@@ -28,9 +28,12 @@ namespace Treadle.Editor
 	///    adds a field and a function (one undo step each) and the Outline lists them; the document
 	///    saves, and reading it back gives the same model; then Help > Report a Problem: the bundle
 	///    from a sample project (contents, no build/ files, the 8 MB cap, Save), the summary and issue
-	///    link, and the buttons hidden or shown by IssuesUrl / SupportChatUrl (ReportProblem.bf).
+	///    link, and the buttons hidden or shown by IssuesUrl / SupportChatUrl (ReportProblem.bf). Before the third
+	///    wave, the type context (SelfTestDocTabs.bf): two types open, one Sheet strip per type, header, title.
 	///  - `menu`: opens the Node menu dragged off an int output and leaves it open (for captures).
 	///  - `reportdialog`: opens Help > Report a Problem with sample texts and leaves it open (for captures).
+	///  - `startsamples`: opens the start page's "Open a sample" list, checks it found samples, leaves it open
+	///    (for captures; StartPage.bf).
 	///  - `backend`: the back end's IR fixtures built, run and compared in Debug and Release, lldb on a
 	///    node's listing line, Build / Run through the installed toolchain (SelfTestBackend.bf).
 	///  - `frontend`: the compiler front end over the samples (SelfTestFrontEnd.bf).
@@ -103,8 +106,9 @@ namespace Treadle.Editor
 			{
 			case "smoke": finished = SelfTestSmoke();
 			case "codec": finished = SelfTestCodec();
-			case "editor": finished = SelfTestEditor();
+			case "editor": finished = SelfTestEditor(); if (finished) mSelfTests.Insert(1, new String("entry")); // the first-program case runs after it (SelfTestEntry.bf)
 			case "menu": finished = SelfTestMenu();
+			case "startsamples": SelfTestStartSamples(ref finished); // captures: StartPage.bf
 			case "reportdialog":
 				// Captures: Help > Report a Problem open with sample texts (ReportProblem.bf).
 				OpenReportProblem();
@@ -142,11 +146,14 @@ namespace Treadle.Editor
 			case "frontend": finished = SelfTestFrontEnd();
 			case "cimport": finished = SelfTestCImport();
 			case "core": finished = SelfTestCore();
+			case "update": finished = SelfTestUpdate(); // SelfTestUpdate.bf
 			case "fuzzopen": finished = SelfTestFuzzOpen(); // SelfTestSecurity.bf
 			case "debug": finished = SelfTestDebug();
 			case "debugstop": finished = SelfTestDebugStop();
+			case "hood": finished = SelfTestHood(); // SelfTestHood.bf
 			case "fatal": finished = SelfTestFatal(); // SelfTestFatal.bf
 			case "tutorial": finished = SelfTestTutorial(); // captures: SelfTestTutorial.bf
+			case "entry": finished = SelfTestEntry(); // SelfTestEntry.bf
 			case "scale": finished = SelfTestScale(false); // SelfTestScale.bf
 			case "scalemeasure": finished = SelfTestScale(true);
 			case "scalegen": finished = SelfTestScaleGen();
@@ -184,6 +191,11 @@ namespace Treadle.Editor
 				else if (SelfTestUXCapture(test)) {} // captures: SelfTestUX.bf
 				else if (SelfTestUX2Capture(test)) {} // captures: SelfTestUX2.bf
 				else if (SelfTestE3Capture(test, ref finished)) {} // captures: SelfTestEditor3.bf
+				else if (SelfTestE4Capture(test, ref finished)) {} // captures: SelfTestEditor4.bf
+				else if (SelfTestValidateCapture(test)) {} // captures: SelfTestValidate.bf
+				else if (SelfTestNTCapture(test)) {} // captures: SelfTestNewType.bf
+				else if (SelfTestDocCapture(test, ref finished)) {} // captures: SelfTestDocTabs.bf
+				else if (SelfTestUpdateCapture(test)) {} // captures: Updates.bf
 				else
 					SelfTestCheck(false, scope $"unknown self test '{test}'");
 			}
@@ -289,6 +301,7 @@ namespace Treadle.Editor
 			let codec = Language.Codec;
 			SelfTestCheck(codec.Extension == ".treadle", "codec: the type file codec is installed (.treadle)");
 			SelfTestSecurityCodec(); // SelfTestSecurity.bf
+			SelfTestSecurityToolDirs();
 
 			// 1. Each sample: load, save under another name, the bytes are the same (layout too).
 			for (let name in StringView[?]("Player", "Program", "Pair"))
@@ -310,12 +323,13 @@ namespace Treadle.Editor
 				let saved = doc.TrySave(why);
 				String written = scope .();
 				SelfTestCheck(saved && ReadFile(doc.FilePath, written) && written == original, scope $"codec: {name}.treadle saves byte for byte{(why.IsEmpty ? "" : ": ")}{why}");
-				String layoutSrc = scope $"{src}.layout";
+				String layoutSrc = scope .();
+				TypeDocument.LayoutPathOf(src, layoutSrc);
 				if (File.Exists(layoutSrc))
 				{
 					String a = scope .();
 					String b = scope .();
-					SelfTestCheck(ReadFile(layoutSrc, a) && ReadFile(scope $"{doc.FilePath}.layout", b) && a == b, scope $"codec: {name}.treadle.layout saves byte for byte");
+					SelfTestCheck(ReadFile(layoutSrc, a) && ReadFile(TypeDocument.LayoutPathOf(doc.FilePath, .. scope String()), b) && a == b, scope $"codec: {name}.treadle.layout saves byte for byte");
 				}
 				// The hand-ordered original (the spec's reading order) normalises to the canonical file.
 				String ro = scope .();
@@ -494,6 +508,7 @@ namespace Treadle.Editor
 
 			// 7. Version handling: format-history, a simulated bump, aliases, a newer file (SelfTestMigrate.bf).
 			SelfTestMigrate(samples, temp);
+			SelfTestSidecars(temp);
 			return true;
 		}
 
@@ -569,9 +584,23 @@ namespace Treadle.Editor
 				mSelfTestWait = Math.Max(mSelfTestWait, 2);
 				return false;
 			}
+			if (mSelfTestStep == 23 + cUX2Phases && !mValDone && !(mValDone = SelfTestValidateBefore()))
+			{
+				// When problems are shown: after Validate / Build only, stale after an edit (SelfTestValidate.bf).
+				mSelfTestStep--;
+				mSelfTestWait = Math.Max(mSelfTestWait, 2);
+				return false;
+			}
 			if (mSelfTestStep == 23 + cUX2Phases && !mVecDone && !(mVecDone = SelfTestVectorBefore()))
 			{
 				// The vector types on the editor side (SelfTestVector.bf): one phase per frame.
+				mSelfTestStep--;
+				mSelfTestWait = Math.Max(mSelfTestWait, 2);
+				return false;
+			}
+			if (mSelfTestStep == 23 + cUX2Phases && !mE4Done && !(mE4Done = SelfTestE4Before()))
+			{
+				// The fourth wave (SelfTestEditor4.bf): one phase per frame.
 				mSelfTestStep--;
 				mSelfTestWait = Math.Max(mSelfTestWait, 2);
 				return false;
@@ -598,8 +627,10 @@ namespace Treadle.Editor
 					temp.Set(samples);
 				mSelfTestDir.Set(scope $"{temp}/treadle-editor-{(int)Platform.BfpSystem_GetTimeStamp() & 0xFFFFFF}");
 				Directory.CreateDirectory(mSelfTestDir).IgnoreError();
-				for (let name in StringView[?]("Player.treadle", "Player.treadle.layout", "Pair.treadle", "Program.treadle"))
+				for (let name in StringView[?]("Player.treadle", "Pair.treadle", "Program.treadle"))
 					File.Copy(scope $"{samples}/{name}", scope $"{mSelfTestDir}/{name}").IgnoreError();
+				// The sample's layout lives in the samples' layout folder; the copy has no project, so it sits beside the file.
+				File.Copy(TypeDocument.LayoutPathOf(scope $"{samples}/Player.treadle", .. scope String()), scope $"{mSelfTestDir}/Player.treadle.layout").IgnoreError();
 				let doc = OpenFile(scope $"{mSelfTestDir}/Player.treadle");
 				SelfTestCheck(doc != null && doc.Header.Name == "Player", "editor: Player.treadle opens");
 				if (doc == null)
@@ -891,6 +922,13 @@ namespace Treadle.Editor
 				Directory.Delete(mSelfTestDir).IgnoreError();
 				return false;
 			case 24 + cUX2Phases:
+				// The type context (SelfTestDocTabs.bf): one phase per frame, before the third wave.
+				if (!mDocTabsDone && !(mDocTabsDone = SelfTestDocTabs()))
+				{
+					mSelfTestStep--;
+					mSelfTestWait = Math.Max(mSelfTestWait, 2);
+					return false;
+				}
 				// The third wave on a project of its own (SelfTestEditor3.bf): one phase per frame.
 				if (!SelfTestE3After())
 				{

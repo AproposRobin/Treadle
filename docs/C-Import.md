@@ -171,6 +171,14 @@ The SDL sample's set:
 `TREADLE_SDL2` is the root of an SDL 2.32.10 mingw development package (the folder that holds
 `x86_64-w64-mingw32`).
 
+**In the package** the samples sit one folder higher (`samples\m2-sdl` against `TreadleCore\samples\m2-sdl`) and
+SDL2 is the package's `tools\SDL2`, so the shipped sets read `${TREADLE_SDL2:-../../tools/SDL2}`: with
+`TREADLE_SDL2` unset, the fallback is the `tools\SDL2` of the Treadle folder the sample came with
+(`scripts\package.ps1` writes that fallback when it copies the samples; the rule itself is unchanged). On Linux
+the shipped `sdl2.linux.cimport` links the package's own library, `lib ../../libSDL2-2.0.so.0`, in place of
+`lib SDL2`; the program loads the system's SDL2 at run time, or the package's with `LD_LIBRARY_PATH` set to the
+Treadle folder.
+
 **Build names what is outside.** Every Build gives one warning, *C import paths outside the project folder*, that
 lists each `include`, `header`, `lib`, `bin` and `csource` path that, after the variables and `..`, is not inside
 the project folder (a header or library given by name alone is not a path). The SDL sample lists its three SDL2

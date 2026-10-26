@@ -1,0 +1,10 @@
+# The Core.Vector functions end to end (SIMD-and-Vectors.md 1): M2.VectorFns.Run.
+== exit
+0
+== stdout
+equal true false
+normalize (0.6, 0, 0.8, 0) (0, 0, 0, 0) length 5
+product 24 min 1 max 5
+and 0 or 15 xor 3
+all true false bitmask 3
+cross (0, 0, 1, 0) lerp (1, 2, 3, 4.5) splat (2.5, 2.5, 2.5, 2.5)

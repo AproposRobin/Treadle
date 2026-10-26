@@ -60,6 +60,9 @@ namespace Treadle.Editor
 		{
 			if (index == cMenuDragIndex)
 				return mMenuDrag;
+			// The drag brought another type to the front: its row as it was (GraphTabs.bf: HoldDragAcrossTypes).
+			if (HeldDrag != null && index == HeldDragIndex)
+				return HeldDrag;
 			if (index < 0 || index >= mMembers.Count)
 				return null;
 			return mMembers[index];

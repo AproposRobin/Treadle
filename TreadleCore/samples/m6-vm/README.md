@@ -8,10 +8,11 @@ functions (recursive, and passed around as values) and three built-in functions.
 ## Run it
 
 ```
-Treadle.exe --build-run TreadleCore\samples\m6-vm -- --selftest
+Treadle.exe --build-run samples\m6-vm -- --selftest
 ```
 
-Or open the folder in the editor and press Ctrl+F5. Add `--config Release` for an optimised build.
+(`samples\` of the Treadle folder; in a source checkout `TreadleCore\samples\`; on Linux `./treadle --build-run
+samples/m6-vm -- --selftest`.) Or open the folder in the editor and press Ctrl+F5. Add `--config Release` for an optimised build.
 
 What follows `--` goes to the program:
 
@@ -26,11 +27,11 @@ What follows `--` goes to the program:
 The exit code is 0 when the script ran, 1 for an error found before it runs (a character, the grammar, a
 misplaced `return` or function), 2 for an error while it runs, 3 when the file cannot be read.
 
-A program started by `--build-run` (or Ctrl+F5) runs in the build folder, `build\Debug` or `build\Release`, so
-the sample script of the project folder is `..\..\sample.mini` there:
+A program started by `--build-run` runs in the project folder, so the sample script is named as it is (Ctrl+F5 in
+the editor runs it in the build folder, `build\Debug` or `build\Release`, where it is `..\..\sample.mini`):
 
 ```
-Treadle.exe --build-run TreadleCore\samples\m6-vm -- ..\..\sample.mini
+Treadle.exe --build-run samples\m6-vm -- sample.mini
 ```
 
 prints

@@ -263,10 +263,10 @@ namespace Treadle.Format
 			return true;
 		}
 
-		/// The backup a migration leaves once: `<file>.v<old>.bak` beside the file.
+		/// The backup a migration leaves once: `backup/<relative path>.v<old>.bak` in the project (beside the file with no project).
 		public static void BackupPathOf(StringView path, int32 oldVersion, String outPath)
 		{
-			outPath.AppendF("{}.v{}.bak", path, oldVersion);
+			Treadle.Document.Sidecars.BackupPathOf(path, oldVersion, outPath);
 		}
 
 		/// Copies `path` (still at `oldVersion` on disk) to `<file>.v<old>.bak` unless that backup
@@ -277,6 +277,7 @@ namespace Treadle.Format
 				return true;
 			String bak = scope .();
 			BackupPathOf(path, oldVersion, bak);
+			Treadle.Document.FileSafety.EnsureParent(bak);
 			if (File.Exists(bak))
 				return true;
 			return File.Copy(path, bak) case .Ok;

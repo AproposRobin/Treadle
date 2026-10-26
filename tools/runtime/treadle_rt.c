@@ -291,13 +291,23 @@ typedef struct rt_dbg_header {
 #define RT_HSIZE(h) ((h)->size)
 #define RT_HTHREAD(h) ((uint32_t)(uintptr_t)(h)->free_site)
 
-/* ---- the allocator lock (docs/Threads.md 5): the live list, its counters and the quarantine ring are shared by
-   every thread. A spin lock (an atomic exchange; pause, then a yield after 64 tries), taken only once a second
-   thread was started (rt_threads_used, set before it runs): a program with one thread pays a flag test. Nothing
-   inside the lock allocates (evicting from the quarantine frees). */
+/* ---- per-thread lists (docs/Threads.md 5): each thread links the blocks it makes into its own live list, with
+   its own counters and its own quarantine ring, and changes them without a lock or any atomic instruction (a
+   program with one thread pays a flag test, as before threads). The cross-thread paths take a small spin lock
+   (an atomic exchange; pause, then a yield after 64 tries):
+     * a Delete of a block another thread made poisons it and marks it freed, and counts it on its maker's list;
+       the maker unlinks such blocks itself (a sweep when they add up to 64 plus an eighth of its live blocks)
+       and quarantines them in its ring;
+     * a thread that ends moves its live blocks to the list of ended threads (the orphan list, under the lock),
+       and its ring with them, so a later Delete or the leak report still finds them;
+     * the leak report freezes the lists: it takes the lock, raises rt_alloc_frozen and waits until no thread is
+       inside a change of its list (its busy flag), so it walks lists that stand still.
+   The live lists, counters and rings are only ever changed by their owner or under the lock. */
 static volatile int32_t rt_alloc_lock_word;
+static volatile int32_t rt_alloc_frozen;                 /* the leak report walks the lists: wait */
 
 static void rt_spin_yield(void);
+void rt_sleep(int64_t ms);
 
 /* Taken when the exchange finds the lock held: spin, then yield. */
 static void rt_alloc_lock_wait(void)
@@ -311,26 +321,217 @@ static void rt_alloc_lock_wait(void)
     } while (__atomic_exchange_n(&rt_alloc_lock_word, 1, __ATOMIC_ACQUIRE));
 }
 
-/* Macros, not functions: the Debug runtime is compiled at -O0, where a call per alloc and free was measurable.
-   `locked` is set when the lock was taken (a second thread was started before). */
-#define RT_ALLOC_LOCK(locked) \
-    do { \
-        (locked) = rt_threads_used != 0; \
-        if ((locked) && __atomic_exchange_n(&rt_alloc_lock_word, 1, __ATOMIC_ACQUIRE)) rt_alloc_lock_wait(); \
-    } while (0)
-#define RT_ALLOC_UNLOCK(locked) \
-    do { if (locked) __atomic_store_n(&rt_alloc_lock_word, 0, __ATOMIC_RELEASE); } while (0)
+#define RT_ALLOC_LOCK() \
+    do { if (__atomic_exchange_n(&rt_alloc_lock_word, 1, __ATOMIC_ACQUIRE)) rt_alloc_lock_wait(); } while (0)
+#define RT_ALLOC_UNLOCK() __atomic_store_n(&rt_alloc_lock_word, 0, __ATOMIC_RELEASE)
 
-static rt_dbg_header* live_head;
-static int64_t live_count, total_count, bytes_live, bytes_peak;
-static rt_dbg_header* ring[RT_QUARANTINE_COUNT];
-static uint32_t ring_pos;
-static uint64_t ring_bytes;
+typedef struct rt_ring {
+    rt_dbg_header** slot;
+    uint32_t count, pos;
+    uint64_t bytes, cap;                              /* bytes held, the most it holds */
+} rt_ring;
+
+typedef struct rt_dbg_list {
+    rt_dbg_header* head;
+    int64_t live, total, bytes, peak;                 /* its linked blocks (a block another thread deleted counts until the sweep) */
+    volatile int64_t remote_n;                        /* its blocks other threads deleted (written under the lock) */
+    int64_t swept_n;                                  /* of those, unlinked by the owner */
+    volatile int32_t sweep_due;                       /* set by a deleting thread when enough wait: the owner sweeps */
+    volatile int32_t busy;                            /* 1 while the owner changes the list */
+    uint32_t index;                                   /* the runtime index of the owner */
+    rt_ring ring;
+} rt_dbg_list;
+
+#define RT_WORKER_QUARANTINE_COUNT 1024
+#define RT_WORKER_QUARANTINE_BYTES (1u << 20)
+
+static rt_dbg_header* rt_main_slots[RT_QUARANTINE_COUNT];
+static rt_dbg_list rt_main_list = { .index = 0, .ring = { rt_main_slots, RT_QUARANTINE_COUNT, 0, 0, RT_QUARANTINE_BYTES } };
+static rt_dbg_header* rt_orphan_slots[RT_QUARANTINE_COUNT];
+static rt_dbg_list rt_orphan_list = { .index = 0xFFFFFFFFu, .ring = { rt_orphan_slots, RT_QUARANTINE_COUNT, 0, 0, RT_QUARANTINE_BYTES } };
+static _Thread_local rt_dbg_list* rt_cur_list;        /* this thread's list (set when it starts; main in rt_start) */
+static rt_dbg_list** rt_lists;                        /* by runtime index: the running threads' lists (under the lock) */
+static uint32_t rt_lists_cap;
+static int64_t rt_ended_total, rt_ended_peak;         /* the counters of the lists of ended threads */
+
+static void quarantine(rt_ring* r, rt_dbg_header* h)
+{
+    /* Evict the oldest blocks until the new one fits (by count and by bytes). */
+    uint32_t pos = r->pos;
+    uint64_t size = RT_HSIZE(h);
+    while (r->slot[pos] || r->bytes + size > r->cap) {
+        rt_dbg_header* old = r->slot[pos];
+        if (old) {
+            r->bytes -= RT_HSIZE(old);
+            free(old);
+            r->slot[pos] = NULL;
+        }
+        if (!r->slot[pos] && r->bytes + size <= r->cap) break;
+        pos = (pos + 1) % r->count;
+        if (pos == r->pos) break;                     /* the block alone is larger than the ring */
+    }
+    if (r->bytes + size > r->cap) { free(h); return; }
+    r->slot[pos] = h;
+    r->bytes += size;
+    r->pos = (pos + 1) % r->count;
+}
+
+/* quarantine of the main list's ring with its fields named directly (no pointer to follow at -O0: the one-thread
+   path costs what it did before threads) */
+static void quarantine_main(rt_dbg_header* h)
+{
+    uint32_t pos = rt_main_list.ring.pos;
+    uint64_t size = RT_HSIZE(h);
+    while (rt_main_slots[pos] || rt_main_list.ring.bytes + size > RT_QUARANTINE_BYTES) {
+        rt_dbg_header* old = rt_main_slots[pos];
+        if (old) {
+            rt_main_list.ring.bytes -= RT_HSIZE(old);
+            free(old);
+            rt_main_slots[pos] = NULL;
+        }
+        if (!rt_main_slots[pos] && rt_main_list.ring.bytes + size <= RT_QUARANTINE_BYTES) break;
+        pos = (pos + 1) % RT_QUARANTINE_COUNT;
+        if (pos == rt_main_list.ring.pos) break;
+    }
+    if (rt_main_list.ring.bytes + size > RT_QUARANTINE_BYTES) { free(h); return; }
+    rt_main_slots[pos] = h;
+    rt_main_list.ring.bytes += size;
+    rt_main_list.ring.pos = (pos + 1) % RT_QUARANTINE_COUNT;
+}
+
+/* The owner changes its list: its busy flag is set meanwhile (plain stores; a raised freeze flag waits first).
+   Macros, not functions: the Debug runtime is compiled at -O0, where a call per alloc and free was measurable. */
+static void rt_frozen_wait(rt_dbg_list* L)
+{
+    L->busy = 0;                                      /* the report may walk it */
+    while (__atomic_load_n(&rt_alloc_frozen, __ATOMIC_ACQUIRE)) rt_sleep(1);
+    L->busy = 1;
+    __atomic_signal_fence(__ATOMIC_SEQ_CST);
+}
+#define RT_LIST_ENTER(L) \
+    do { (L)->busy = 1; __atomic_signal_fence(__ATOMIC_SEQ_CST); if (rt_alloc_frozen) rt_frozen_wait(L); } while (0)
+#define RT_LIST_LEAVE(L) \
+    do { __atomic_signal_fence(__ATOMIC_SEQ_CST); (L)->busy = 0; } while (0)
+
+static void rt_list_register(rt_dbg_list* L)        /* under the lock */
+{
+    uint32_t need = L->index + 1;
+    if (need > rt_lists_cap) {
+        uint32_t cap = rt_lists_cap ? rt_lists_cap : 16;
+        rt_dbg_list** n;
+        while (cap < need) cap *= 2;
+        n = (rt_dbg_list**)realloc(rt_lists, sizeof(rt_dbg_list*) * cap);
+        if (!n) { RT_ALLOC_UNLOCK(); fputs("fatal: out of memory\n", stderr); exit(3); }
+        memset(n + rt_lists_cap, 0, sizeof(rt_dbg_list*) * (cap - rt_lists_cap));
+        rt_lists = n;
+        rt_lists_cap = cap;
+    }
+    if (!rt_lists[0]) rt_lists[0] = &rt_main_list;
+    rt_lists[L->index] = L;
+}
+
+/* A thread that starts (rt_thread_run), or a thread the runtime did not start that allocates once threads run
+   (a C host calling a library's exports): its own list. */
+static rt_dbg_list* rt_dbg_thread_begin(uint32_t index)
+{
+    rt_dbg_list* L = (rt_dbg_list*)calloc(1, sizeof(rt_dbg_list));
+    rt_dbg_header** slots = (rt_dbg_header**)calloc(RT_WORKER_QUARANTINE_COUNT, sizeof(rt_dbg_header*));
+    if (!L || !slots) { fputs("fatal: out of memory\n", stderr); exit(3); }
+    L->index = index;
+    L->ring.slot = slots;
+    L->ring.count = RT_WORKER_QUARANTINE_COUNT;
+    L->ring.cap = RT_WORKER_QUARANTINE_BYTES;
+    RT_ALLOC_LOCK();
+    rt_list_register(L);
+    RT_ALLOC_UNLOCK();
+    rt_cur_list = L;
+    return L;
+}
+
+static uint32_t rt_name_new(const char* name, int64_t len, const char* prefix);
+static rt_dbg_list* rt_dbg_adopt(void)
+{
+    uint32_t index = rt_name_new(NULL, 0, "Thread");
+    rt_cur_index = index;
+    return rt_dbg_thread_begin(index);
+}
+
+/* The owner unlinks the blocks of its list that other threads deleted, into its ring. */
+static void rt_sweep(rt_dbg_list* L)
+{
+    rt_dbg_header* h = L->head;
+    while (h) {
+        rt_dbg_header* next = h->next;
+        if (__atomic_load_n(&h->magic, __ATOMIC_ACQUIRE) == RT_MAGIC_FREE) {
+            if (h->prev) h->prev->next = h->next; else L->head = h->next;
+            if (h->next) h->next->prev = h->prev;
+            h->prev = h->next = NULL;
+            L->live--;
+            L->bytes -= (int64_t)RT_HSIZE(h);
+            L->swept_n++;
+            quarantine(&L->ring, h);
+        }
+        h = next;
+    }
+}
+
+/* The thread ends: its blocks still live go to the orphan list, the ones another thread deleted and its ring to
+   the orphan ring (a later Delete of them is still caught as a double free). */
+static void rt_dbg_thread_end(void)
+{
+    rt_dbg_list* L = rt_cur_list;
+    rt_dbg_header* h;
+    uint32_t k;
+    if (!L || L == &rt_main_list) return;
+    RT_ALLOC_LOCK();
+    h = L->head;
+    while (h) {
+        rt_dbg_header* next = h->next;
+        h->prev = h->next = NULL;
+        if (h->magic == RT_MAGIC_FREE)
+            quarantine(&rt_orphan_list.ring, h);
+        else {
+            h->next = rt_orphan_list.head;
+            if (rt_orphan_list.head) rt_orphan_list.head->prev = h;
+            rt_orphan_list.head = h;
+            rt_orphan_list.live++;
+            rt_orphan_list.bytes += (int64_t)RT_HSIZE(h);
+        }
+        h = next;
+    }
+    for (k = 0; k < L->ring.count; k++) {
+        uint32_t at = (L->ring.pos + k) % L->ring.count;    /* oldest first */
+        if (L->ring.slot[at]) quarantine(&rt_orphan_list.ring, L->ring.slot[at]);
+    }
+    rt_ended_total += L->total;
+    rt_ended_peak += L->peak;
+    if (L->index < rt_lists_cap) rt_lists[L->index] = NULL;
+    RT_ALLOC_UNLOCK();
+    rt_cur_list = NULL;
+    free(L->ring.slot);
+    free(L);
+}
+
+/* The main thread keeps the one-thread path after threads start: no thread-local read, no busy flag (its list is
+   walked by a report on the main thread; a report another thread makes, a fatal error there, leaves it out). Which
+   thread runs is one read of the thread block: the thread id in the TEB (Windows), the TCB's self pointer (Linux). */
+static uintptr_t rt_main_tid;
+static inline uintptr_t rt_thread_word(void)
+{
+    uintptr_t v;
+#ifdef _WIN32
+    __asm__ volatile("movq %%gs:0x48, %0" : "=r"(v));
+#else
+    __asm__ volatile("movq %%fs:0x10, %0" : "=r"(v));
+#endif
+    return v;
+}
+#define RT_ON_MAIN() (rt_thread_word() == rt_main_tid)
 
 void* rt_alloc_dbg(int64_t size, int64_t align, const rt_site* site)
 {
     rt_dbg_header* h;
-    int locked;
+    rt_dbg_list* L;
     if (size < 0) rt_fatal(11, site, "allocation of a negative size (an array length below zero, or too large)");
     if (size == 0) size = 1;
     if (size > INT64_MAX - (int64_t)sizeof(rt_dbg_header)) { fputs("fatal: out of memory\n", stderr); exit(3); }
@@ -338,87 +539,132 @@ void* rt_alloc_dbg(int64_t size, int64_t align, const rt_site* site)
     h = (rt_dbg_header*)plain_alloc((int64_t)sizeof(rt_dbg_header) + size, 16);
     h->magic = RT_MAGIC_LIVE;
     h->alloc_site = site;
-    if (rt_threads_used)                             /* the thread that made it (main: 0; a TLS read only once threads run) */
-        h->free_site = (const rt_site*)(uintptr_t)rt_cur_index;
     h->size = (uint64_t)size;
-    RT_ALLOC_LOCK(locked);
-    h->next = live_head;
-    if (live_head) live_head->prev = h;
-    live_head = h;
-    live_count++; total_count++; bytes_live += size;
-    if (bytes_live > bytes_peak) bytes_peak = bytes_live;
-    RT_ALLOC_UNLOCK(locked);
+    if (!rt_threads_used || RT_ON_MAIN()) {        /* one thread, or the main thread: the main list, no thread-local read */
+        h->next = rt_main_list.head;
+        if (rt_main_list.head) rt_main_list.head->prev = h;
+        rt_main_list.head = h;
+        rt_main_list.live++; rt_main_list.total++; rt_main_list.bytes += size;
+        if (rt_main_list.bytes > rt_main_list.peak) rt_main_list.peak = rt_main_list.bytes;
+        if (rt_main_list.sweep_due) { rt_main_list.sweep_due = 0; rt_sweep(&rt_main_list); }
+        return h + 1;
+    }
+    L = rt_cur_list;
+    if (!L) L = rt_dbg_adopt();
+    h->free_site = (const rt_site*)(uintptr_t)L->index; /* the thread that made it (main: 0) */
+    RT_LIST_ENTER(L);
+    h->next = L->head;
+    if (L->head) L->head->prev = h;
+    L->head = h;
+    L->live++; L->total++; L->bytes += size;
+    if (L->bytes > L->peak) L->peak = L->bytes;
+    if (L->sweep_due) { L->sweep_due = 0; rt_sweep(L); }
+    RT_LIST_LEAVE(L);
     return h + 1;
 }
 
-static void quarantine(rt_dbg_header* h)
+/* poison: the vtable traps, the fields read as 0xDD (a macro: no call at -O0) */
+#define RT_POISON(p, size) \
+    do { \
+        if ((size) >= sizeof(void*)) { \
+            ((rt_object*)(p))->vtable = (void* const*)rt_poison_vtable; \
+            memset((char*)(p) + sizeof(void*), 0xDD, (size_t)(size) - sizeof(void*)); \
+        } else \
+            memset((p), 0xDD, (size_t)(size)); \
+    } while (0)
+
+static void rt_double_free(rt_dbg_header* h, const rt_site* site)
 {
-    /* Evict the oldest blocks until the new one fits (by count and by bytes). */
-    uint32_t pos = ring_pos;
-    uint64_t size = RT_HSIZE(h);
-    while (ring[pos] || ring_bytes + size > RT_QUARANTINE_BYTES) {
-        rt_dbg_header* old = ring[pos];
-        if (old) {
-            ring_bytes -= RT_HSIZE(old);
-            free(old);
-            ring[pos] = NULL;
-        }
-        if (!ring[pos] && ring_bytes + size <= RT_QUARANTINE_BYTES) break;
-        pos = (pos + 1) % RT_QUARANTINE_COUNT;
-        if (pos == ring_pos) break;                  /* the block alone is larger than the ring */
+    char msg[512];
+    snprintf(msg, sizeof msg, "double free of an object made at %s node %s (first deleted at %s node %s)",
+             site_where(h->alloc_site), site_node(h->alloc_site), site_where(h->free_site), site_node(h->free_site));
+    rt_fatal(6, site, msg);
+}
+
+/* A Delete of a block another thread made (or that the orphan list holds): under the lock. */
+static void rt_free_remote(rt_dbg_header* h, const rt_site* site)
+{
+    rt_dbg_list* owner;
+    uint32_t index;
+    uint64_t size;
+    RT_ALLOC_LOCK();
+    if (h->magic == RT_MAGIC_FREE) { RT_ALLOC_UNLOCK(); rt_double_free(h, site); }
+    if (h->magic != RT_MAGIC_LIVE) {
+        RT_ALLOC_UNLOCK();
+        rt_fatal(7, site, "delete of an object that was not made by Construct (a Local, an appended object or a foreign pointer)");
     }
-    if (ring_bytes + size > RT_QUARANTINE_BYTES) { free(h); return; }
-    ring[pos] = h;
-    ring_bytes += size;
-    ring_pos = (pos + 1) % RT_QUARANTINE_COUNT;
+    index = RT_HTHREAD(h);
+    owner = (index < rt_lists_cap) ? rt_lists[index] : (index == 0 ? &rt_main_list : NULL);
+    size = RT_HSIZE(h);
+    RT_POISON(h + 1, size);
+    if (!owner) {                                    /* its thread ended: the orphan list */
+        if (h->prev) h->prev->next = h->next; else rt_orphan_list.head = h->next;
+        if (h->next) h->next->prev = h->prev;
+        h->prev = h->next = NULL;
+        h->magic = RT_MAGIC_FREE;
+        h->free_site = site;
+        rt_orphan_list.live--;
+        rt_orphan_list.bytes -= (int64_t)size;
+        quarantine(&rt_orphan_list.ring, h);
+    } else {                                         /* still linked in its maker's list until the maker sweeps */
+        h->free_site = site;
+        __atomic_store_n(&h->magic, RT_MAGIC_FREE, __ATOMIC_RELEASE);
+        __atomic_store_n(&owner->remote_n, owner->remote_n + 1, __ATOMIC_RELAXED);
+        if (owner->remote_n - owner->swept_n >= 64 + (owner->live >> 3))   /* a heuristic: the owner's counts are read unlocked */
+            __atomic_store_n(&owner->sweep_due, 1, __ATOMIC_RELAXED);
+    }
+    RT_ALLOC_UNLOCK();
 }
 
 void rt_free_dbg(void* p, const rt_site* site)
 {
     rt_dbg_header* h;
-    char msg[512];
-    int locked;
+    rt_dbg_list* L;
     uint64_t size;
     if (!p) return;
     h = ((rt_dbg_header*)p) - 1;
-    RT_ALLOC_LOCK(locked);
-    if (h->magic == RT_MAGIC_FREE) {
-        snprintf(msg, sizeof msg, "double free of an object made at %s node %s (first deleted at %s node %s)",
-                 site_where(h->alloc_site), site_node(h->alloc_site), site_where(h->free_site), site_node(h->free_site));
-        RT_ALLOC_UNLOCK(locked);
-        rt_fatal(6, site, msg);
-    }
-    if (h->magic != RT_MAGIC_LIVE) {
-        RT_ALLOC_UNLOCK(locked);
+    if (h->magic == RT_MAGIC_FREE) rt_double_free(h, site);
+    if (h->magic != RT_MAGIC_LIVE)
         rt_fatal(7, site, "delete of an object that was not made by Construct (a Local, an appended object or a foreign pointer)");
+    size = RT_HSIZE(h);
+    if (!rt_threads_used || (RT_HTHREAD(h) == 0 && RT_ON_MAIN())) { /* one thread, or main deletes its own: the main list */
+        if (h->prev) h->prev->next = h->next; else rt_main_list.head = h->next;
+        if (h->next) h->next->prev = h->prev;
+        h->prev = h->next = NULL;
+        h->magic = RT_MAGIC_FREE;
+        h->free_site = site;
+        rt_main_list.live--; rt_main_list.bytes -= (int64_t)size;
+        RT_POISON(p, size);
+        quarantine_main(h);
+        return;
     }
-    if (h->prev) h->prev->next = h->next; else live_head = h->next;
+    L = rt_cur_list;
+    if (!L) L = rt_dbg_adopt();
+    if (RT_HTHREAD(h) != L->index) {
+        rt_free_remote(h, site);
+        return;
+    }
+    RT_LIST_ENTER(L);
+    if (h->prev) h->prev->next = h->next; else L->head = h->next;
     if (h->next) h->next->prev = h->prev;
     h->prev = h->next = NULL;
     h->magic = RT_MAGIC_FREE;
     h->free_site = site;
-    size = RT_HSIZE(h);
-    live_count--; bytes_live -= (int64_t)size;
-    /* poison: the vtable traps, the fields read as 0xDD */
-    if (size >= sizeof(void*)) {
-        ((rt_object*)p)->vtable = (void* const*)rt_poison_vtable;
-        memset((char*)p + sizeof(void*), 0xDD, (size_t)size - sizeof(void*));
-    } else
-        memset(p, 0xDD, (size_t)size);
-    quarantine(h);
-    RT_ALLOC_UNLOCK(locked);
+    L->live--; L->bytes -= (int64_t)size;
+    RT_POISON(p, size);
+    if (L == &rt_main_list) quarantine_main(h); else quarantine(&L->ring, h);
+    RT_LIST_LEAVE(L);
 }
 
-int32_t rt_leak_report(void)
+static int64_t rt_report_list(rt_dbg_list* L, int64_t* live, int64_t* bytes)
 {
     rt_dbg_header* h;
     int64_t n = 0;
-    int locked;
-    fflush(stdout);
-    RT_ALLOC_LOCK(locked);
-    for (h = live_head; h; h = h->next) {
+    for (h = L->head; h; h = h->next) {
         void* obj = h + 1;
-        const char* name = (RT_HSIZE(h) >= sizeof(void*)) ? type_name_of(obj) : "block";
+        const char* name;
+        if (h->magic != RT_MAGIC_LIVE) continue;     /* deleted by another thread, not swept yet */
+        name = (RT_HSIZE(h) >= sizeof(void*)) ? type_name_of(obj) : "block";
         if (RT_HTHREAD(h))
             err_printf("leak: %s (%llu bytes) made at %s node %s on thread \"%s\"\n", name, (unsigned long long)RT_HSIZE(h),
                     site_where(h->alloc_site), site_node(h->alloc_site), rt_thread_index_name(RT_HTHREAD(h)));
@@ -426,11 +672,52 @@ int32_t rt_leak_report(void)
             err_printf("leak: %s (%llu bytes) made at %s node %s\n", name, (unsigned long long)RT_HSIZE(h),
                     site_where(h->alloc_site), site_node(h->alloc_site));
         n++;
+        (*live)++;
+        *bytes += (int64_t)RT_HSIZE(h);
+    }
+    return n;
+}
+
+int32_t rt_leak_report(void)
+{
+    int64_t n = 0, live = 0, bytes = 0, total, peak;
+    uint32_t k;
+    int threads = rt_threads_used != 0;
+    fflush(stdout);
+    if (threads) {
+        RT_ALLOC_LOCK();
+        /* freeze: once the flag is seen (the sleep lets every thread's stores reach memory), a thread inside a
+           change of its list finishes it and the next one waits */
+        __atomic_store_n(&rt_alloc_frozen, 1, __ATOMIC_SEQ_CST);
+        rt_sleep(2);
+        for (k = 0; k < rt_lists_cap; k++)
+            if (rt_lists[k] && rt_lists[k] != rt_cur_list)
+                while (__atomic_load_n(&rt_lists[k]->busy, __ATOMIC_ACQUIRE)) rt_sleep(1);
+    }
+    total = rt_main_list.total + rt_ended_total;
+    peak = rt_main_list.peak + rt_ended_peak;
+    /* the main thread changes its list without the busy flag: only a report on the main thread (or before a second
+       thread ran) walks it */
+    if (!threads || RT_ON_MAIN())
+        n += rt_report_list(&rt_main_list, &live, &bytes);
+    else if (rt_main_list.live > 0)
+        err_printf("treadle_rt: the main thread's objects are not listed (the report ran on thread \"%s\")\n", rt_thread_index_name(rt_cur_index));
+    if (threads) {
+        for (k = 1; k < rt_lists_cap; k++)
+            if (rt_lists[k]) {
+                n += rt_report_list(rt_lists[k], &live, &bytes);
+                total += rt_lists[k]->total;
+                peak += rt_lists[k]->peak;
+            }
+        n += rt_report_list(&rt_orphan_list, &live, &bytes);
     }
     if (n || getenv("TREADLE_RT_VERBOSE"))
         err_printf("treadle_rt: allocs=%lld live=%lld bytes_live=%lld bytes_peak=%lld\n",
-                (long long)total_count, (long long)live_count, (long long)bytes_live, (long long)bytes_peak);
-    RT_ALLOC_UNLOCK(locked);
+                (long long)total, (long long)live, (long long)bytes, (long long)peak);
+    if (threads) {
+        __atomic_store_n(&rt_alloc_frozen, 0, __ATOMIC_SEQ_CST);
+        RT_ALLOC_UNLOCK();
+    }
     fflush(stderr);
     return n > 0x7fff ? 0x7fff : (int32_t)n;
 }
@@ -697,6 +984,10 @@ void rt_start(int32_t argc, char** argv)
         }
     }
 #endif
+#ifdef TREADLE_DEBUG
+    rt_cur_list = &rt_main_list;                     /* the main thread's live list */
+    rt_main_tid = rt_thread_word();
+#endif
     rt_debug_name_thread(0);                         /* the main thread in the debugger's table */
     start_tables();
 }
@@ -745,6 +1036,15 @@ void rt_lib_start(void)
     if (rt_lib_refs++ > 0) return;
 #ifdef _WIN32
     utf8_args();
+#endif
+#ifdef TREADLE_DEBUG
+    rt_cur_list = &rt_main_list;                     /* the thread that calls treadle_init has the main list */
+    rt_main_tid = rt_thread_word();
+#endif
+#if !defined(_WIN32) && defined(TREADLE_DEBUG) && defined(PR_SET_PTRACER)
+    /* Debug > Attach to Process on the host (its lldb-dap is the editor's child, not the host's ancestor): as a
+       Debug program does in rt_start, a Debug library lets a debugger that is not the host's parent attach */
+    prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY, 0, 0, 0);
 #endif
     start_tables();
 }
@@ -1325,12 +1625,17 @@ static int64_t rt_group(char* buf, int64_t cap, const char* digits)
     int64_t len = (int64_t)strlen(digits), start = 0, intEnd, o = 0, i;
     if (digits[0] == '-') start = 1;
     for (intEnd = start; intEnd < len && digits[intEnd] >= '0' && digits[intEnd] <= '9'; intEnd++) {}
-    for (i = 0; i < len && o + 2 < cap; i++) {
-        buf[o++] = digits[i];
-        if (i >= start && i + 1 < intEnd && (intEnd - i - 1) % 3 == 0) buf[o++] = ',';
+    int64_t need = 0;
+    for (i = 0; i < len; i++) {
+        int comma = i >= start && i + 1 < intEnd && (intEnd - i - 1) % 3 == 0;
+        need += 1 + comma;
+        if (o + 2 < cap) {
+            buf[o++] = digits[i];
+            if (comma) buf[o++] = ',';
+        }
     }
     buf[o] = 0;
-    return o;
+    return need;                                     /* the length it needs (rt_format_number clamps) */
 }
 
 /* The decimal digits of v (a '-' first when negative), zero-terminated, into buf, which has room for 21 bytes;
@@ -1367,7 +1672,7 @@ int64_t rt_format_int(char* buf, int64_t v)
 }
 
 /* An integer in decimal with at least `digits` digits (zeros in front; the '-' before them), zero-terminated into
- * buf (cap bytes); returns its length. */
+ * buf (cap bytes, at least 2); returns the length it needs (more than written when cut; rt_format_number clamps). */
 static int64_t rt_format_digits(char* buf, int64_t cap, int64_t i, int digits)
 {
     char tmp[24];
@@ -1378,7 +1683,7 @@ static int64_t rt_format_digits(char* buf, int64_t cap, int64_t i, int digits)
     for (k = 0; k < zeros && o + 1 < cap; k++) buf[o++] = '0';
     for (k = neg; k < n && o + 1 < cap; k++) buf[o++] = tmp[k];
     buf[o] = 0;
-    return o;
+    return neg + zeros + (n - neg);
 }
 
 /* AppendF's alignment of one placeholder: p holds the formatted value (n bytes) with room after it for |width| more
@@ -1406,8 +1711,9 @@ int64_t rt_format_align(char* p, int64_t n, int64_t width)
  * 7), N fixed with ',' between thousands (2 decimals, an integer 0), D decimal with at least that many digits, X / x
  * hex digits (upper / lower case) and B binary digits, at least that many. D, X and B round a float to an integer;
  * X and B of a negative integer give its 64-bit two's complement. An empty or unknown spec writes the plain form
- * (String.Append's). */
-int64_t rt_format_number(char* buf, int64_t cap, int32_t kind, int64_t i, double d, const char* spec, int64_t specLen)
+ * (String.Append's). rt_format_number_raw returns the length the text needs (snprintf's), which may exceed cap - 1;
+ * rt_format_number clamps it (Security-Review.md finding 13). */
+static int64_t rt_format_number_raw(char* buf, int64_t cap, int32_t kind, int64_t i, double d, const char* spec, int64_t specLen)
 {
     char letter = specLen > 0 ? spec[0] : 0;
     int prec = -1;
@@ -1454,14 +1760,38 @@ int64_t rt_format_number(char* buf, int64_t cap, int32_t kind, int64_t i, double
         int bits = 1, o = 0, b;
         while (bits < 64 && (u >> bits) != 0) bits++;
         if (prec > bits) bits = prec > 64 ? 64 : prec;
-        for (b = bits - 1; b >= 0; b--) buf[o++] = (char)('0' + ((u >> b) & 1u));
+        for (b = bits - 1; b >= 0 && o + 1 < cap; b--) buf[o++] = (char)('0' + ((u >> b) & 1u));
         buf[o] = 0;
-        return o;
+        return bits;                                 /* the length it needs (more than o when cut) */
     }
     default:
         if (kind == 0) return rt_format_digits(buf, cap, i, 1);
         return snprintf(buf, (size_t)cap, kind == 2 ? "%.7g" : "%.15g", d);
     }
+}
+
+/* The number's text never runs past buf: a length the buffer could not hold is cut to cap - 1 (the text is then
+ * cut too, snprintf and the loops above stop at cap). The core always passes 512, which every format fits, so a
+ * cut is a runtime bug: Debug stops with fatal error 13 naming the lengths, Release returns the cut text. */
+int64_t rt_format_number(char* buf, int64_t cap, int32_t kind, int64_t i, double d, const char* spec, int64_t specLen)
+{
+    int64_t n;
+    if (cap < 2) {
+        if (cap > 0) buf[0] = 0;
+        return 0;
+    }
+    n = rt_format_number_raw(buf, cap, kind, i, d, spec, specLen);
+    if (n < 0) n = 0;
+    if (n > cap - 1) {
+#ifdef TREADLE_DEBUG
+        char msg[160];
+        snprintf(msg, sizeof msg, "a number's text needs %lld bytes, its buffer holds %lld (rt_format_number)", (long long)n, (long long)(cap - 1));
+        rt_fatal(13, NULL, msg);
+#endif
+        n = cap - 1;
+    }
+    buf[n] = 0;
+    return n;
 }
 
 /* ---- UTF-8 */
@@ -2414,6 +2744,9 @@ static void rt_thread_run(rt_thread* t)
 {
     rt_cur_thread = t;
     rt_cur_index = t->index;
+#ifdef TREADLE_DEBUG
+    rt_dbg_thread_begin(t->index);                   /* its own live list (docs/Threads.md 5) */
+#endif
     __atomic_store_n(&t->sysid, rt_now_id(), __ATOMIC_RELEASE);
     rt_name_this_thread(rt_thread_index_name(t->index));
     rt_debug_name_thread(t->index);
@@ -2425,6 +2758,9 @@ static void rt_thread_run(rt_thread* t)
         t->body = NULL;
         rt_delete_object(d);                         /* the body is the thread's: deleted on the thread */
     }
+#ifdef TREADLE_DEBUG
+    rt_dbg_thread_end();                             /* its live blocks to the orphan list */
+#endif
     __atomic_store_n(&t->state, 2, __ATOMIC_RELEASE);
     rt_thread_release(t);
 }
@@ -2447,7 +2783,7 @@ void* rt_thread_new(const char* name, int64_t len, int64_t stackSize, void* owne
 
 static int rt_thread_launch(rt_thread* t)
 {
-    __atomic_store_n(&rt_threads_used, 1, __ATOMIC_SEQ_CST);   /* the Debug allocator locks from now on */
+    __atomic_store_n(&rt_threads_used, 1, __ATOMIC_SEQ_CST);   /* the Debug allocator keeps per-thread lists from now on */
     __atomic_add_fetch(&t->refs, 1, __ATOMIC_ACQ_REL);
     t->started = 1;
     t->state = 1;

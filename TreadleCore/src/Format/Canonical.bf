@@ -161,7 +161,7 @@ namespace Treadle.Format
 				return .Changed;
 			if (old && !Migrations.BackupOnce(path, version))
 			{
-				outError.Set(scope $"the backup {path}.v{version}.bak cannot be written");
+				outError.Set(scope $"the backup of {path} (.v{version}.bak) cannot be written");
 				return .Failed;
 			}
 			if (File.WriteAllText(path, canon) case .Err)

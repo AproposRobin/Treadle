@@ -984,33 +984,37 @@ func M2.Consts.Run() void static sheet "k0002" display "M2.Consts.Run"
 		%_38 = make Core.Span<int> %_36 %_37 @c8.value
 		%_39 = const int 3 @c9.index
 		%_40 = extract int* %_38 0 @c9.value
-		%_41 = elem.addr int* %_40 %_39 @c9.value
-		%_42 = load int %_41 @c9.value
-		call void Core.Console.WriteLine(int) %_42 @d1
+		%_41 = extract int %_38 1 @c9.value
+		boundscheck %_38 %_39 %_41 @c9.value
+		%_42 = elem.addr int* %_40 %_39 @c9.value
+		%_43 = load int %_42 @c9.value
+		call void Core.Console.WriteLine(int) %_43 @d1
 		br b19
 	block b19
-		%_43 = global.addr StringView[3]* M2.Consts.Names @d2.value
-		%_44 = cast StringView* %_43 @d2.value
-		%_45 = const int 3 @d2.value
-		%_46 = make Core.Span<StringView> %_44 %_45 @d2.value
-		%_47 = extract int %_46 1 @d3.value
-		call void Core.Console.WriteLine(int) %_47 @d4
+		%_44 = global.addr StringView[3]* M2.Consts.Names @d2.value
+		%_45 = cast StringView* %_44 @d2.value
+		%_46 = const int 3 @d2.value
+		%_47 = make Core.Span<StringView> %_45 %_46 @d2.value
+		%_48 = extract int %_47 1 @d3.value
+		call void Core.Console.WriteLine(int) %_48 @d4
 		br b20
 	block b20
-		%_48 = global.addr StringView[3]* M2.Consts.Names @d5.value
-		%_49 = cast StringView* %_48 @d5.value
-		%_50 = const int 3 @d5.value
-		%_51 = make Core.Span<StringView> %_49 %_50 @d5.value
-		%_52 = const int 1 @d6.index
-		%_53 = extract StringView* %_51 0 @d6.value
-		%_54 = elem.addr StringView* %_53 %_52 @d6.value
-		%_55 = load StringView %_54 @d6.value
-		intrinsic void console.writeline %_55 @d7
+		%_49 = global.addr StringView[3]* M2.Consts.Names @d5.value
+		%_50 = cast StringView* %_49 @d5.value
+		%_51 = const int 3 @d5.value
+		%_52 = make Core.Span<StringView> %_50 %_51 @d5.value
+		%_53 = const int 1 @d6.index
+		%_54 = extract StringView* %_52 0 @d6.value
+		%_55 = extract int %_52 1 @d6.value
+		boundscheck %_52 %_53 %_55 @d6.value
+		%_56 = elem.addr StringView* %_54 %_53 @d6.value
+		%_57 = load StringView %_56 @d6.value
+		intrinsic void console.writeline %_57 @d7
 		br b21
 	block b21
-		%_56 = global.addr int* M2.Consts.Rows @d9.x
-		%_57 = call int M2.Consts.Twice(int*) %_56 @d9.result
-		call void Core.Console.WriteLine(int) %_57 @f1
+		%_58 = global.addr int* M2.Consts.Rows @d9.x
+		%_59 = call int M2.Consts.Twice(int*) %_58 @d9.result
+		call void Core.Console.WriteLine(int) %_59 @f1
 		br b22
 	block b22
 		region.exit r0 @f2

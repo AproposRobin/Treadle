@@ -673,6 +673,10 @@ namespace Treadle.Compiler
 					return .Text;
 				if (t.Sym.Kind == .Enum && !t.Sym.HasPayload)
 					return .Enum;
+				// a core math struct: its fields inline (Vec3, Color, ...)
+				let mk = PinValue.MathValueKind(t.Sym.FullName, current, pinName);
+				if (mk != .None)
+					return mk;
 				return .None;
 			default:
 				return .None;

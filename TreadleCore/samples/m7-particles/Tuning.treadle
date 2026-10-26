@@ -1,0 +1,89 @@
+# treadle 1
+type Tuning class
+	namespace Particles
+	static
+	doc "The constants of the simulation: particle counts, chunking, the step, the forces, the world and the window."
+
+field CountA int
+	const
+	init 100000
+	doc "Particles of emitter A (float4 lanes in float arrays, Vector.Load / Store)."
+
+field CountB int
+	const
+	init 100000
+	doc "Particles of emitter B (Vec3 arrays)."
+
+field ChunksA int
+	const
+	init 32
+	doc "Chunks emitter A is cut into for Parallel.For (one chunk is one call of the body)."
+
+field ChunksB int
+	const
+	init 32
+
+field Chunks int
+	const
+	init ChunksA + ChunksB
+	doc "All chunks of a step."
+
+field Dt float
+	const
+	init 1.0f / 60.0f
+	doc "The fixed step: 60 steps are one simulated second."
+
+field Gravity float4
+	const
+	init float4(0, -9.81f, 0, 0)
+
+field Drag float
+	const
+	init 0.35f
+	doc "Velocity lost per second, as a fraction."
+
+field Repel float
+	const
+	init 900.0f
+	doc "Strength of the moving repelling point: the push is d * Repel / (|d|^2 + Soft)."
+
+field Soft float
+	const
+	init 25.0f
+
+field Restitution float
+	const
+	init 0.8f
+	doc "What a bounce keeps of the velocity."
+
+field Half float
+	const
+	init 50.0f
+	doc "Half the size of the world box (centred on the origin)."
+
+field BurstFrames int
+	const
+	init 120
+	doc "A burst every 2 s of simulated time."
+
+field Width int
+	const
+	init 960
+
+field Height int
+	const
+	init 600
+
+field Batch int
+	const
+	init 8192
+	doc "Points per SDL_RenderDrawPoints call."
+
+field Projectors int
+	const
+	init 4
+	doc "Named threads that project the particles to the screen each frame."
+
+field Seed int
+	const
+	init 7

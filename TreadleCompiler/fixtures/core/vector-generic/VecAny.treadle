@@ -1,0 +1,22 @@
+# treadle 1
+type VecAny class
+	namespace Cx
+	static
+	generic T vector
+	doc "A generic function over any vector type (`T : vector`): T + T."
+
+function h001 Add
+	static
+	pure
+	returns T
+	doc "a + b, lane by lane."
+param a T
+param b T
+sheet body
+node a1 Entry
+node a2 Operator +
+node a3 Return
+wire a1.a a2.a
+wire a1.b a2.b
+wire a1.then a3.in
+wire a2.result a3.value

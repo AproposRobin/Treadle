@@ -1260,7 +1260,9 @@ namespace Treadle.Backend.Emit
 			String i = scope .();
 			Index64(op.Args[1], i);
 			String len = scope .();
-			if (arr.Type.Kind == .Array)
+			if (op.Args.Count >= 3)
+				Index64(op.Args[2], len); // `boundscheck %span %i %len`: a Span's length (Compiler.md 6)
+			else if (arr.Type.Kind == .Array)
 			{
 				String ao = scope .();
 				L.ArrayObject(arr.Type.Elem, ao);
@@ -2308,6 +2310,11 @@ namespace Treadle.Backend.Emit
 
 		void EmitIntrinsic(IROp op, StringView r)
 		{
+			if (op.Sub != null && op.Sub.StartsWith("kernel."))
+			{
+				EmitKernelIntrinsic(op, r); // EmitKernel.bf: Kernel.Shared (GPU-Compute.md)
+				return;
+			}
 			if (op.Type.IsVector || (!op.Args.IsEmpty && op.Args[0].Type.IsVector))
 			{
 				EmitVectorIntrinsic(op, r); // EmitVector.bf

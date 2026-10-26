@@ -197,7 +197,15 @@ namespace Treadle.Editor
 			mApp.SheetChain(mg, chain);
 			List<String> labels = scope .();
 			defer { ClearAndDeleteItems!(labels); }
-			labels.Add(new String(mg.Doc.Header.Name));
+			// "Dog : Animal": the type and its base class.
+			String typeLabel = new String(mg.Doc.Header.Name);
+			if (mg.Doc.Header.Kind == .Class && mg.Doc.Header.Base != null && !mg.Doc.Header.Base.IsNone)
+			{
+				String b = mg.Doc.Header.Base.ToString(.. scope String());
+				let dot = b.LastIndexOf('.');
+				typeLabel.AppendF(" : {}", (dot >= 0 && !b.Contains('<')) ? b.Substring(dot + 1) : (StringView)b);
+			}
+			labels.Add(typeLabel);
 			for (let sh in chain)
 				labels.Add((sh.Role == .Lambda) ? new $"Lambda {sh.LambdaNode}" : new String(sh.Name));
 			for (let l in labels)

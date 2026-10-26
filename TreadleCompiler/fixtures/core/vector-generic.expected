@@ -1,0 +1,9 @@
+# Generic functions over vector types and the text of vectors (VectorFormat, AppendF)
+== exit
+0
+== stdout
+(2, 4, 6, 8)
+(3, 5, 7, 9)
+10
+(11, 22, 33, 44)
+m = (true, true, false, false), v = (1, 2, 3, 4)

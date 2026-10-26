@@ -65,6 +65,36 @@ namespace Treadle.Compiler
 
 		DiagSite SiteOf(TypeSym t, StringView member = "") => .(t.FullName, member, "", t.Path);
 
+		/// Every variable of a member has a type (T1078, on the variable: `newVar needs a type`): a field's
+		/// or property's, each input's and output's, each Local Variable's and each `const` generic
+		/// parameter's. Without one the variable would reach the Sheet IR untyped (a slot of no type the
+		/// back end cannot read); with the error the build stops at Validate.
+		void NeedTypes(MemberDecl d, in NameCtx c)
+		{
+			void Need(TypeRef r, StringView kind, StringView name, StringView what, in NameCtx c)
+			{
+				if (r != null && !r.IsNone)
+					return;
+				let diag = Error("T1078", c.Site, "", "", scope $"{name} needs a type: choose one for the {what} in Properties", .Declare);
+				diag?.Variable.Set(scope $"{kind}:{name}");
+			}
+			switch (d.Kind)
+			{
+			case .Field: Need(d.Type, "field", d.Name, "variable", c);
+			case .Property: Need(d.Type, "field", d.Name, "property", c);
+			default:
+			}
+			for (let p in d.Params)
+				Need(p.Type, (p.Mode == .Out) ? "out" : "param", p.Name, (p.Mode == .Out) ? "output" : "input", c);
+			for (let o in d.Outs)
+				Need(o.Type, "out", o.Name, "output", c);
+			for (let l in d.Locals)
+				Need(l.Type, "local", l.Name, "Local Variable", c);
+			for (let g in d.Generics)
+				if (g.IsConst)
+					Need(g.ConstType, "generic", g.Name, "generic parameter", c);
+		}
+
 		void DeclareType(SourceUnit u)
 		{
 			let h = u.Doc.Header;
@@ -172,6 +202,7 @@ namespace Treadle.Compiler
 					case "interface": p.IsInterface = true;
 					case "delete": p.IsDelete = true;
 					case "new": p.IsNew = true;
+					case "vector": p.IsVector = true;
 					}
 				case .Operator:
 					StringView op = k.Word;
@@ -184,6 +215,12 @@ namespace Treadle.Compiler
 						p.Operators.Add(new String(op));
 				case .Type:
 					let t = Resolve(k.Type, c);
+					// `vector float`: the lane type of a vector constraint (a number or bool after `vector`)
+					if (t != null && narrowing == null && p.IsVector && p.VectorElement == null && (t.IsNumeric || t.Kind == .Bool))
+					{
+						p.VectorElement = t;
+						break;
+					}
 					if (t != null && !t.IsError)
 					{
 						if (narrowing != null)
@@ -527,6 +564,7 @@ namespace Treadle.Compiler
 					case "Obsolete": m.Obsolete = new String(a.Args.IsEmpty ? "" : (StringView)a.Args[0]);
 					case "ExpandEnumAsFlow": m.ExpandAsFlow = true;
 					case "Variadic": m.Variadic = true;
+					case "Kernel": KernelRules.Mark(m, t, d.Name); // Kernel.bf (GPU-Compute.md)
 					case "Export":
 						// `[Export("name")]` (the C name; default the function's name), a second
 						// argument (the calling convention) is the platform's C one on x64
@@ -562,6 +600,8 @@ namespace Treadle.Compiler
 					if (InWordList(u.Set.Pure, d.Name))
 						m.Pure = true;
 				}
+				if (!u.IsCDecl)
+					NeedTypes(d, c);
 				switch (d.Kind)
 				{
 				case .Field:
@@ -860,6 +900,12 @@ namespace Treadle.Compiler
 				for (let v in t.VTable)
 					if (v.Abstract && !v.HasBody)
 						t.Abstract = true;
+				// A class not marked Abstract must override every abstract function of its bases
+				// (the editor lists them under Required overrides).
+				if (t.Decl != null && !t.Decl.Abstract)
+					for (let v in t.VTable)
+						if (v.Abstract && !v.HasBody && v.Owner != t)
+							Error("T1053", SiteOf(t), "", "", scope $"{t.Name} does not override {v.Owner.Name}.{v.GetSignature(.. scope .())}, which is abstract: implement it (Outline > Required overrides) or mark {t.Name} Abstract", .Declare);
 			}
 			if (t.Kind == .Interface)
 			{

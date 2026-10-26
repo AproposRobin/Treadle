@@ -31,6 +31,10 @@ namespace Treadle.Editor
 		/// configuration the project names, else Debug),
 		/// 1 = Debug, 2 = Release.
 		public static int32 DefaultConfig = 0;
+		/// Off (default): problems appear after Validate (Shift+F7), Build or Run, and an edit dims the
+		/// ones shown as stale. On: every edit checks the edited Sheet and shows its problems at once
+		/// (Editor-Model.md 7.1).
+		public static bool ValidateAfterEdits = false;
 
 		public static void GetPath(String outPath)
 		{
@@ -57,6 +61,7 @@ namespace Treadle.Editor
 			IdlePacing = p.GetBool("idlePacing", IdlePacing);
 			RecoverySeconds = (int32)Math.Clamp(p.GetNumber("recoverySeconds", RecoverySeconds), 0, 3600);
 			DefaultConfig = (int32)Math.Clamp(p.GetNumber("defaultConfig", DefaultConfig), 0, 2);
+			ValidateAfterEdits = p.GetBool("validateAfterEdits", ValidateAfterEdits);
 		}
 
 		public static void Save()
@@ -72,6 +77,7 @@ namespace Treadle.Editor
 			p.Set("showToasts", Json.NewBool(ShowToasts));
 			p.Set("idlePacing", Json.NewBool(IdlePacing));
 			p.Set("recoverySeconds", Json.NewNumber(RecoverySeconds));
+			p.Set("validateAfterEdits", Json.NewBool(ValidateAfterEdits));
 			p.Set("defaultConfig", Json.NewNumber(DefaultConfig));
 			Settings.Save();
 		}
@@ -251,6 +257,11 @@ namespace Treadle.Editor
 								StringView[3] cfgs = .("Automatic", "Debug", "Release");
 								if (PropertyGrid.ComboRow("Default Configuration", "##defcfg", ref Prefs.DefaultConfig, cfgs, "Build configuration for projects you have not chosen one for. Automatic: the configuration the project names, else Debug. The toolbar's configuration menu overrides it per project."))
 									changed = true;
+								if (PropertyGrid.CheckRow("Validate automatically after edits", "##autovalidate", ref Prefs.ValidateAfterEdits, "Off (default): errors and warnings appear when you press Validate (Shift+F7), Build or Run; after an edit the ones shown are dimmed until the next Validate.\nOn: every edit checks the edited Sheet and shows its problems at once."))
+								{
+									ValidateAfterEditsChanged();
+									changed = true;
+								}
 							}
 						case 4:
 							DrawNodeHotkeyPrefs();

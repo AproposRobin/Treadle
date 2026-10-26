@@ -1,0 +1,24 @@
+# treadle 1
+# expect n4 - T2083
+type CompoundResult class
+	namespace Broken
+	static
+	doc "A compound Set keeps the variable's type: Mat4 * Vec4 gives a Vec4, so `set op *=` on a Mat4 with a Vec4 is refused."
+
+function f1 Scale
+	static
+local m Mat4
+sheet body
+node n1 Entry
+node n2 Get Core.Mat4.Identity
+node n3 Make Core.Vec4
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+	in W 1.0f
+node n4 Set local:m
+	set op *=
+node n5 Return
+wire n1.then n4.in
+wire n3.value n4.value
+wire n4.then n5.in

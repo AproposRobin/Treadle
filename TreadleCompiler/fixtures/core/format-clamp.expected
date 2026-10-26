@@ -1,0 +1,9 @@
+# The number formatter clamps to its buffer: Debug fatal error 13, Release the cut length
+== exit Debug
+3
+== exit Release
+0
+== stdout Release
+3
+== stderr Debug
+fatal: a number's text needs 6 bytes, its buffer holds 3 (rt_format_number)

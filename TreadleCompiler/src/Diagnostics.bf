@@ -41,6 +41,9 @@ namespace Treadle.Compiler
 		public String Node = new .() ~ delete _;
 		/// The pin's format name; "" when the message is about the whole node.
 		public String Pin = new .() ~ delete _;
+		/// A variable of the member the message is about, as `local:<name>`, `param:<name>`, `out:<name>`,
+		/// `field:<name>` or `generic:<name>` (a missing type: the editor selects it in the Outline); "" otherwise.
+		public String Variable = new .() ~ delete _;
 		public String File = new .() ~ delete _;
 		public int32 Line;
 		/// Chains: instantiation sites, the other Delete of a double free, the Local and its reader.
@@ -77,6 +80,8 @@ namespace Treadle.Compiler
 				outText.AppendF(" node {}", Node);
 			if (!Pin.IsEmpty)
 				outText.AppendF(" pin {}", Pin);
+			if (!Variable.IsEmpty)
+				outText.AppendF(" {}", Variable);
 			outText.AppendF(": {} {}: {}", (Severity == .Error) ? "error" : ((Severity == .Warning) ? "warning" : "note"), Code, Message);
 		}
 	}

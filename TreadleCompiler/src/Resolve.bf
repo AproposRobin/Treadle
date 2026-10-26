@@ -316,6 +316,20 @@ namespace Treadle.Compiler
 				why.Append("it must be a class or a struct with a constructor that takes no inputs (the `new` constraint)");
 				return false;
 			}
+			if (p.IsVector)
+			{
+				let elem = (argParam != null) ? (argParam.IsVector ? argParam.VectorElement : null) : (arg.IsVector ? arg.Element : null);
+				if (!(arg.IsVector || (argParam != null && argParam.IsVector)))
+				{
+					why.Append("it must be a vector type (float4, int32x4, ...; the `vector` constraint)");
+					return false;
+				}
+				if (p.VectorElement != null && elem != p.VectorElement)
+				{
+					why.AppendF("it must be a vector of {} lanes (`vector {}`)", p.VectorElement.Name, p.VectorElement.Name);
+					return false;
+				}
+			}
 			for (let ct in p.TypeConstraints)
 			{
 				let want = Table.Subst(ct, map);
@@ -389,6 +403,11 @@ namespace Treadle.Compiler
 			case .Param:
 				let p = t.Param;
 				if (p.HasOperator(op))
+					return true;
+				// `T : vector`: the element-wise arithmetic every vector has; the bitwise operators
+				// when the lanes are named integers (`vector int32`). A comparison gives a lane mask,
+				// which a generic Sheet cannot name: Vector.Equal tests every lane.
+				if (p.IsVector && ((isArith && op != "%") || (isBits && p.VectorElement != null && p.VectorElement.IsInteger)))
 					return true;
 				if (ctxMember != null)
 				{

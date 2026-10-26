@@ -1,0 +1,50 @@
+# treadle 1
+type SplitVectorMain class
+	namespace Cx
+	static
+	doc "Split Pin on vector pins (Graph-Format.md 3.2): a Set of a float4 local split into its lanes value.x ... value.w with a literal each, a Get of it split into its lanes, the lanes written and added; and a float8 split into lane0 ... lane7."
+
+function m1 Main
+	static
+	returns int
+local v float4
+local w float8
+sheet body
+node a1 Entry
+node a2 Set local:v
+	split value float4
+	in value.x 1
+	in value.y 2
+	in value.z 3
+	in value.w 4
+node a3 Get local:v
+	split value float4
+node a4 Call Console.WriteLine(float)
+node a5 Call Console.WriteLine(float)
+node a6 Operator +
+node a7 Call Console.WriteLine(float)
+node a8 Set local:w
+	split value float8
+	in value.lane0 0.5
+	in value.lane7 8
+node a9 Get local:w
+	split value float8
+node b1 Operator +
+node b2 Call Console.WriteLine(float)
+node b3 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a4.in
+wire a3.value.w a4.value
+wire a4.then a5.in
+wire a3.value.y a5.value
+wire a5.then a7.in
+wire a3.value.x a6.a
+wire a3.value.z a6.b
+wire a6.result a7.value
+wire a7.then a8.in
+wire a8.then b2.in
+wire a9.value.lane0 b1.a
+wire a9.value.lane7 b1.b
+wire b1.result b2.value
+wire b2.then b3.in

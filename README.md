@@ -83,7 +83,7 @@ These pages ship in every package and appear in the editor's Help:
 | [Performance](docs/Performance.md) | The benchmark kernels against C, Debug against Release |
 | [Known issues](docs/Known-Issues.md) | The alpha's limits and what to do instead today |
 
-The notes for this release are in [docs/Release-Notes-0.1.0-alpha.md](docs/Release-Notes-0.1.0-alpha.md).
+The notes for this release are in [docs/Release-Notes-0.1.1-alpha.md](docs/Release-Notes-0.1.1-alpha.md) (the first alpha's: [docs/Release-Notes-0.1.0-alpha.md](docs/Release-Notes-0.1.0-alpha.md)).
 
 ## Status
 

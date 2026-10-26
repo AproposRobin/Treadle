@@ -1,0 +1,15 @@
+# tproj 1
+project M7Particles
+	kind windowed
+	entry Particles.Program
+	version 0.1.0
+	namespace Particles
+cimport sdl2.cimport
+config Debug
+	checks on
+	optimize 0
+	simd x86-64-v2
+config Release
+	optimize 2
+	checks off
+	simd x86-64-v2

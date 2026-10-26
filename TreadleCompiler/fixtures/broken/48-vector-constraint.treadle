@@ -1,0 +1,43 @@
+# treadle 1
+# expect n2 - T1007
+# expect n4 b T2320
+type VectorConstraint class
+	namespace Broken
+	static
+	doc "`T : vector` takes vector types only, and a number beside a T splats only when the constraint names the lanes (`vector float`)."
+
+function f1 Pick
+	static
+	generic T vector
+	pure
+	returns T
+param a T
+sheet body
+node m1 Entry
+node m2 Return
+wire m1.a m2.value
+wire m1.then m2.in
+
+function f2 Scale
+	static
+	generic T vector
+	pure
+	returns T
+param a T
+sheet body
+node n1 Entry
+node n3 Return
+node n4 Operator *
+	in b 2
+wire n1.then n3.in
+wire n4.result n3.value
+wire n1.a n4.a
+
+function f3 Main
+	static
+sheet body
+node n0 Entry
+node n2 Call VectorConstraint.Pick
+	in a 5
+node n5 Return
+wire n0.then n5.in

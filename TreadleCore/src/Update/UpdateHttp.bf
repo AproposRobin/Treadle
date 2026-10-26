@@ -8,9 +8,14 @@ using System.Threading;
 
 namespace Treadle.Update
 {
-	/// HTTPS GETs for the updater through the system's curl (Windows 10 and later ship %SystemRoot%\System32\curl.exe;
-	/// Linux desktops ship /usr/bin/curl), so no TLS code is linked into the editor. Runs on the updater's worker thread
-	/// only. HTTPS only, redirects followed (GitHub's release downloads redirect to its file host), a size cap, timeouts.
+	/// HTTPS GETs for the updater through the system's curl, started by its absolute path with the process API (never a
+	/// shell): Windows 10 and later ship %SystemRoot%\System32\curl.exe, Linux desktops /usr/bin/curl. No TLS code is
+	/// linked into the editor, and the system's certificate store and proxy settings apply. Runs on the updater's worker
+	/// thread only.
+	///
+	/// Rules: https only (`--proto =https`); redirects are followed here, one hop at a time (at most 5), and only to the
+	/// GitHub hosts of ReleaseChannel.IsAllowedHost (github.com sends release downloads to its file host); a size cap;
+	/// a connect timeout and a total (check) or stall (download) timeout.
 	public static class UpdateHttp
 	{
 		public enum Outcome
@@ -25,6 +30,8 @@ namespace Treadle.Update
 			TooLarge,
 			/// Cancelled by the caller.
 			Cancelled,
+			/// A redirect to a host that is not GitHub's, or to something that is not https.
+			BadRedirect,
 			/// curl failed in another way, or wrote no headers.
 			Failed
 		}
@@ -35,17 +42,14 @@ namespace Treadle.Update
 			public int32 Status;
 			public int32 CurlExit;
 			public String ETag = new .() ~ delete _;
+			public String Location = new .() ~ delete _;
 		}
 
-		/// The curl to use: TREADLE_UPDATE_CURL (tests), else the system's own.
+		public const int MaxRedirects = 5;
+
+		/// The system's curl, by absolute path only.
 		public static bool FindCurl(String outPath)
 		{
-			String env = scope .();
-			if (Environment.GetEnvironmentVariable("TREADLE_UPDATE_CURL", env) case .Ok && !env.IsEmpty && File.Exists(env))
-			{
-				outPath.Set(env);
-				return true;
-			}
 #if BF_PLATFORM_WINDOWS
 			String root = scope .();
 			if (Environment.GetEnvironmentVariable("SystemRoot", root) case .Err || root.IsEmpty)
@@ -57,7 +61,7 @@ namespace Treadle.Update
 				return true;
 			}
 #else
-			StringView[3] candidates = .("/usr/bin/curl", "/bin/curl", "/usr/local/bin/curl");
+			StringView[2] candidates = .("/usr/bin/curl", "/bin/curl");
 			for (let p in candidates)
 			{
 				if (File.Exists(p))
@@ -83,7 +87,7 @@ namespace Treadle.Update
 			args.Append('"');
 		}
 
-		/// Reads the status and ETag of the last response in a curl -D file (one block per redirect hop).
+		/// Reads the status, ETag and Location of the last response in a curl -D file.
 		public static void ParseHeaders(StringView text, Response response)
 		{
 			for (var line in text.Split('\n'))
@@ -93,6 +97,7 @@ namespace Treadle.Update
 				{
 					response.Status = 0;
 					response.ETag.Clear();
+					response.Location.Clear();
 					int sp = line.IndexOf(' ');
 					if (sp > 0)
 					{
@@ -110,14 +115,52 @@ namespace Treadle.Update
 					continue;
 				var name = line.Substring(0, colon);
 				name.Trim();
+				var v = line.Substring(colon + 1);
+				v.Trim();
 				if (name.Equals("etag", true))
 				{
-					var v = line.Substring(colon + 1);
-					v.Trim();
 					if (v.Length <= 200)
 						response.ETag.Set(v);
 				}
+				else if (name.Equals("location", true))
+				{
+					if (v.Length <= 4096)
+						response.Location.Set(v);
+				}
 			}
+		}
+
+		/// The host of an https:// URL ("" when it is not one).
+		public static void HostOf(StringView url, String outHost)
+		{
+			if (!url.StartsWith("https://"))
+				return;
+			var rest = url.Substring(8);
+			int end = rest.Length;
+			for (int i < rest.Length)
+			{
+				let c = rest[i];
+				if (c == '/' || c == '?' || c == '#' || c == ':' || c == '@' || c == '\\')
+				{
+					end = i;
+					// user-info ("a@b") and explicit ports are never accepted
+					if (c == '@' || c == ':')
+						return;
+					break;
+				}
+			}
+			outHost.Set(rest.Substring(0, end));
+		}
+
+		/// True when `url` is https on one of GitHub's hosts (ReleaseChannel.IsAllowedHost).
+		public static bool IsAllowedUrl(StringView url)
+		{
+			for (let c in url.RawChars)
+				if (c <= ' ' || c == '"' || c >= (char8)0x7F)
+					return false;
+			String host = scope .();
+			HostOf(url, host);
+			return !host.IsEmpty && ReleaseChannel.IsAllowedHost(host);
 		}
 
 		static int64 FileLength(StringView path)
@@ -129,6 +172,7 @@ namespace Treadle.Update
 		}
 
 		/// GET `url` into `outFile`. `etag` (may be empty) is sent as If-None-Match; a 304 leaves `outFile` alone.
+		/// `maxSeconds` > 0 caps the whole request; 0 = a download, stopped when nothing arrives for `connectSeconds`.
 		/// `onProgress(received)` is called about four times a second while the body arrives; `cancel` set to true stops it.
 		public static void Get(StringView url, StringView outFile, StringView etag, int64 maxBytes, int32 connectSeconds, int32 maxSeconds,
 			bool githubApi, Response response, delegate void(int64 received) onProgress = null, bool* cancel = null)
@@ -139,16 +183,44 @@ namespace Treadle.Update
 				response.Outcome = .NoClient;
 				return;
 			}
+			String current = scope .(url);
+			for (int hop = 0; hop <= MaxRedirects; hop++)
+			{
+				if (!IsAllowedUrl(current))
+				{
+					response.Outcome = .BadRedirect;
+					return;
+				}
+				GetOnce(curl, current, outFile, (hop == 0) ? etag : "", maxBytes, connectSeconds, maxSeconds, githubApi, response, onProgress, cancel);
+				if (response.Outcome != .Ok)
+					return;
+				let s = response.Status;
+				if (s != 301 && s != 302 && s != 303 && s != 307 && s != 308)
+					return;
+				if (response.Location.IsEmpty)
+				{
+					response.Outcome = .Failed;
+					return;
+				}
+				current.Set(response.Location);
+			}
+			response.Outcome = .BadRedirect; // too many hops
+		}
+
+		static void GetOnce(StringView curl, StringView url, StringView outFile, StringView etag, int64 maxBytes, int32 connectSeconds, int32 maxSeconds,
+			bool githubApi, Response response, delegate void(int64 received) onProgress, bool* cancel)
+		{
 			String headerFile = scope .(outFile);
 			headerFile.Append(".headers");
 			File.Delete(headerFile).IgnoreError(); // absent is fine
+			File.Delete(outFile).IgnoreError(); // a hop never appends to an earlier hop's body
 			String args = scope .();
-			args.Append("-sS -L --max-redirs 5 --proto =https --proto-redir =https");
+			args.Append("-sS --proto =https");
 			args.AppendF(" --connect-timeout {}", connectSeconds);
 			if (maxSeconds > 0)
 				args.AppendF(" --max-time {}", maxSeconds);
 			else
-				args.Append(" --speed-limit 1024 --speed-time 60");
+				args.AppendF(" --speed-limit 1 --speed-time {}", Math.Max(connectSeconds, 10));
 			if (maxBytes > 0)
 				args.AppendF(" --max-filesize {}", maxBytes);
 			args.Append(" -A");
@@ -157,6 +229,8 @@ namespace Treadle.Update
 			{
 				args.Append(" -H");
 				Quote(args, "Accept: application/vnd.github+json");
+				args.Append(" -H");
+				Quote(args, "X-GitHub-Api-Version: 2022-11-28");
 			}
 			if (!etag.IsEmpty)
 			{

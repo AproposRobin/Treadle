@@ -346,6 +346,8 @@ namespace Treadle.Backend.IR
 				needArgs = 0;
 			default:
 			}
+			if (op.Kind == .BoundsCheck && op.Args.Count == 3)
+				needArgs = 3; // `boundscheck %span %i %len`: a Span's length given (Compiler.md 4)
 			if (needArgs >= 0 && op.Args.Count != needArgs)
 				err(scope $"{IRWriter.Mnemonic(op.Kind)} takes {needArgs} value{(needArgs == 1) ? "" : "s"}, has {op.Args.Count}");
 			switch (op.Kind)

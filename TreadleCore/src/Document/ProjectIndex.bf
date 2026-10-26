@@ -44,6 +44,13 @@ namespace Treadle.Document
 			Root.Set(root);
 			Extension.Set(ext);
 			ClearAndDeleteItems!(Files);
+			ClearAndDeleteItems!(mSidecars);
+			SidecarInfo info = scope .();
+			if (Sidecars.Find(scope $"{root}/.index", info))
+			{
+				mSidecars.Add(new String(info.LayoutDir));
+				mSidecars.Add(new String(info.BackupDir));
+			}
 			Scan(root, 0);
 			Version++;
 		}
@@ -63,6 +70,9 @@ namespace Treadle.Document
 				return Treadle.Format.FormatNames.IsTypeFile(path);
 			return path.EndsWith(Extension, .OrdinalIgnoreCase);
 		}
+
+		// The project's layout and backup folders: not source.
+		List<String> mSidecars = new .() ~ DeleteContainerAndItems!(_);
 
 		void Scan(StringView dir, int depth)
 		{
@@ -90,7 +100,12 @@ namespace Treadle.Document
 					continue;
 				String path = scope .();
 				e.GetFilePath(path);
-				Scan(path, depth + 1);
+				bool skip = false;
+				for (let s in mSidecars)
+					if (SamePath(s, path))
+						skip = true;
+				if (!skip)
+					Scan(path, depth + 1);
 			}
 		}
 

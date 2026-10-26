@@ -5,7 +5,7 @@ using Treadle.Document;
 
 namespace Treadle.Editor
 {
-	/// Ctrl+Tab: the list of open Sheets, most recently used first (the document switcher of other node
+	/// Ctrl+Tab: the list of open Sheets of the type in front, most recently used first (the document switcher of other node
 	/// editors). Ctrl+Tab opens it on the Sheet used before this one; Tab / Shift+Tab (Ctrl still held)
 	/// move down / up; releasing Ctrl opens the highlighted Sheet; Esc closes the list; a click on a row
 	/// opens that Sheet. A quick tap of Ctrl+Tab goes back and forth between the last two Sheets.
@@ -47,18 +47,19 @@ namespace Treadle.Editor
 			return null;
 		}
 
-		/// The open Sheet tabs, most recently used first (tabs never in front come last, in bar order).
+		/// The open Sheet tabs of the type in front, most recently used first (tabs never in front come last, in
+		/// bar order): Ctrl+Tab cycles the Sheets of one type, Ctrl+Shift+Page Down / Up the types.
 		public void SheetsByRecentUse(List<GraphTab> outTabs)
 		{
 			outTabs.Clear();
 			for (let uid in mTabMru)
 			{
 				let t = TabByUid(uid);
-				if (t != null && t.Doc != null && t.Doc.FindSheet(t.MethodKey) != null && !outTabs.Contains(t))
+				if (t != null && t.Doc == Doc && t.Doc.FindSheet(t.MethodKey) != null && !outTabs.Contains(t))
 					outTabs.Add(t);
 			}
 			for (let t in Tabs)
-				if (t.Doc != null && t.Doc.FindSheet(t.MethodKey) != null && !outTabs.Contains(t))
+				if (t.Doc == Doc && t.Doc.FindSheet(t.MethodKey) != null && !outTabs.Contains(t))
 					outTabs.Add(t);
 		}
 

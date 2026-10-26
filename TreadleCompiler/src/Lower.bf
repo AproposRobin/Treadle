@@ -302,15 +302,17 @@ namespace Treadle.Compiler
 		/// for a function pointer Lambda.
 		/// `owner` is the type instance the Sheet is lowered for (`Gen.Box<int>` in a generic type) and
 		/// `lambdaType` the Lambda's type with that instance's arguments.
-		public void LambdaKey(KType owner, StringView node, KType lambdaType, String o)
+		public void LambdaKey(KType owner, StringView node, KType lambdaType, String o, List<KType> methodArgs = null)
 		{
 			if (lambdaType.Kind == .Function)
 			{
 				KirWriter.Type(owner, o);
-				o.AppendF(".$lambda_{}(", node);
+				o.AppendF(".$lambda_{}", node);
+				MethodArgsSuffix(methodArgs, o);
+				o.Append('(');
 			}
 			else
-				o.AppendF("{}.Invoke(", Closure(owner, node).FullName);
+				o.AppendF("{}.Invoke(", Closure(owner, node, methodArgs).FullName);
 			for (let a in lambdaType.Args)
 			{
 				if (@a.Index > 0)
@@ -324,17 +326,19 @@ namespace Treadle.Compiler
 		/// for a non-generic owner, else `<Owner<Args>>.$lambda_<node>`, one per generic instance
 		/// (written in the definition's unit with the instance, so the back end shares it as it
 		/// does the instance's own functions).
-		public TypeSym Closure(KType owner, StringView node)
+		public TypeSym Closure(KType owner, StringView node, List<KType> methodArgs = null)
 		{
 			// An extension's Lambdas are named after the extension (its node ids are its own file's).
 			let ext = ClosureScope;
-			if (owner.Args.IsEmpty)
+			let perCall = methodArgs != null && !methodArgs.IsEmpty;
+			if (owner.Args.IsEmpty && !perCall)
 				return C.ClosureType(ext ?? owner.Sym, node);
 			String stem = scope .();
 			if (ext != null)
 				stem.AppendF("$lambda_{}_{}", ext.Name, node);
 			else
 				stem.AppendF("$lambda_{}", node);
+			MethodArgsSuffix(methodArgs, stem);
 			String name = scope .();
 			KirWriter.Type(owner, name);
 			name.AppendF(".{}", stem);
@@ -351,11 +355,28 @@ namespace Treadle.Compiler
 			return t;
 		}
 
+		/// A Lambda of a generic function (a core function lowered per instance, CoreLowering): the
+		/// function's own arguments after the Lambda's name (`Core.Parallel.$lambda_c3<int>`), one
+		/// closure class and one function per instance.
+		static void MethodArgsSuffix(List<KType> methodArgs, String o)
+		{
+			if (methodArgs == null || methodArgs.IsEmpty)
+				return;
+			o.Append('<');
+			for (let a in methodArgs)
+			{
+				if (@a.Index > 0)
+					o.Append(',');
+				KirWriter.Type(a, o);
+			}
+			o.Append('>');
+		}
+
 		/// The closure class of a Lambda node: `base Core.Delegate`, a field per capture (a pointer
 		/// to the variable for a by-ref capture), the capture types with the instance's arguments.
-		void ClosureDecl(SheetResult lr, KType inst, Dictionary<GenericParamSym, KType> map, String o)
+		public void ClosureDecl(SheetResult lr, KType inst, Dictionary<GenericParamSym, KType> map, String o, List<KType> methodArgs = null)
 		{
-			let cl = Closure(inst, lr.Sheet.LambdaNode);
+			let cl = Closure(inst, lr.Sheet.LambdaNode, methodArgs);
 			o.AppendF("\ntype {} class\n\tbase Core.Delegate\n", cl.FullName);
 			for (let cap in lr.Captures)
 			{
@@ -791,6 +812,8 @@ namespace Treadle.Compiler
 					let f = fl.Run();
 					KirWriter.Function(f, o);
 					delete f;
+					if (r.Member != null && r.Member.KernelEntry != null && !r.IsLambda)
+						KernelHelpers(r.Member, inst, o); // KernelLower.bf: its CPU and GPU dispatch functions
 				}
 		}
 

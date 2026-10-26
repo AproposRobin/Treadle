@@ -1,0 +1,12 @@
+# Device-resident buffers: 100 saxpy dispatches with one download, the same on a GpuStream from pinned memory, Kernel.RunCpu and float8 agree.
+== args Release
+16M
+== exit
+0
+== stdout
+GPU mismatches 0
+SIMD mismatches 0
+stream mismatches 0
+== stderr
+GPU:
+resident saxpy x100 over

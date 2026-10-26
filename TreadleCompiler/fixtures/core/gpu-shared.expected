@@ -1,0 +1,11 @@
+# Kernel.Shared and Kernel.Barrier: a block reduction and a tiled matrix multiply on the GPU and with Kernel.RunCpu (blocks on fibers) agree with CPU versions.
+== args Release
+big
+== exit
+0
+== stdout
+reduce mismatches 0
+matmul mismatches 0
+== stderr
+GPU:
+block reduction of

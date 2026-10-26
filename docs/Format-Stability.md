@@ -33,7 +33,7 @@ migration step) or, for names, through the alias table of section 4. Never silen
 | Id scheme | Node, member and group ids: a word of 1-8 chars `[a-z0-9]`, unique per file, never reused; the editor writes 5-char Crockford base32 ids | 2, 7 |
 | Canonical order | Members in declaration order, fixed key order per record, nodes by id, wires by destination then source, groups by id; one blank line between members | 3.1, 7 |
 | Unknown content | Unknown records, keys and comments kept and written back in place (type files, layout); an unknown node kind keeps its word (`Node.KindWord`) | 2 |
-| Sidecar separation | Meaning lives only in the type file; positions, knots, boxes, views and fold state only in `<file>.layout`. Deleting a layout never changes a program | 4 |
+| Sidecar separation | Meaning lives only in the type file; positions, knots, boxes, views and fold state only in the layout file (`layout/<path>.layout`, outside the source folders). Deleting a layout never changes a program | 4 |
 | Member references | `Type.Member`, `Type.Member(ParamTypes)`, `this.Member`, `local:` / `param:`, `C.<set>.<symbol>` | 2, 3.2 |
 
 ### 1.2 Frozen at 1.0
@@ -42,7 +42,7 @@ Everything in 1.1, plus:
 
 * **Type text** in tokens (`List<int>`, `int[4]`, `function:int(int)`, `(int,float)`), including the spelling
   of the built-in numeric types (decision 4 in section 6).
-* **The file extensions and header words** (`.treadle`, `.treadle.layout`, `.tproj`, `.tir`, `.cimport`, `.cdecl`; 3.4), with the old ones read forever.
+* **The file extensions and header words** (`.treadle`, `.layout`, `.tproj`, `.tir`, `.cimport`, `.cdecl`; 3.4), with the old ones read forever.
 * **The alias table is append-only** (section 4): a name that ever loaded keeps loading.
 * **The migration chain is complete**: every version ever written migrates to the current one (section 5).
 * **The `.cdecl` C records** and the `.cimport` keys (`header include define lib pure hide only category`,
@@ -52,7 +52,7 @@ Everything in 1.1, plus:
 
 | Item | State | Why it is open |
 |---|---|---|
-| File extensions and header words | `.treadle`, `.treadle.layout`, `.tproj`, `.tir`, `.cimport`, `.cdecl`, `# treadle 1` | Settled by the product rename (2026-10-25); the old names are read forever and `--format --migrate` renames them (3.4). Freeze at beta |
+| File extensions and header words | `.treadle`, `.layout` (in `layout/`), `.tproj`, `.tir`, `.cimport`, `.cdecl`, `# treadle 1` | Settled by the product rename (2026-10-25); the old names are read forever and `--format --migrate` renames them (3.4). Freeze at beta |
 | `group` record, node `split`, field `category` | Added 2026-10-25 without a bump | New; no real users yet. Shape fixed at beta |
 | Layout `node` / `collapsed` naming a group, `saved`, `pinned` | New | Layout is lenient (3.2), so lower stakes |
 | Project `kind`, config `optimize` / `checks` / `define` / `debugFormat` | On master kept and written back; Build reads only `debugFormat`. `wt/kind` makes Build read them with defaults (`kind console`; `optimize` 2 / 0 and `checks` off / on by config name; `debugFormat dwarf`) | The value sets (`optimize size`, `define NAME=value`) are new; freeze after `wt/kind` merges |
@@ -128,8 +128,8 @@ reader only ever knows the current version. Rules:
 * **Run on load**: every reader runs the chain through `TreadleCodec.Prepare` (type file, layout, project, C
   import set), so the compiler, the C import and the editor all read old files. `TypeDocument.Load` keeps
   `MigratedFrom` (and `LayoutMigratedFrom`), marks the document dirty and lists the step notes and a line
-  naming the backup in its load messages. The first save writes `<file>.v<old>.bak` beside the file (and
-  `<file>.layout.v<old>.bak`; one per old version, never overwritten: `Migrations.BackupOnce`), then the
+  naming the backup in its load messages. The first save writes `backup/<path>.v<old>.bak` (and
+  `backup/layout/<path>.layout.v<old>.bak`; one per old version, never overwritten: `Migrations.BackupOnce`), then the
   file at the current version.
 * **No step has shipped yet**: every file written so far is version 1. The `codec` self test registers a
   test-only step (`Migrations.SimulateBump(2, ...)`: a field's `doc` key renamed `summary`) and checks the
@@ -156,7 +156,7 @@ Treadle --format <file|folder>... [--migrate] [--check]
   with `.`, `build` folders and `format-history`) and writes the canonical form. Files already canonical are
   not touched.
 * `--migrate` also runs the migration chain on files below the current version, layout sidecars included,
-  and writes them at the current version after `<file>.v<old>.bak` (3.1). Without it an old-version file is
+  and writes them at the current version after `backup/<path>.v<old>.bak` (3.1). Without it an old-version file is
   reported (`old version <path>: format version V, this build writes N`) and not rewritten (exit 1).
 * `--check` writes nothing: exit 0 when every file is canonical and current, 1 with one line per file that is
   not (not canonical, or below the current version), also 1 when a file does not read.
@@ -179,6 +179,14 @@ Treadle --format <file|folder>... [--migrate] [--check]
   T0017, naming both; a `depends` path finds the project under either extension.
 * Not built: opening an old-extension project in the editor offering the same migration once. The editor
   reads and saves such files in place (their names are kept), so nobody is forced to migrate mid-branch.
+* **Layout and backup folders** (decided 2026-10-25, **built**): the layout file is no longer a sibling of the
+  type file. `layout/<relative path, extension dropped>.layout` and `backup/<relative path>.bak` under the project
+  folder (project keys `layoutDir` and `backupDir`; [Graph-Format.md 4](Graph-Format.md#4-layout-file-layoutpathtypelayout)),
+  so a graph can be run without its layout and the sources stay clean. This is a project-level path change, not a
+  change of the text of any file: the format version stays 1 and the `format-history/v1` corpus keeps its
+  beside-the-file layouts (it is never moved). Opening a project (and `--format --migrate <project>`) moves old
+  `<Type>.treadle.layout` / `.vtype.layout` files and format-file backups from beside the sources into the folders
+  once, keeping the newer file when both places have one.
 * `format-history/` keeps the old names and header words (the read-old corpus); the `codec` self test also
   migrates a copy of it under its old names and checks the result clean.
 

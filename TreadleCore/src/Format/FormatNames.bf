@@ -7,7 +7,7 @@ namespace Treadle.Format
 	/// `--format --migrate` renames old-extension files. The format version is not involved.
 	///
 	///   type file      .treadle          # treadle N          (old: .vtype, # vtype N; .cdecl carries the type header)
-	///   layout         .treadle.layout   # treadle-layout N   (old: .vtype.layout, # vtype-layout N)
+	///   layout         .layout           # treadle-layout N   (in the layout folder; old: beside the source as .treadle.layout / .vtype.layout, # vtype-layout N)
 	///   project        .tproj            # tproj N            (old: .vproject, # vproject N)
 	///   Sheet IR       .tir              # tir N              (old: .kir, # kir N)
 	///   C import set   .cimport          # cimport N          (unchanged)
@@ -44,8 +44,8 @@ namespace Treadle.Format
 
 		/// A type file (`.treadle`, `.vtype`; not a layout sidecar).
 		public static bool IsTypeFile(StringView path) => Ends(path, TypeExt) || Ends(path, OldTypeExt);
-		/// A layout sidecar (`.treadle.layout`, `.vtype.layout`).
-		public static bool IsLayoutFile(StringView path) => Ends(path, LayoutExt) || Ends(path, OldLayoutExt);
+		/// A layout file (`.layout` in the layout folder; `.treadle.layout` and `.vtype.layout` beside a source in old projects).
+		public static bool IsLayoutFile(StringView path) => Ends(path, ".layout");
 		/// A project file (`.tproj`, `.vproject`).
 		public static bool IsProjectFile(StringView path) => Ends(path, ProjectExt) || Ends(path, OldProjectExt);
 		/// A Sheet IR dump (`.tir`, `.kir`).

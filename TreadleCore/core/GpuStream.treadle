@@ -1,0 +1,60 @@
+# treadle 1
+type GpuStream class
+	namespace Core
+	sealed
+	doc "Experimental (NVIDIA only): a queue of GPU work (GpuBuffer.UploadAsync, Gpu.DispatchAsync, GpuBuffer.DownloadAsync) that runs in order, beside the host and other streams. Sync waits for it; Delete waits, then frees it. Without a GPU everything queued runs at once, on the host. docs: GPU-Compute."
+
+field mHandle void*
+	access internal
+
+ctor s0001
+	doc "A new stream."
+sheet body
+node a1 Entry
+node a2 Call GpuStream.rt_gpu_stream_new
+node a3 Set this.mHandle
+node a4 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.result a3.value
+wire a3.then a4.in
+
+dtor s0002
+	doc "Waits for what the stream still has queued, then frees it."
+sheet body
+node b1 Entry
+node b2 Get this.mHandle
+node b3 Call GpuStream.rt_gpu_stream_free
+node b4 Return
+wire b1.then b3.in
+wire b2.value b3.s
+wire b3.then b4.in
+
+function s0003 Sync
+	doc "Waits until everything queued on the stream has finished (a failed check in one of its kernels stops the program here)."
+sheet body
+node c1 Entry
+node c2 Get this.mHandle
+node c3 Call GpuStream.rt_gpu_stream_sync
+node c4 Return
+wire c1.then c3.in
+wire c2.value c3.s
+wire c3.then c4.in
+
+function s0020 rt_gpu_stream_new
+	static
+	access private
+	returns void*
+	attr Import treadle_rt rt_gpu_stream_new
+
+function s0021 rt_gpu_stream_free
+	static
+	access private
+	attr Import treadle_rt rt_gpu_stream_free
+param s void*
+
+function s0022 rt_gpu_stream_sync
+	static
+	access private
+	attr Import treadle_rt rt_gpu_stream_sync
+param s void*

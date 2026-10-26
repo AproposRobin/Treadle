@@ -238,6 +238,69 @@ namespace Treadle.Debug
 		public List<DebugVariable> Locals = new .() ~ DeleteContainerAndItems!(_);
 		/// The threads of the stopped program (the Call Stack panel lists them when there are several).
 		public List<DebugThread> Threads = new .() ~ DeleteContainerAndItems!(_);
+
+		/// The Call Stack's order of the threads (lldb-dap lists them as the system does, `Main` not always
+		/// first): `Main` first, then the named threads by name with their numbers compared as numbers
+		/// (`worker 2` before `worker 10`), then the threads the runtime did not start (`Thread <n>`) by number.
+		public static void SortThreads(List<DebugThread> threads)
+		{
+			threads.Sort(scope (a, b) =>
+			{
+				int ra = ThreadRank(a);
+				int rb = ThreadRank(b);
+				if (ra != rb)
+					return ra <=> rb;
+				let c = NaturalCompare(a.Name, b.Name);
+				return (c != 0) ? c : (a.Id <=> b.Id);
+			});
+		}
+
+		static int ThreadRank(DebugThread t)
+		{
+			if (t.Name == "Main")
+				return 0;
+			if (t.Name.StartsWith("Thread ") && (int64.Parse(StringView(t.Name, 7)) case .Ok))
+				return 2;
+			return 1;
+		}
+
+		/// Text order (ignoring case) with each run of digits compared by its value.
+		public static int NaturalCompare(StringView a, StringView b)
+		{
+			int i = 0;
+			int j = 0;
+			while (i < a.Length && j < b.Length)
+			{
+				if (a[i].IsDigit && b[j].IsDigit)
+				{
+					int i0 = i;
+					int j0 = j;
+					while (i < a.Length && a[i].IsDigit)
+						i++;
+					while (j < b.Length && b[j].IsDigit)
+						j++;
+					var da = StringView(a, i0, i - i0);
+					var db = StringView(b, j0, j - j0);
+					while (da.Length > 1 && da[0] == '0')
+						da.RemoveFromStart(1);
+					while (db.Length > 1 && db[0] == '0')
+						db.RemoveFromStart(1);
+					if (da.Length != db.Length)
+						return da.Length <=> db.Length;
+					let c = StringView.Compare(da, db, false);
+					if (c != 0)
+						return c;
+					continue;
+				}
+				let ca = a[i].ToLower;
+				let cb = b[j].ToLower;
+				if (ca != cb)
+					return ca <=> cb;
+				i++;
+				j++;
+			}
+			return (a.Length - i) <=> (b.Length - j);
+		}
 		/// The selected call-stack frame (Locals and the pin values show its variables).
 		public int SelectedFrame;
 		/// Program and adapter output (the Debug Output panel), oldest first; a line the
@@ -457,6 +520,7 @@ namespace Treadle.Debug
 					StopMessage.Set(e.Text);
 					Adapter.GetFrames(Frames);
 					Adapter.GetThreads(Threads);
+					SortThreads(Threads);
 					// The panels start on the first frame that is on a node of the project.
 					SelectedFrame = 0;
 					for (let f in Frames)

@@ -8,10 +8,21 @@ namespace Treadle.Editor
 {
 	/// The start page: what the editor shows when it was started without a project (nothing is reopened on its own).
 	/// Recent projects on the left (a click opens one; a folder that is gone is dimmed with a Remove button), the ways
-	/// to start on the right: New project, Open project, Documentation. It covers the work area while no project is
-	/// open; opening or creating a project closes it.
+	/// to start on the right: New project, Open project, Documentation, Open a sample. It covers the work area while no
+	/// project is open; opening or creating a project closes it.
 	extension EditorApp
 	{
+		/// One sample of the "Open a sample" list: its folder, its name and the first sentence of its README.
+		class StartSample
+		{
+			public String Dir = new .() ~ delete _;
+			public String Name = new .() ~ delete _;
+			public String Line = new .() ~ delete _;
+		}
+		/// The samples found by the last ScanSamples (when the list was opened) and the folder they are in.
+		List<StartSample> mStartSamples = new .() ~ DeleteContainerAndItems!(_);
+		String mStartSamplesDir = new .() ~ delete _;
+		ImVec2 mStartSamplesAnchor;
 		bool mStartPageWasVisible;
 		/// The page itself has the focus (a click on it): the documentation window then asks for the front again.
 		bool mStartPageFocused;
@@ -51,7 +62,7 @@ namespace Treadle.Editor
 			// The page sits over every panel. Panels that something raises (the first-start focus of the Project Browser, a
 			// menu) must not cover it, so it asks for the front each frame, except while the documentation, the preferences or a
 			// popup is up: those stay over it.
-			bool other = mShowDocs || mShowPrefs || Gui.igIsPopupOpen_Str("", PopupFlags.AnyPopup);
+			bool other = mShowDocs || mShowPrefs || mShowUpdateNotes || mShowAbout || Gui.igIsPopupOpen_Str("", PopupFlags.AnyPopup);
 			if (justShown || !other)
 				Gui.igSetNextWindowFocus();
 			Gui.igPushStyleVar_Vec2(StyleVar.WindowPadding, .(0, 0));
@@ -120,6 +131,19 @@ namespace Treadle.Editor
 			cardY += cardH + cardGap;
 			if (StartCard(2, Icon.BookOpen, "Documentation", "Getting started, the editor and the nodes.", x0 + leftW + gap, cardY, rightW, cardH, fs, font))
 				OpenDocumentation();
+			cardY += cardH + cardGap;
+			bool openSamples = StartCard(3, Icon.Package, "Open a sample...", "One of the sample projects that come with Treadle.", x0 + leftW + gap, cardY, rightW, cardH, fs, font);
+			mStartSamplesAnchor = Gui.igGetItemRectMax(); // the list opens under the card, right edges aligned
+#if TREADLE_SELFTEST
+			openSamples |= mSelfTestOpenSamples;
+			mSelfTestOpenSamples = false;
+#endif
+			if (openSamples)
+			{
+				ScanSamples();
+				Gui.OpenPopup("##startsamples");
+			}
+			DrawSamplesPopup(fs);
 			cardY += cardH + cardGap * 2;
 			Gui.igSetCursorPos(.(x0 + leftW + gap, cardY));
 			Gui.igPushTextWrapPos(x0 + leftW + gap + rightW);
@@ -152,6 +176,193 @@ namespace Treadle.Editor
 			if (hovered && shown.Length != text.Length)
 				Gui.Tooltip(text);
 			return clicked;
+		}
+
+		/// The folder that holds the samples: TREADLE_SAMPLES, else `samples` next to the exe (the package), else
+		/// TreadleCore/samples above it (a source tree). False when there is none.
+		static bool FindSampleFolder(String outDir)
+		{
+			if (Environment.GetEnvironmentVariable("TREADLE_SAMPLES", outDir) case .Ok && Directory.Exists(outDir))
+				return true;
+			outDir.Clear();
+			String dir = scope .();
+			Environment.GetExecutableFilePath(dir);
+			for (int up < 8)
+			{
+				String parent = scope .();
+				if (Path.GetDirectoryPath(dir, parent) case .Err)
+					break;
+				dir.Set(parent);
+				String probe = scope $"{dir}/samples";
+				if (up == 0 && Directory.Exists(probe))
+				{
+					outDir.Set(probe);
+					return true;
+				}
+				probe.Set(scope $"{dir}/TreadleCore/samples");
+				if (Directory.Exists(probe))
+				{
+					outDir.Set(probe);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// Fills mStartSamples: every folder of the samples folder with a project file (.tproj) and a README.md (the
+		/// rule the packages ship samples by), by name, with the first sentence of its README's first paragraph.
+		void ScanSamples()
+		{
+			ClearAndDeleteItems!(mStartSamples);
+			mStartSamplesDir.Clear();
+			if (!FindSampleFolder(mStartSamplesDir))
+				return;
+			for (let e in Directory.EnumerateDirectories(mStartSamplesDir))
+			{
+				String dir = scope .();
+				e.GetFilePath(dir);
+				String readme = scope $"{dir}/README.md";
+				if (!File.Exists(readme))
+					continue;
+				bool hasProject = false;
+				for (let f in Directory.EnumerateFiles(dir, "*.tproj"))
+				{
+					hasProject = true;
+					break;
+				}
+				if (!hasProject)
+					continue;
+				let s = new StartSample();
+				s.Dir.Set(dir);
+				Path.GetFileName(dir, s.Name);
+				String text = scope .();
+				if (File.ReadAllText(readme, text, true) case .Ok)
+				{
+					bool inPara = false;
+					for (var line in text.Split('\n'))
+					{
+						line.Trim();
+						if (line.IsEmpty || line.StartsWith('#'))
+						{
+							if (inPara)
+								break;
+							continue;
+						}
+						inPara = true;
+						if (!s.Line.IsEmpty)
+							s.Line.Append(' ');
+						s.Line.Append(line);
+					}
+					PlainText(s.Line);
+					let stop = s.Line.IndexOf(". ");
+					if (stop > 0)
+						s.Line.RemoveToEnd(stop + 1);
+				}
+				mStartSamples.Add(s);
+			}
+			mStartSamples.Sort(scope (a, b) => String.Compare(a.Name, b.Name, true));
+#if BF_PLATFORM_WINDOWS
+			mStartSamplesDir.Replace('/', '\\');
+#endif
+		}
+
+		/// A README line as plain text: `[text](link)` becomes text, code and emphasis marks go.
+		static void PlainText(String line)
+		{
+			String o = scope .();
+			int i = 0;
+			while (i < line.Length)
+			{
+				let c = line[i];
+				if (c == '[')
+				{
+					let close = line.IndexOf(']', i + 1);
+					if (close > i && close + 1 < line.Length && line[close + 1] == '(')
+					{
+						let end = line.IndexOf(')', close + 2);
+						if (end > close)
+						{
+							o.Append(line.Substring(i + 1, close - i - 1));
+							i = end + 1;
+							continue;
+						}
+					}
+				}
+				if (c != '`' && c != '*')
+					o.Append(c);
+				i++;
+			}
+			line.Set(o);
+		}
+
+#if TREADLE_SELFTEST
+		/// Set by the `startsamples` self test: the start page opens its samples list on the next frame.
+		bool mSelfTestOpenSamples;
+
+		/// `startsamples` (captures): opens the start page's samples list and leaves it open; checks that samples
+		/// were found (TREADLE_SAMPLES, `samples` next to the exe or TreadleCore/samples above it) and that each one
+		/// has a line from its README.
+		bool SelfTestStartSamples(ref bool finished)
+		{
+			if (mSelfTestStep == 0)
+			{
+				mSelfTestOpenSamples = true;
+				finished = false;
+				return true;
+			}
+			if (mSelfTestStep < 3)
+			{
+				finished = false;
+				return true;
+			}
+			SelfTestCheck(StartPageVisible, "startsamples: the start page is not shown (a project is open)");
+			SelfTestCheck(!mStartSamples.IsEmpty, scope $"startsamples: no samples found ('{mStartSamplesDir}')");
+			for (let s in mStartSamples)
+				SelfTestCheck(!s.Line.IsEmpty, scope $"startsamples: {s.Name} has no README line");
+			Notify.Log(.Info, "SelfTest", scope $"[SELFTEST] startsamples: {mStartSamples.Count} samples in {mStartSamplesDir}");
+			return true;
+		}
+#endif
+
+		/// The list the "Open a sample" card opens: a click opens that sample's folder as the project.
+		void DrawSamplesPopup(float fs)
+		{
+			Gui.igSetNextWindowPos(.(mStartSamplesAnchor.x, mStartSamplesAnchor.y + 4 * Look.Scale), Cond.Appearing, .(1, 0));
+			if (!Look.BeginPopupSpaced("##startsamples"))
+				return;
+			String openPath = null;
+			if (mStartSamples.IsEmpty)
+				Gui.TextDisabled(mStartSamplesDir.IsEmpty ? "No samples folder next to the editor." : scope $"No samples in {mStartSamplesDir}.");
+			else
+			{
+				float listW = fs * 38;
+				float nameW = fs * 8;
+				String folderShown = scope .();
+				Look.EllipsizeMiddle(mStartSamplesDir, listW - Gui.CalcTextSize("Samples in ").x, folderShown);
+				Gui.TextDisabled(scope $"Samples in {folderShown}");
+				Gui.Separator();
+				for (let s in mStartSamples)
+				{
+					Gui.PushID((int32)@s.Index);
+					let p = Gui.igGetCursorScreenPos();
+					if (Gui.Selectable("##sample", false, 0, .(listW, 0)))
+						openPath = scope:: String(s.Dir);
+					if (Gui.igIsItemHovered(0))
+						Gui.Tooltip(scope $"{s.Dir}\nOpen this sample (a build writes its build folder inside it)");
+					let dl = Gui.igGetWindowDrawList();
+					Gui.DrawText(dl, p, Look.Foreground, s.Name);
+					String shown = scope .();
+					Look.EllipsizeEnd(s.Line, listW - nameW, shown);
+					Gui.DrawText(dl, .(p.x + nameW, p.y), Look.ForegroundDim, shown);
+					Gui.PopID();
+				}
+			}
+			Look.EndPopupSpaced();
+			if (openPath != null)
+			{
+				FileSafety.ReadOnlyProject = false;
+				RequestOpenProject(openPath);
+			}
 		}
 
 		void DrawRecentList(float fs, ImFont* font)

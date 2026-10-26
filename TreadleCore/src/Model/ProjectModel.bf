@@ -222,9 +222,13 @@ namespace Treadle.Model
 		public TypeRef Entry ~ delete _;
 		public String Output = new .() ~ delete _;
 		public String Version = new .() ~ delete _;
-		/// `namespace A.B`: the project's root namespace, which New Type proposes (with the sub-folder
+		/// `namespace A.B`: the project's root namespace, which New Class, New Struct... propose (with the sub-folder
 		/// path under a source folder after it); "" = not written.
 		public String Namespace = new .() ~ delete _;
+		/// `layoutDir <folder>` / `backupDir <folder>`: where the layout files and the backups live,
+		/// relative to the project folder ("" = not written: `layout` and `backup`).
+		public String LayoutDir = new .() ~ delete _;
+		public String BackupDir = new .() ~ delete _;
 		public RecordExtras Extras = new .() ~ delete _;
 		/// `depends <path>`: graph library projects compiled with this one.
 		public List<String> Depends = new .() ~ DeleteContainerAndItems!(_);
@@ -235,6 +239,29 @@ namespace Treadle.Model
 		public List<String> Sources = new .() ~ DeleteContainerAndItems!(_);
 		/// Comment lines and unknown records at the end of the file.
 		public List<String> Tail = new .() ~ DeleteContainerAndItems!(_);
+
+		/// The `entry` type's name as written ("" when there is none, or a library: no Program Start).
+		public void EntryTypeName(String outName)
+		{
+			StringView kind;
+			KindIs(out kind);
+			if (Entry == null || Entry.IsNone || kind == KindLibrary)
+				return;
+			Entry.ToString(outName);
+		}
+
+		/// Writes `entry <typeName>` ("" removes the line). Returns whether it changed.
+		public bool SetEntryType(StringView typeName)
+		{
+			String now = scope .();
+			Entry?.ToString(now);
+			if (now == typeName)
+				return false;
+			DeleteAndNullify!(Entry);
+			if (!typeName.IsEmpty)
+				Entry = TypeRef.Parse(typeName);
+			return true;
+		}
 
 		public ProjectConfig FindConfig(StringView name)
 		{

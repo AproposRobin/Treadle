@@ -159,6 +159,7 @@ namespace Treadle.Compiler
 		{
 			SheetChecker k = scope .(this, r);
 			k.Run();
+			KernelRules.Check(this, r); // Kernel.bf: a [Kernel] Sheet's rules (GPU-Compute.md)
 		}
 	}
 

@@ -32,7 +32,9 @@ build\Release_Win64\TreadleEditor\Treadle.exe
    end, the runtime and the debugger) under `tools\llvm-mingw`, the SDL2 2.32.10 mingw devel package (the
    native host and the m2-sdl sample) under `tools\SDL2-2.32.10`, and libclang 23.1.3 (the C header import)
    under `tools\libclang` ([Toolchain.md](Toolchain.md), "What is pinned"). The editor finds them there by
-   looking above its exe; `TREADLE_LLVM`, `TREADLE_SDL2` and `TREADLE_LIBCLANG` point it elsewhere.
+   looking in the source tree it was built in (`build\<Config>_Win64\TreadleEditor` three folders below the
+   repository root: no other parent folder is searched); `TREADLE_LLVM`, `TREADLE_SDL2` and `TREADLE_LIBCLANG`
+   point it elsewhere.
 2. `Native\build_windows.ps1` rebuilds the native host `Native\bin\win64\treadlehost.dll` + `treadlehost.lib`
    (SDL2, OpenGL 3, Dear ImGui and imnodes; about a minute). It is optional: the host binaries are committed,
    and a rebuild with the pinned toolchain gives the same bytes (the script prints the sha256 and compares it
@@ -66,7 +68,11 @@ Treadle.exe --import-c <file.cimport> [--out <dir>]
 Treadle.exe --format <project folder or file>... [--check]
 Treadle.exe --format --migrate <project folder or file>... [--check]
 Treadle.exe --version
+Treadle.exe --update [--check-only]
 ```
+
+`--update` checks GitHub Releases (or `TREADLE_UPDATE_INDEX`, a local release index: [Releasing.md](Releasing.md),
+"The update path"), downloads and verifies a newer package and starts the helper that installs it, without a window.
 
 `--format --migrate` also renames files that still carry the extensions from before the product rename
 (`.vtype`, `.vtype.layout`, `.vproject`, `.kir`) to the current ones ([Format-Stability.md](Format-Stability.md)).

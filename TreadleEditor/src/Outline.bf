@@ -24,24 +24,30 @@ namespace Treadle.Editor
 		bool mSelLocalActive;
 		String mSelLocalName = new .() ~ delete _;
 
-		/// Category bar. Returns whether the section is open; `addClicked` reports the "+".
-		bool BPSection(StringView id, StringView title, int count, out bool addClicked, StringView addTip, bool startsClosed = false)
+		/// Set by BPSection when its `extraLabel` button (FUNCTIONS: Override...) was clicked.
+		bool mBPExtraClicked;
+
+		/// Category bar. Returns whether the section is open; `addClicked` reports the "+", and
+		/// `mBPExtraClicked` the `extraLabel` button drawn before it.
+		bool BPSection(StringView id, StringView title, int count, out bool addClicked, StringView addTip, bool startsClosed = false, StringView extraLabel = default, StringView extraTip = default, uint32 titleColor = 0)
 		{
 			addClicked = false;
+			mBPExtraClicked = false;
 			float h = Gui.igGetFrameHeight();
 			let p = Gui.igGetCursorScreenPos();
 			float w = Gui.igGetContentRegionAvail().x;
+			float fs = Gui.igGetFontSize();
+			float extraW = extraLabel.IsEmpty ? 0 : Gui.CalcTextSize(extraLabel).x + 12 * Look.Scale;
 			String key = scope .(id);
 			bool open = startsClosed ? mBPOpened.Contains(key) : !mBPClosed.Contains(key);
 			Gui.PushID(id);
-			bool clicked = Gui.igInvisibleButton("##sec", .(w - (addTip.IsEmpty ? 0 : h + 2), h), ButtonFlags.MouseButtonLeft);
+			bool clicked = Gui.igInvisibleButton("##sec", .(Math.Max(1, w - (addTip.IsEmpty ? 0 : h + 2) - (extraLabel.IsEmpty ? 0 : extraW + 2)), h), ButtonFlags.MouseButtonLeft);
 			bool hovered = Gui.igIsItemHovered(0);
 			let dl = Gui.igGetWindowDrawList();
 			Gui.ImDrawList_AddRectFilled(dl, p, .(p.x + w, p.y + h), hovered ? Gui.Color(56, 56, 56) : Look.Header, 2 * Look.Scale, 0);
-			float fs = Gui.igGetFontSize();
 			float ty = p.y + (h - fs) * 0.5f;
 			Gui.DrawText(dl, .(p.x + 4 * Look.Scale, ty), Look.ForegroundDim, open ? Icon.ChevronDown : Icon.ChevronRight);
-			Gui.DrawText(dl, .(p.x + fs * 1.3f, ty), Gui.Color(215, 215, 215), title);
+			Gui.DrawText(dl, .(p.x + fs * 1.3f, ty), (titleColor != 0) ? titleColor : Gui.Color(215, 215, 215), title);
 			float tw = Gui.CalcTextSize(title).x;
 			Gui.DrawText(dl, .(p.x + fs * 1.3f + tw + 8 * Look.Scale, ty), Look.ForegroundDim, scope $"{count}");
 			if (clicked)
@@ -53,6 +59,18 @@ namespace Treadle.Editor
 				else if (set.GetAndRemove(key) case .Ok(let s))
 					delete s;
 				open = !open;
+			}
+			if (!extraLabel.IsEmpty)
+			{
+				Gui.SameLine(0, 2);
+				let xp = Gui.igGetCursorScreenPos();
+				bool hit = Gui.igInvisibleButton("##extra", .(extraW, h), ButtonFlags.MouseButtonLeft);
+				bool xh = Gui.igIsItemHovered(0);
+				Gui.ImDrawList_AddRectFilled(dl, xp, .(xp.x + extraW, xp.y + h), xh ? Look.Primary : Theme.Mix(Look.Header, Gui.Color(255, 255, 255), 0.06f), 2 * Look.Scale, 0);
+				Gui.DrawText(dl, .(xp.x + 6 * Look.Scale, ty), Gui.Color(215, 215, 215), extraLabel);
+				if (xh && !extraTip.IsEmpty)
+					Gui.Tooltip(extraTip);
+				mBPExtraClicked = hit;
 			}
 			if (addTip.IsEmpty)
 			{
@@ -94,24 +112,74 @@ namespace Treadle.Editor
 					Gui.igSetNextItemWidth(-1);
 					Gui.igInputTextWithHint("##bpsearch", scope $"{Icon.Search}  Search", mBPSearch.Ptr, (.)mBPSearch.Capacity, 0, null, null);
 					Gui.igSpacing();
-					// The document header.
+					// The document header: "Dog : Animal", the kind and the "N required" badge.
+					let h = Doc.Header;
 					String docName = scope .();
-					Doc.Header.GetFullName(docName);
-					if (docName.IsEmpty)
+					if (h.Name.IsEmpty)
 						Doc.GetName(docName);
+					else
+						InheritanceLine(h, docName);
 					String header = scope .();
-					header.AppendF("{}  {}  ", Icon.FileCode, docName);
+					header.AppendF("{}  {}  ", KindIcon(h.Kind), docName);
 					Gui.igPushStyleColor_U32(Col.Header, Theme.Mix(Look.Header, Look.AccentBlue, 0.35f));
 					Gui.igPushStyleColor_U32(Col.HeaderHovered, Theme.Mix(Look.Dropdown, Look.AccentBlue, 0.35f));
 					Gui.igPushStyleColor_U32(Col.Text, Look.ForegroundHover);
 					bool open = Gui.CollapsingHeader(header, TreeNodeFlags.DefaultOpen);
 					Gui.igPopStyleColor(3);
+					List<InheritedFn> required = scope .();
+					List<InheritedFn> overridable = scope .();
+					defer { ClearAndDeleteItems!(required); ClearAndDeleteItems!(overridable); }
+					InheritedFunctions(h, Doc.Members, required, overridable);
 					{
 						let min = Gui.igGetItemRectMin();
 						let max = Gui.igGetItemRectMax();
-						StringView k = Treadle.Format.TreadleCodec.TypeKindWord(Doc.Header.Kind);
+						if (Gui.igIsItemHovered(0))
+						{
+							String tip = scope .();
+							tip.AppendF("{} {}", KindTitle(h.Kind), h.GetFullName(.. scope String()));
+							if (!required.IsEmpty)
+								tip.AppendF("\n{} required override{} not implemented", required.Count, (required.Count == 1) ? "" : "s");
+							Gui.Tooltip(tip);
+						}
+						let dl = Gui.igGetWindowDrawList();
+						StringView k = Treadle.Format.TreadleCodec.TypeKindWord(h.Kind);
 						float kw = Gui.CalcTextSize(k).x;
-						Gui.DrawText(Gui.igGetWindowDrawList(), .(max.x - kw - 8 * Look.Scale, min.y + (max.y - min.y - Gui.igGetFontSize()) * 0.5f), Look.ForegroundDim, k);
+						float ty = min.y + (max.y - min.y - Gui.igGetFontSize()) * 0.5f;
+						// Where the title ends (the arrow, then the text): the kind word and the badge never cover it.
+						float fsz = Gui.igGetFontSize();
+						float titleEnd = min.x + fsz * 1.9f + Gui.CalcTextSize(scope $"{KindIcon(h.Kind)}  {docName}").x;
+						String badge = scope .();
+						if (!required.IsEmpty)
+							badge.AppendF("{} required", required.Count);
+						float bw = badge.IsEmpty ? 0 : Gui.CalcTextSize(badge).x + 10 * Look.Scale;
+						float right = max.x - kw - 8 * Look.Scale;
+						bool showKind = right - (badge.IsEmpty ? 0 : bw + 8 * Look.Scale) > titleEnd + 6 * Look.Scale;
+						if (showKind)
+							Gui.DrawText(dl, .(right, ty), Look.ForegroundDim, k);
+						else
+							right = max.x - 4 * Look.Scale;
+						if (!badge.IsEmpty)
+						{
+							if (right - bw - 8 * Look.Scale < titleEnd)
+							{
+								// No room for the words: the count alone.
+								badge.Set(scope $"{required.Count}");
+								bw = Gui.CalcTextSize(badge).x + 10 * Look.Scale;
+							}
+							float bx = right - bw - (showKind ? 8 * Look.Scale : 0);
+							Gui.ImDrawList_AddRectFilled(dl, .(bx, ty - 1), .(bx + bw, ty + fsz + 1), Theme.WithAlpha(Theme.Warning, 70), 6 * Look.Scale, 0);
+							Gui.DrawText(dl, .(bx + 5 * Look.Scale, ty), Theme.Warning, badge);
+						}
+					}
+					if (Gui.igBeginPopupContextItem("##typehdr"))
+					{
+						if (h.Kind == .Class && !h.Static && !h.Sealed && !Doc.FilePath.IsEmpty && KindMenuItem(.Class, "Make Child Class..."))
+							StartMakeChild(Doc.FilePath);
+						if (!Doc.FilePath.IsEmpty && IconItem(Icon.Copy, "Duplicate..."))
+							StartDuplicate(Doc.FilePath);
+						if (IconItem(Icon.Settings, "Type Settings"))
+							SelectOutline(.TypeSettings);
+						Gui.EndPopup();
 					}
 					if (open)
 					{
@@ -121,30 +189,191 @@ namespace Treadle.Editor
 							if (Gui.Selectable(scope $"    {Icon.Settings}  Type Settings##typesettings", selected))
 								SelectOutline(.TypeSettings);
 							if (Gui.igIsItemHovered(0))
-								Gui.Tooltip("Name, kind, namespace, base type, interfaces, generic parameters and attributes of the type");
+								Gui.Tooltip("Name, kind, namespace, base class, interfaces, generic parameters and attributes of the type");
 						}
-						if (DrawSheetRows())
+						// The sections that apply to the kind (Editor-Model.md, "Outline").
+						bool changed = false;
+						switch (h.Kind)
+						{
+						case .Enum:
+							DrawOutlineCases();
+							changed = DrawSheetRows(overridable);
+							if (!changed)
+							{
+								Gui.igSpacing();
+								DrawOutlineLocals();
+							}
+						case .Interface:
+							changed = DrawSheetRows(overridable);
+						case .Delegate:
+							DrawOutlineSignature();
+						default:
+							changed = DrawRequiredOverrides(required) || DrawSheetRows(overridable);
+							if (!changed)
+							{
+								Gui.igSpacing();
+								DrawOutlineFields();
+								Gui.igSpacing();
+								DrawOutlineLocals();
+							}
+						}
+						if (changed)
 						{
 							Gui.End();
 							return; // the document changed: its lists are rebuilt next frame
 						}
-						Gui.igSpacing();
-						DrawOutlineFields();
-						DrawOutlineCases();
-						Gui.igSpacing();
-						DrawOutlineLocals();
 					}
-					// F2: the selected member or local is renamed through its Name field in Properties.
-					if (Gui.igIsWindowFocused(FocusedFlags.RootAndChildWindows) && !Gui.igIsAnyItemActive() && Gui.IsKeyPressed(573 /* F2 */, false)
-						&& (OutlineSel == .Member || OutlineSel == .Local))
-						FocusNameField();
+					if (Gui.igIsWindowFocused(FocusedFlags.RootAndChildWindows) && !Gui.igIsAnyItemActive())
+						OutlineKeys();
 				}
 			}
 			Gui.End();
 		}
 
-		/// The context menu of a member row: rename (in Properties), move, delete. True when the
-		/// member was removed (the caller stops using it).
+		/// The Outline's keys (it has the focus, nothing is being typed): Delete removes the selected
+		/// variable, function, case or local as its row's Delete does, F2 renames it (its Name field in
+		/// Properties), Enter opens it (its Sheet, else its page in Properties). The canvas handles its
+		/// own Delete only when it has the focus (GraphPanel.HandleKeyboard).
+		void OutlineKeys()
+		{
+			bool member = OutlineSel == .Member && SelectedMember != null;
+			bool local = OutlineSel == .Local && mSelLocalActive;
+			if (Gui.IsKeyPressed(573 /* F2 */, false) && (member || local))
+				FocusNameField();
+			if (Gui.IsKeyPressed(Key.Delete, false) && (member || local))
+				DeleteOutlineSelection();
+			if (Gui.IsKeyPressed(Key.Enter, false) && member)
+			{
+				let m = SelectedMember;
+				Sheet body = null;
+				for (let s in Doc.Sheets)
+					if (s.Member == m && s.Role != .Lambda && body == null)
+						body = s;
+				if (body != null)
+					OpenTab(body);
+				else
+					Panels.Focus(Panels.PropertiesId);
+			}
+		}
+
+		/// Delete on the Outline: the selected member (RemoveMember, one undo step) or the selected
+		/// local of the Sheet in front (as its row's Delete Local Variable). True when something went.
+		public bool DeleteOutlineSelection()
+		{
+			if (OutlineSel == .Member)
+			{
+				let m = SelectedMember;
+				if (m == null)
+					return false;
+				RemoveMember(m);
+				SelectOutline(.None);
+				return true;
+			}
+			if (OutlineSel == .Local && mSelLocalActive)
+			{
+				let mg = OpenLocalsGraph();
+				if (mg == null)
+					return false;
+				for (let l in mg.Graph.Locals)
+				{
+					if (l.Name != mSelLocalName)
+						continue;
+					BeginEdit();
+					String why = scope .();
+					if (!mg.Graph.RemoveLocal(l, why))
+					{
+						EditDoc.DropLastUndo();
+						SetStatus(why, .Warning);
+						return false;
+					}
+					CommitCurrent();
+					mSelLocalActive = false;
+					SelectOutline(.None);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// REQUIRED OVERRIDES (a class or a struct): the abstract functions of its base chain and the
+		/// interface functions nothing provides yet, each with Implement; the "+" implements them all.
+		/// Not drawn when there are none. True when the document changed.
+		bool DrawRequiredOverrides(List<InheritedFn> required)
+		{
+			if (required.IsEmpty)
+				return false;
+			bool all = false;
+			bool open = BPSection("required", "REQUIRED OVERRIDES", required.Count, out all, "Implement all: a Sheet for each, with its signature", false, default, default, Theme.Warning);
+			if (all)
+			{
+				ImplementAllRequired();
+				return true;
+			}
+			if (!open)
+				return false;
+			float fs = Gui.igGetFontSize();
+			for (let f in required)
+			{
+				Gui.PushID((int32)(50000 + @f.Index));
+				String sig = scope .();
+				SignatureText(f.Fn, sig);
+				let rowPos = Gui.igGetCursorScreenPos();
+				float bw = Gui.CalcTextSize("Implement").x + 14 * Look.Scale;
+				float w = Gui.igGetContentRegionAvail().x;
+				bool clicked = Gui.Selectable(scope $"##req{@f.Index}", false, 0, .(Math.Max(1, w - bw - 4 * Look.Scale), 0));
+				let max = Gui.igGetItemRectMax();
+				let dl = Gui.igGetWindowDrawList();
+				float ty = rowPos.y + (max.y - rowPos.y - fs) * 0.5f;
+				Gui.DrawText(dl, .(rowPos.x + 14 * Look.Scale, ty), Theme.Warning, Icon.Function);
+				String fit = scope .();
+				FitText(sig, Math.Max(0, max.x - rowPos.x - 14 * Look.Scale - fs * 1.5f), fit);
+				Gui.DrawText(dl, .(rowPos.x + 14 * Look.Scale + fs * 1.5f, ty), Look.Foreground, fit);
+				if (Gui.igIsItemHovered(0))
+					Gui.Tooltip(scope $"{sig}\nRequired by {f.From} ({f.FromInterface ? "an interface function" : "an abstract function"}): Implement makes its Sheet");
+				Gui.SameLine(0, 4 * Look.Scale);
+				bool impl = Gui.SmallButton("Implement");
+				Gui.PopID();
+				if (clicked || impl)
+				{
+					ImplementInherited(f);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// SIGNATURE (a delegate type): its result and inputs in one row; the row opens Type Settings
+		/// on the Signature section.
+		void DrawOutlineSignature()
+		{
+			bool add = false;
+			let sigRef = Doc.Header.Signature;
+			int inputs = (sigRef != null && sigRef.Args != null) ? sigRef.Args.Count : 0;
+			bool open = BPSection("signature", "SIGNATURE", inputs, out add, "Edit the result and the inputs in Type Settings > Signature");
+			if (add)
+			{
+				SelectOutline(.TypeSettings);
+				Panels.Focus(Panels.PropertiesId);
+			}
+			if (!open)
+				return;
+			String sig = scope .();
+			if (sigRef != null)
+				sigRef.AppendSignature(sig);
+			else
+				sig.Append("void()");
+			if (Gui.Selectable(scope $"    {Icon.Link}  {sig}##sig", OutlineSel == .TypeSettings))
+			{
+				SelectOutline(.TypeSettings);
+				Panels.Focus(Panels.PropertiesId);
+			}
+			if (Gui.igIsItemHovered(0))
+				Gui.Tooltip("The result and the input types a delegate of this type has; edit them in Type Settings > Signature");
+		}
+
+		/// The context menu of a member row: rename (in Properties), a function's inheritance
+		/// (a class: Normal / Virtual / Override / Abstract), move, delete. True when the member was
+		/// removed (the caller stops using it).
 		bool MemberRowMenu(MemberDecl m)
 		{
 			if (!Gui.igBeginPopupContextItem())
@@ -155,11 +384,23 @@ namespace Treadle.Editor
 				SelectOutline(.Member, m);
 				FocusNameField();
 			}
+			if (m.Kind == .Function && Doc.Header.Kind == .Class && !m.Static)
+			{
+				Gui.Separator();
+				Gui.TextDisabled("INHERITANCE");
+				let cur = FunctionInheritance(m);
+				for (let k in FnInheritance[?](.Normal, .Virtual, .Override, .Abstract))
+					if (Gui.MenuItem(FnInheritanceName(k), "", cur == k))
+						SetFunctionInheritance(m, k);
+				Gui.Separator();
+			}
 			if (IconItem(Icon.ChevronUp, "Move Up"))
 				MoveMember(m, -1);
 			if (IconItem(Icon.ChevronDown, "Move Down"))
 				MoveMember(m, 1);
-			if (IconItem(Icon.Trash2, "Delete"))
+			EntryMenuItem(m); // a static Main: Set as entry point (EntryPoint.bf)
+			if (m.Kind == .Function || m.Kind == .Ctor || m.Kind == .Dtor || m.Kind == .Operator) HoodFunctionMenuItem(m); // Disassembly: DisassemblyPanel.bf
+			if (IconItem(Icon.Trash2, "Delete", "Del"))
 			{
 				RemoveMember(m);
 				removed = true;
@@ -172,25 +413,46 @@ namespace Treadle.Editor
 		/// set), then the auto properties; "+" adds a function, a property, a constructor or the
 		/// destructor. A row opens its Sheet, shows its page in Properties, and drags as a Call.
 		/// True when the document changed (a member was removed) and the caller must stop.
-		bool DrawSheetRows()
+		bool DrawSheetRows(List<InheritedFn> overridable)
 		{
 			let currentKey = (CurrentTab != null && CurrentTab.Doc == Doc) ? CurrentTab.MethodKey : "";
 			bool addMember = false;
+			bool iface = Doc.Header.Kind == .Interface;
 			int count = Doc.Sheets.Count;
 			for (let m in Doc.Members)
-				if (m.Kind == .Property && m.Auto)
+				if ((m.Kind == .Property && m.Auto) || (m.Kind == .Function && !HasSheet(m)))
 					count++;
-			bool open = BPSection("sheets", "FUNCTIONS", count, out addMember, "Add a function, property, constructor or destructor");
+			bool canOverride = Doc.Header.Kind == .Class && !overridable.IsEmpty;
+			bool open = BPSection("sheets", "FUNCTIONS", count, out addMember, iface ? "Add a function signature (an interface has no bodies)" : "Add a function, property, constructor or destructor",
+				false, canOverride ? "Override..." : "", "Override a virtual or abstract function of the base classes: its Sheet, with the same signature");
+			if (canOverride && mBPExtraClicked)
+				Gui.OpenPopup("##override");
+			if (Gui.BeginPopup("##override"))
+			{
+				Gui.TextDisabled("OVERRIDE A FUNCTION OF THE BASE CLASSES");
+				for (let f in overridable)
+				{
+					String sig = scope .();
+					SignatureText(f.Fn, sig);
+					if (Gui.MenuItem(scope $"{sig}##ov{@f.Index}", f.From))
+					{
+						ImplementInherited(f);
+						Gui.EndPopup();
+						return true;
+					}
+				}
+				Gui.EndPopup();
+			}
 			if (addMember)
 				Gui.OpenPopup("##addmember");
 			if (Gui.BeginPopup("##addmember"))
 			{
-				if (IconItem(Icon.Function, "Function"))
+				if (IconItem(Icon.Function, iface ? "Function (signature)" : "Function"))
 				{
-					if (AddFunctionMember("NewFunction") != null)
+					if ((iface ? AddFunctionSignature("NewFunction") : AddFunctionMember("NewFunction")) != null)
 						FocusNameField();
 				}
-				if (IconItem(Icon.Variable, "Property"))
+				if (!iface && IconItem(Icon.Variable, "Property"))
 				{
 					if (AddProperty("NewProperty", "int") != null)
 						FocusNameField();
@@ -239,6 +501,7 @@ namespace Treadle.Editor
 					{
 						float tw = Gui.CalcTextSize("static").x;
 						Gui.DrawText(dl, .(max.x - tw - 4 * Look.Scale, ty), Gui.Color(120, 120, 120), "static");
+						DrawEntryGlyph(dl, m, max.x, ty); // Program Start: a play glyph (EntryPoint.bf)
 					}
 					if (mg.IsBuilt && !mg.Graph.Errors.IsEmpty)
 					{
@@ -310,6 +573,26 @@ namespace Treadle.Editor
 				bool selected = OutlineSel == .Member && mSelMemberSerial == m.Serial;
 				if (Gui.Selectable(scope $"    {Icon.Variable}  {m.Name}  (auto property)", selected))
 					SelectOutline(.Member, m);
+				if (MemberRowMenu(m))
+				{
+					Gui.PopID();
+					return true;
+				}
+				Gui.PopID();
+			}
+			// Functions without a body (an interface's signatures, abstract ones): a row each, for their page.
+			for (let m in Doc.Members)
+			{
+				if (m.Kind != .Function || HasSheet(m) || !BPMatches(m.Name))
+					continue;
+				Gui.PushID((int32)(45000 + @m.Index));
+				bool selected = OutlineSel == .Member && mSelMemberSerial == m.Serial;
+				String sig = scope .();
+				SignatureText(m, sig);
+				if (Gui.Selectable(scope $"    {Icon.Function}  {sig}##nobody", selected))
+					SelectOutline(.Member, m);
+				if (Gui.igIsItemHovered(0))
+					Gui.Tooltip(iface ? "A signature: each class that implements the interface gives it a Sheet" : "No Sheet: an abstract function (a derived class overrides it)");
 				if (MemberRowMenu(m))
 				{
 					Gui.PopID();
@@ -434,6 +717,7 @@ namespace Treadle.Editor
 				String tip = scope $"{m.Name} : {type}{(m.Static ? " (static)" : "")}";
 				if (m.Category != null)
 					tip.AppendF("\nCategory: {}", m.Category);
+				StorageTip(m, null, tip); // Lives in: LivesIn.bf
 				tip.Append("\nDrag onto a pin to wire it, or onto the Sheet: Ctrl = Get, Alt = Set");
 				Gui.Tooltip(tip);
 			}
@@ -556,7 +840,7 @@ namespace Treadle.Editor
 					Gui.DrawText(dl, .(max.x - tw - 4 * Look.Scale, cur.y), Gui.Color(120, 120, 120), fit);
 				}
 				if (Gui.igIsItemHovered(0))
-					Gui.Tooltip(scope $"{local.Name} : {local.GetTypeText(.. scope String())}\nDrag onto a pin to wire it, or onto the Sheet: Ctrl = Get, Alt = Set");
+					Gui.Tooltip(scope $"{local.Name} : {local.GetTypeText(.. scope String())}{StorageTip(null, local, .. scope String())}\nDrag onto a pin to wire it, or onto the Sheet: Ctrl = Get, Alt = Set");
 				AddMemberRef(.Variable, local.Name, local.GetTypeText(.. scope String()), "", "", false);
 				if (Gui.igBeginDragDropSource(DragNative.SourceNoPreviewTooltip))
 				{

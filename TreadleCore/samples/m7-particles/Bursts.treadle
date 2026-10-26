@@ -1,0 +1,36 @@
+# treadle 1
+type Bursts class
+	namespace Particles
+	doc "The burst clock: every BurstFrames steps (2 s of simulated time) it fires the event OnBurst with the burst's number."
+
+field OnBurst BurstHandler
+	attr Event
+	doc "Invoked on every burst; the Reseeder is its handler."
+
+field mFired int
+	doc "Bursts fired so far."
+
+function b0001 Tick
+	doc "Called after each step with the number of steps taken: fires a burst when it is a positive multiple of BurstFrames."
+param frame int
+sheet body
+node a1 Entry
+node a2 Get Particles.Tuning.BurstFrames
+node a3 Math
+	set expr "frame > 0 && frame % every == 0"
+node a4 Branch
+node a5 Set this.mFired
+	set op +=
+	in value 1
+node a6 Get this.mFired
+node a7 Call this.OnBurst.Invoke
+node a8 Return
+wire a2.value a3.every
+wire a1.frame a3.frame
+wire a3.result a4.condition
+wire a1.then a4.in
+wire a4.true a5.in
+wire a6.value a7.arg0
+wire a5.then a7.in
+wire a4.false a8.in
+wire a7.then a8.in

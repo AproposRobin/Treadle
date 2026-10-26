@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using ImGui;
 using Treadle.Document;
+using Treadle.Model;
 
 namespace Treadle.Editor
 {
@@ -266,6 +267,9 @@ namespace Treadle.Editor
 		}
 
 		static bool SkipFolder(StringView name) => name.StartsWith(".") || name == "build" || name == "recovery";
+		/// The project's layout and backup folders (Graph-Format.md 4), found at the start of each scan; never listed.
+		SidecarInfo mCBSidecars = new .() ~ delete _;
+		void FindCBSidecars() { mCBSidecars.Root.Clear(); mCBSidecars.LayoutDir.Clear(); mCBSidecars.BackupDir.Clear(); Sidecars.Find(scope $"{mProjectRoot}/.browse", mCBSidecars); }
 
 		/// A file or folder name the file systems of every platform accept.
 		public static bool ValidateFileName(StringView name, String outError)
@@ -317,6 +321,7 @@ namespace Treadle.Editor
 			Path.GetFileName(mProjectRoot, mCBTree.Name);
 			if (mCBTree.Name.IsEmpty)
 				mCBTree.Name.Set(mProjectRoot);
+			FindCBSidecars();
 			ScanContentDir(mCBTree, 0);
 			// Keep the current folder (or its nearest surviving parent).
 			String folder = scope .(mCBFolder);
@@ -349,7 +354,9 @@ namespace Treadle.Editor
 			{
 				String name = scope .();
 				e.GetFileName(name);
-				if (SkipFolder(name))
+				String full = scope .();
+				e.GetFilePath(full);
+				if (SkipFolder(name) || mCBSidecars.IsSidecarFolder(full))
 					continue;
 				CBDir sub = new .();
 				sub.Name.Set(name);
@@ -386,6 +393,7 @@ namespace Treadle.Editor
 			if (mProjectRoot.IsEmpty || !Directory.Exists(mProjectRoot))
 				return 0;
 			int64 h = (int64)0xCBF29CE484222325;
+			FindCBSidecars();
 			HashDir(mProjectRoot, 0, ref h);
 			return h;
 		}
@@ -419,7 +427,9 @@ namespace Treadle.Editor
 			{
 				name.Clear();
 				e.GetFileName(name);
-				if (SkipFolder(name))
+				String full = scope .();
+				e.GetFilePath(full);
+				if (SkipFolder(name) || mCBSidecars.IsSidecarFolder(full))
 					continue;
 				HashStr(name, ref h);
 				String path = scope .();
@@ -606,7 +616,7 @@ namespace Treadle.Editor
 					// Closes when you click elsewhere (not while one of its dialogs is up).
 					bool focused = Gui.igIsWindowFocused(FocusedFlags.RootAndChildWindows);
 					bool anyPopup = Gui.igIsPopupOpen_Str("", PopupFlags.AnyPopup);
-					bool dialogBusy = mCBModalOpen || mOpenCBNewFolder || mOpenCBRename || mOpenCBDelete || mOpenNewProject;
+					bool dialogBusy = mCBModalOpen || mOpenCBNewFolder || mOpenNewType || mOpenCBRename || mOpenCBDelete || mOpenNewProject;
 					if (mCBDrawerFrames > 2 && !focused && !anyPopup && !dialogBusy)
 						open = false;
 					if (Gui.IsKeyPressed(Key.Escape, false) && !anyPopup && !Gui.igIsAnyItemActive() && !dialogBusy)
@@ -670,8 +680,8 @@ namespace Treadle.Editor
 			}
 
 			// ---- toolbar: + Add, Save All | up, breadcrumb ............ search
-			if (GreenButton("+ Add"))
-				Gui.OpenPopup("##cbadd");
+			if (GreenButton("+ Add") || mSpAddMenu) // captures: SelfTestNewType.bf (addmenu)
+				{ mSpAddMenu = false; Gui.OpenPopup("##cbadd"); }
 			if (Gui.igIsItemHovered(0))
 				Gui.Tooltip("Create a folder or a type");
 			if (Gui.BeginPopup("##cbadd"))
@@ -1109,7 +1119,7 @@ namespace Treadle.Editor
 				AssetStyle.Text(dl, cfgFit, .(c0.x + 5, c0.y + 2), fs, Gui.Color(240, 220, 190));
 			}
 			String kindText = scope .();
-			FitText((item.Kind == .Project) ? scope $"Project \u{00B7} {ActiveConfig}" : AssetStyle.KindLabel(item.Kind), tile - 10, kindText);
+			FitText((item.Kind == .Project) ? scope $"Project \u{00B7} {ActiveConfig}" : TileKindLabel(item), tile - 10, kindText);
 			AssetStyle.Text(dl, kindText, .(p0.x + 5, p1.y - fontH * 0.86f - 4), fontH * 0.86f, Gui.Color(140, 140, 140));
 			if (selected)
 				Gui.ImDrawList_AddRect(dl, p0, p1, Look.Primary, 6, 2, 0);
@@ -1128,6 +1138,8 @@ namespace Treadle.Editor
 			Gui.TextDisabled(rel);
 			if (item.Kind == .Document && !File.Exists(item.Path))
 				Gui.TextColored(Theme.Warning, "Not written yet");
+			if (item.Kind == .Document)
+				DrawTypeTooltipLines(item.Path); // NewTypes.bf: Base, Interfaces, required overrides
 			if (item.Kind == .Project)
 				Gui.TextDisabled(scope $"Active config: {ActiveConfig} (right-click to switch)");
 			if (item.Modified)
@@ -1159,8 +1171,15 @@ namespace Treadle.Editor
 			Gui.TextDisabled("CREATE");
 			if (IconMenuItem(.Folder, "New Folder..."))
 				StartNewAsset(.Folder, folder);
-			if (IconMenuItem(.Document, "New Type..."))
-				StartNewAsset(.Document, folder);
+			Gui.Separator();
+			// One entry per kind: each asks for the name in the Create Type dialog (NewTypes.bf).
+			Gui.TextDisabled("TYPES");
+			for (let k in TypeKind[?](.Class, .Struct, .Enum, .Interface, .Delegate, .Extension))
+				if (KindMenuItem(k, scope $"New {KindTitle(k)}..."))
+					StartNewType(k, folder);
+			Gui.Separator();
+			if (IconItem(Icon.FileCode, "New C Import Set...", "", false, !mProjectRoot.IsEmpty))
+				ImportCHeaders();
 			Gui.Separator();
 			if (Gui.MenuItem("Show in Explorer"))
 				ShowInExplorer(folder, false);
@@ -1205,6 +1224,15 @@ namespace Treadle.Editor
 				}
 				if (sel.Count == 1 && Gui.MenuItem("Rename", "F2"))
 					StartRename(first);
+				if (sel.Count == 1 && first.Kind == .Document)
+				{
+					// Make Child Class: classes only (a struct, an enum... cannot be derived from: Language.md 2.5).
+					let t = ProjectTypeAt(first.Path);
+					if (t != null && t.Kind == .Class && !t.Static && !t.Sealed && KindMenuItem(.Class, "Make Child Class..."))
+						StartMakeChild(first.Path);
+					if (Gui.MenuItem("Duplicate..."))
+						StartDuplicate(first.Path);
+				}
 			}
 			bool anyProject = false;
 			for (let it in sel)
@@ -1229,32 +1257,20 @@ namespace Treadle.Editor
 
 		void ShowInExplorer(StringView path, bool isFile)
 		{
-			ProcessStartInfo psi = scope .();
-			String args = scope .();
+			// Desktop.ShellOpen: never in a test run, never with an empty or missing path.
 #if BF_PLATFORM_WINDOWS
-			psi.SetFileName(Desktop.SystemProgram("explorer.exe", .. scope String()));
-			String winPath = scope .(path);
-			winPath.Replace('/', '\\');
-			if (isFile)
-				args.AppendF("/select,\"{}\"", winPath);
-			else
-				args.AppendF("\"{}\"", winPath);
+			bool ok = Desktop.ShellOpen("explorer.exe", path, isFile);
 #else
-			psi.SetFileName(Desktop.SystemProgram("xdg-open", .. scope String()));
 			String dir = scope .(path);
 			if (isFile)
 			{
 				dir.Clear();
 				Path.GetDirectoryPath(path, dir).IgnoreError(); // a root has no parent: dir stays empty
 			}
-			args.AppendF("\"{}\"", dir);
+			bool ok = Desktop.ShellOpen("xdg-open", dir);
 #endif
-			psi.SetArguments(args);
-			psi.UseShellExecute = false;
-			psi.CreateNoWindow = true;
-			SpawnedProcess proc = scope .();
-			if (proc.Start(psi) case .Err)
-				SetStatus("Could not open the file browser");
+			if (!ok)
+				SetStatus(path.IsEmpty ? "Nothing to show: no folder is selected" : scope $"Could not open the file browser on {path}", .Warning);
 		}
 
 		// ------------------------------------------------------------------ open, create
@@ -1269,12 +1285,10 @@ namespace Treadle.Editor
 				SelectProjectSettings();
 				Panels.Focus(Panels.PropertiesId);
 			case .Document:
+				// An open type comes to the front with the Sheet last in front there (EditorApp.OpenFile).
 				let open = FindDoc(item.Path);
-				if (open != null && !open.Sheets.IsEmpty)
-				{
-					Doc = open;
-					OpenTab(open.Sheets[0]);
-				}
+				if (open != null && FindTypeContext(open) != null)
+					ActivateType(open);
 				else
 					OpenFile(item.Path);
 			}
@@ -1286,7 +1300,7 @@ namespace Treadle.Editor
 				return;
 			if (kind == .Document)
 			{
-				StartNewDocument(folder);
+				StartNewType(.Class, folder);
 				return;
 			}
 			mCBNewFolder.Set(folder.IsEmpty ? (StringView)mProjectRoot : folder);
@@ -1499,6 +1513,7 @@ namespace Treadle.Editor
 		void DrawProjectBrowserPopups()
 		{
 			DrawNewFolderPopup();
+			DrawNewTypePopup(); // NewTypes.bf
 			DrawRenameAssetPopup();
 			DrawDeleteAssetsPopup();
 			DrawNewProjectPopup();

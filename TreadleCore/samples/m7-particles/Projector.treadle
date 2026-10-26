@@ -1,0 +1,273 @@
+# treadle 1
+type Projector class
+	namespace Particles
+	doc "Projects every particle to the screen with the camera's Mat4 into an array of SDL_Point (one slot per particle, off-screen ones at -10, -10). The work is cut over Projectors named Threads (\"project 0\" ...), started with a Construct Lambda each frame and joined; each counts its visible points and adds them with one Atomic.Add."
+
+field mSim Sim
+	doc "Not owned."
+
+field mPoints C.SDL_Point[]
+	owner owned
+
+field mVP Mat4
+
+field mVisible int
+	doc "Points on screen in the last ProjectAll (the threads add to it with Atomic.Add)."
+
+ctor p0001
+param sim Sim
+sheet body
+node a1 Entry
+node a2 Set this.mSim
+node a3 Call Particles.Sim.Total
+node a4 Construct C.SDL_Point
+	set count
+node a5 Set this.mPoints
+node a6 Return
+wire a1.then a2.in
+wire a1.sim a2.value
+wire a1.sim a3.receiver
+wire a3.result a4.count
+wire a2.then a4.in
+wire a4.then a5.in
+wire a4.object a5.value
+wire a5.then a6.in
+
+function p0002 ProjectPoint
+	returns int
+	doc "Point i from position p: clip = mVP * (p, 1); inside the view volume it lands in the window (Y down) and gives 1, else it goes to -10, -10 and gives 0."
+param i int
+param p Vec3
+local clip Vec4
+sheet body
+node b1 Entry
+node b2 Get this.mVP
+node b3 Call Core.Vec4.FromVec3
+	in w 1.0f
+node b4 Operator *
+node b5 Set local:clip
+node b6 Get local:clip
+node b7 Break Vec4
+node b8 Math
+	set expr "w > 0.1f && Abs(x) <= w && Abs(y) <= w && z >= 0 && z <= w"
+node b9 Branch
+node c1 Get Particles.Tuning.Width
+node c2 Get Particles.Tuning.Height
+node c3 Math
+	set expr "(x / w * 0.5f + 0.5f) * width"
+node c4 Math
+	set expr "(0.5f - y / w * 0.5f) * height"
+node c5 Cast int32
+node c6 Cast int32
+node c7 Make C.SDL_Point
+node c8 Get this.mPoints
+node c9 Call Arrays.Set
+node d1 Return
+	in value 1
+node d2 Make C.SDL_Point
+	in x -10
+	in y -10
+node d3 Call Arrays.Set
+node d4 Return
+	in value 0
+wire b1.p b3.v
+wire b2.value b4.a
+wire b3.result b4.b
+wire b1.then b5.in
+wire b4.result b5.value
+wire b6.value b7.value
+wire b7.W b8.w
+wire b7.X b8.x
+wire b7.Y b8.y
+wire b7.Z b8.z
+wire b8.result b9.condition
+wire b5.then b9.in
+wire b7.W c3.w
+wire c1.value c3.width
+wire b7.X c3.x
+wire c2.value c4.height
+wire b7.W c4.w
+wire b7.Y c4.y
+wire c3.result c5.value
+wire c4.result c6.value
+wire c5.result c7.x
+wire c6.result c7.y
+wire c8.value c9.array
+wire b9.true c9.in
+wire b1.i c9.index
+wire c7.value c9.value
+wire c9.then d1.in
+wire c8.value d3.array
+wire b9.false d3.in
+wire b1.i d3.index
+wire d2.value d3.value
+wire d3.then d4.in
+
+function p0003 ProjectSlice
+	doc "Projects slice part of Projectors: that share of emitter A's particles and of emitter B's; adds the visible count to mVisible once."
+param part int
+local n int
+local nA int
+local nB int
+sheet body
+node e1 Entry
+node e2 Get this.mSim
+node e3 Get Particles.Sim.mA
+node e4 Get Particles.EmitterA.mCount
+node e5 Set local:nA
+node e6 Get Particles.Sim.mB
+node e7 Get Particles.EmitterB.mCount
+node e8 Set local:nB
+node e9 Get Particles.Tuning.Projectors
+node f1 Get local:nA
+node f2 Math
+	set expr "part * n / k"
+node f3 Math
+	set expr "(part + 1) * n / k - part * n / k"
+node f4 For
+node f5 Call Particles.EmitterA.PosAt
+node f6 Call Core.Vec4.FromVector
+node f7 Call Core.Vec4.XYZ
+node f8 Call this.ProjectPoint
+node f9 Set local:n
+	set op +=
+node g1 Get local:nB
+node g2 Math
+	set expr "part * n / k"
+node g3 Math
+	set expr "(part + 1) * n / k - part * n / k"
+node g4 For
+node g5 Call Particles.EmitterB.PosAt
+node g6 Operator +
+node g7 Call this.ProjectPoint
+node g8 Set local:n
+	set op +=
+node g9 Get local:n
+node h1 Call Atomic.Add
+node h2 Get this.mVisible
+node h3 Return
+wire e2.value e3.receiver
+wire e3.value e4.receiver
+wire e1.then e5.in
+wire e4.value e5.value
+wire e2.value e6.receiver
+wire e6.value e7.receiver
+wire e5.then e8.in
+wire e7.value e8.value
+wire e9.value f2.k
+wire f1.value f2.n
+wire e1.part f2.part
+wire e9.value f3.k
+wire f1.value f3.n
+wire e1.part f3.part
+wire f3.result f4.count
+wire e8.then f4.in
+wire f2.result f4.start
+wire f4.index f5.i
+wire e3.value f5.receiver
+wire f5.result f6.value
+wire f6.result f7.receiver
+wire f4.index f8.i
+wire f4.body f8.in
+wire f7.result f8.p
+wire f8.then f9.in
+wire f8.result f9.value
+wire e9.value g2.k
+wire g1.value g2.n
+wire e1.part g2.part
+wire e9.value g3.k
+wire g1.value g3.n
+wire e1.part g3.part
+wire g3.result g4.count
+wire f4.done g4.in
+wire g2.result g4.start
+wire g4.index g5.i
+wire e6.value g5.receiver
+wire f1.value g6.a
+wire g4.index g6.b
+wire g6.result g7.i
+wire g4.body g7.in
+wire g5.result g7.p
+wire g7.then g8.in
+wire g7.result g8.value
+wire g4.done h1.in
+wire h2.value h1.location
+wire g9.value h1.value
+wire h1.then h3.in
+
+function p0004 ProjectAll
+	returns int
+	doc "Projects everything with vp on Projectors named threads (\"project 0\", \"project 1\", ...), each started with a Construct Lambda that captures its part by value; joins and deletes them; returns the visible count."
+param vp Mat4
+local part int
+sheet body
+node i1 Entry
+node i2 Set this.mVP
+node i3 Set this.mVisible
+	in value 0
+node i4 Construct List<Thread>
+	set ctor ()
+node i5 DeferDelete
+node i6 Get Particles.Tuning.Projectors
+node i7 For
+	in start 0
+node i8 Set local:part
+node i9 Local String
+	set ctor ()
+node j1 Get local:part
+node j2 Call String.AppendF
+	in format "project {0}"
+node j3 Construct Thread
+	set ctor (StringView)
+node j4 Call List<Thread>.Add
+node j5 Lambda
+	set type delegate:void()
+	set alloc construct
+node j6 Call Thread.Start
+node j7 ForEach
+node j8 Call Thread.Join
+node j9 ForEach
+node k1 Delete
+node k2 Get this.mVisible
+node k3 Return
+wire i1.then i2.in
+wire i1.vp i2.value
+wire i2.then i3.in
+wire i3.then i4.in
+wire i4.then i5.in
+wire i4.object i5.object
+wire i6.value i7.count
+wire i5.then i7.in
+wire i7.body i8.in
+wire i7.index i8.value
+wire i8.then i9.in
+wire j1.value j2.arg0
+wire i9.then j2.in
+wire i9.object j2.receiver
+wire j2.then j3.in
+wire i9.object j3.name
+wire j3.then j4.in
+wire i4.object j4.receiver
+wire j3.object j4.value
+wire j4.then j5.in
+wire j5.value j6.body
+wire j5.then j6.in
+wire j3.object j6.receiver
+wire i4.object j7.collection
+wire i7.done j7.in
+wire j7.body j8.in
+wire j7.element j8.receiver
+wire i4.object j9.collection
+wire j7.done j9.in
+wire j9.body k1.in
+wire j9.element k1.object
+wire j9.done k3.in
+wire k2.value k3.value
+sheet lambda:j5
+node la1 Entry
+node la2 Get local:part
+node la3 Call this.ProjectSlice
+node la4 Return
+wire la1.then la3.in
+wire la2.value la3.part
+wire la3.then la4.in

@@ -1,0 +1,728 @@
+# treadle 1
+type SelfTest class
+	namespace Particles
+	static
+	doc "--selftest: eight checks, one line each, then selftest ok (exit 0) or the number of failures."
+
+field sCount int
+	static
+	doc "The counter the Mutex check's threads add to."
+
+field sLock Mutex
+	static
+
+function t0001 Report
+	static
+	returns int
+	doc "Prints the check's name and ok or FAILED; gives 0 or 1."
+param name StringView
+param ok bool
+sheet body
+node a1 Entry
+node a2 Call Console.Write(StringView)
+node a3 Select
+	in true ": ok"
+	in false ": FAILED"
+node a4 Call Console.WriteLine(StringView)
+node a5 Select
+	in true 0
+	in false 1
+node a6 Return
+wire a1.then a2.in
+wire a1.name a2.text
+wire a1.ok a3.condition
+wire a2.then a4.in
+wire a3.result a4.text
+wire a1.ok a5.condition
+wire a4.then a6.in
+wire a5.result a6.value
+
+function t0002 VectorMath
+	static
+	returns bool
+	doc "float4 identities: Dot is symmetric, the cross product is orthogonal to both inputs, a normalised vector has length 1, and (a + b) * 2 is the same on float4 and on Vec4 (lane for lane: Vector.All of the == mask), as is Dot. The normalised vector is v / Length(v) in a Math Expression (Core.Vector.Normalize and Core.Vector.Equal do not lower yet: Follow-ups, Found by m7-particles)."
+sheet body
+node b1 Entry
+node b2 Make float4
+	in x 1
+	in y 2
+	in z 3
+	in w 0
+node b3 Make float4
+	in x -2
+	in y 0.5
+	in z 4
+	in w 0
+node b4 Call Core.Vector.Cross
+node b5 Math
+	set expr "v / Length(v)"
+node b6 Math
+	set expr "Abs(Dot(a, b) - Dot(b, a)) < 0.000001f && Abs(Dot(c, a)) < 0.0001f && Abs(Dot(c, b)) < 0.0001f && Abs(Length(n) - 1) < 0.00001f"
+node b7 Call Core.Vec4.FromVector
+node b8 Call Core.Vec4.FromVector
+node b9 Operator +
+node c1 Operator *
+	in b 2
+node c2 Call Core.Vec4.ToVector
+node c3 Math
+	set expr "(a + b) * 2"
+node c4 Call Core.Vector.All
+node c5 Call Core.Vec4.Dot
+node c6 Call Core.Vector.Dot
+node c7 Math
+	set expr "Abs(d1 - d2) < 0.000001f"
+node c8 Math
+	set expr "m && e && d"
+node c9 Return
+node ca Operator ==
+wire b2.value b4.a
+wire b3.value b4.b
+wire b2.value b5.v
+wire b2.value b6.a
+wire b3.value b6.b
+wire b4.result b6.c
+wire b5.result b6.n
+wire b2.value b7.value
+wire b3.value b8.value
+wire b7.result b9.a
+wire b8.result b9.b
+wire b9.result c1.a
+wire c1.result c2.receiver
+wire b2.value c3.a
+wire b3.value c3.b
+wire ca.result c4.m
+wire b8.result c5.b
+wire b7.result c5.receiver
+wire b2.value c6.a
+wire b3.value c6.b
+wire c5.result c7.d1
+wire c6.result c7.d2
+wire c7.result c8.d
+wire c4.result c8.e
+wire b6.result c8.m
+wire b1.then c9.in
+wire c8.result c9.value
+wire c2.result ca.a
+wire c3.result ca.b
+
+function t0003 Bounce
+	static
+	returns bool
+	doc "A particle placed just above the floor and moving down comes back up inside the box after one step; after 240 more steps every particle is inside the world AABB."
+local vy float
+local py float
+sheet body
+node d1 Entry
+node d2 Construct Particles.Sim
+	set ctor (int,int,int)
+	in countA 500
+	in countB 500
+	in seed 11
+node d3 DeferDelete
+node d4 Get Particles.Sim.mA
+node d5 Call Particles.EmitterA.Place
+	in i 0
+	in p 0,-49.5,0,0
+	in v 0,-40,0,0
+node d6 Call Particles.Sim.Step
+	in parallel false
+node d7 Call Particles.EmitterA.VelAt
+	in i 0
+node d8 Call Core.Vector.GetLane
+	in i 1
+node d9 Set local:vy
+node e1 Call Particles.EmitterA.PosAt
+	in i 0
+node e2 Call Core.Vector.GetLane
+	in i 1
+node e3 Set local:py
+node e4 Call Particles.Sim.Run
+	in frames 240
+	in parallel false
+node e5 Call Particles.Sim.CountInside
+node e6 Call Particles.Sim.Total
+node e7 Get local:vy
+node e8 Get local:py
+node e9 Math
+	set expr "vy > 0 && py >= -50 && py < -45 && inside == total"
+node f1 Return
+wire d1.then d2.in
+wire d2.then d3.in
+wire d2.object d3.object
+wire d2.object d4.receiver
+wire d3.then d5.in
+wire d4.value d5.receiver
+wire d5.then d6.in
+wire d2.object d6.receiver
+wire d4.value d7.receiver
+wire d7.result d8.v
+wire d6.then d9.in
+wire d8.result d9.value
+wire d4.value e1.receiver
+wire e1.result e2.v
+wire d9.then e3.in
+wire e2.result e3.value
+wire e3.then e4.in
+wire d2.object e4.receiver
+wire e4.then e5.in
+wire d2.object e5.receiver
+wire d2.object e6.receiver
+wire e5.result e9.inside
+wire e8.value e9.py
+wire e6.result e9.total
+wire e7.value e9.vy
+wire e5.then f1.in
+wire e9.result f1.value
+
+function t0004 ParallelSerial
+	static
+	returns bool
+	doc "Two Sims from one seed, 90 steps each, one with Parallel.For and one with the plain loop: the position checksums and the speed statistics are equal, and every chunk merged once per step."
+local cp int
+local cs int
+sheet body
+node g1 Entry
+node g2 Construct Particles.Sim
+	set ctor (int,int,int)
+	in countA 3000
+	in countB 3000
+	in seed 5
+node g3 DeferDelete
+node g4 Construct Particles.Sim
+	set ctor (int,int,int)
+	in countA 3000
+	in countB 3000
+	in seed 5
+node g5 DeferDelete
+node g6 Call Particles.Sim.Run
+	in frames 90
+	in parallel true
+node g7 Call Particles.Sim.Run
+	in frames 90
+	in parallel false
+node g8 Call Particles.Sim.Checksum
+node g9 Set local:cp
+node h1 Call Particles.Sim.Checksum
+node h2 Set local:cs
+node h3 Get Particles.Sim.mStats
+node h4 Get Particles.Sim.mStats
+node h5 Get Particles.Stats.mMin
+node h6 Get Particles.Stats.mMin
+node h7 Get local:cp
+node h8 Get local:cs
+node h9 Get Particles.Tuning.Chunks
+node i1 Math
+	set expr "a == b && a != 17 && mn1 == mn2 && mx1 == mx2 && s1 == s2 && c1 == c2 && m1 == k && m2 == k"
+node i2 Return
+node i3 Get Particles.Stats.mMax
+node i4 Get Particles.Stats.mMax
+node i5 Get Particles.Stats.mSum
+node i6 Get Particles.Stats.mSum
+node i7 Get Particles.Stats.mCount
+node i8 Get Particles.Stats.mCount
+node i9 Get Particles.Stats.mMerges
+node ia Get Particles.Stats.mMerges
+wire g1.then g2.in
+wire g2.then g3.in
+wire g2.object g3.object
+wire g3.then g4.in
+wire g4.then g5.in
+wire g4.object g5.object
+wire g5.then g6.in
+wire g2.object g6.receiver
+wire g6.then g7.in
+wire g4.object g7.receiver
+wire g7.then g8.in
+wire g2.object g8.receiver
+wire g8.then g9.in
+wire g8.result g9.value
+wire g9.then h1.in
+wire g4.object h1.receiver
+wire h1.then h2.in
+wire h1.result h2.value
+wire g2.object h3.receiver
+wire g4.object h4.receiver
+wire h3.value h5.receiver
+wire h4.value h6.receiver
+wire h7.value i1.a
+wire h8.value i1.b
+wire i7.value i1.c1
+wire i8.value i1.c2
+wire h9.value i1.k
+wire i9.value i1.m1
+wire ia.value i1.m2
+wire h5.value i1.mn1
+wire h6.value i1.mn2
+wire i3.value i1.mx1
+wire i4.value i1.mx2
+wire i5.value i1.s1
+wire i6.value i1.s2
+wire h2.then i2.in
+wire i1.result i2.value
+wire h3.value i3.receiver
+wire h4.value i4.receiver
+wire h3.value i5.receiver
+wire h4.value i6.receiver
+wire h3.value i7.receiver
+wire h4.value i8.receiver
+wire h3.value i9.receiver
+wire h4.value ia.receiver
+
+function t0005 NoNaN
+	static
+	returns bool
+	doc "After 200 parallel steps no position or velocity is NaN; then a NaN placed on purpose is found (the detector works)."
+local clean bool
+sheet body
+node j1 Entry
+node j2 Construct Particles.Sim
+	set ctor (int,int,int)
+	in countA 2000
+	in countB 2000
+	in seed 9
+node j3 DeferDelete
+node j4 Call Particles.Sim.Run
+	in frames 200
+	in parallel true
+node j5 Call Particles.Sim.AnyNaN
+node j6 Operator !
+node j7 Set local:clean
+node j8 Get Particles.Sim.mA
+node j9 Math
+	set expr "z / z"
+	in z 0.0f
+node k1 Make float4
+	in y 0
+	in z 0
+	in w 0
+node k2 Call Particles.EmitterA.Place
+	in i 3
+	in v 0
+node k3 Call Particles.Sim.AnyNaN
+node k4 Get local:clean
+node k5 Operator &&
+node k6 Return
+wire j1.then j2.in
+wire j2.then j3.in
+wire j2.object j3.object
+wire j3.then j4.in
+wire j2.object j4.receiver
+wire j4.then j5.in
+wire j2.object j5.receiver
+wire j5.result j6.a
+wire j5.then j7.in
+wire j6.result j7.value
+wire j2.object j8.receiver
+wire j9.result k1.x
+wire j7.then k2.in
+wire k1.value k2.p
+wire j8.value k2.receiver
+wire k2.then k3.in
+wire j2.object k3.receiver
+wire k4.value k5.a
+wire k3.result k5.b
+wire k3.then k6.in
+wire k5.result k6.value
+
+function t0006 CountWork
+	static
+	doc "The body of each counter thread: 25,000 adds, each inside a Local LockGuard (one loop pass is the critical section)."
+sheet body
+node l1 Entry
+node l2 For
+	in start 0
+	in count 25000
+node l3 Get Particles.SelfTest.sLock
+node l4 Local LockGuard
+	set ctor (Mutex)
+node l5 Set Particles.SelfTest.sCount
+	set op +=
+	in value 1
+node l6 Return
+wire l1.then l2.in
+wire l2.body l4.in
+wire l3.value l4.mutex
+wire l4.then l5.in
+wire l2.done l6.in
+
+function t0007 MutexCounter
+	static
+	returns bool
+	doc "8 named Threads (\"counter 0\" ...) run CountWork at once; the count is exactly 200,000."
+sheet body
+node m1 Entry
+node m2 Set Particles.SelfTest.sCount
+	in value 0
+node m3 Construct Mutex
+	set ctor ()
+node m4 Set Particles.SelfTest.sLock
+node m5 Construct List<Thread>
+	set ctor ()
+node m6 DeferDelete
+node m7 For
+	in start 0
+	in count 8
+node m8 Local String
+	set ctor ()
+node m9 Call String.AppendF
+	in format "counter {0}"
+node n1 Construct Thread
+	set ctor (StringView)
+node n2 Call List<Thread>.Add
+node n3 Bind Particles.SelfTest.CountWork
+	set alloc construct
+node n4 Call Thread.Start
+node n5 ForEach
+node n6 Call Thread.Join
+node n7 ForEach
+node n8 Delete
+node n9 Get Particles.SelfTest.sLock
+node o1 Delete
+node o2 Get Particles.SelfTest.sCount
+node o3 Operator ==
+	in b 200000
+node o4 Return
+wire m1.then m2.in
+wire m2.then m3.in
+wire m3.then m4.in
+wire m3.object m4.value
+wire m4.then m5.in
+wire m5.then m6.in
+wire m5.object m6.object
+wire m6.then m7.in
+wire m7.body m8.in
+wire m7.index m9.arg0
+wire m8.then m9.in
+wire m8.object m9.receiver
+wire m9.then n1.in
+wire m8.object n1.name
+wire n1.then n2.in
+wire m5.object n2.receiver
+wire n1.object n2.value
+wire n2.then n3.in
+wire n3.value n4.body
+wire n3.then n4.in
+wire n1.object n4.receiver
+wire m5.object n5.collection
+wire m7.done n5.in
+wire n5.body n6.in
+wire n5.element n6.receiver
+wire m5.object n7.collection
+wire n5.done n7.in
+wire n7.body n8.in
+wire n7.element n8.object
+wire n7.done o1.in
+wire n9.value o1.object
+wire o2.value o3.a
+wire o1.then o4.in
+wire o3.result o4.value
+
+function t0008 EventCount
+	static
+	returns bool
+	doc "600 steps fire OnBurst exactly 5 times (every 120 steps), its one handler ran 5 times and re-seeded particles."
+sheet body
+node p1 Entry
+node p2 Construct Particles.Sim
+	set ctor (int,int,int)
+	in countA 800
+	in countB 800
+	in seed 3
+node p3 DeferDelete
+node p4 Call Particles.Sim.Run
+	in frames 600
+	in parallel true
+node p5 Get Particles.Sim.mBursts
+node p6 Get Particles.Bursts.mFired
+node p7 Call Particles.Bursts.OnBurst.Count
+node p8 Get Particles.Sim.mReseeder
+node p9 Get Particles.Reseeder.mCalls
+node q1 Get Particles.Reseeder.mReseeded
+node q2 Math
+	set expr "fired == 5 && handlers == 1 && calls == 5 && reseeded > 0"
+node q3 Return
+wire p1.then p2.in
+wire p2.then p3.in
+wire p2.object p3.object
+wire p3.then p4.in
+wire p2.object p4.receiver
+wire p2.object p5.receiver
+wire p5.value p6.receiver
+wire p5.value p7.receiver
+wire p2.object p8.receiver
+wire p8.value p9.receiver
+wire p8.value q1.receiver
+wire p9.value q2.calls
+wire p6.value q2.fired
+wire p7.result q2.handlers
+wire q1.value q2.reseeded
+wire p4.then q3.in
+wire q2.result q3.value
+
+function t0009 MatVec
+	static
+	pure
+	returns bool
+	doc "The camera's view-projection Mat4 times a Vec4 equals the reference built from the matrix's rows (Row(i).Dot(v)), and TransformPoint of FromTRS equals Mat4 * (p, 1)."
+sheet body
+node r1 Entry
+node r2 Make Particles.Camera
+	in Yaw 0.6f
+	in Pitch -0.45f
+	in Distance 170.0f
+node r3 Call Particles.Camera.ViewProj
+	in aspect 1.6f
+node r4 Make Vec4
+	in X 10.0f
+	in Y -20.0f
+	in Z 5.0f
+	in W 1.0f
+node r5 Operator *
+node r6 Call Core.Mat4.Row
+	in index 0
+node r7 Call Core.Mat4.Row
+	in index 1
+node r8 Call Core.Mat4.Row
+	in index 2
+node r9 Call Core.Mat4.Row
+	in index 3
+node s1 Call Core.Vec4.Dot
+node s2 Call Core.Vec4.Dot
+node s3 Call Core.Vec4.Dot
+node s4 Call Core.Vec4.Dot
+node s5 Make Vec4
+node s6 Call Core.Vec4.ApproxEquals
+	in epsilon 0.001f
+node s7 Make Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node s8 Make Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node s9 Call Core.Quat.FromAxisAngle
+	in angle 0.7f
+node t1 Make Vec3
+	in X 2.0f
+	in Y 2.0f
+	in Z 2.0f
+node t2 Call Core.Mat4.FromTRS
+node t3 Make Vec3
+	in X 0.5f
+	in Y -1.0f
+	in Z 2.0f
+node t4 Call Core.Mat4.TransformPoint
+node t5 Call Core.Vec4.FromVec3
+	in w 1.0f
+node t6 Operator *
+node t7 Call Core.Vec4.XYZ
+node t8 Call Core.Vec3.ApproxEquals
+	in epsilon 0.0001f
+node t9 Operator &&
+node u1 Return
+wire r2.value r3.receiver
+wire r3.result r5.a
+wire r4.value r5.b
+wire r3.result r6.receiver
+wire r3.result r7.receiver
+wire r3.result r8.receiver
+wire r3.result r9.receiver
+wire r4.value s1.b
+wire r6.result s1.receiver
+wire r4.value s2.b
+wire r7.result s2.receiver
+wire r4.value s3.b
+wire r8.result s3.receiver
+wire r4.value s4.b
+wire r9.result s4.receiver
+wire s4.result s5.W
+wire s1.result s5.X
+wire s2.result s5.Y
+wire s3.result s5.Z
+wire s5.value s6.other
+wire r5.result s6.receiver
+wire s8.value s9.axis
+wire s9.result t2.rotation
+wire t1.value t2.scale
+wire s7.value t2.translation
+wire t3.value t4.point
+wire t2.result t4.receiver
+wire t3.value t5.v
+wire t2.result t6.a
+wire t5.result t6.b
+wire t6.result t7.receiver
+wire t7.result t8.other
+wire t4.result t8.receiver
+wire s6.result t9.a
+wire t8.result t9.b
+wire r1.then u1.in
+wire t9.result u1.value
+
+function t000a QuatNorm
+	static
+	pure
+	returns bool
+	doc "Quat (1, 2, 3, 4) normalised has length 1; FromAxisAngle of a unit axis has length 1; rotating (3, -4, 12) keeps its length 13; q * Conjugate(q) is the identity."
+sheet body
+node v1 Entry
+node v2 Make Quat
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+	in W 4.0f
+node v3 Call Core.Quat.Normalized
+node v4 Call Core.Quat.Length
+node v5 Make Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 2.0f
+node v6 Call Core.Vec3.Normalized
+node v7 Call Core.Quat.FromAxisAngle
+	in angle 1.1f
+node v8 Call Core.Quat.Length
+node v9 Make Vec3
+	in X 3.0f
+	in Y -4.0f
+	in Z 12.0f
+node w1 Operator *
+node w2 Call Core.Vec3.Length
+node w3 Call Core.Quat.Conjugate
+node w4 Operator *
+node w5 Get Core.Quat.Identity
+node w6 Call Core.Quat.ApproxEquals
+	in epsilon 0.00001f
+node w7 Math
+	set expr "Abs(l1 - 1) < 0.00001f && Abs(l2 - 1) < 0.00001f && Abs(l3 - 13) < 0.0001f && id"
+node w8 Return
+wire v2.value v3.receiver
+wire v3.result v4.receiver
+wire v5.value v6.receiver
+wire v6.result v7.axis
+wire v7.result v8.receiver
+wire v7.result w1.a
+wire v9.value w1.b
+wire w1.result w2.receiver
+wire v7.result w3.receiver
+wire v7.result w4.a
+wire w3.result w4.b
+wire w5.value w6.other
+wire w4.result w6.receiver
+wire w6.result w7.id
+wire v4.result w7.l1
+wire v8.result w7.l2
+wire w2.result w7.l3
+wire v1.then w8.in
+wire w7.result w8.value
+
+function t000b Run
+	static
+	returns int
+	doc "Runs the eight checks in order and prints selftest ok when all passed; gives the number of failures."
+local fails int
+sheet body
+node x1 Entry
+node x2 Call Particles.SelfTest.VectorMath
+node x3 Call Particles.SelfTest.Report
+	in name "1 vector math identities (float4 and Vec4)"
+node x4 Set local:fails
+	set op +=
+node x5 Call Particles.SelfTest.Bounce
+node x6 Call Particles.SelfTest.Report
+	in name "2 AABB bounce invariants"
+node x7 Set local:fails
+	set op +=
+node x8 Call Particles.SelfTest.ParallelSerial
+node x9 Call Particles.SelfTest.Report
+	in name "3 Parallel.For result == serial result"
+node y1 Set local:fails
+	set op +=
+node y2 Call Particles.SelfTest.NoNaN
+node y3 Call Particles.SelfTest.Report
+	in name "4 no NaN (and a planted NaN is found)"
+node y4 Set local:fails
+	set op +=
+node y5 Call Particles.SelfTest.MutexCounter
+node y6 Call Particles.SelfTest.Report
+	in name "5 Mutex counter exact over 8 named threads"
+node y7 Set local:fails
+	set op +=
+node y8 Call Particles.SelfTest.EventCount
+node y9 Call Particles.SelfTest.Report
+	in name "6 burst event count exact"
+node z1 Set local:fails
+	set op +=
+node z2 Call Particles.SelfTest.MatVec
+node z3 Call Particles.SelfTest.Report
+	in name "7 Mat4 * Vec4 against the row reference"
+node z4 Set local:fails
+	set op +=
+node z5 Call Particles.SelfTest.QuatNorm
+node z6 Call Particles.SelfTest.Report
+	in name "8 quaternion normalisation"
+node z7 Set local:fails
+	set op +=
+node z8 Get local:fails
+node z9 Operator ==
+	in b 0
+node za Branch
+node zb Call Console.WriteLine(StringView)
+	in text "selftest ok"
+node zc Local String
+	set ctor ()
+node zd Call String.AppendF
+	in format "selftest FAILED: {0} of 8 checks"
+node ze Call Console.WriteLine(String)
+node zf Get local:fails
+node zg Return
+wire x1.then x2.in
+wire x2.then x3.in
+wire x2.result x3.ok
+wire x3.then x4.in
+wire x3.result x4.value
+wire x4.then x5.in
+wire x5.then x6.in
+wire x5.result x6.ok
+wire x6.then x7.in
+wire x6.result x7.value
+wire x7.then x8.in
+wire x8.then x9.in
+wire x8.result x9.ok
+wire x9.then y1.in
+wire x9.result y1.value
+wire y1.then y2.in
+wire y2.then y3.in
+wire y2.result y3.ok
+wire y3.then y4.in
+wire y3.result y4.value
+wire y4.then y5.in
+wire y5.then y6.in
+wire y5.result y6.ok
+wire y6.then y7.in
+wire y6.result y7.value
+wire y7.then y8.in
+wire y8.then y9.in
+wire y8.result y9.ok
+wire y9.then z1.in
+wire y9.result z1.value
+wire z1.then z3.in
+wire z2.result z3.ok
+wire z3.then z4.in
+wire z3.result z4.value
+wire z4.then z6.in
+wire z5.result z6.ok
+wire z6.then z7.in
+wire z6.result z7.value
+wire z8.value z9.a
+wire z9.result za.condition
+wire z7.then za.in
+wire za.true zb.in
+wire za.false zc.in
+wire z8.value zd.arg0
+wire zc.then zd.in
+wire zc.object zd.receiver
+wire zd.then ze.in
+wire zc.object ze.value
+wire zb.then zg.in
+wire ze.then zg.in
+wire zf.value zg.value

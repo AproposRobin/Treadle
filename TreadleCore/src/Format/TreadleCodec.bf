@@ -513,11 +513,11 @@ namespace Treadle.Format
 					Error("`local` outside a function");
 					return;
 				}
-				if (!Need(3, "local <name> <Type>"))
+				if (!Need(2, "local <name> [<Type>]")) // a Local Variable not given a type yet has none (Validate: T1078)
 					return;
 				LocalDecl l = new .();
 				RecordText.Unquote(mTok[1], l.Name);
-				l.Type = TypeRef.Parse(mTok[2]);
+				l.Type = (mTok.Count > 2) ? TypeRef.Parse(mTok[2]) : null;
 				mMember.Locals.Add(l);
 				mLocal = l;
 				Begin(.Local, l.Extras);
@@ -1405,7 +1405,10 @@ namespace Treadle.Format
 				WriteParam("out", p, outText);
 			for (let l in m.Locals)
 			{
-				Open(l.Extras, scope $"local {RecordText.Text(l.Name, .. scope String())} {l.Type?.ToString(.. scope String())}", outText);
+				String localLine = scope $"local {RecordText.Text(l.Name, .. scope String())}";
+				if (l.Type != null && !l.Type.IsNone)
+					localLine.AppendF(" {}", l.Type.ToString(.. scope String()));
+				Open(l.Extras, localLine, outText);
 				PropWriter lw = scope .();
 				if (l.Init != null)
 					lw.Add("init", l.Init);

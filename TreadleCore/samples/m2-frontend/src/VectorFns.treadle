@@ -1,0 +1,169 @@
+# treadle 1
+type VectorFns class
+	namespace M2
+	static
+	doc "The Core.Vector functions end to end, beside the ones SimdOps uses: Equal, Normalize (a zero vector stays zero), Length, Product, MinLane, MaxLane, And, Or, Xor, All, Bitmask, Cross, Lerp and Splat, each result printed with AppendF."
+
+function v0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 Local String
+	set ctor ()
+node a3 Make float4
+	in x 1
+	in y 2
+	in z 3
+	in w 4
+node a4 Make float4
+	in x 1
+	in y 2
+	in z 3
+	in w 5
+node a5 Make float4
+	in x 3
+	in y 0
+	in z 4
+	in w 0
+node a6 Make float4
+	in x 0
+	in y 0
+	in z 0
+	in w 0
+node a7 Make int32x4
+	in x 12
+	in y 10
+	in z 6
+	in w 3
+node a8 Make float4
+	in x 1
+	in y 0
+	in z 0
+	in w 0
+node a9 Make float4
+	in x 0
+	in y 1
+	in z 0
+	in w 0
+node b1 Call Core.Vector.Equal
+node b2 Call Core.Vector.Equal
+node b3 Call String.AppendF
+	in format "equal {0} {1}"
+node b4 Call Console.WriteLine(StringView)
+node c1 Call Core.Vector.Normalize
+node c2 Call Core.Vector.Normalize
+node c3 Call Core.Vector.Length
+node c4 Call String.Clear
+node c5 Call String.AppendF
+	in format "normalize {0} {1} length {2}"
+node c6 Call Console.WriteLine(StringView)
+node d1 Call Core.Vector.Product
+node d2 Call Core.Vector.MinLane
+node d3 Call Core.Vector.MaxLane
+node d4 Call String.Clear
+node d5 Call String.AppendF
+	in format "product {0} min {1} max {2}"
+node d6 Call Console.WriteLine(StringView)
+node e1 Call Core.Vector.And
+node e2 Call Core.Vector.Or
+node e3 Call Core.Vector.Xor
+node e4 Call String.Clear
+node e5 Call String.AppendF
+	in format "and {0} or {1} xor {2}"
+node e6 Call Console.WriteLine(StringView)
+node f1 Operator <
+	in b 5
+node f2 Operator <
+	in b 3
+node f3 Call Core.Vector.All
+node f4 Call Core.Vector.All
+node f5 Call Core.Vector.Bitmask
+node f6 Call String.Clear
+node f7 Call String.AppendF
+	in format "all {0} {1} bitmask {2}"
+node f8 Call Console.WriteLine(StringView)
+node g1 Call Core.Vector.Cross
+node g2 Call Core.Vector.Lerp
+	in t 0.5
+node g3 Call Core.Vector.Splat<float4>
+	in value 2.5
+node g4 Call String.Clear
+node g5 Call String.AppendF
+	in format "cross {0} lerp {1} splat {2}"
+node g6 Call Console.WriteLine(StringView)
+node g7 Return
+wire a1.then a2.in
+wire a3.value b1.a
+wire a3.value b1.b
+wire a3.value b2.a
+wire a4.value b2.b
+wire b1.result b3.arg0
+wire b2.result b3.arg1
+wire a2.then b3.in
+wire a2.object b3.receiver
+wire b3.then b4.in
+wire a2.object b4.text
+wire a5.value c1.v
+wire a6.value c2.v
+wire a5.value c3.v
+wire b4.then c4.in
+wire a2.object c4.receiver
+wire c1.result c5.arg0
+wire c2.result c5.arg1
+wire c3.result c5.arg2
+wire c4.then c5.in
+wire a2.object c5.receiver
+wire c5.then c6.in
+wire a2.object c6.text
+wire a3.value d1.v
+wire a4.value d2.v
+wire a4.value d3.v
+wire c6.then d4.in
+wire a2.object d4.receiver
+wire d1.result d5.arg0
+wire d2.result d5.arg1
+wire d3.result d5.arg2
+wire d4.then d5.in
+wire a2.object d5.receiver
+wire d5.then d6.in
+wire a2.object d6.text
+wire a7.value e1.v
+wire a7.value e2.v
+wire a7.value e3.v
+wire d6.then e4.in
+wire a2.object e4.receiver
+wire e1.result e5.arg0
+wire e2.result e5.arg1
+wire e3.result e5.arg2
+wire e4.then e5.in
+wire a2.object e5.receiver
+wire e5.then e6.in
+wire a2.object e6.text
+wire a3.value f1.a
+wire a3.value f2.a
+wire f1.result f3.m
+wire f2.result f4.m
+wire f2.result f5.m
+wire e6.then f6.in
+wire a2.object f6.receiver
+wire f3.result f7.arg0
+wire f4.result f7.arg1
+wire f5.result f7.arg2
+wire f6.then f7.in
+wire a2.object f7.receiver
+wire f7.then f8.in
+wire a2.object f8.text
+wire a8.value g1.a
+wire a9.value g1.b
+wire a3.value g2.a
+wire a4.value g2.b
+wire f8.then g4.in
+wire a2.object g4.receiver
+wire g1.result g5.arg0
+wire g2.result g5.arg1
+wire g3.result g5.arg2
+wire g4.then g5.in
+wire a2.object g5.receiver
+wire g5.then g6.in
+wire a2.object g6.text
+wire g6.then g7.in

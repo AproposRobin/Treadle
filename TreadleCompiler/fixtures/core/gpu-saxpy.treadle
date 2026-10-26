@@ -1,0 +1,379 @@
+# treadle 1
+type GpuSaxpyMain class
+	namespace Cx
+	static
+	doc "GPU compute spike (docs/GPU-Compute.md): y = a * x + y over 1,000,000 floats three ways: the [Kernel] function Saxpy on the CPU (Kernel.RunCpu, every Debug check), the same kernel on the GPU (Gpu.Upload, Gpu.Dispatch, Gpu.Download; the CPU again when there is no GPU or TREADLE_GPU=cpu), and a float8 loop on the CPU. The three results must agree (1e-6); the GPU line and the timings go to stderr (not compared)."
+
+field sN int
+	static
+	const
+	init 1000000
+
+function g01 Saxpy
+	static
+	attr Kernel
+	doc "y[i] = a * x[i] + y[i] for the dispatch's index i."
+param x Span<float>
+param y Span<float>
+param a float
+sheet body
+node ka1 Entry
+node ka2 Call Kernel.Index
+node ka3 Call Span<float>.At
+node ka4 Call Span<float>.At
+node ka5 Math
+	set expr "a * xv + yv"
+node ka6 Call Span<float>.SetAt
+node ka7 Return
+wire ka1.then ka3.in
+wire ka2.result ka3.index
+wire ka1.x ka3.receiver
+wire ka3.then ka4.in
+wire ka2.result ka4.index
+wire ka1.y ka4.receiver
+wire ka1.a ka5.a
+wire ka3.result ka5.xv
+wire ka4.result ka5.yv
+wire ka4.then ka6.in
+wire ka2.result ka6.index
+wire ka1.y ka6.receiver
+wire ka5.result ka6.value
+wire ka6.then ka7.in
+
+function g02 SaxpySimd
+	static
+	doc "The same over float8 vectors on the CPU (n a multiple of 8)."
+param x Span<float>
+param y Span<float>
+param a float
+param n int
+sheet body
+node sa1 Entry
+node sa2 For
+	in start 0
+node sa3 Operator /
+	in b 8
+node sa4 Operator *
+	in b 8
+node sa5 Call Core.Vector.Load<float8>
+node sa6 Call Core.Vector.Load<float8>
+node sa7 Math
+	set expr "float8(a) * xv + yv"
+node sa8 Call Core.Vector.Store
+node sa9 Return
+wire sa3.result sa2.count
+wire sa1.then sa2.in
+wire sa1.n sa3.a
+wire sa2.index sa4.a
+wire sa4.result sa5.index
+wire sa1.x sa5.span
+wire sa4.result sa6.index
+wire sa1.y sa6.span
+wire sa1.a sa7.a
+wire sa5.result sa7.xv
+wire sa6.result sa7.yv
+wire sa2.body sa8.in
+wire sa4.result sa8.index
+wire sa1.y sa8.span
+wire sa7.result sa8.v
+wire sa2.done sa9.in
+
+function g03 Main
+	static
+	returns int
+local x float[]
+local yCpu float[]
+local yGpu float[]
+local ySimd float[]
+local bx GpuBuffer<float>
+local by GpuBuffer<float>
+local tCpu int
+local tSimd int
+local tUp int
+local tKernel int
+local tDown int
+local onGpu bool
+local badGpu int
+local badSimd int
+sheet body
+node a1 Entry
+node a2 Construct float[]
+	in count Cx.GpuSaxpyMain.sN
+node a3 Set local:x
+node a4 Construct float[]
+	in count Cx.GpuSaxpyMain.sN
+node a5 Set local:yCpu
+node a6 Construct float[]
+	in count Cx.GpuSaxpyMain.sN
+node a7 Set local:yGpu
+node a8 Construct float[]
+	in count Cx.GpuSaxpyMain.sN
+node a9 Set local:ySimd
+node b1 For
+	in start 0
+	in count Cx.GpuSaxpyMain.sN
+node b2 Call Arrays.Set
+node b3 Get local:x
+node b4 Cast float
+node b5 Math
+	set expr "i % 1000"
+node b6 Call Arrays.Set
+node b7 Get local:yCpu
+node b8 Cast float
+node b9 Math
+	set expr "i % 7"
+node c1 Call Arrays.Set
+node c2 Get local:yGpu
+node c3 Call Arrays.Set
+node c4 Get local:ySimd
+node c5 Local Stopwatch
+	set ctor (bool)
+	in startNow true
+node c6 Call Kernel.RunCpu
+	set kernel Cx.GpuSaxpyMain.Saxpy
+	in count Cx.GpuSaxpyMain.sN
+	in a 2.5
+node c7 Get local:x
+node c8 Get local:yCpu
+node c9 Call Stopwatch.ElapsedMicroseconds
+node d1 Set local:tCpu
+node d2 Call Stopwatch.Restart
+node d3 Call GpuSaxpyMain.SaxpySimd
+	in a 2.5
+	in n Cx.GpuSaxpyMain.sN
+node d4 Get local:x
+node d5 Get local:ySimd
+node d6 Call Stopwatch.ElapsedMicroseconds
+node d7 Set local:tSimd
+node d8 Call Gpu.PrintInfo
+node d9 Call Stopwatch.Restart
+node e1 Call Gpu.Upload
+node e2 Get local:x
+node e3 Cast Span<float>
+node e4 Set local:bx
+node e5 Call Gpu.Upload
+node e6 Cast Span<float>
+node e7 Get local:yGpu
+node e8 Set local:by
+node e9 Call Stopwatch.ElapsedMicroseconds
+node f1 Set local:tUp
+node f2 Call Stopwatch.Restart
+node f3 Call Gpu.Dispatch
+	set kernel Cx.GpuSaxpyMain.Saxpy
+	in count Cx.GpuSaxpyMain.sN
+	in a 2.5
+node f4 Get local:bx
+node f5 Get local:by
+node f6 Set local:onGpu
+node f7 Call Gpu.Sync
+node f8 Call Stopwatch.ElapsedMicroseconds
+node f9 Set local:tKernel
+node g1 Call Stopwatch.Restart
+node g2 Call Gpu.Download
+node g3 Get local:by
+node g4 Cast Span<float>
+node g5 Get local:yGpu
+node g6 Call Stopwatch.ElapsedMicroseconds
+node g7 Set local:tDown
+node g8 Get local:bx
+node g9 Delete
+node h1 Delete
+node h2 Get local:by
+node h3 For
+	in start 0
+	in count Cx.GpuSaxpyMain.sN
+node h4 Set local:badGpu
+	set op +=
+node h5 Set local:badSimd
+	set op +=
+node h6 Index
+node h7 Get local:yCpu
+node h8 Index
+node h9 Get local:yGpu
+node i1 Index
+node i2 Get local:ySimd
+node i3 Math
+	set expr "Math.Abs(c - g) > 0.000001 ? 1 : 0"
+node i4 Math
+	set expr "Math.Abs(c - s) > 0.000001 ? 1 : 0"
+node j1 Index
+	in index 0
+node j2 Call Console.WriteLine(float)
+node j3 Index
+	in index 999999
+node j4 Call Console.WriteLine(float)
+node j5 Call Console.Write
+	in text "GPU mismatches "
+node j6 Get local:badGpu
+node j7 Call Console.WriteLine(int)
+node j8 Call Console.Write
+	in text "SIMD mismatches "
+node j9 Get local:badSimd
+node k1 Call Console.WriteLine(int)
+node k2 Local String
+node k3 Call String.AppendF
+	in format "saxpy over {0} floats: GPU {1} us kernel, {2} us upload, {3} us download (ran on the GPU: {4}); "
+node k4 Get local:tKernel
+node k5 Get local:tUp
+node k6 Get local:tDown
+node k7 Get local:onGpu
+node k8 Call String.AppendF
+	in format "CPU (Kernel.RunCpu) {0} us; SIMD CPU (float8) {1} us"
+node k9 Get local:tCpu
+node l1 Get local:tSimd
+node l2 Call Console.ErrorLine
+node l3 Get local:x
+node l4 Delete
+node l5 Get local:yCpu
+node l6 Delete
+node l7 Get local:yGpu
+node l8 Delete
+node l9 Get local:ySimd
+node m1 Delete
+node m2 Return
+	in value 0
+node m3 Get local:yCpu
+node m4 Get Cx.GpuSaxpyMain.sN
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value
+wire a3.then a4.in
+wire a4.then a5.in
+wire a4.object a5.value
+wire a5.then a6.in
+wire a6.then a7.in
+wire a6.object a7.value
+wire a7.then a8.in
+wire a8.then a9.in
+wire a8.object a9.value
+wire a9.then b1.in
+wire b3.value b2.array
+wire b1.body b2.in
+wire b1.index b2.index
+wire b4.result b2.value
+wire b5.result b4.value
+wire b1.index b5.i
+wire b7.value b6.array
+wire b2.then b6.in
+wire b1.index b6.index
+wire b8.result b6.value
+wire b9.result b8.value
+wire b1.index b9.i
+wire c2.value c1.array
+wire b6.then c1.in
+wire b1.index c1.index
+wire b8.result c1.value
+wire c4.value c3.array
+wire c1.then c3.in
+wire b1.index c3.index
+wire b8.result c3.value
+wire b1.done c5.in
+wire c5.then c6.in
+wire c7.value c6.x
+wire c8.value c6.y
+wire c6.then c9.in
+wire c5.object c9.receiver
+wire c9.then d1.in
+wire c9.result d1.value
+wire d1.then d2.in
+wire c5.object d2.receiver
+wire d2.then d3.in
+wire d4.value d3.x
+wire d5.value d3.y
+wire d3.then d6.in
+wire c5.object d6.receiver
+wire d6.then d7.in
+wire d6.result d7.value
+wire d7.then d8.in
+wire d8.then d9.in
+wire c5.object d9.receiver
+wire e3.result e1.data
+wire d9.then e1.in
+wire e2.value e3.value
+wire e1.then e4.in
+wire e1.result e4.value
+wire e6.result e5.data
+wire e4.then e5.in
+wire e7.value e6.value
+wire e5.then e8.in
+wire e5.result e8.value
+wire e8.then e9.in
+wire c5.object e9.receiver
+wire e9.then f1.in
+wire e9.result f1.value
+wire f1.then f2.in
+wire c5.object f2.receiver
+wire f2.then f3.in
+wire f4.value f3.x
+wire f5.value f3.y
+wire f3.then f6.in
+wire f3.result f6.value
+wire f6.then f7.in
+wire f7.then f8.in
+wire c5.object f8.receiver
+wire f8.then f9.in
+wire f8.result f9.value
+wire f9.then g1.in
+wire c5.object g1.receiver
+wire g3.value g2.buffer
+wire g1.then g2.in
+wire g4.result g2.into
+wire g5.value g4.value
+wire g2.then g6.in
+wire c5.object g6.receiver
+wire g6.then g7.in
+wire g6.result g7.value
+wire g7.then g9.in
+wire g8.value g9.object
+wire g9.then h1.in
+wire h2.value h1.object
+wire h1.then h3.in
+wire h3.body h4.in
+wire i3.result h4.value
+wire h4.then h5.in
+wire i4.result h5.value
+wire h7.value h6.collection
+wire h3.index h6.index
+wire h9.value h8.collection
+wire h3.index h8.index
+wire i2.value i1.collection
+wire h3.index i1.index
+wire h6.value i3.c
+wire h8.value i3.g
+wire h6.value i4.c
+wire i1.value i4.s
+wire m3.value j1.collection
+wire h3.done j2.in
+wire j1.value j2.value
+wire m3.value j3.collection
+wire j2.then j4.in
+wire j3.value j4.value
+wire j4.then j5.in
+wire j5.then j7.in
+wire j6.value j7.value
+wire j7.then j8.in
+wire j8.then k1.in
+wire j9.value k1.value
+wire k1.then k2.in
+wire m4.value k3.arg0
+wire k4.value k3.arg1
+wire k5.value k3.arg2
+wire k6.value k3.arg3
+wire k7.value k3.arg4
+wire k2.then k3.in
+wire k2.object k3.receiver
+wire k9.value k8.arg0
+wire l1.value k8.arg1
+wire k3.then k8.in
+wire k2.object k8.receiver
+wire k8.then l2.in
+wire k2.object l2.text
+wire l2.then l4.in
+wire l3.value l4.object
+wire l4.then l6.in
+wire l5.value l6.object
+wire l6.then l8.in
+wire l7.value l8.object
+wire l8.then m1.in
+wire l9.value m1.object
+wire m1.then m2.in

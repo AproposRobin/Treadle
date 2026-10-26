@@ -1,7 +1,7 @@
 ---
 audience: developer
 title: Graph format
-summary: The on-disk text format of type files (.treadle), layout sidecars (.treadle.layout), project files and C import sets: grammar, canonical form, versioning, and three complete examples.
+summary: The on-disk text format of type files (.treadle), layout files (`layout/<Type>.layout`), project files and C import sets: grammar, canonical form, versioning, and three complete examples.
 order: 2
 ---
 
@@ -41,6 +41,7 @@ continuation lines), not TOML and not JSON.
 | Free text | One rule for every value a person types: type, member, parameter, local and payload names, Switch case labels (`case <label>`) and the pin names made from them, project, config and C import set names, folders and paths (`source`, `depends`, `cimport`, `output`, `header`, `include`, `lib`). Such a value is written as a word when it reads back as one: not empty, no space, tab or other control character (bytes up to 0x20 and 0x7F), not starting with `"`; quotes, backslashes and UTF-8 inside a word stay as they are (`back\slash`, `café`). Otherwise it is a string with the escapes above: `case "two words"`, `case "say \"hi\""`, `case ""`, `project "My Game"`. The writer quotes only when needed, so a file without such values is unchanged. A wire or `route` end `<id>.<pin>` whose pin name needs quoting is one string as a whole: `wire "a2.case:two words" a3.in` (node ids have no dots, so the first dot splits it). |
 | Id | A word of 1-8 chars from `[a-z0-9]`, unique in its file. The editor assigns 5-char random ids (Crockford base32, lower case, no `i l o u`), so two branches adding nodes never collide on a counter. |
 | Type syntax (in a token) | `int`, `String`, `Game.Player`, `List<int>`, `int[]`, `int[4]`, `int?`, `int*`, `(int,float)`, `function:int(int)`, `delegate:void(int)`, vectors `float4`, `int32x4`, `bool4` (`Vector<float,4>` reads as `float4`; a vector literal on an `in` line lists the lanes without spaces, `in v 0,1,0,0`, or one value for all, `in v 2`). Names resolve through the file's `uses` lines, then the type's namespace and its parents. |
+| Struct literal (in a token) | On an `in` line of a struct-typed input whose fields are all numbers, bools or characters (the core math types: `Vec3`, `Quat`, `Color`, `Color32`, `Rect`, ...): one value per field in declaration order, separated by commas without spaces, every field written: `in translation 1,2.5,-3` (a Vec3), `in value 255,128,0,255` (a Color32). Each value must fit its field (T2232 otherwise, also for a count other than the fields'); it compiles as the Make of those fields. Not on a Receiver (it takes a wire). The format reads it as any word, so it needs no new syntax. |
 | Member reference | `Type.Member` or `Type.Member(ParamTypes)` when the member is overloaded: `Console.WriteLine(StringView)`. `this.Member` for the own type. C imports: `C.<set>.<symbol>`. |
 
 Unknown record kinds and unknown property keys are **kept verbatim and written back in place**, so a file
@@ -125,9 +126,10 @@ Pins not listed in `in` lines and not wired hold the type's `default`; a require
 compile error on the node ("needs a value"). Pins are never written: the reader makes the pins a node's kind
 and settings give, plus any pin a wire or an `in` line names (its type comes later from the compiler).
 
-**Split struct pins.** A node line `split <pin> <Type>` (any node, any struct- or tuple-typed value pin; `Type`
-is the struct as the pin had it when it was split) draws that pin as one pin per field, named
-`<pin>.<field>`: `value.First`, `value.Second`. Wires and `in` lines name those field pins like any other pin
+**Split struct pins.** A node line `split <pin> <Type>` (any node, any struct-, tuple- or vector-typed value pin;
+`Type` is the struct as the pin had it when it was split) draws that pin as one pin per field, named
+`<pin>.<field>`: `value.First`, `value.Second`; a vector's fields are its lanes, `value.x` ... `value.w`
+(`value.lane0` ... above 4 lanes: `split value float4`, `in value.w 4`). Wires and `in` lines name those field pins like any other pin
 (`wire a1.x a2.value.X`, `in value.Y 2`); the pin itself takes no wire or literal while it is split. The
 compiler reads an input split as a `Make <Type>` fed by the field pins and wired into the pin, an output
 split as a `Break <Type>` fed by the pin and giving the field pins; a field pin with neither a wire nor a
@@ -387,14 +389,39 @@ Read: `Swap` is pure, so a call to it is a value node. The `==` operator adds op
 generic parameters so that comparing the fields is legal; `generic TFirst operator==` on the operator
 record narrows the type's own parameter for this member (Beef's `where` on a method).
 
-## 4. Layout file (`<Type>.treadle.layout`)
+## 4. Layout file (`layout/<path>/<Type>.layout`)
 
 Optional and disposable: deleting it loses positions, comment boxes, knots and the view; never meaning. The
-editor writes it only when its text changed, and not at all when there is no layout. Records are grouped per
+editor writes it only when its text changed, and not at all when there is no layout. A type with no layout file opens
+auto-arranged, and its next save writes the file. Records are grouped per
 Sheet by the owner's id; Sheet blocks follow the type file's Sheet order, and inside one: `view`, `saved`,
 nodes and node groups by id, then `box`, `route`, `collapsed`, `pinned`.
 
-`Game/Player.treadle.layout`
+**Where it lives.** Layout files and backups are kept out of the source folders, so a graph can be run, shared
+or built without anyone's layout. Under the project folder (the folder of the nearest `.tproj` above the type
+file):
+
+| What | Path | Example |
+|---|---|---|
+| Layout of a type file | `layout/<path of the type file relative to the project, extension dropped>.layout` | `src/Game/Engine.treadle` has `layout/src/Game/Engine.layout` |
+| Backup of a saved-over file | `backup/<path relative to the project>.bak` (one file, replaced by the next save) | `backup/src/Game/Engine.treadle.bak`, `backup/layout/src/Game/Engine.layout.bak`, `backup/Shooter.tproj.bak` |
+| Backup a format migration leaves | `backup/<path>.v<old>.bak` (once, never overwritten) | `backup/src/Game/Engine.treadle.v1.bak` |
+
+The folder names are the optional project keys `layoutDir` and `backupDir` (section 5), `layout` and `backup`
+by default, relative to the project folder (a rooted path is used as it is). A type file with no project file
+above it keeps its sidecars beside it as `<file>.layout` (`Engine.treadle.layout`) and `<file>.bak`, and the
+frozen `format-history` corpus is never moved. The path mapping is the only change from the first alpha: the
+text of every file and the format version (still 1) are unchanged. Old projects are moved once: when a project is
+opened (and by `--format --migrate`), `<Type>.treadle.layout` and `<Type>.vtype.layout` beside the sources and
+`.bak` / `.v<old>.bak` backups of format files move into the two folders, one line per project says "moved N layout
+files and M backups to layout/ and backup/", and where both places hold a file the newer one is kept and the
+other is dropped with a line saying so.
+
+Version control: **New Project** writes a `.gitignore` containing `backup/`; the layout folder stays committed by
+default because positions are worth sharing. Ignore `layout/` as well to share only the graphs; they then open
+auto-arranged for everyone else.
+
+`layout/Game/Player.layout` (for `Game/Player.treadle`)
 
 ```
 # treadle-layout 1
@@ -469,11 +496,15 @@ subsystem; on Linux the two are the same program), with the same `Main` forms an
 shown in the editor's Output Log by Run; a library is a DLL (Linux: `lib<Name>.so`) with no `entry` and no
 `Main`, exporting its `[Export("name")]` functions ([Language.md 6](Language.md#6-entry-points)) and the pair
 `treadle_init` / `treadle_shutdown` its user calls around them. `namespace` is the root namespace File > New
-Type proposes (a type in a sub-folder of a source folder gets the folder path after it: `Game/Enemies` gives
-`App.Enemies`); New Project writes it, and New Type adds it (the project name made an identifier) to a file
+Class (and the other + Add > New entries) propose (a type in a sub-folder of a source folder gets the folder path after it: `Game/Enemies` gives
+`App.Enemies`); New Project writes it, and New Class (any + Add > New entry) adds it (the project name made an identifier) to a file
 without one. `source` lists folders scanned for `.treadle` files (default: the project folder). `depends` names
 graph library projects compiled with this one. A `config`'s settings are kept in file order (above, Debug and
 Release differ); unknown records are written at the end.
+
+`layoutDir` and `backupDir` are optional lines of the `project` record (`layoutDir <folder>`, `backupDir <folder>`; written
+only when set): the folders, relative to the project folder, that hold the layout files and the backups (section 4,
+"Where it lives"). The defaults are `layout` and `backup`. The project index skips both folders.
 
 A build names a config, and the config's keys decide what it does; the name only gives the defaults:
 
@@ -554,8 +585,8 @@ meaning changes. New record kinds and new keys do not bump it (they are preserve
 
 * **Older file:** every reader runs the migration chain (`TreadleCore/src/Format/Migrations.bf`: one step per
   version and file kind over the file's records, before binding) and reads the result. In the editor the
-  document is marked dirty; its first save keeps the old text once as `<file>.v<old>.bak` (the layout's as
-  `<file>.layout.v<old>.bak`) and writes the current version. `--format --migrate <paths>` does the same in
+  document is marked dirty; its first save keeps the old text once as `backup/<path>.v<old>.bak` (the layout's as
+  `backup/layout/<path>.layout.v<old>.bak`) and writes the current version. `--format --migrate <paths>` does the same in
   batch; `--format` without `--migrate`, and `--format --check`, list such a file and leave it.
 * **Newer file:** the compiler, the C import and `--format` refuse it with one diagnostic on line 1, "saved by a
   newer version V; this build reads up to N; open read-only" (`--format` and `--build-run` exit with code 2).

@@ -126,6 +126,31 @@ namespace Treadle.Editor
 			return false;
 		}
 
+		/// `codec`: the tools, the runtime and the core are looked for beside the exe and, in a development
+		/// build, in its source tree at the fixed build layout only (finding 8: no walk up the parent
+		/// folders); a missing tool's message says where it was looked for.
+		void SelfTestSecurityToolDirs()
+		{
+			String tree = scope .();
+			let dev = Treadle.Language.ToolDirs.DevTree(tree);
+			let package = Treadle.Language.ToolDirs.IsPackage();
+			SelfTestCheck(package || (dev && System.IO.File.Exists(scope $"{tree}/BeefSpace.toml")),
+				scope $"codec: a development build finds its source tree at the build layout ({(dev ? tree : "none")}{(package ? ", a package" : "")})");
+			if (dev)
+			{
+				String core = scope .();
+				Treadle.Compiler.CoreSource.FindFolder(core);
+				core.Replace('\\', '/');
+				String env = scope .();
+				let coreEnv = Environment.GetEnvironmentVariable("TREADLE_CORE", env) case .Ok && !env.IsEmpty;
+				SelfTestCheck(coreEnv || core.EndsWith("/TreadleCore/core"), scope $"codec: the core folder of a development build is its tree's TreadleCore/core ({core})");
+			}
+			String msg = scope .();
+			Treadle.Language.ToolDirs.Missing("clang", "tools/llvm/bin/clang.exe", "tools/llvm-mingw/bin/clang.exe", "TREADLE_LLVM", msg);
+			SelfTestCheck(msg.Contains("no parent folder is searched") && msg.Contains("TREADLE_LLVM") && (!dev || msg.Contains("llvm-mingw")),
+				scope $"codec: a missing tool names where it was looked for: {msg}");
+		}
+
 		/// `cimport`: a set name cannot leave the output folder; Build's program and config names
 		/// cannot leave the build folder.
 		void SelfTestSecurityCImport()

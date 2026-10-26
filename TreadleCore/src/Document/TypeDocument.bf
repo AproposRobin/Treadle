@@ -206,10 +206,10 @@ namespace Treadle.Document
 		public bool CanUndo => !mUndo.IsEmpty;
 		public bool CanRedo => !mRedo.IsEmpty;
 
-		/// The layout sidecar of a type file: `<file>.layout` (`Player.treadle.layout`).
+		/// The layout file of a type file: `layout/<relative path>.layout` in its project (Sidecars).
 		public static void LayoutPathOf(StringView path, String outPath)
 		{
-			outPath.AppendF("{}.layout", path);
+			Sidecars.LayoutPathOf(path, outPath);
 		}
 
 		/// The file name without its extension.
@@ -559,6 +559,157 @@ namespace Treadle.Document
 			Header.Namespace.Set(ns);
 		}
 
+		/// A new type of `kind` as the Project Browser's New Class, New Struct, New Enum, New Interface,
+		/// New Delegate and New Extension make it (Editor-Model.md, "Making a type"): a class starts with
+		/// a constructor and its empty Sheet, an enum with the case `None`, a delegate with the signature
+		/// `void()`; a struct, an interface and an extension start with no members (an extension's
+		/// `extends` is chosen next, in Type Settings). Returns the Sheet to open first (the class's
+		/// constructor), else null.
+		public Sheet InitFromTemplate(StringView name, TypeKind kind, StringView ns)
+		{
+			InitType(name, kind, ns);
+			DeleteAndNullify!(Header.Signature);
+			switch (kind)
+			{
+			case .Class:
+				MemberDecl ctor = new .();
+				ctor.Kind = .Ctor;
+				NewId(ctor.Id);
+				Members.Add(ctor);
+				return NewSheet(ctor, .Body);
+			case .Enum:
+				MemberDecl none = new .();
+				none.Kind = .Case;
+				none.Name.Set("None");
+				Members.Add(none);
+			case .Delegate:
+				Header.Signature = TypeRef.ParseSignature("void()");
+			default:
+			}
+			return null;
+		}
+
+		/// A function with the signature of `proto` (its name, inputs, outputs and result) and an empty
+		/// body Sheet: a required interface function to fill, or an override of a base function
+		/// (`isOverride`). Null when the type has a member of that name already.
+		public Sheet AddFunctionLike(MemberDecl proto, bool isOverride)
+		{
+			if (FindMember(proto.Name) != null)
+				return null;
+			MemberDecl m = new .();
+			m.Kind = .Function;
+			NewId(m.Id);
+			m.Name.Set(proto.Name);
+			m.Returns = proto.Returns?.Clone();
+			for (let p in proto.Params)
+				m.Params.Add(p.Clone());
+			for (let p in proto.Outs)
+				m.Outs.Add(p.Clone());
+			m.Access = proto.Access;
+			m.Pure = proto.Pure;
+			m.Override = isOverride;
+			Members.Add(m);
+			let s = NewSheet(m, .Body);
+			Modified = true;
+			Version++;
+			return s;
+		}
+
+		/// Forgets undo and redo: a new type's template is where its history starts.
+		public void ClearHistory()
+		{
+			ClearAndDeleteItems!(mUndo);
+			ClearAndDeleteItems!(mRedo);
+		}
+
+		/// The type file and layout of a copy of this type named `newName` (Project Browser >
+		/// Duplicate): every member gets a fresh id and every word that names the type (outside
+		/// quoted text) names the copy. False with `outError` when the codec refuses.
+		public bool WriteDuplicate(StringView newName, String outText, String outLayout, String outError)
+		{
+			String text = scope .();
+			if (!WriteText(text, outError))
+				return false;
+			String layout = scope .();
+			String why = scope .();
+			if (!Codec.WriteLayout(this, layout, why))
+			{
+				outError?.Set(why);
+				return false;
+			}
+			Dictionary<String, String> map = scope .();
+			defer { for (let kv in map) { delete kv.key; delete kv.value; } }
+			HashSet<String> used = scope .();
+			defer { for (let s in used) delete s; }
+			for (let m in Members)
+				if (!m.Id.IsEmpty)
+					used.Add(new String(m.Id));
+			for (let m in Members)
+			{
+				if (m.Id.IsEmpty || map.ContainsKeyAlt(m.Id))
+					continue;
+				String id = new .();
+				RecordIds.NewUnique(used, id);
+				map[new String(m.Id)] = id;
+			}
+			if (!map.ContainsKeyAlt(Header.Name))
+				map[new String(Header.Name)] = new String(newName);
+			RewriteWords(text, map, outText);
+			RewriteWords(layout, map, outLayout);
+			return true;
+		}
+
+		/// `text` with every word (letters, digits, `_`) that is a key of `map` replaced by its value;
+		/// quoted text ("...", with \" inside) is copied as it is.
+		public static void RewriteWords(StringView text, Dictionary<String, String> map, String outText)
+		{
+			int i = 0;
+			while (i < text.Length)
+			{
+				let c = text[i];
+				if (c == '"')
+				{
+					int j = i + 1;
+					while (j < text.Length && text[j] != '"' && text[j] != '\n')
+						j += (text[j] == '\\' && j + 1 < text.Length) ? 2 : 1;
+					j = Math.Min(j + 1, text.Length);
+					outText.Append(text.Substring(i, j - i));
+					i = j;
+					continue;
+				}
+				if (c.IsLetterOrDigit || c == '_')
+				{
+					int j = i;
+					while (j < text.Length && (text[j].IsLetterOrDigit || text[j] == '_'))
+						j++;
+					let word = text.Substring(i, j - i);
+					if (map.TryGetValueAlt(word, let to))
+						outText.Append(to);
+					else
+						outText.Append(word);
+					i = j;
+					continue;
+				}
+				outText.Append(c);
+				i++;
+			}
+		}
+
+		/// The name the New Class, New Struct, ... entries propose before a number is added
+		/// (`NewClass`, `INewInterface`).
+		public static StringView TemplateName(TypeKind kind)
+		{
+			switch (kind)
+			{
+			case .Class: return "NewClass";
+			case .Struct: return "NewStruct";
+			case .Interface: return "INewInterface";
+			case .Enum: return "NewEnum";
+			case .Delegate: return "NewDelegate";
+			case .Extension: return "NewExtension";
+			}
+		}
+
 		// ------------------------------------------------------------------ layout
 
 		public void SetLayout(StringView key, NodePos pos)
@@ -833,8 +984,9 @@ namespace Treadle.Document
 			if (MigratedFrom > 0)
 			{
 				Modified = true;
-				Messages.Add(new String(scope $"{path}: format version {MigratedFrom} migrated to {Treadle.Format.TreadleCodec.Current}; the first save keeps the old file as {Path.GetFileName(path, .. scope String())}.v{MigratedFrom}.bak"));
+				Messages.Add(new String(scope $"{path}: format version {MigratedFrom} migrated to {Treadle.Format.TreadleCodec.Current}; the first save keeps the old file once as {Path.GetFileName(path, .. scope String())}.v{MigratedFrom}.bak in the backup folder"));
 			}
+			Sidecars.TakeMessages(Messages);
 			Version++;
 			return .Ok;
 		}
@@ -957,7 +1109,7 @@ namespace Treadle.Document
 			// A file migrated on load keeps its old text once as `<file>.v<old>.bak` (never overwritten).
 			if (MigratedFrom > 0 && !Treadle.Format.Migrations.BackupOnce(FilePath, MigratedFrom))
 			{
-				outError.Set(scope $"Not saved: the backup {FilePath}.v{MigratedFrom}.bak could not be written");
+				outError.Set(scope $"Not saved: the backup of {FilePath} (.v{MigratedFrom}.bak) could not be written");
 				return false;
 			}
 			String layout = scope .();

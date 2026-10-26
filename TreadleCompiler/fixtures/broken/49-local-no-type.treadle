@@ -1,0 +1,14 @@
+# treadle 1
+# expect - - T1078
+type Program class
+	namespace Broken
+	static
+	doc "A Local Variable never given a type (the editor's new Local, Outline `newVar  null`): Validate names it (T1078 on the variable, local:newVar) and a build stops there, before the Sheet IR."
+
+function m0001 Main
+	static
+local newVar
+sheet body
+node n1 Entry
+node n2 Return
+wire n1.then n2.in

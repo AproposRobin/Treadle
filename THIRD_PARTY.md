@@ -17,6 +17,7 @@ to Treadle. Treadle is derived from VisualBeef (Apache-2.0, see `NOTICE`).
 | imnodes | as vendored in `Native/third_party/cimnodes/imnodes/` | MIT, (c) 2019 Johann Muszynski | compiled into `treadlehost.dll` (not used at run time, see below) | `THIRD_PARTY/imnodes-LICENSE.txt` |
 | cimnodes (C bindings for imnodes) | as vendored in `Native/third_party/cimnodes/` | generated from imnodes by the cimgui generator; the upstream repository has no licence file of its own, so imnodes's MIT licence is the one that applies | compiled into `treadlehost.dll` | `THIRD_PARTY/imnodes-LICENSE.txt` |
 | SDL2 | 2.32.10 (`SDL2-devel-2.32.10-mingw.zip`) | zlib, (c) 1997-2025 Sam Lantinga | **statically linked** into `treadlehost.dll` | `THIRD_PARTY/SDL2-LICENSE.txt` |
+| SDL2 development files for the SDL samples (`SDL2.dll`, `libSDL2.dll.a`, the `include/SDL2` headers, x86_64 only) | 2.32.10, unmodified from `SDL2-devel-2.32.10-mingw.zip` (archive sha256 in `scripts/get-sdl2.ps1`, file sha256 in `packaging/sdl2-files.txt`) | zlib, (c) 1997-2025 Sam Lantinga | shipped as `tools/SDL2/x86_64-w64-mingw32/` for `samples/m2-sdl` and `samples/m4-breakout`; Build copies `SDL2.dll` next to a program that imports SDL2 | `THIRD_PARTY/SDL2-LICENSE.txt` (also `tools/SDL2/LICENSE.txt`) |
 | LLVM C++ runtime from llvm-mingw 20261006 (clang 23.1.3): libc++, libc++abi, libunwind, compiler-rt builtins | as released in llvm-mingw 20261006 | Apache-2.0 with LLVM Exceptions | **statically linked** into `treadlehost.dll` (`-static`) | `THIRD_PARTY/LLVM-LICENSE.txt` |
 | mingw-w64 runtime (CRT start-up code, import libraries, headers) | the mingw-w64 revision llvm-mingw 20261006 is built from (`a3d93999ef0521681d45e445c39964a7af0f593f`) | permissive (ZPL / BSD-style / public domain parts; list in the file) | statically linked into `treadlehost.dll` | `THIRD_PARTY/mingw-w64-runtime-COPYING.txt` (`COPYING.MinGW-w64-runtime.txt`, the file meant for binaries) |
 | Lucide icons (`lucide.ttf`) | 0.460.0 | ISC | shipped as `assets/fonts/lucide.ttf` | `THIRD_PARTY/Lucide-LICENSE.txt` (also `assets/fonts/LICENSE-lucide.txt`) |
@@ -49,7 +50,7 @@ The libraries are the Ubuntu 26.04 builds, unmodified.
 | Component | Version | Licence | Where it ends up | Licence text |
 |---|---|---|---|---|
 | Dear ImGui, stb, cimgui, imnodes, cimnodes | as in the Windows table | as in the Windows table | compiled into `libtreadlehost.so` | as in the Windows table |
-| SDL2 (`libSDL2-2.0.so.0`) | 2.32.10 (Ubuntu `libsdl2-classic` 2.32.10+dfsg-6) | zlib | shipped next to `libtreadlehost.so` (loaded dynamically, not linked in) | `THIRD_PARTY/SDL2-LICENSE.txt`, `THIRD_PARTY/linux/libsdl2-classic.copyright` |
+| SDL2 (`libSDL2-2.0.so.0`) | 2.32.10 (Ubuntu `libsdl2-classic` 2.32.10+dfsg-6) | zlib | shipped next to `libtreadlehost.so` (loaded dynamically, not linked in); the SDL samples' programs link against it and load it at run time | `THIRD_PARTY/SDL2-LICENSE.txt`, `THIRD_PARTY/linux/libsdl2-classic.copyright` |
 | Beef language runtime and corlib | as in the Windows table | MIT | linked statically into `TreadleEditor` | as in the Windows table |
 | LLVM 22, trimmed: `clang`, `lld`, `libLLVM.so.22.1`, `libclang-cpp.so.22.1`, clang's builtin headers, compiler-rt builtins and `clang_rt.crtbegin/crtend` | 22.1.2 (Ubuntu `clang-22`, `lld-22`, `libllvm22`, `libclang-cpp22` 1:22.1.2-1ubuntu1) | Apache-2.0 with LLVM Exceptions | `tools/llvm/` (the subset is `packaging/llvm-files-linux.txt`); compiler-rt's builtins and start-up files are linked into the programs Treadle builds | `THIRD_PARTY/LLVM-LICENSE.txt` (also `tools/llvm/LICENSE.TXT`), `THIRD_PARTY/linux/{clang-22,lld-22,libllvm22}.copyright` |
 | libclang (`libclang.so`, the file `libclang-22.so.22`) | 22.1.2 (Ubuntu `libclang1-22`) | Apache-2.0 with LLVM Exceptions | `tools/llvm/lib/` (the C header import) | `THIRD_PARTY/LLVM-LICENSE.txt`, `THIRD_PARTY/linux/libclang1-22.copyright` |
@@ -71,7 +72,8 @@ builds on Linux link the system's glibc (from `libc6-dev`) and the packaged comp
 
 * **BeefBuild** builds the editor itself (it is written in Beef); a Treadle program never needs Beef.
 * **Build tools** (not part of the package): the rest of llvm-mingw 20261006 (only the trimmed subset in the
-  table ships), the mingw-w64 SDL2 development files (the `m2-sdl` sample's; SDL2 is not in the package), 7-Zip
+  table ships), the static `libSDL2.a` and the rest of the mingw-w64 SDL2 development package (the package ships
+  only the files of `packaging/sdl2-files.txt` and the headers), 7-Zip
   (LGPL) to unpack the Beef installer in CI.
   The compiler output contains only the runtime pieces listed above.
 

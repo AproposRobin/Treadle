@@ -1,0 +1,94 @@
+# treadle 1
+type VectorGenericMain class
+	namespace Cx
+	static
+	doc "Generic functions over vector types (`T : vector`, `T : vector float`) called with float4 and int32x4, and the text of vectors: String.Append of a vector (VectorFormat), with and without the signature in the Call, and AppendF with a lane mask and a vector as arguments."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Local String
+	set ctor ()
+node a3 Make float4
+	in x 1
+	in y 2
+	in z 3
+	in w 4
+node a4 Call VecOps<float4>.Scaled
+	in k 2.0f
+node a5 Call String.Append
+node a6 Call Console.WriteLine(StringView)
+node b1 Call VecOps<float4>.Twice
+node b2 Call String.Clear
+node b3 Call String.Append(float4)
+node b4 Call Console.WriteLine(StringView)
+node c1 Call VecOps<float4>.Total
+node c2 Call String.Clear
+node c3 Call String.Append(float)
+node c4 Call Console.WriteLine(StringView)
+node d1 Make int32x4
+	in x 1
+	in y 2
+	in z 3
+	in w 4
+node d2 Make int32x4
+	in x 10
+	in y 20
+	in z 30
+	in w 40
+node d3 Call VecAny<int32x4>.Add
+node d4 Call String.Clear
+node d5 Call String.Append
+node d6 Call Console.WriteLine(StringView)
+node e1 Operator <
+	in b 2.5f
+node e2 Call String.Clear
+node e3 Call String.AppendF
+	in format "m = {0}, v = {1}"
+node e4 Call Console.WriteLine(StringView)
+node e5 Return
+	in value 0
+wire a1.then a2.in
+wire a3.value a4.a
+wire a2.then a5.in
+wire a2.object a5.receiver
+wire a4.result a5.value
+wire a5.then a6.in
+wire a2.object a6.text
+wire a3.value b1.a
+wire a6.then b2.in
+wire a2.object b2.receiver
+wire b2.then b3.in
+wire a2.object b3.receiver
+wire b1.result b3.value
+wire b3.then b4.in
+wire a2.object b4.text
+wire a3.value c1.a
+wire b4.then c2.in
+wire a2.object c2.receiver
+wire c2.then c3.in
+wire a2.object c3.receiver
+wire c1.result c3.value
+wire c3.then c4.in
+wire a2.object c4.text
+wire d1.value d3.a
+wire d2.value d3.b
+wire c4.then d4.in
+wire a2.object d4.receiver
+wire d4.then d5.in
+wire a2.object d5.receiver
+wire d3.result d5.value
+wire d5.then d6.in
+wire a2.object d6.text
+wire a3.value e1.a
+wire d6.then e2.in
+wire a2.object e2.receiver
+wire e1.result e3.arg0
+wire a3.value e3.arg1
+wire e2.then e3.in
+wire a2.object e3.receiver
+wire e3.then e4.in
+wire a2.object e4.text
+wire e4.then e5.in

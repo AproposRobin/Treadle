@@ -309,6 +309,32 @@ namespace Treadle.Editor
 						SelfTestCheck(hit != null, scope $"frontend: {name}: {code} on node {node}{(pin.IsEmpty ? "" : ".")}{pin}{(hit != null) ? ": " : ""}{(hit != null) ? hit.Message : ""}");
 						if (hit == null)
 							LogDiags(c);
+						// a Local Variable with no type: the message names the variable (the Problems row selects it
+						// in the Outline), and the Sheet IR is never written for it: lowering anyway gives the internal
+						// error T4003 naming the function and the variable, not an IR the back end cannot read
+						if (name == "49-local-no-type" && hit != null)
+						{
+							SelfTestCheck(hit.Variable == "local:newVar" && hit.Message.StartsWith("newVar needs a type"),
+								scope $"frontend: {name}: the T1078 row is on local:newVar ('{hit.Variable}': {hit.Message})");
+							String ir = scope .();
+							let lowered = Lowering.WriteProgram(c, "Broken", "Broken.Program", ir);
+							CDiag internalErr = null;
+							for (let d in c.Diags.Items)
+								if (d.Code == "T4003")
+									internalErr = d;
+							SelfTestCheck(!lowered && internalErr != null && internalErr.Message.StartsWith("Broken.Program.Main: newVar has no type"),
+								scope $"frontend: {name}: lowering a typeless local stops with T4003 ({(internalErr != null) ? internalErr.Message : "none"})");
+							// the Problems row: its click selects newVar in the Outline and focuses the Type field
+							let row = Treadle.Compiler.FrontEndBuild.ToDiagnostic(hit, .Validate);
+							defer delete row;
+							if (row.Path.IsEmpty)
+								row.Path.Set(path);
+							JumpToDiagnostic(row);
+							SelfTestCheck(OutlineSel == .Local && mSelLocalName == "newVar" && mFocusTypeField,
+								scope $"frontend: {name}: the Problems row selects newVar in the Outline and focuses its Type field ({OutlineSel}, '{mSelLocalName}')");
+							mFocusTypeField = false;
+							OutlineSel = .None;
+						}
 					}
 				}
 			}
@@ -417,7 +443,8 @@ namespace Treadle.Editor
 					"m2-structlocal", "src/StructLocals.treadle src/Res.treadle", "StructLocals",
 					"m2-nullable", "src/Nullables.treadle", "Nullables",
 					"m2-nullunwrap", "src/NullUnwrap.treadle", "NullUnwrap",
-					"m2-simd", "src/SimdOps.treadle", "SimdOps");
+					"m2-simd", "src/SimdOps.treadle", "SimdOps",
+					"m2-vectorfn", "src/VectorFns.treadle", "VectorFns");
 
 				String work = scope .();
 				Path.GetTempPath(work).IgnoreError();

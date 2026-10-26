@@ -106,3 +106,64 @@ wire d05.value d02.Ptr
 wire d01.then d03.in
 wire d02.value d03.items
 wire d03.then d04.in
+
+function a0005 SetAt
+	doc "Writes `value` at `index` of the elements the span views. An index outside the span is a fatal error naming the node (in every config); in a [Kernel] function running on the GPU it stops the dispatch."
+param index int
+param value T
+sheet body
+node e01 Entry
+node e02 Get this.Length
+node e03 Math
+	set expr "i < 0 || i >= n"
+node e04 Branch
+node e05 Fatal
+	in message "Span.SetAt: the index is out of range"
+node e06 Scope
+	unsafe
+node e07 Get this.Ptr
+node e08 Call Pointer.Add
+node e09 Call Pointer.Store
+node e10 Return
+wire e01.index e03.i
+wire e02.value e03.n
+wire e03.result e04.condition
+wire e01.then e04.in
+wire e04.true e05.in
+wire e04.false e06.in
+wire e01.index e08.count
+wire e07.value e08.ptr
+wire e06.body e09.in
+wire e08.result e09.ptr
+wire e01.value e09.value
+wire e06.done e10.in
+
+function a0006 At
+	returns T
+	doc "The element at `index`. An index outside the span is a fatal error naming the node (in every config, Release included); in a [Kernel] function running on the GPU it stops the dispatch."
+param index int
+sheet body
+node f01 Entry
+node f02 Get this.Length
+node f03 Math
+	set expr "i < 0 || i >= n"
+node f04 Branch
+node f05 Fatal
+	in message "Span.At: the index is out of range"
+node f06 Scope
+	unsafe
+node f07 Get this.Ptr
+node f08 Call Pointer.Add
+node f09 Call Pointer.Load
+node f10 Return
+wire f01.index f03.i
+wire f02.value f03.n
+wire f03.result f04.condition
+wire f01.then f04.in
+wire f04.true f05.in
+wire f04.false f06.in
+wire f01.index f08.count
+wire f07.value f08.ptr
+wire f08.result f09.ptr
+wire f06.body f10.in
+wire f09.result f10.value

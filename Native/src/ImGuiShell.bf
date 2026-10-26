@@ -350,6 +350,7 @@ namespace ImGui
 		[CLink] public static extern uint32 igGetColorU32_Col(int32 idx, float alpha_mul);
 		[CLink] public static extern void igSetNextWindowViewport(uint32 viewport_id);
 		[CLink] public static extern bool igIsWindowDocked();
+		[CLink] public static extern uint32 igGetWindowDockID();
 		[CLink] public static extern float igGetWindowWidth();
 		[CLink] public static extern float igGetWindowHeight();
 		[CLink] public static extern void igSetNextWindowSizeConstraints(ImVec2 size_min, ImVec2 size_max, void* custom_callback, void* custom_callback_data);

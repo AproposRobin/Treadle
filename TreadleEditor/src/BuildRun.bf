@@ -202,6 +202,15 @@ namespace Treadle.Editor
 			}
 			List<String> files = scope .();
 			defer { ClearAndDeleteItems!(files); }
+			List<String> moveLines = scope .();
+			defer { ClearAndDeleteItems!(moveLines); }
+			if (migrate && !check)
+			{
+				for (let p in paths)
+					Treadle.Document.Sidecars.MigrateAt(p, moveLines);
+				for (let l in moveLines)
+					Program.ConsoleOut(l, false);
+			}
 			for (let p in paths)
 			{
 				let before = files.Count;

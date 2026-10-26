@@ -1,0 +1,54 @@
+# treadle 1
+type VecOps class
+	namespace Cx
+	static
+	generic T vector float
+	doc "Generic functions over any vector of float lanes (`T : vector float`): an Operator with a splatting float, T + T and a literal, and Vector.Sum giving a float."
+
+function g001 Scaled
+	static
+	pure
+	returns T
+	doc "Every lane times `k`."
+param a T
+param k float
+sheet body
+node a1 Entry
+node a2 Operator *
+node a3 Return
+wire a1.a a2.a
+wire a1.k a2.b
+wire a1.then a3.in
+wire a2.result a3.value
+
+function g002 Twice
+	static
+	pure
+	returns T
+	doc "a + a + 1, lane by lane."
+param a T
+sheet body
+node b1 Entry
+node b2 Operator +
+node b3 Operator +
+	in b 1
+node b4 Return
+wire b1.a b2.a
+wire b1.a b2.b
+wire b2.result b3.a
+wire b1.then b4.in
+wire b3.result b4.value
+
+function g003 Total
+	static
+	pure
+	returns float
+	doc "The sum of the lanes."
+param a T
+sheet body
+node c1 Entry
+node c2 Call Vector.Sum
+node c3 Return
+wire c1.a c2.v
+wire c1.then c3.in
+wire c2.result c3.value

@@ -21,7 +21,7 @@ objects are made and freed (section 3).
 
 A **project** is a folder with a project file (`<Name>.tproj`) and its type files. Every **type** (a class,
 struct, interface, enum, delegate type or extension) is one file, `<Type>.treadle`, with all its members. Node
-positions live in a separate `<Type>.treadle.layout` file, so moving a node never changes the program. The files
+positions live in a separate layout file in the project's `layout` folder (`layout/<Type>.layout`), so moving a node never changes the program. The files
 are text, made to be read in a diff and merged with git.
 
 A type's members are listed in the **Outline**: **FUNCTIONS** (functions, properties, constructors, the
@@ -30,6 +30,10 @@ Settings** holds the type's own settings: name, kind, namespace, base type, inte
 
 Each function body is a **Sheet**: a node graph in its own tab. A Sheet has one **Entry** node, whose outputs
 are the function's inputs, and any number of **Return** nodes, which take the result.
+
+A program starts at the static `Main` of the project's **entry** type (`entry` in the project file; New Project
+makes `Program.Main`, and the status bar names it). Any type's static `Main` (no inputs, or `Args : String[]`;
+returning `int` or nothing) can be the start: **Set as entry point** in its Outline menu writes `entry` for you.
 
 Pins come in two kinds:
 

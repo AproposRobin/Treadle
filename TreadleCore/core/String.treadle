@@ -992,6 +992,15 @@ function s0025 AppendValue
 param into String
 param value T
 
+function s003a AppendVector
+	static
+	access internal
+	generic T vector
+	attr Intrinsic String.AppendVector
+	doc "Appends the lanes of `value` as (1, 2, 3, 4), each as AppendValue appends a value of the lane type (VectorFormat's Append; the compiler writes it per instance)."
+param into String
+param value T
+
 function s001d CompareTo
 	pure
 	returns int

@@ -128,10 +128,32 @@ namespace Treadle.Compiler
 			return false;
 		}
 
+		/// `String.AppendVector<T>(into, value)` (VectorFormat's Append, and AppendF's vector arguments): `(`, each
+		/// lane as AppendValue appends a value of the lane type, `, ` between them, `)`; the lane count is the
+		/// instance's, so the loop is unrolled.
+		void AppendVector(IRValue into, IRValue v, StringView node, StringView pin)
+		{
+			let vt = v.Type;
+			if (vt == null || !vt.IsVector)
+				return;
+			let sv = T.StringViewSym.Self;
+			AppendValue(into, E.Const("\"(\"", sv, node, pin), node, pin);
+			for (int i < vt.Length)
+			{
+				if (i > 0)
+					AppendValue(into, E.Const("\", \"", sv, node, pin), node, pin);
+				let lane = VecOp("get", vt.Element, node, pin);
+				lane.Operands.Add(v);
+				lane.Index = (int32)i;
+				AppendValue(into, lane, node, pin);
+			}
+			AppendValue(into, E.Const("\")\"", sv, node, pin), node, pin);
+		}
+
 		/// `String.AppendValue<T>(into, value)` (AppendF's arguments): the String.Append overload for the
 		/// value's type: integers and simple enums as int, float, double, bool, char8, char16 and char32 as a
-		/// code point in UTF-8, StringView, a String through its view. Any other type appends its name in
-		/// angle brackets.
+		/// code point in UTF-8, StringView, a String through its view, a vector as AppendVector writes it.
+		/// Any other type appends its name in angle brackets.
 		void AppendValue(IRValue into, IRValue v, StringView node, StringView pin)
 		{
 			let t = v.Type;
@@ -162,6 +184,11 @@ namespace Treadle.Compiler
 				view.Callee = new String("Core.String.View()");
 				view.Operands.Add(v);
 				arg = view;
+			}
+			else if (t.IsVector)
+			{
+				AppendVector(into, v, node, pin); // VectorFormat: (1, 2, 3, 4)
+				return;
 			}
 			else if (HasAppend(t))
 				want = t; // a String.Append overload of its own (the math types: MathFormat)
@@ -246,6 +273,7 @@ namespace Treadle.Compiler
 			}
 			switch (name)
 			{
+			case "Kernel.Shared": return KernelShared(args, result, node, pin); // KernelLower.bf (GPU-Compute.md)
 			case "Build.IsDefined", "Build.Value":
 				// the config's `define`s (Graph-Format.md 5) as constants: the name is the node's
 				// typed text; a wired name has no value at build time
@@ -324,6 +352,9 @@ namespace Treadle.Compiler
 				return null;
 			case "String.AppendValue":
 				AppendValue(args[0], args[1], node, pin);
+				return null;
+			case "String.AppendVector":
+				AppendVector(args[0], args[1], node, pin);
 				return null;
 			case "String.AppendFormatted":
 				AppendFormatted(args[0], args[1], args[2], node, pin);

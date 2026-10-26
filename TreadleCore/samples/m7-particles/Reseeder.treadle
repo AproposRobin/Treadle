@@ -1,0 +1,89 @@
+# treadle 1
+type Reseeder class
+	namespace Particles
+	doc "The handler of Bursts.OnBurst: on each burst it gives the particles in a slab near the floor (the left half on odd bursts, the right half on even ones) a new upward velocity from its own seeded Random."
+
+field mSim Sim
+	doc "The simulation whose emitters it re-seeds (not owned: the Sim owns this Reseeder)."
+
+field mRandom Random
+	owner owned
+
+field mCalls int
+	doc "Bursts handled."
+
+field mReseeded int
+	doc "Particles re-seeded over all bursts."
+
+ctor r0001
+param sim Sim
+param seed int
+sheet body
+node a1 Entry
+node a2 Set this.mSim
+node a3 Construct Random
+	set ctor (int)
+node a4 Set this.mRandom
+node a5 Return
+wire a1.then a2.in
+wire a1.sim a2.value
+wire a2.then a3.in
+wire a1.seed a3.seed
+wire a3.then a4.in
+wire a3.object a4.value
+wire a4.then a5.in
+
+function r0002 OnBurst
+	doc "Re-seeds the slab of burst n in emitter A, then in emitter B, and counts."
+param n int
+local region AABB
+sheet body
+node b1 Entry
+node b2 Math
+	set expr "n % 2 == 0 ? 25.0f : -25.0f"
+node b3 Make Vec3
+	in Y -40.0f
+	in Z 0.0f
+node b4 Make Vec3
+	in X 25.0f
+	in Y 10.0f
+	in Z 50.0f
+node b5 Call AABB.FromCenterExtents
+node b6 Set local:region
+node b7 Get this.mSim
+node b8 Get Particles.Sim.mA
+node b9 Get local:region
+node c1 Get this.mRandom
+node c2 Call Particles.EmitterA.Reseed
+node c3 Set this.mReseeded
+	set op +=
+node c4 Get Particles.Sim.mB
+node c5 Call Particles.EmitterB.Reseed
+node c6 Set this.mReseeded
+	set op +=
+node c7 Set this.mCalls
+	set op +=
+	in value 1
+node c8 Return
+wire b1.n b2.n
+wire b2.result b3.X
+wire b3.value b5.center
+wire b4.value b5.extents
+wire b1.then b6.in
+wire b5.result b6.value
+wire b7.value b8.receiver
+wire b6.then c2.in
+wire b8.value c2.receiver
+wire b9.value c2.region
+wire c1.value c2.rng
+wire c2.then c3.in
+wire c2.result c3.value
+wire b7.value c4.receiver
+wire c3.then c5.in
+wire c4.value c5.receiver
+wire b9.value c5.region
+wire c1.value c5.rng
+wire c5.then c6.in
+wire c5.result c6.value
+wire c6.then c7.in
+wire c7.then c8.in

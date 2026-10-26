@@ -81,8 +81,6 @@ namespace Treadle.Editor
 		bool mOpenNewSheet;
 		bool mOpenRenameSheet;
 		String mRenameSheetKey = new .() ~ delete _;
-		bool mOpenNewDocument;
-		String mNewDocFolder = new .() ~ delete _;
 		int32 mContextNode;
 		bool mOpenNodeContext;
 		String mBrowseDir = new .() ~ delete _;
@@ -240,6 +238,12 @@ namespace Treadle.Editor
 				return;
 			}
 			Index.Build(mProjectRoot, GraphExtension);
+			// Layout files and backups moved out of the source folders on this project's first load (Sidecars).
+			List<String> moved = scope .();
+			defer { ClearAndDeleteItems!(moved); }
+			Sidecars.TakeMessages(moved);
+			for (let m in moved)
+				Notify.Log(.Info, "Project", m);
 			LoadProjectFile();
 			for (let f in Index.Files)
 				mProjectFiles.Add(new String(f.Path));
@@ -291,22 +295,19 @@ namespace Treadle.Editor
 			mSourceVersion = -1;
 			if (openFirstGraph)
 			{
-				// Prefer a tab that's already open for this file.
-				bool found = false;
-				for (let tab in Tabs)
+				// An open type comes to the front with the Sheet last in front there; a type opened now shows its
+				// first Sheet.
+				let front = FrontTabOf(doc);
+				if (front != null)
 				{
-					if (tab.Doc == doc)
-					{
-						ActiveTab = @tab.Index;
-						mSelectTab = tab;
-						mLastActiveTab = tab;
-						found = true;
-						break;
-					}
+					ActiveTab = Tabs.IndexOf(front);
+					mSelectTab = front;
+					mLastActiveTab = front;
 				}
-				if (!found && !doc.Sheets.IsEmpty)
+				else if (!doc.Sheets.IsEmpty)
 					OpenTab(doc.Sheets[0]);
 			}
+			SyncTypeContexts();
 			SetStatus(scope $"Opened {path}");
 			SaveSettings();
 			UpdateTitle();
@@ -329,8 +330,13 @@ namespace Treadle.Editor
 			return true;
 		}
 
-		/// A new, empty document at `path` (written at once so the Project Browser lists it).
-		public TypeDocument NewDocument(StringView path)
+		/// A new type of `kind` at `path` from its template (TypeDocument.InitFromTemplate), written at
+		/// once so the Project Browser lists it, then its first view: a class's constructor Sheet, else
+		/// Type Settings on the kind's own section (an extension's Extends picker focused). A class or a
+		/// struct takes `baseType` (classes) and `interfaces`: each interface function gets a Sheet to fill
+		/// and a base with constructors a Base Constructor node in the constructor's Sheet; Type Settings
+		/// then shows those rows. The template is where the type's undo history starts.
+		public TypeDocument NewDocument(StringView path, Treadle.Model.TypeKind kind = .Class, StringView baseType = "", List<String> interfaces = null)
 		{
 			if (!CheckWritable())
 				return null;
@@ -347,7 +353,29 @@ namespace Treadle.Editor
 			Path.GetDirectoryPath(path, folder).IgnoreError();
 			String ns = scope .();
 			NamespaceFor(folder, ns);
-			doc.InitType(typeName, mNewTypeKind, ns);
+			let first = doc.InitFromTemplate(typeName, kind, ns);
+			bool inherits = false;
+			if (kind == .Class && !baseType.IsEmpty)
+			{
+				doc.Header.Base = Treadle.Model.TypeRef.Parse(baseType);
+				inherits = true;
+			}
+			if ((kind == .Class || kind == .Struct) && interfaces != null)
+			{
+				for (let i in interfaces)
+				{
+					doc.Header.Implements.Add(Treadle.Model.TypeRef.Parse(i));
+					inherits = true;
+				}
+				// The interface functions the base chain does not provide yet: a Sheet each to fill (the
+				// base's abstract ones stay under Required overrides).
+				List<InheritedFn> req = scope .();
+				defer { ClearAndDeleteItems!(req); }
+				InheritedFunctions(doc.Header, doc.Members, req, null);
+				for (let f in req)
+					if (f.FromInterface)
+						doc.AddFunctionLike(f.Fn, false);
+			}
 			String why = scope .();
 			if (!doc.TrySave(why))
 			{
@@ -358,8 +386,27 @@ namespace Treadle.Editor
 			mDocs.Add(doc);
 			Doc = doc;
 			ScanProject();
-			if (!doc.Sheets.IsEmpty)
-				OpenTab(doc.Sheets[0]);
+			if (first != null)
+			{
+				OpenTab(first);
+				SelectOutline(inherits ? OutlineSelection.TypeSettings : OutlineSelection.Member, inherits ? null : first.Member);
+				if (inherits && PlaceBaseConstructorStub())
+				{
+					doc.TrySave(why..Clear());
+					doc.Modified = false;
+					// The placed node is not selected: Properties keeps Type Settings (the inheritance rows).
+					CurrentTab?.ClearSelection();
+					SelectOutline(.TypeSettings);
+				}
+			}
+			else
+			{
+				SelectOutline(.TypeSettings);
+				if (kind == .Extension)
+					mFocusTsId.Set("##tsextends");
+				Panels.Focus(Panels.PropertiesId);
+			}
+			doc.ClearHistory();
 			SetStatus(scope $"Created {path}");
 			UpdateTitle();
 			return doc;
@@ -537,6 +584,7 @@ namespace Treadle.Editor
 					mSelectTab = tab;
 					mLastActiveTab = tab;
 					Doc = tab.Doc;
+					SyncTypeContexts();
 					return;
 				}
 			}
@@ -550,6 +598,8 @@ namespace Treadle.Editor
 			mSelectTab = tab;
 			mLastActiveTab = tab;
 			Doc = mg.Doc;
+			// Opening a Sheet brings its type to the front (a type opened now gets its tab in the type strip).
+			SyncTypeContexts();
 		}
 		GraphTab mSelectTab;
 
@@ -558,7 +608,7 @@ namespace Treadle.Editor
 		{
 			if (Doc == null || Doc == mEmptyDoc)
 			{
-				SetStatus("Open or create a type first (File > New Type)", .Info);
+				SetStatus("Open or create a type first (+ Add > New Class in the Project Browser)", .Info);
 				return null;
 			}
 			if (!CheckWritable())
@@ -681,9 +731,14 @@ namespace Treadle.Editor
 			let doc = tab.Doc;
 			String key = scope .(mg.Key);
 			let graph = mg.Graph;
-			doc.Commit(mg);
-			ReportGraphIssues(doc, key, graph);
-			RefreshValidateRows(doc, key);
+			// The checks and the front end's incremental pass run on every edit; what they find is shown only
+			// after Validate / Build / Run, unless "Validate automatically after edits" is on (ValidationState.bf).
+			CheckSheet(mg, true);
+			if (Prefs.ValidateAfterEdits)
+			{
+				ReportGraphIssues(doc, key, graph);
+				RefreshValidateRows(doc, key);
+			}
 			mDetailsEditPushed = false;
 			UpdateTitle();
 			SyncLambdaSheets(doc);
@@ -694,8 +749,9 @@ namespace Treadle.Editor
 		/// Graphs (by Graph.Serial) already checked since they were built.
 		HashSet<int32> mCheckedGraphs = new .() ~ delete _;
 
-		/// Runs the graph checks on a graph the first time it is shown, so the errors and warnings
-		/// are on the nodes (and in the Output Log) before the first edit. Every edit checks again.
+		/// Runs the graph checks on a graph the first time it is shown. What they find is shown (on the
+		/// nodes, in the Output Log and in Problems) only when the workspace is validated as it is, or with
+		/// "Validate automatically after edits" on; otherwise the Sheet keeps what it showed.
 		public void EnsureChecked(Sheet mg)
 		{
 			let g = mg.Graph;
@@ -703,6 +759,11 @@ namespace Treadle.Editor
 				return;
 			// Split struct pins read from the file: the fields without a wire or a literal get their pins.
 			EnsureSplitSubPins(mg);
+			if (!Validated)
+			{
+				CheckSheet(mg, false);
+				return;
+			}
 			mg.Doc.Validate(mg);
 			if (!g.Errors.IsEmpty || !g.Warnings.IsEmpty)
 				ReportGraphIssues(mg.Doc, mg.Key, g);
@@ -1308,6 +1369,13 @@ namespace Treadle.Editor
 			delete mValidate;
 			mValidate = toolchain.Validate(request);
 			mValidateQuiet = quiet;
+			// Sheets shown earlier but not open now drop what they showed and are checked when shown again
+			// (EnsureChecked): from here on, what a Sheet shows is of the workspace as validated.
+			for (let d in mDocs)
+				for (let s in d.Sheets)
+					if (s.IsBuilt && !sheets.Contains(s) && mCheckedGraphs.Remove(s.Graph.Serial))
+						s.Graph.ClearErrors();
+			MarkValidated();
 			// The checks may have changed what the nodes show: the Output Log gets them as after an edit.
 			for (let mg in sheets)
 				ReportGraphIssues(mg.Doc, mg.Key, mg.Graph);
@@ -1421,6 +1489,10 @@ namespace Treadle.Editor
 			}
 			if (RefuseNewerFormat("Build"))
 				return;
+			// Build and Run show the problems of the workspace as Validate does (quietly: the build's own status
+			// and panels follow), also when the build cannot start. Before the build: its thread holds the
+			// front end's lock.
+			Validate(true);
 			if (!SaveAll())
 			{
 				SetStatus("Build cancelled: some files could not be saved.");
@@ -1574,9 +1646,11 @@ namespace Treadle.Editor
 			DrawCompilerResultsPanel();
 			DrawFindResults();
 			DrawDebugPanels();
+			DrawHoodPanels(); // Memory and Disassembly: MemoryPanel.bf, DisassemblyPanel.bf
 			DrawPopups();
 			DrawStartPageAndDocs();
 			DrawPreferences();
+			DrawUpdatePanels(); // What changed, About (Updates.bf)
 			if (mShowDemo)
 				Gui.igShowDemoWindow(&mShowDemo);
 			DrawDragGhost();
@@ -1620,13 +1694,15 @@ namespace Treadle.Editor
 			// Ctrl+Tab / Ctrl+Shift+Tab: the list of open Sheets, most recent first; releasing Ctrl opens the
 			// highlighted one (SheetSwitcher.bf).
 			SheetSwitcherKeys(ctrl);
-			// Ctrl+Page Down / Ctrl+Page Up: the next / previous Sheet tab in the bar's order.
-			if (ctrl && !Gui.IsShiftDown && !Gui.IsAltDown && Tabs.Count > 1 && !Gui.igIsAnyItemActive())
+			// Ctrl+Page Down / Ctrl+Page Up: the next / previous Sheet tab of the type in front, in the bar's order;
+			// with Shift: the next / previous open type (GraphTabs.bf).
+			if (ctrl && !Gui.IsAltDown && !Gui.igIsAnyItemActive())
 			{
-				if (Gui.IsKeyPressed(Key.PageDown, true))
-					CycleSheetTab(1);
-				else if (Gui.IsKeyPressed(Key.PageUp, true))
-					CycleSheetTab(-1);
+				int dir = Gui.IsKeyPressed(Key.PageDown, true) ? 1 : (Gui.IsKeyPressed(Key.PageUp, true) ? -1 : 0);
+				if (dir != 0 && Gui.IsShiftDown)
+					CycleType(dir);
+				else if (dir != 0 && Tabs.Count > 1)
+					CycleSheetTab(dir);
 			}
 			// F7 Build (Ctrl+F7 Force Build), Shift+F7 Validate.
 			if (Gui.IsKeyPressed(578 /* F7 */, false))
@@ -1661,14 +1737,18 @@ namespace Treadle.Editor
 				if (ctrl && Gui.IsKeyPressed(Key.Z, true))
 				{
 					if (Gui.IsShiftDown)
-						EditDoc.Redo();
-					else
+					{
+						if (!RedoEntryChange()) // Set as entry point first (EntryPoint.bf)
+							EditDoc.Redo();
+					}
+					else if (!UndoEntryChange())
 						EditDoc.Undo();
 					UpdateTitle();
 				}
 				if (ctrl && Gui.IsKeyPressed(Key.Y, true))
 				{
-					EditDoc.Redo();
+					if (!RedoEntryChange())
+						EditDoc.Redo();
 					UpdateTitle();
 				}
 			}
@@ -1730,21 +1810,6 @@ namespace Treadle.Editor
 			return Gui.MenuItem(text, shortcut, selected, enabled);
 		}
 
-		/// File > New Document: asks for a name, writes the file in the current Project Browser folder.
-		public void StartNewDocument(StringView folder = "")
-		{
-			if (!CheckWritable())
-				return;
-			mNewDocFolder.Set(folder.IsEmpty ? ((mCBFolder.IsEmpty) ? (StringView)mProjectRoot : (StringView)mCBFolder) : folder);
-			if (mNewDocFolder.IsEmpty)
-			{
-				SetStatus("Open a project folder first (File > Open Project Folder)", .Info);
-				return;
-			}
-			mNameBuf.Set("NewType");
-			mOpenNewDocument = true;
-		}
-
 		void DrawMainMenu()
 		{
 			Gui.igPushStyleVar_Vec2(StyleVar.FramePadding, .(8 * Look.Scale, 6 * Look.Scale));
@@ -1770,8 +1835,8 @@ namespace Treadle.Editor
 				if (IconItem(Icon.Package, "New Project..."))
 					StartNewProject();
 				bool haveFolder = !mProjectRoot.IsEmpty && mCBTree != null;
-				if (IconItem(Icon.FilePlus, "New Type...", "", false, haveFolder))
-					StartNewDocument(mCBFolder);
+				if (IconItem(Icon.Class, "New Class...", "", false, haveFolder))
+					StartNewType(.Class, mCBFolder);
 				if (IconItem(Icon.Function, "New Sheet...", "", false, Doc != null && Doc != mEmptyDoc))
 				{
 					mNameBuf.Set("Sheet");
@@ -1817,9 +1882,9 @@ namespace Treadle.Editor
 			}
 			if (Gui.BeginMenu("Edit"))
 			{
-				if (IconItem(Icon.Undo2, "Undo", "Ctrl+Z", false, EditDoc.CanUndo))
+				if (IconItem(Icon.Undo2, "Undo", "Ctrl+Z", false, EditDoc.CanUndo || mEntryChange != null) && !UndoEntryChange())
 					EditDoc.Undo();
-				if (IconItem(Icon.Redo2, "Redo", "Ctrl+Y", false, EditDoc.CanRedo))
+				if (IconItem(Icon.Redo2, "Redo", "Ctrl+Y", false, EditDoc.CanRedo || mEntryChange != null) && !RedoEntryChange())
 					EditDoc.Redo();
 				Gui.Separator();
 				let tab = CurrentTab;
@@ -1878,6 +1943,7 @@ namespace Treadle.Editor
 					ShowCompilerResults = !ShowCompilerResults;
 				if (IconItem(Icon.Find, "Find Results", "", ShowFindResults))
 					ShowFindResults = !ShowFindResults;
+				DrawHoodMenuItems(false); // Memory, Disassembly: DisassemblyPanel.bf
 				if (IconItem(Icon.Minimap, "Graph Minimap", "M", Prefs.ShowMinimap, CurrentTab != null))
 				{
 					Prefs.ShowMinimap = !Prefs.ShowMinimap;
@@ -1928,6 +1994,8 @@ namespace Treadle.Editor
 				}
 				if (Gui.igIsItemHovered(0))
 					Gui.Tooltip(offered ? "Download and install the new release (Editor Preferences > Updates shows the progress)" : "Look for a new release now (Editor Preferences > Updates has the settings)");
+				if (IconItem(Icon.Info, "About Treadle"))
+					mShowAbout = true;
 				Gui.Separator();
 				Gui.MenuItem("Show ImGui Demo", "", mShowDemo);
 				if (Gui.igIsItemClicked(0))
@@ -1972,6 +2040,7 @@ namespace Treadle.Editor
 					Gui.igDockBuilderDockWindow(Panels.PropertiesId, right);
 					Gui.igDockBuilderDockWindow(Panels.LocalsId, right);
 					Gui.igDockBuilderDockWindow(Panels.CallStackId, right);
+					Gui.igDockBuilderDockWindow(HoodPanels.MemoryId, bottom); Gui.igDockBuilderDockWindow(HoodPanels.DisassemblyId, graph); // MemoryPanel.bf
 					Gui.igDockBuilderDockWindow(Panels.DebugOutputId, bottom);
 					Gui.igDockBuilderDockWindow(Panels.ProjectBrowserId, bottom);
 					Gui.igDockBuilderDockWindow(Panels.OutputLogId, bottom);
@@ -2011,30 +2080,46 @@ namespace Treadle.Editor
 			{
 				Gui.igPopStyleVar(1);
 				DrawFormatNotice();
-				if (Tabs.IsEmpty)
+				// One type in front (docs/Editor-Model.md, "Type context"): the type strip lists the open types,
+				// the Sheet tabs under it are those of the type in front only (GraphTabs.bf).
+				ApplyTabCloses();
+				SyncTypeContexts(true);
+				DrawTypeStrip();
+				let typeCtx = FindTypeContext(Doc);
+				DrawnSheetTabs = 0;
+				bool anySheet = false;
+				for (let t in Tabs)
+					if (t.Doc == Doc)
+						anySheet = true;
+				if (!anySheet)
 				{
+					if (typeCtx != null)
+						DrawDocumentHeader(null, null);
 					Gui.igSetCursorPos(.(20, Gui.igGetCursorPos().y + 20));
 					Gui.igPushTextWrapPos(Gui.igGetWindowWidth() - 20);
-					if (Doc.FilePath.IsEmpty && mProjectRoot.IsEmpty)
+					if (Doc.FilePath.IsEmpty && mProjectRoot.IsEmpty && typeCtx == null)
 						Gui.TextDisabled("Open a project folder or a type file (File menu, the Project Browser, or drop it on the window).");
-					else if (Doc.FilePath.IsEmpty)
-						Gui.TextDisabled("Double-click a type in the Project Browser to open it, or add one with + Add > New Type.");
+					else if (typeCtx == null)
+						Gui.TextDisabled("Double-click a type in the Project Browser to open it, or add one with + Add > New Class (New Struct, New Enum, ...).");
 					else
-						Gui.TextDisabled("Pick a Sheet in the Outline, or add one with its + button.");
+						Gui.TextDisabled("No Sheet of this type is open: pick one in the Outline, or add one with its + button.");
 					Gui.igPopTextWrapPos();
 				}
-				else if (Gui.igBeginTabBar("##graphs", 1 << 0 /* Reorderable */))
+				else if (Gui.igBeginTabBar(scope $"##graphs{typeCtx?.Uid ?? 0}", 1 << 0 /* Reorderable */))
 				{
-					ApplyTabCloses();
 					for (int i = 0; i < Tabs.Count; i++)
 					{
 						let tab = Tabs[i];
+						if (tab.Doc != Doc)
+							continue;
 						let mg = tab.Doc.FindSheet(tab.MethodKey);
 						if (mg == null || !mg.Graphable)
 						{
 							// The Sheet was removed.
 							Tabs.RemoveAt(i);
 							delete tab;
+							if (i < ActiveTab)
+								ActiveTab--;
 							if (ActiveTab >= Tabs.Count)
 								ActiveTab = Tabs.Count - 1;
 							i--;
@@ -2050,6 +2135,7 @@ namespace Treadle.Editor
 						label.AppendF("{}  {}{}###graphtab{}", Icon.Function, tab.Title, tab.Doc.Modified ? " *" : "", tab.Uid);
 						bool open = true;
 						bool tabShown = Gui.igBeginTabItem(label, &open, flags);
+						DrawnSheetTabs++;
 						TabItemInput(tab);
 						if (tabShown)
 						{
@@ -2060,6 +2146,9 @@ namespace Treadle.Editor
 								mLastActiveTab = tab;
 								Doc = tab.Doc;
 							}
+							if (typeCtx != null)
+								typeCtx.ActiveTabUid = tab.Uid;
+							DrawDocumentHeader(tab, mg);
 							mGraphPanel.Draw(tab, mg);
 							Gui.igEndTabItem();
 						}
@@ -2069,6 +2158,8 @@ namespace Treadle.Editor
 								mLastActiveTab = null;
 							Tabs.RemoveAt(i);
 							delete tab;
+							if (i < ActiveTab)
+								ActiveTab--;
 							if (ActiveTab >= Tabs.Count)
 								ActiveTab = Tabs.Count - 1;
 							i--;
@@ -2195,7 +2286,6 @@ namespace Treadle.Editor
 			DrawFolderPopup();
 			DrawNewSheetPopup();
 			DrawRenameSheetPopup();
-			DrawNewDocumentPopup();
 			DrawSaveAsPopup();
 			DrawProjectBrowserPopups();
 			DrawReportProblem();
@@ -2341,7 +2431,7 @@ namespace Treadle.Editor
 		}
 
 		/// A small modal asking for one name. Returns true when the name was accepted (Enter / OK).
-		bool NamePopup(StringView title, StringView prompt, String outName, bool typeKinds = false)
+		bool NamePopup(StringView title, StringView prompt, String outName)
 		{
 			bool accepted = false;
 			if (Gui.igBeginPopupModal(scope String(title), null, WindowFlags.AlwaysAutoResize))
@@ -2351,8 +2441,6 @@ namespace Treadle.Editor
 				if (Gui.igIsWindowAppearing())
 					Gui.igSetKeyboardFocusHere(0);
 				Gui.Text(prompt);
-				if (typeKinds)
-					DrawNewTypeKinds();
 				Gui.igSetNextItemWidth(360 * Look.Scale);
 				bool enter = Gui.igInputText("##name", mNameBuf.Ptr, (.)mNameBuf.Capacity, InputTextFlags.EnterReturnsTrue, null, null);
 				var typed = mNameBuf.View;
@@ -2407,27 +2495,6 @@ namespace Treadle.Editor
 				let s = Doc.FindSheet(mRenameSheetKey);
 				if (s != null)
 					RenameSheet(s, name);
-			}
-		}
-
-		void DrawNewDocumentPopup()
-		{
-			if (mOpenNewDocument)
-			{
-				mOpenNewDocument = false;
-				Gui.OpenPopup("New Type");
-			}
-			String name = scope .();
-			if (NamePopup("New Type", scope $"Name of the new type (written to {mNewDocFolder}):", name, true))
-			{
-				for (let c in GraphExtension.RawChars)
-					if (name.EndsWith(GraphExtension, .OrdinalIgnoreCase))
-						break;
-				String path = scope .();
-				path.AppendF("{}{}{}", mNewDocFolder, Path.DirectorySeparatorChar, name);
-				if (!IsGraphFile(path))
-					path.Append(GraphExtension);
-				NewDocument(path);
 			}
 		}
 

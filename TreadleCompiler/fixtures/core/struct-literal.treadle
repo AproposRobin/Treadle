@@ -1,0 +1,67 @@
+# treadle 1
+type StructLiteralMain class
+	namespace Cx
+	static
+	doc "Struct literals on unwired inputs (Graph-Format.md 2): one value per field in declaration order, 1,2.25,-0.5 for a Vec3 into a local, 255,128,0,255 for a Color32, 0,0,640,480 for a RectI and 1,2,3,4 for a Vec4 into String.Append; the float4, Vec3 and Color32 locals are what the debug self test reads."
+
+function m1 Main
+	static
+	returns int
+local v float4
+local p Vec3
+local c Color32
+sheet body
+node a1 Entry
+node a2 Set local:v
+	in value 1,2,3,4
+node a3 Set local:p
+	in value 1,2.25,-0.5
+node a4 Set local:c
+	in value 255,128,0,255
+node a5 Local String
+	set ctor ()
+node a6 Get local:p
+node a7 Call String.Append(Vec3)
+node a8 Call Console.WriteLine(StringView)
+node a9 Call String.Clear
+node b1 Call String.Append(Color32)
+	in value 255,128,0,255
+node b2 Call Console.WriteLine(StringView)
+node b3 Call String.Clear
+node b4 Call String.Append(RectI)
+	in value 0,0,640,480
+node b5 Call Console.WriteLine(StringView)
+node b6 Call String.Clear
+node b7 Call String.Append(Vec4)
+	in value 1,2,3,4
+node b8 Call Console.WriteLine(StringView)
+node b9 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a3.then a4.in
+wire a4.then a5.in
+wire a5.then a7.in
+wire a5.object a7.receiver
+wire a6.value a7.value
+wire a7.then a8.in
+wire a5.object a8.text
+wire a8.then a9.in
+wire a5.object a9.receiver
+wire a9.then b1.in
+wire a5.object b1.receiver
+wire b1.then b2.in
+wire a5.object b2.text
+wire b2.then b3.in
+wire a5.object b3.receiver
+wire b3.then b4.in
+wire a5.object b4.receiver
+wire b4.then b5.in
+wire a5.object b5.text
+wire b5.then b6.in
+wire a5.object b6.receiver
+wire b6.then b7.in
+wire a5.object b7.receiver
+wire b7.then b8.in
+wire a5.object b8.text
+wire b8.then b9.in

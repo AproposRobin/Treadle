@@ -146,6 +146,22 @@ Besides ordinary type checking, the Check stage does what a textual language get
 8. **Sequence regions** may not share value reads across `then` outputs unless through a local (same as
    the original editor, now an error with a "Store in a local" fix).
 
+Rules Declare and Bind add for the same reason (a graph has no syntax that rules the case out):
+
+* **Every variable has a type** (Declare, T1078): a Local Variable, a field, a property, an input, an output and a
+  `const` generic parameter; the diagnostic names the variable (`CDiag.Variable`, `local:newVar`), which the
+  editor's Problems row selects in the Outline. Lowering never sees a typeless variable (if it did, T4003 names the
+  function and the variable rather than writing a Sheet IR the back end cannot read).
+* **A delegate Thread.Start or ThreadPool.Run will own** is not a Local Bind Function or Lambda (Bind, T2224).
+* **A compound Set** (`set op *=`) finds its operator as the Operator node does, by the variable's type and the
+  type wired into Value or the number type its literal fits (`Vec3 *= float`); the operator's result must be the
+  variable's type (T2083).
+* **`T : vector`** (Declare reads `vector` and an optional lane type after it, `GenericParamSym.IsVector` /
+  `VectorElement`): a `T` operand takes the element-wise operators (BindVector `TryBindGenericVectorOperator`: a
+  scalar beside it splats per instance when the lanes are named) and the vector functions; overload scoring and a
+  Call's signature match refuse a non-vector argument for such a parameter, so `String.Append(int)` keeps its own
+  overload beside VectorFormat's generic one.
+
 ## 4. Sheet IR
 
 A small SSA-style IR; one function per lowered Sheet (per instantiation for generics). It lives in
@@ -224,7 +240,7 @@ bypassed: `main` calls `Main(Core.String[])` with the arguments.
 | `load.slot T s`, `store.slot s %v`, `slot.addr T* s` | Locals and hidden temps are `alloca` slots; mem2reg in LLVM makes them registers |
 | `binop T add\|sub\|mul\|div\|rem\|and\|or\|xor\|shl\|shr %a %b`, `cmp bool eq\|ne\|lt\|le\|gt\|ge %a %b`, `select T %c %a %b` | signedness from the type |
 | `field.addr T* %obj <field>`, `elem.addr T* %arr %i`, `array.len int %arr`, `load T %p`, `store %p %v` | a class reference or a pointer to a struct (inherited fields by name); an array object, `T*` or `T[N]*` |
-| `nullcheck %obj`, `boundscheck %arr %i` | Debug: a branch to `rt_null` / `rt_freed` (a deleted object) / `rt_bounds`; Release: nothing |
+| `nullcheck %obj`, `boundscheck %arr %i`, `boundscheck %span %i %len` | Debug: a branch to `rt_null` / `rt_freed` (a deleted object) / `rt_bounds`; Release: nothing. The three-operand form checks against the length it is given: the front end gives it for a Get [ ] (and an element address for a Set or a `ref`) on a `Span<T>`, extracting the span's `Length` (fixture `spanindexguard`); before it a Span index was not checked in Debug at all. Arrays have the two-operand form (the length from the array object), a List checks in its `[]` operator's Sheet (a Fatal node, Debug and Release), a StringView index is still unchecked |
 | `call T <fn> %args`, `ccall T <fn> %args`, `vcall T <fn> %obj %args`, `icall T <fn> %obj %args` | `this` first; imports get the C ABI, variadic extras promoted; for `vcall` / `icall` `<fn>` is the declaring function (a vslot / islot) |
 | `fn.addr function R(A) <fn>`, `fptr.call T %fp %args` | |
 | `alloc C [%allocator]`, `alloc.array T[] %len [%allocator]`, `local C s`, `local S* s` | `local` needs a slot of kind local (its region is where it dies); the object is zeroed, its vtable set; for a struct `S` the result is the slot's address; with an allocator `alloc` / `alloc.array` allocate through `rt_alloc_with` |
@@ -590,6 +606,9 @@ registers and inline across type units (Performance.md, "Before and after").
   the alloc kernel 283 -> 223 ms); a build with nothing changed still compiles and links nothing. A unit's
   object is compiled again when its `.ll` changes; a flag change alone is not seen there (Follow-ups.md,
   "Found by bench").
+* **Code alignment.** The link passes no alignment option: LLVM's defaults (16-byte functions, loops as the CPU model
+  says). Aligning every jump target or every function to 32 bytes was measured on all kernels and m6-vm and not
+  taken (Performance.md, "The alignment policy, evaluated again"): the one best on m6-vm slows `virtual` by 13-17%.
 * **Frame pointers.** `"frame-pointer"="all"` in Debug only (the debugger's stack walks); Release leaves them
   to `-O2`, as for C.
 * **Target CPU.** Every function carries the attributes clang gives a C function compiled with `-march=<level>`,
@@ -954,7 +973,8 @@ core's type files and its `crt` declarations before the project's own files; `Co
 line (Compiler.md 2). `CoreSource` (`TreadleCompiler/src/CoreSource.bf`) finds the files:
 
 1. `TREADLE_CORE` (a folder), else
-2. `TreadleCore/core` above the running exe (a source tree: edits to the core take effect without rebuilding the
+2. `core` beside the exe (a package), or `TreadleCore/core` of a development build's source tree (the exe three
+   folders below it, `ToolDirs`; edits to the core take effect without rebuilding the
    editor), else
 3. the copy compiled into `TreadleCompiler` (comptime `Embed`, the file list `CoreSource.Files`), so an installed
    editor needs no folder.
@@ -981,6 +1001,13 @@ String and StringView under **Strings**, Math under **Math**). The `crt` set and
   Each lands in the unit of the type that defines it (`unit Core.List "List.treadle"`), one function per instance:
   `Core.List<int>.Add(int)`, `Core.Memory.Resize<char8>(char8*,int)`. Generic functions with bodies work for the
   core (an instance per argument list); a project's generic functions still need a generic type around them.
+  A core function's Lambdas are lowered with it (`CoreLowering.LowerLambdas`, Lambdas in Lambdas too): the closure
+  class of a delegate Lambda and the Lambda's function, in the same unit; in a generic function they are one per
+  instance, named with the function's arguments (`Core.Parallel.$lambda_c2<int>`, its `Invoke(int)`), so
+  `Parallel.ForEach<T>` is a Local Lambda over `Parallel.For`.
+* **Vector text** (`VectorFormat.treadle`): `String.Append<T>(value) where T : vector` calls the intrinsic
+  `String.AppendVector<T>`, which writes `(`, each lane as `AppendValue` writes a value of the lane type, `, `
+  between them and `)`, unrolled for the instance's lane count; AppendF's vector arguments take the same path.
 * **Receivers without `this` in the back end.** The back end has no `this` for the built-in `StringView` (no `type`
   record) or for enums; their member functions (`StringView.IndexOf`, `Option<T>.Unwrap`) are lowered as static
   functions whose first parameter is the receiver's address (`StringView.IndexOf(StringView*,char8)`), which is what

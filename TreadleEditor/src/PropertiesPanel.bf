@@ -66,6 +66,7 @@ namespace Treadle.Editor
 				else
 					DrawSheetDetails(mg);
 			}
+			Panels.NoteNarrow();
 			Gui.End();
 		}
 
@@ -155,7 +156,7 @@ namespace Treadle.Editor
 					}
 					DrawOverloadRow(mg, node, readOnly);
 				case .Construct, .Local:
-					if (TsType("Type", scope $"##ntype{id}", node.Text, v, "What the node allocates") && !readOnly)
+					if (TsType("Type", scope $"##ntype{id}", node.Text, v, "What the node allocates: a class or a struct that is not abstract or static", .Allocatable) && !readOnly)
 					{
 						// The constructor is looked up again for the new type (a generic one's with its arguments).
 						BeginEdit();
@@ -183,6 +184,7 @@ namespace Treadle.Editor
 							CommitCurrent();
 						}
 					}
+					StorageRowNode(node); // LivesIn.bf
 					DrawOverloadRow(mg, node, readOnly);
 				case .Cast:
 					if (TsType("Cast To", scope $"##ncast{id}", node.Text, v) && !readOnly)
@@ -266,7 +268,7 @@ namespace Treadle.Editor
 					if (node.Kind == .MultiGate)
 						DrawStateFieldRow(mg, node, readOnly);
 				case .Switch:
-					if (TsType("Switch On", scope $"##non{id}", node.GetSetting("on"), v, "The type of the value: an integer, a char, a String or an enum") && !readOnly)
+					if (TsType("Switch On", scope $"##non{id}", node.GetSetting("on"), v, "The type of the value: an integer, a char, a String or an enum", .SwitchOn) && !readOnly)
 					{
 						BeginEdit();
 						node.SetSetting("on", v);
@@ -317,7 +319,7 @@ namespace Treadle.Editor
 					}
 				case .For:
 					StringView indexType = node.GetSetting("index-type").IsEmpty ? "int" : node.GetSetting("index-type");
-					if (TsType("Index Type", scope $"##nfor{id}", indexType, v) && !readOnly)
+					if (TsType("Index Type", scope $"##nfor{id}", indexType, v, "An integer type", .Integer) && !readOnly)
 					{
 						BeginEdit();
 						node.SetSetting("index-type", v);
@@ -394,8 +396,8 @@ namespace Treadle.Editor
 				int shown = 0;
 				for (let p in node.Inputs)
 				{
-					if (p.Kind != .Value)
-						continue;
+					if (p.Kind != .Value || SplitPins.IsSplit(p))
+						continue; // a split pin is hidden: its field or lane pins are the rows
 					PinLabel(p, label);
 					uint32 swatch = Theme.PinColor(p);
 					String tip = scope $"{(p.TypeName.IsEmpty ? "any type" : p.TypeName)}  \u{00B7}  pin '{p.Name}'";
@@ -430,8 +432,8 @@ namespace Treadle.Editor
 				int shown = 0;
 				for (let p in node.Outputs)
 				{
-					if (p.Kind != .Value)
-						continue;
+					if (p.Kind != .Value || SplitPins.IsSplit(p))
+						continue; // a split pin is hidden: its field or lane pins are the rows
 					PinLabel(p, label);
 					PropertyGrid.InfoRow(label, p.TypeName.IsEmpty ? "(any)" : (StringView)p.TypeName, scope $"pin '{p.Name}'", 0, 0, false, Theme.PinColor(p));
 					shown++;

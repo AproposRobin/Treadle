@@ -105,6 +105,12 @@ node f3 Call M2.MathExprs.PolyNodes
 	in x 4
 node f4 Call Console.WriteLine(int)
 node f5 Return
+node f6 Math
+	set expr "s / 1000.0"
+node f7 Call Console.WriteLine(double)
+node f8 Math
+	set expr "s * 0.5f"
+node f9 Call Console.WriteLine(float)
 wire d1.then d3.in
 wire d2.result d3.value
 wire d3.then d5.in
@@ -126,4 +132,10 @@ wire e9.then f2.in
 wire f1.result f2.value
 wire f2.then f4.in
 wire f3.result f4.value
-wire f4.then f5.in
+wire f9.then f5.in
+wire d2.result f6.s
+wire f4.then f7.in
+wire f6.result f7.value
+wire d2.result f8.s
+wire f7.then f9.in
+wire f8.result f9.value

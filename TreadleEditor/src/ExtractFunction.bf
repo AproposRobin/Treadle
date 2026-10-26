@@ -438,7 +438,7 @@ namespace Treadle.Editor
 				}
 			}
 			KeyAssigner.Assign(ng);
-			doc.Commit(ns);
+			CheckSheet(ns, true);
 			doc.Modified = true;
 			doc.Version++;
 			for (let s in doc.Sheets)

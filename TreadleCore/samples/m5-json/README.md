@@ -7,10 +7,11 @@ built-in checks. It follows RFC 8259, with two relaxations noted below.
 ## Run it
 
 ```
-Treadle.exe --build-run TreadleCore\samples\m5-json -- --selftest
+Treadle.exe --build-run samples\m5-json -- --selftest
 ```
 
-Or open the folder in the editor and press Ctrl+F5. Add `--config Release` for an optimised build.
+(`samples\` of the Treadle folder; in a source checkout `TreadleCore\samples\`; on Linux `./treadle --build-run
+samples/m5-json -- --selftest`.) Or open the folder in the editor and press Ctrl+F5. Add `--config Release` for an optimised build.
 
 What follows `--` goes to the program:
 
@@ -24,7 +25,7 @@ A program started by `--build-run` runs in the project folder (Ctrl+F5 in the ed
 `build\Debug` or `build\Release`), so a file of the project folder is named as it is:
 
 ```
-Treadle.exe --build-run TreadleCore\samples\m5-json -- data.json
+Treadle.exe --build-run samples\m5-json -- data.json
 ```
 
 prints

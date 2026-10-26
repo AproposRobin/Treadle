@@ -7,12 +7,10 @@ using Treadle.Model;
 
 namespace Treadle.Editor
 {
-	/// Type files in the editor: File > New Type (name, kind, namespace from the folder), Save As,
+	/// Type files in the editor: the namespace a new type proposes (Project Browser > + Add > New Class...), Save As,
 	/// and the project file of the open folder.
 	extension EditorApp
 	{
-		/// The kind the New Type dialog creates.
-		TypeKind mNewTypeKind = .Class;
 		bool mOpenSaveAs;
 		/// The project file of the open folder (`*.tproj` at its root), null when there is none.
 		public ProjectFile Project ~ delete _;
@@ -180,18 +178,6 @@ namespace Treadle.Editor
 			SetStatus(scope $"Saved {path}");
 			UpdateTitle();
 			return true;
-		}
-
-		/// The kind row of the New Type dialog (drawn above its name field).
-		void DrawNewTypeKinds()
-		{
-			Gui.Text("Kind:");
-			for (let k in TypeKind[?](.Class, .Struct, .Interface, .Enum))
-			{
-				Gui.SameLine();
-				if (Gui.igRadioButton_Bool(scope String(Treadle.Format.TreadleCodec.TypeKindWord(k)), mNewTypeKind == k))
-					mNewTypeKind = k;
-			}
 		}
 	}
 }

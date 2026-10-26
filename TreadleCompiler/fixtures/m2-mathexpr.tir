@@ -906,6 +906,10 @@ func M2.MathExprs.Run() void static sheet "x0004" display "M2.MathExprs.Run"
 	node f3 Call M2.MathExprs.PolyNodes
 	node f4 Call Console.WriteLine(int)
 	node f5 Return
+	node f6 Math
+	node f7 Call Console.WriteLine(double)
+	node f8 Math
+	node f9 Call Console.WriteLine(float)
 	block b0
 		br b1
 	block b1
@@ -1038,6 +1042,28 @@ func M2.MathExprs.Run() void static sheet "x0004" display "M2.MathExprs.Run"
 		call void Core.Console.WriteLine(int) %_78 @f4
 		br b18
 	block b18
+		%_79 = const int 6 @d2.a
+		%_80 = const int 7 @d2.b
+		%_81 = binop int mul %_79 %_80 @d2.result
+		%_82 = const int 1 @d2.result
+		%_83 = binop int add %_81 %_82 @d2.result
+		%_84 = cast double %_83 @f6.result
+		%_85 = const double 1000.0 @f6.result
+		%_86 = binop double div %_84 %_85 @f6.result
+		call void Core.Console.WriteLine(double) %_86 @f7
+		br b19
+	block b19
+		%_87 = const int 6 @d2.a
+		%_88 = const int 7 @d2.b
+		%_89 = binop int mul %_87 %_88 @d2.result
+		%_90 = const int 1 @d2.result
+		%_91 = binop int add %_89 %_90 @d2.result
+		%_92 = cast float %_91 @f8.result
+		%_93 = const float 0.5f @f8.result
+		%_94 = binop float mul %_92 %_93 @f8.result
+		call void Core.Console.WriteLine(float) %_94 @f9
+		br b20
+	block b20
 		region.exit r0 @f5
 		ret @f5
 

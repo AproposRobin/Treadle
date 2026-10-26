@@ -1,0 +1,12 @@
+# Per-thread allocator lists: cross-thread deletes, deletes of an ended thread's blocks, the leak report while a thread runs
+== exit Debug
+!0
+== exit Release
+0
+== stdout
+0
+5000
+done
+== stderr Debug
+leak: Core.Delegate (24 bytes) made at Cx.ThreadsCrossMain.Main node h2
+leak: Core.String (56 bytes) made at Cx.ThreadsCrossMain.Spin node s2 on thread "spinner"

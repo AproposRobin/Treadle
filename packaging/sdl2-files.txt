@@ -1,0 +1,9 @@
+# The SDL2 2.32.10 development files the Windows package ships as tools\SDL2 (scripts/package.ps1), for the SDL
+# samples (m2-sdl, m4-breakout) to build and run: taken from the mingw development package that
+# scripts/get-sdl2.ps1 installs (archive pinned by sha256). x86_64 only; the headers are the whole include\SDL2
+# folder (90 files). The editor's own host links SDL2 statically and does not use these.
+# <sha256>  <path under the SDL2 root>
+e482193c3db358936fa40b830745a93cbe0b11d868b450879b0f5d823a5aff21  x86_64-w64-mingw32/lib/libSDL2.dll.a
+53e8fa7e9ed43c30bd650c39396f0d9d2067d2fff0b926c9433b75202592e4aa  x86_64-w64-mingw32/bin/SDL2.dll
+ee97570d0d6507b4687076336c07fd4a7fa1f5e7986c9b61893a279950febce8  x86_64-w64-mingw32/include/SDL2/SDL_version.h
+97f35b302b361680ec1e891e95d2d52097bb95abff361434916d99dc1305f127  LICENSE.txt

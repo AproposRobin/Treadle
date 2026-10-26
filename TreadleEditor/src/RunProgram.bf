@@ -5,7 +5,7 @@ using Treadle.Backend.Driver;
 
 namespace Treadle.Editor
 {
-	/// Build > Run Without Debugging (Ctrl+F5): the build Run needs, then the program with its
+	/// Build > Run (Ctrl+F5, the toolbar's Run): the build Run needs, then the program with its
 	/// stdout and stderr in the Output Log (category "Run") and its exit code at the end.
 	extension EditorApp
 	{
@@ -35,9 +35,10 @@ namespace Treadle.Editor
 
 		void DrawRunMenuItems()
 		{
-			Gui.Separator();
-			if (Gui.MenuItem(scope $"{Icon.Play}  Run Without Debugging", "Ctrl+F5", false, !ProgramRunning && (mBuild == null || !mBuild.Running)))
+			if (Gui.MenuItem(scope $"{Icon.Play}  Run", "Ctrl+F5", false, !ProgramRunning && (mBuild == null || !mBuild.Running)))
 				RunProgram();
+			if (Gui.igIsItemHovered(1 << 10 /* AllowWhenDisabled */))
+				Gui.Tooltip("Run: build if needed, then start the program (without the debugger; F5 runs it under the debugger)");
 			if (Gui.MenuItem(scope $"{Icon.Square}  Stop Program", "", false, ProgramRunning))
 				StopProgram();
 		}

@@ -1,0 +1,8 @@
+# Debug checks a Span index (fatal error naming the Index node); Release does not check
+== only Debug
+== exit
+3
+== stdout
+0
+== stderr
+fatal: index 5 out of range (length 3) at Cx.SpanIndexGuardMain.Peek node p2

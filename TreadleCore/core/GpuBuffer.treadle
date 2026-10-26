@@ -1,0 +1,284 @@
+# treadle 1
+type GpuBuffer class
+	namespace Core
+	generic T
+	sealed
+	doc "Experimental (NVIDIA only): elements of T in GPU memory (host memory when there is no GPU). Made by Gpu.Upload or Construct with a Span (a copy), or Construct with a count (zeros, no copy). It stays on the GPU across dispatches: nothing comes back until Download. Upload refills it; UploadAsync / DownloadAsync queue copies on a GpuStream. Delete frees the GPU memory. A Span<T> input of a kernel takes a GpuBuffer<T> at Gpu.Dispatch. docs: GPU-Compute."
+
+field mSpan Span<T>
+	access internal
+
+ctor q0001
+	doc "A buffer of data's length holding a copy of data."
+param data Span<T>
+local probe T*
+sheet body
+node a0 Scope
+	unsafe
+node a1 Entry
+node a2 Get local:probe
+node a3 Call Memory.ElementSize
+node a4 Break Span<T>
+node a5 Operator *
+node a6 Call GpuBuffer<T>.rt_gpu_alloc
+node a7 Cast T*
+	set kind unchecked
+node a8 Make Span<T>
+node a9 Set this.mSpan
+node b0 Call GpuBuffer<T>.rt_gpu_upload
+node b1 Return
+wire a1.then a0.in
+wire a2.value a3.ptr
+wire a1.data a4.value
+wire a4.Length a5.a
+wire a3.result a5.b
+wire a5.result a6.bytes
+wire a0.body a6.in
+wire a6.result a7.value
+wire a4.Length a8.Length
+wire a7.result a8.Ptr
+wire a6.then a9.in
+wire a8.value a9.value
+wire a5.result b0.bytes
+wire a6.result b0.dst
+wire a9.then b0.in
+wire a4.Ptr b0.src
+wire a0.done b1.in
+
+dtor q0002
+	doc "Frees the GPU memory."
+sheet body
+node c1 Entry
+node c2 Get this.mSpan
+node c3 Break Span<T>
+node c4 Call GpuBuffer<T>.rt_gpu_free
+node c5 Return
+wire c2.value c3.value
+wire c1.then c4.in
+wire c3.Ptr c4.p
+wire c4.then c5.in
+
+function q0003 Count
+	pure
+	returns int
+	doc "The number of elements."
+sheet body
+node d1 Entry
+node d2 Get this.mSpan
+node d3 Break Span<T>
+node d4 Return
+wire d2.value d3.value
+wire d1.then d4.in
+wire d3.Length d4.value
+
+function q0004 Download
+	doc "Copies the buffer into `into` (as many elements as both have), after every dispatch before it has finished."
+param into Span<T>
+local probe T*
+sheet body
+node e0 Scope
+	unsafe
+node e1 Entry
+node e2 Get local:probe
+node e3 Call Memory.ElementSize
+node e4 Get this.mSpan
+node e5 Break Span<T>
+node e6 Break Span<T>
+node e7 Math
+	set expr "Math.Min(a, b) * s"
+node e8 Call GpuBuffer<T>.rt_gpu_download
+node e9 Return
+wire e1.then e0.in
+wire e2.value e3.ptr
+wire e4.value e5.value
+wire e1.into e6.value
+wire e5.Length e7.a
+wire e6.Length e7.b
+wire e3.result e7.s
+wire e7.result e8.bytes
+wire e6.Ptr e8.dst
+wire e0.body e8.in
+wire e5.Ptr e8.src
+wire e0.done e9.in
+
+ctor q0005
+	doc "A buffer of `count` elements set to zero (no copy from the host)."
+param count int
+local probe T*
+sheet body
+node f0 Scope
+	unsafe
+node f1 Entry
+node f2 Get local:probe
+node f3 Call Memory.ElementSize
+node f4 Operator *
+node f5 Call GpuBuffer<T>.rt_gpu_alloc_zero
+node f6 Cast T*
+	set kind unchecked
+node f7 Make Span<T>
+node f8 Set this.mSpan
+node f9 Return
+wire f1.then f0.in
+wire f2.value f3.ptr
+wire f1.count f4.a
+wire f3.result f4.b
+wire f4.result f5.bytes
+wire f0.body f5.in
+wire f5.result f6.value
+wire f1.count f7.Length
+wire f6.result f7.Ptr
+wire f5.then f8.in
+wire f7.value f8.value
+wire f0.done f9.in
+
+function q0006 Upload
+	doc "Copies `data` into the buffer (as many elements as both have), after every dispatch before it: refills a buffer instead of making a new one."
+param data Span<T>
+local probe T*
+sheet body
+node g0 Scope
+	unsafe
+node g1 Entry
+node g2 Get local:probe
+node g3 Call Memory.ElementSize
+node g4 Get this.mSpan
+node g5 Break Span<T>
+node g6 Break Span<T>
+node g7 Math
+	set expr "Math.Min(a, b) * s"
+node g8 Call GpuBuffer<T>.rt_gpu_upload
+node g9 Return
+wire g1.then g0.in
+wire g2.value g3.ptr
+wire g4.value g5.value
+wire g1.data g6.value
+wire g5.Length g7.a
+wire g6.Length g7.b
+wire g3.result g7.s
+wire g7.result g8.bytes
+wire g5.Ptr g8.dst
+wire g0.body g8.in
+wire g6.Ptr g8.src
+wire g0.done g9.in
+
+function q0007 UploadAsync
+	doc "Queues a copy of `data` into the buffer on `stream` and returns at once; `data` must stay as it is until the stream's Sync (a PinnedBuffer's span makes the copy run beside the host)."
+param data Span<T>
+param stream GpuStream
+local probe T*
+sheet body
+node h0 Scope
+	unsafe
+node h1 Entry
+node h2 Get local:probe
+node h3 Call Memory.ElementSize
+node h4 Get this.mSpan
+node h5 Break Span<T>
+node h6 Break Span<T>
+node h7 Math
+	set expr "Math.Min(a, b) * s"
+node h8 Call GpuBuffer<T>.rt_gpu_upload_async
+node h9 Return
+node i1 Get GpuStream.mHandle
+wire h1.then h0.in
+wire h2.value h3.ptr
+wire h4.value h5.value
+wire h1.data h6.value
+wire h5.Length h7.a
+wire h6.Length h7.b
+wire h3.result h7.s
+wire h7.result h8.bytes
+wire h5.Ptr h8.dst
+wire h0.body h8.in
+wire h6.Ptr h8.src
+wire i1.value h8.stream
+wire h0.done h9.in
+wire h1.stream i1.receiver
+
+function q0008 DownloadAsync
+	doc "Queues a copy of the buffer into `into` on `stream` and returns at once; `into` holds the data after the stream's Sync."
+param into Span<T>
+param stream GpuStream
+local probe T*
+sheet body
+node j0 Scope
+	unsafe
+node j1 Entry
+node j2 Get local:probe
+node j3 Call Memory.ElementSize
+node j4 Get this.mSpan
+node j5 Break Span<T>
+node j6 Break Span<T>
+node j7 Math
+	set expr "Math.Min(a, b) * s"
+node j8 Call GpuBuffer<T>.rt_gpu_download_async
+node j9 Return
+node k1 Get GpuStream.mHandle
+wire j1.then j0.in
+wire j2.value j3.ptr
+wire j4.value j5.value
+wire j1.into j6.value
+wire j5.Length j7.a
+wire j6.Length j7.b
+wire j3.result j7.s
+wire j7.result j8.bytes
+wire j6.Ptr j8.dst
+wire j0.body j8.in
+wire j5.Ptr j8.src
+wire k1.value j8.stream
+wire j0.done j9.in
+wire j1.stream k1.receiver
+
+function q0020 rt_gpu_alloc
+	static
+	access private
+	returns void*
+	attr Import treadle_rt rt_gpu_alloc
+param bytes int
+
+function q0021 rt_gpu_free
+	static
+	access private
+	attr Import treadle_rt rt_gpu_free
+param p void*
+
+function q0022 rt_gpu_upload
+	static
+	access private
+	attr Import treadle_rt rt_gpu_upload
+param dst void*
+param src void*
+param bytes int
+
+function q0023 rt_gpu_download
+	static
+	access private
+	attr Import treadle_rt rt_gpu_download
+param dst void*
+param src void*
+param bytes int
+
+function q0024 rt_gpu_alloc_zero
+	static
+	access private
+	returns void*
+	attr Import treadle_rt rt_gpu_alloc_zero
+param bytes int
+
+function q0025 rt_gpu_upload_async
+	static
+	access private
+	attr Import treadle_rt rt_gpu_upload_async
+param dst void*
+param src void*
+param bytes int
+param stream void*
+
+function q0026 rt_gpu_download_async
+	static
+	access private
+	attr Import treadle_rt rt_gpu_download_async
+param dst void*
+param src void*
+param bytes int
+param stream void*

@@ -157,7 +157,7 @@ namespace Treadle.Editor
 			float y = (from != null) ? from.Y : 200;
 			mActionTab = CurrentTab;
 			let item = mNodeMenu.DefaultRowFor(mg, .(x, y), (pin != null) ? pin.Id : 0, search);
-			if (item == null || !item.Label.StartsWith(expect))
+			if (item == null || !item.Label.StartsWith(expect) || (item.Kind == .ConstructCall && !expect.Contains(" + ")))
 			{
 				List<NodeItem> rows = scope .();
 				defer { ClearAndDeleteItems!(rows); }
@@ -281,19 +281,69 @@ namespace Treadle.Editor
 			return ok;
 		}
 
-		/// File > New Type in the Source folder (it proposes the project's namespace, Zoo), then Base
-		/// Type in Type Settings when given.
-		TypeDocument TutNewType(StringView name, TypeKind kind, StringView baseType = "")
+		/// + Add > New Class (New Struct...) in the Source folder: the Create Type dialog proposes the
+		/// project's namespace, Zoo; Create writes the type from its template.
+		TypeDocument TutNewType(StringView name, TypeKind kind)
 		{
-			mNewTypeKind = kind;
-			let doc = NewDocument(scope $"{mTutRoot}{Path.DirectorySeparatorChar}Source{Path.DirectorySeparatorChar}{name}.treadle");
-			mNewTypeKind = .Class;
-			TutCheck(doc != null && Doc == doc, scope $"New Type makes {name}");
+			String folder = scope $"{mTutRoot}{Path.DirectorySeparatorChar}Source";
+			StartNewType(kind, folder);
+			TutCheck(mOpenNewType && mNtKind == kind, scope $"+ Add > New {KindTitle(kind)}... opens the Create Type dialog");
+			mOpenNewType = false;
+			let doc = CreateType(kind, folder, name);
+			TutCheck(doc != null && Doc == doc, scope $"New {KindTitle(kind)} makes {name}");
 			if (doc == null)
 				return null;
-			TutCheck(doc.Header.Namespace == "Zoo", scope $"New Type in Source gives {name} the project's namespace ({doc.Header.Namespace})");
-			TutBaseType(baseType);
+			TutCheck(doc.Header.Namespace == "Zoo", scope $"New {KindTitle(kind)} in Source gives {name} the project's namespace ({doc.Header.Namespace})");
+			if (kind == .Class)
+			{
+				let mg = CurrentMethod;
+				TutCheck(mg != null && mg.Member != null && mg.Member.Kind == .Ctor && mg.Doc == doc, scope $"New Class opens {name}'s constructor Sheet");
+			}
 			return doc;
+		}
+
+		/// Right-click Animal's tile > Make Child Class...: the dialog proposes AnimalChild with Base Class
+		/// Animal; named `name`, Create makes the class with its constructor running Animal's.
+		TypeDocument TutMakeChild(StringView name)
+		{
+			String folder = scope $"{mTutRoot}{Path.DirectorySeparatorChar}Source";
+			String animal = scope $"{folder}{Path.DirectorySeparatorChar}Animal{GraphExtension}";
+			StartMakeChild(animal);
+			TutCheck(mOpenNewType && mNtBase == "Zoo.Animal" && mNtName.View == "AnimalChild", scope $"Make Child Class on Animal proposes AnimalChild : Zoo.Animal ({mNtName.View} : {mNtBase})");
+			String baseType = scope .(mNtBase);
+			mOpenNewType = false;
+			let doc = CreateType(.Class, folder, name, baseType);
+			TutCheck(doc != null && Doc == doc && doc.Header.Base?.ToString(.. scope String()) == "Zoo.Animal", scope $"Make Child Class makes {name} : Animal");
+			return doc;
+		}
+
+		/// FUNCTIONS > Override... > `name`: the base class's function, its Sheet opened, marked Override.
+		bool TutOverride(StringView name)
+		{
+			List<InheritedFn> ov = scope .();
+			defer { ClearAndDeleteItems!(ov); }
+			InheritedFunctions(Doc.Header, Doc.Members, null, ov);
+			for (let f in ov)
+				if (f.Fn.Name == name)
+				{
+					let s = ImplementInherited(f);
+					TutCheck(s != null && s.Member.Override && CurrentMethod == s, scope $"Override... > {name} makes the override's Sheet");
+					return s != null;
+				}
+			TutCheck(false, scope $"Override... offers {name} ({ov.Count} functions)");
+			return false;
+		}
+
+		/// The constructor's row in FUNCTIONS: its Sheet opened.
+		void TutOpenCtor()
+		{
+			for (let s in Doc.Sheets)
+				if (s.Member != null && s.Member.Kind == .Ctor)
+				{
+					OpenTab(s);
+					SelectOutline(.Member, s.Member);
+					return;
+				}
 		}
 
 		/// FUNCTIONS + > Constructor has opened its Sheet: `ctor` is its member.
@@ -391,6 +441,7 @@ namespace Treadle.Editor
 					return TutAbort();
 				CurrentTab?.ClearSelection();
 				Panels.Focus(Panels.ProjectBrowserId);
+				mStatus.Clear(); // the picture shows no folder of the machine it was made on
 				mSelfTestWait = 10;
 				return false;
 
@@ -513,8 +564,8 @@ namespace Treadle.Editor
 				if (!TutHold("05-animal-legs"))
 					return false;
 				SaveAll();
-				// FUNCTIONS + > Constructor: Animal's, with the input legs.
-				AddCtorOrDtor(false);
+				// The constructor New Class made: its row in FUNCTIONS opens it; it gets the input legs.
+				TutOpenCtor();
 				mSelfTestWait = 5;
 				return false;
 			case 18:
@@ -535,9 +586,10 @@ namespace Treadle.Editor
 			// ---------------------------------------------------------------- Dog and Bird
 			case 19, 27:
 				let dog = mSelfTestStep == 19;
-				TutNewType(dog ? "Dog" : "Bird", .Class, "Animal");
 				SaveAll();
-				AddCtorOrDtor(false);
+				ScanProject();
+				TutMakeChild(dog ? "Dog" : "Bird");
+				SaveAll();
 				mSelfTestWait = 5;
 				return false;
 			case 20, 28:
@@ -560,8 +612,15 @@ namespace Treadle.Editor
 						TutCheck(get != null && get.A == "get" && get.Label == "mLegs", scope $"'get mlegs' + Enter takes the Get of mLegs ({(get != null) ? get.Label : "nothing"})");
 						delete get;
 					}
-					// Right-click on the canvas: Base Constructor (int), the base class Animal's constructor.
-					if (TutPlace("base", "base constructor", "Base Constructor (int)") != null)
+					// Make Child Class put Base Constructor (int), Animal's constructor, on the constructor's Sheet.
+					Node chainNode = null;
+					for (let n in mg.Graph.Nodes)
+						if (n.Kind == .ChainCtor)
+							chainNode = n;
+					TutCheck(chainNode != null, "Make Child Class puts a Base Constructor node on the constructor's Sheet");
+					if (chainNode != null)
+						TutRemember("base", chainNode.Key);
+					if (chainNode != null)
 					{
 						let chain = TutNode("base");
 						TutCheck(chain.Kind == .ChainCtor && chain.Text == "base" && chain.FindInput("legs")?.TypeName == "int" && ctor.Chain == .Base,
@@ -576,12 +635,14 @@ namespace Treadle.Editor
 					if (dog)
 						CurrentTab?.SelectOnly(TutNode("base")?.Id ?? 0);
 					else
-						AddFunctionMember("Speak");
+						TutOverride("Speak");
 				}
 				mSelfTestWait = 5;
 				return false;
 			case 21:
-				// F with the Base Constructor selected: Properties shows it.
+				// F with the Base Constructor selected: Properties shows it. Validate again: the value typed
+				// after Make Child Class saved the type is checked (the Base Constructor had no legs then).
+				Validate(true);
 				TutFrame();
 				mSelfTestWait = 5;
 				return false;
@@ -589,7 +650,8 @@ namespace Treadle.Editor
 				if (!TutHold("06-dog-constructor"))
 					return false;
 				CurrentTab?.ClearSelection();
-				AddFunctionMember("Speak");
+				// FUNCTIONS > Override... > Speak (Animal's Speak is virtual).
+				TutOverride("Speak");
 				mSelfTestWait = 5;
 				return false;
 			case 23, 29:
@@ -662,8 +724,8 @@ namespace Treadle.Editor
 					EndTypeEdit();
 				}
 				AddField("mValue", "T");
-				// FUNCTIONS + > Constructor, with the input value of type T.
-				AddCtorOrDtor(false);
+				// The constructor New Class made, with the input value of type T.
+				TutOpenCtor();
 				mSelfTestWait = 5;
 				return false;
 			case 37:

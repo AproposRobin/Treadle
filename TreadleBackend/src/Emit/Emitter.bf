@@ -917,6 +917,8 @@ namespace Treadle.Backend.Emit
 		/// Makes a function callable from this unit: defined here, queued (shared), or declared.
 		public void UseFunction(IRFunction f)
 		{
+			if (KernelUse(f)) // EmitKernel.bf: the GPU module defines what a kernel calls
+				return;
 			if (f.IsImport)
 			{
 				DeclareImport(f);
@@ -1942,6 +1944,8 @@ namespace Treadle.Backend.Emit
 			if (mDefined.ContainsAlt(sym))
 				return;
 			mDefined.Add(new .(sym));
+			if (KernelBuiltin(f, sym)) // EmitKernel.bf: Core.Kernel.Index() on the GPU
+				return;
 			FunctionEmitter fe = scope .(this, f, sym);
 			fe.Emit(mFuncs);
 			if (f.ExportName != null && f.Unit == Unit)

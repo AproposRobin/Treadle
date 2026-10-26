@@ -5,14 +5,15 @@ three lives, drawn with SDL2 in a 640x480 window.
 
 ## Run it
 
-You need the SDL 2.32.10 development package for mingw. Set `TREADLE_SDL2` to the folder that holds
-`x86_64-w64-mingw32`, or unpack the package into `tools\SDL2-2.32.10` of the Treadle folder.
-
 ```
-Treadle.exe --build-run TreadleCore\samples\m4-breakout
+Treadle.exe --build-run samples\m4-breakout
 ```
 
-Or open the folder in the editor and press Ctrl+F5. Add `--config Release` for an optimised build.
+(`samples\` of the Treadle folder; in a source checkout `TreadleCore\samples\`.) Or open the folder in the editor
+and press Ctrl+F5. It needs SDL2 ([samples README](../README.md), "SDL2"): the Windows package carries it in
+`tools\SDL2`, and `TREADLE_SDL2` names another SDL 2.32.10 mingw development package (the folder that holds
+`x86_64-w64-mingw32`). On Linux, `./treadle --build-run samples/m4-breakout` links the Treadle folder's
+`libSDL2-2.0.so.0`, and the game runs with your system's SDL2. Add `--config Release` for an optimised build.
 
 What follows `--` goes to the game:
 

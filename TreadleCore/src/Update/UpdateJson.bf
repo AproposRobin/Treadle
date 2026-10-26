@@ -5,8 +5,8 @@ using System.Collections;
 
 namespace Treadle.Update
 {
-	/// A small strict JSON reader for the updater: the release descriptor (release.json) and the list of releases the
-	/// preview channel reads. Objects keep their key order; numbers keep their text (integers are read exactly).
+	/// A small strict JSON reader for the updater: the GitHub releases list the update check
+	/// reads. Objects keep their key order; numbers keep their text (integers are read exactly).
 	/// Depth is limited (32) so a hostile document cannot exhaust the stack.
 	public class UpdateJson
 	{

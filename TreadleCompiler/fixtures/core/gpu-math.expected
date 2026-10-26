@@ -1,0 +1,9 @@
+# The transcendental Math functions in kernels: the GPU's (treadle_gpu_math.c) agree with the C library's (Kernel.RunCpu) in float and double.
+== exit
+0
+== stdout
+float mismatches 0
+double mismatches 0
+== stderr
+GPU:
+GPU math, worst

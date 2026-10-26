@@ -8,6 +8,7 @@ using Treadle.Model;
 namespace Treadle.Editor
 {
 	/// Split Struct Pin / Recombine Struct Pin (the pin menu; SplitPins in TreadleCore): a struct pin drawn
+	/// (or a vector pin, `float4`: one pin per lane, `v.x` ... `v.w`, `lane0` ... above 4 lanes; Split Vector Pin)
 	/// as one pin per field on the same node, kept in the file as the node's `split <pin> <Type>` line.
 	/// Each is one undo step.
 	extension EditorApp
@@ -81,7 +82,7 @@ namespace Treadle.Editor
 				return false;
 			}
 			CommitCurrent();
-			SetStatus(scope $"Split {(pin.Label.IsEmpty ? pin.Name : pin.Label)} into {fields.Count} field pins", .Info, false);
+			SetStatus(scope $"Split {(pin.Label.IsEmpty ? pin.Name : pin.Label)} into {fields.Count} {(VectorTypes.LanesOf(pin.TypeName) > 0) ? "lane" : "field"} pins", .Info, false);
 			return true;
 		}
 

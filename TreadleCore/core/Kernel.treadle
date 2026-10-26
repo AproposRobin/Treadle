@@ -1,0 +1,126 @@
+# treadle 1
+type Kernel class
+	namespace Core
+	static
+	doc "Experimental (NVIDIA only): what a [Kernel] function reads, and running one on the CPU. A [Kernel] function runs once per index of a dispatch; Index gives the index. Gpu.Dispatch runs it on the GPU, RunCpu on the CPU (over the thread pool) with every Debug check. docs: GPU-Compute."
+
+field sIndex int
+	static
+	access private
+
+function k0001 Index
+	static
+	pure
+	returns int
+	doc "The index this run of the kernel works on: 0 up to (not including) the dispatch's count. On the GPU the thread's global index."
+sheet body
+node a1 Entry
+node a2 Get Kernel.sIndex
+node a3 Return
+wire a1.then a3.in
+wire a2.value a3.value
+
+function k0002 RunCpu
+	static
+	attr Intrinsic Kernel.RunCpu
+	doc "Runs the kernel named by the node's `set kernel <Type.Function>` once for every index from 0 up to `count` on the CPU, split over the thread pool (TREADLE_KERNEL_THREADS=1: the calling thread only), with the kernel's inputs as this node's inputs (Debug checks included)."
+param count int
+
+function k0003 SetIndex
+	static
+	access internal
+	doc "The CPU path's chunk loop: the index Index gives on this thread (a thread-local of the runtime in a build; this Sheet is the one-thread meaning)."
+param index int
+sheet body
+node c1 Entry
+node c2 Set Kernel.sIndex
+node c3 Return
+wire c1.then c2.in
+wire c1.index c2.value
+wire c2.then c3.in
+
+function k0020 rt_kernel_cpu
+	static
+	access internal
+	attr Import treadle_rt rt_kernel_cpu
+param count int
+param block int
+param flags int32
+param chunk void*
+param a0 void*
+param a1 void*
+param a2 void*
+param a3 void*
+param a4 void*
+param a5 void*
+param a6 void*
+param a7 void*
+
+function k0004 SetBlockSize
+	static
+	access internal
+	doc "The CPU path's chunk function: the block size BlockSize gives on this thread (a thread-local in a build)."
+param size int
+sheet body
+node d1 Entry
+node d2 Return
+wire d1.then d2.in
+
+function k0005 BlockIndex
+	static
+	pure
+	returns int
+	doc "The block this run belongs to: Index / BlockSize (on the GPU the CUDA block index)."
+sheet body
+node e1 Entry
+node e2 Call Kernel.Index
+node e3 Call Kernel.BlockSize
+node e4 Operator /
+node e5 Return
+wire e2.result e4.a
+wire e3.result e4.b
+wire e1.then e5.in
+wire e4.result e5.value
+
+function k0006 ThreadInBlock
+	static
+	pure
+	returns int
+	doc "This run's place in its block: 0 up to BlockSize (on the GPU the CUDA thread index)."
+sheet body
+node f1 Entry
+node f2 Call Kernel.Index
+node f3 Call Kernel.BlockSize
+node f4 Operator %
+node f5 Return
+wire f2.result f4.a
+wire f3.result f4.b
+wire f1.then f5.in
+wire f4.result f5.value
+
+function k0007 BlockSize
+	static
+	pure
+	returns int
+	doc "The threads per block of this dispatch: the dispatch node's set block (256 when not set)."
+sheet body
+node g1 Entry
+node g2 Return
+	in value 256
+wire g1.then g2.in
+
+function k0008 Barrier
+	static
+	doc "Waits until every run of this block has reached this Barrier: what they wrote to Shared memory before it is seen by all after it. Every run of the block must reach the same Barriers (no Barrier in a Branch that some runs skip). A kernel that calls it runs in whole blocks: its dispatch count must be a multiple of the block size."
+sheet body
+node h1 Entry
+node h2 Return
+wire h1.then h2.in
+
+function k0009 Shared
+	static
+	returns Span<T>
+	generic T
+	attr Intrinsic Kernel.Shared
+	doc "Memory shared by the runs of one block: `count` elements of the node's set type <T>, zero at the start of the block on the CPU (undefined on the GPU), at most 48 KB per block. `count` is typed on the node (it is fixed when the program is built). Each Shared node is its own memory; a kernel that uses it runs in whole blocks."
+param count int

@@ -1,0 +1,86 @@
+# treadle 1
+type Camera struct
+	namespace Particles
+	doc "An orbit camera as a quaternion: yaw about Y, then a pitch about X. ViewProj builds the view from the conjugate rotation and the eye position, and the projection with Mat4.Perspective."
+
+field Yaw float
+
+field Pitch float
+
+field Distance float
+
+function c0001 Orientation
+	pure
+	returns Quat
+	doc "FromAxisAngle(Y, Yaw) * FromAxisAngle(X, Pitch): the pitch is applied first."
+sheet body
+node a1 Entry
+node a2 Get Core.Vec3.UnitY
+node a3 Get this.Yaw
+node a4 Call Core.Quat.FromAxisAngle
+node a5 Get Core.Vec3.UnitX
+node a6 Get this.Pitch
+node a7 Call Core.Quat.FromAxisAngle
+node a8 Operator *
+node a9 Return
+wire a3.value a4.angle
+wire a2.value a4.axis
+wire a6.value a7.angle
+wire a5.value a7.axis
+wire a4.result a8.a
+wire a7.result a8.b
+wire a1.then a9.in
+wire a8.result a9.value
+
+function c0002 Eye
+	pure
+	returns Vec3
+	doc "The eye: (0, 0, Distance) rotated by the orientation (the camera looks along its -Z, at the origin)."
+sheet body
+node b1 Entry
+node b2 Call this.Orientation
+node b3 Get this.Distance
+node b4 Make Vec3
+	in X 0.0f
+	in Y 0.0f
+node b5 Operator *
+node b6 Return
+wire b3.value b4.Z
+wire b2.result b5.a
+wire b4.value b5.b
+wire b1.then b6.in
+wire b5.result b6.value
+
+function c0003 ViewProj
+	pure
+	returns Mat4
+	doc "Perspective(55 degrees, aspect, 1, 1000) * Rotation(conjugate of the orientation) * Translation(-eye)."
+param aspect float
+sheet body
+node c1 Entry
+node c2 Call this.Orientation
+node c3 Call Core.Quat.Conjugate
+node c4 Call Core.Mat4.Rotation
+node c5 Call this.Eye
+node c6 Operator neg
+node c7 Call Core.Mat4.Translation
+node c8 Operator *
+node c9 Call Core.Math.Radians
+	in degrees 55.0f
+node d1 Call Core.Mat4.Perspective
+	in near 1.0f
+	in far 1000.0f
+node d2 Operator *
+node d3 Return
+wire c2.result c3.receiver
+wire c3.result c4.rotation
+wire c5.result c6.a
+wire c6.result c7.offset
+wire c4.result c8.a
+wire c7.result c8.b
+wire c1.aspect d1.aspect
+wire c9.result d1.fovY
+wire d1.result d2.a
+wire c8.result d2.b
+wire c1.then d3.in
+wire d2.result d3.value

@@ -20,6 +20,7 @@ namespace Treadle.Editor
 		public TypeKind Kind;
 		public bool Static;
 		public bool Abstract;
+		public bool Sealed;
 		public String Base = new .() ~ delete _;
 		public List<String> Implements = new .() ~ DeleteContainerAndItems!(_);
 		public List<String> Generics = new .() ~ DeleteContainerAndItems!(_);
@@ -36,6 +37,7 @@ namespace Treadle.Editor
 			Kind = h.Kind;
 			Static = h.Static;
 			Abstract = h.Abstract;
+			Sealed = h.Sealed;
 			Base.Clear();
 			h.Base?.ToString(Base);
 			ClearAndDeleteItems!(Implements);
@@ -172,6 +174,7 @@ namespace Treadle.Editor
 			dst.Kind = src.Kind;
 			dst.Static = src.Static;
 			dst.Abstract = src.Abstract;
+			dst.Sealed = src.Sealed;
 			dst.Base.Set(src.Base);
 			for (let i in src.Implements)
 				dst.Implements.Add(new String(i));
@@ -321,6 +324,9 @@ namespace Treadle.Editor
 			else
 			{
 				let pt = mTypes.Find(t);
+				let mk = (pt != null) ? PinValue.MathValueKind(pt.FullName, current, pinName) : PinValueKind.None;
+				if (mk != .None)
+					return mk; // a core math struct: its fields inline
 				if (pt != null && pt.Kind == .Enum)
 					kind = .Enum;
 				else

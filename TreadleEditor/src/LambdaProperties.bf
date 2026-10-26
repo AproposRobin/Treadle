@@ -187,7 +187,7 @@ namespace Treadle.Editor
 			if (custom && known)
 			{
 				String t = scope .();
-				if (TsType("Returns", scope $"##lret{id}", sig.Returns, t, "The result: the Return node's Return Value in the Sheet (void: none)") && !readOnly && !t.IsEmpty)
+				if (TsType("Returns", scope $"##lret{id}", sig.Returns, t, "The result: the Return node's Return Value in the Sheet (void: none)", .Result) && !readOnly && !t.IsEmpty)
 				{
 					sig.Returns.Set(t);
 					RewriteCustomSignature(mg, node, sig);

@@ -155,6 +155,12 @@ namespace Treadle.Editor
 			// the staged version and exits without opening a window (Treadle.Update.UpdateApply).
 			if (args.Count > 0 && args[0] == Treadle.Update.UpdateApply.HelperSwitch)
 				return Treadle.Update.UpdateApply.RunHelper(args);
+			// Command-line updates (UpdateCli.bf); the editor's own arguments are kept for the restart after an update.
+			if (args.Count > 0 && args[0] == Treadle.Update.UpdateApply.HealthSwitch)
+				return UpdateCli.Health();
+			if (args.Count > 0 && args[0] == "--update")
+				return UpdateCli.Run(args);
+			UpdateCli.Remember(args);
 			// Every non-interactive run: fatal errors, failed asserts and leaks go to the log and
 			// stderr and end the process with an exit code (3 / 4, 5 for the watchdog), never a dialog.
 			String headless = scope .();

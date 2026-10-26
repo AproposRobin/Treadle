@@ -1,0 +1,41 @@
+# treadle 1
+type FormatClampMain class
+	namespace Cx
+	static
+	doc "The runtime's number formatter never writes past its buffer (Security-Review.md finding 13): asked to write 123456 into 4 bytes, Debug stops with fatal error 13 naming both lengths, Release returns the text cut to 3 bytes."
+
+function f001 rt_format_number
+	static
+	access private
+	attr Import treadle_rt rt_format_number
+	returns int
+param buf int64*
+param cap int
+param kind int32
+param i int64
+param d double
+param spec char8*
+param specLen int
+
+function m000 Main
+	static
+	returns int
+local buf int64
+sheet body
+node a1 Entry
+node a2 Get local:buf
+node a3 Call FormatClampMain.rt_format_number
+	in cap 4
+	in kind 0
+	in i 123456
+	in d 0.0
+	in spec ""
+	in specLen 0
+node a4 Call Console.WriteLine(int)
+node a5 Return
+	in value 0
+wire a1.then a3.in
+wire a2.value a3.buf
+wire a3.then a4.in
+wire a3.result a4.value
+wire a4.then a5.in

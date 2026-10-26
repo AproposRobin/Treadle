@@ -579,6 +579,7 @@ namespace Treadle.Editor
 				ShowCallStack = !ShowCallStack;
 			if (Gui.MenuItem("Debug Output", "", ShowDebugOutput))
 				ShowDebugOutput = !ShowDebugOutput;
+			DrawHoodMenuItems(true); // Disassembly, Memory: DisassemblyPanel.bf
 			Gui.EndMenu();
 		}
 
@@ -603,6 +604,7 @@ namespace Treadle.Editor
 			bool canOpen = v.ChildrenRef != 0 && depth < 6;
 			int32 flags = TreeNodeFlags.SpanFullWidth | (canOpen ? TreeNodeFlags.OpenOnArrow : (TreeNodeFlags.Leaf | TreeNodeFlags.NoTreePushOnOpen));
 			open = Gui.TreeNode(v.Label.IsEmpty ? v.Name : v.Label, flags);
+			if (depth == 0) HoodVariableMenu(v); // Show in Memory: MemoryPanel.bf
 			if (Gui.igIsItemHovered(0) && v.Kind == .Pin)
 			{
 				let f = mDebug.CurrentFrame;
@@ -692,6 +694,7 @@ namespace Treadle.Editor
 							Gui.TextDisabled("This frame has no variables the debugger can read.");
 					}
 				}
+				Panels.NoteNarrow();
 				Gui.End();
 			}
 			if (ShowCallStack)
@@ -706,14 +709,15 @@ namespace Treadle.Editor
 						// it current, and its stack replaces the frames below.
 						if (mDebug.Threads.Count > 1)
 						{
+							// Main first, then the workers by name (DebugSession.SortThreads); the current thread
+							// carries the stop arrow and the selection colour.
 							if (Gui.TreeNode(scope $"Threads ({mDebug.Threads.Count})###threads", TreeNodeFlags.SpanFullWidth | TreeNodeFlags.NoTreePushOnOpen | TreeNodeFlags.DefaultOpen))
 							{
 								for (let t in mDebug.Threads)
 								{
-									if (Gui.Selectable(scope $"{t.Name}##thread{t.Id}", t.Current, 0))
+									if (CallStackRow(t.Name, scope $"thread{t.Id}", t.Current, t.Current, false,
+										t.Current ? "the thread the Call Stack shows" : "click to show its call stack"))
 										mDebug.SelectThread(t.Id);
-									if (Gui.igIsItemHovered(0))
-										Gui.Tooltip(t.Current ? scope $"{t.Name}: the thread the Call Stack shows" : scope $"{t.Name}: show its call stack");
 								}
 							}
 							Gui.Separator();
@@ -729,21 +733,18 @@ namespace Treadle.Editor
 							}
 							else
 								label.Append(f.Name.IsEmpty ? "(unknown)" : f.Name);
-							if (!f.IsUser)
-								Gui.igPushStyleColor_U32(0 /* Text */, Look.ForegroundDim);
-							if (Gui.Selectable(scope $"{label}##frame{@f.Index}", @f.Index == mDebug.SelectedFrame, 0))
+							String detail = f.IsUser ? scope:: $"{f.Name}: {f.Path}, Sheet {f.SheetKey}, node {f.NodeKey} (listing line {f.Line})" : "Outside the project's Sheets (the runtime, the C library or the system)";
+							if (CallStackRow(label, scope $"frame{@f.Index}", @f.Index == mDebug.SelectedFrame, false, !f.IsUser, detail))
 							{
 								mDebug.SelectFrame(@f.Index);
 								if (f.IsUser)
 									ShowFrameNode(f);
 							}
-							if (!f.IsUser)
-								Gui.igPopStyleColor(1);
-							if (Gui.igIsItemHovered(0))
-								Gui.Tooltip(f.IsUser ? scope $"{f.Name}: {f.Path}, Sheet {f.SheetKey}, node {f.NodeKey} (listing line {f.Line})" : "Outside the project's Sheets (the runtime, the C library or the system)");
+							HoodFrameMenu(f, @f.Index); // Show Frame in Memory, Disassembly: MemoryPanel.bf
 						}
 					}
 				}
+				Panels.NoteNarrow();
 				Gui.End();
 			}
 			if (ShowDebugOutput)
@@ -785,6 +786,44 @@ namespace Treadle.Editor
 				Gui.End();
 			}
 		}
+	}
+
+	extension EditorApp
+	{
+		/// One Call Stack row (a thread or a frame): a gutter with the stop arrow when `arrow` (the current
+		/// thread), the text cut in the middle to the panel's width, dimmed when `dim` (a frame outside the
+		/// project). The tooltip has the whole text when it was cut, and `detail`. True when clicked.
+		bool CallStackRow(StringView text, StringView id, bool selected, bool arrow, bool dim, StringView detail)
+		{
+			let lineH = Gui.igGetTextLineHeight();
+			let gutter = lineH * 1.1f;
+			let pos = Gui.igGetCursorScreenPos();
+			let avail = Gui.igGetContentRegionAvail().x;
+			bool clicked = Gui.Selectable(scope $"##{id}", selected, 0, .(0, lineH));
+			bool hovered = Gui.igIsItemHovered(0);
+			String shown = scope .();
+			bool cut = Look.EllipsizeMiddle(text, Math.Max(avail - gutter, 8 * Look.Scale), shown);
+			let dl = Gui.igGetWindowDrawList();
+			if (arrow)
+			{
+				// the canvas's stop arrow, small: yellow with a thin outline that reads on both themes
+				let s = lineH * 0.3f;
+				let cy = pos.y + lineH * 0.5f;
+				let x0 = pos.x + lineH * 0.2f;
+				ImVec2 a = .(x0, cy - s);
+				ImVec2 b = .(x0, cy + s);
+				ImVec2 c = .(x0 + s * 1.6f, cy);
+				Gui.ImDrawList_AddTriangleFilled(dl, a, b, c, cStackArrow);
+				Gui.ImDrawList_AddTriangle(dl, a, b, c, Gui.igGetColorU32_Col(0 /* Text */, 0.45f), 1);
+			}
+			let col = dim ? Look.ForegroundDim : Gui.igGetColorU32_Col(0 /* Text */, 1);
+			Gui.ImDrawList_AddText_Vec2(dl, .(pos.x + gutter, pos.y), col, shown.Ptr, shown.Ptr + shown.Length);
+			if (hovered)
+				Gui.Tooltip(cut ? scope $"{text}\n{detail}" : detail);
+			return clicked;
+		}
+
+		const uint32 cStackArrow = 0xFF28C8FF; // ABGR: the canvas's stop yellow (255, 200, 40)
 	}
 
 	extension GraphPanel

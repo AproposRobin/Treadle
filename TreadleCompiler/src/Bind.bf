@@ -633,6 +633,24 @@ namespace Treadle.Compiler
 
 		/// The overload score (Compiler.md 2): exact 4, implicit 2, generic 1,
 		/// refused -100, an unknown argument name -100, a missing required argument -20.
+		/// A value of type `have` may stand for the `T : vector` parameter `p` (a vector, with the lanes
+		/// `vector float` names, or a parameter with such a constraint).
+		static bool VectorArgFits(GenericParamSym p, KType have)
+		{
+			if (have == null)
+				return false;
+			if (have.IsError)
+				return true;
+			KType elem = null;
+			if (have.IsVector)
+				elem = have.Element;
+			else if (have.Kind == .Param && have.Param.IsVector)
+				elem = have.Param.VectorElement;
+			else
+				return false;
+			return p.VectorElement == null || elem == p.VectorElement;
+		}
+
 		int ScoreArgs(BNode b, MemberSym f, Dictionary<GenericParamSym, KType> map, List<StringView> args)
 		{
 			int score = 0;
@@ -648,6 +666,13 @@ namespace Treadle.Compiler
 					continue;
 				let want = T.Subst(p.Type, map);
 				let have = InType(b, a);
+				// A `T : vector` parameter takes a vector (of the lanes it names) only, so the overloads
+				// of String.Append beside VectorFormat's generic one keep their numbers.
+				if (want.Kind == .Param && want.Param.IsVector)
+				{
+					score += VectorArgFits(want.Param, have) ? 1 : -100;
+					continue;
+				}
 				// A generic parameter takes any wired value or literal (its type is inferred after the pick).
 				if (TypeTable.IsOpen(want) && (have != null || !Lit(b, a).IsEmpty))
 				{
@@ -1034,7 +1059,7 @@ namespace Treadle.Compiler
 					for (int i < sig.Count)
 					{
 						let pt = f.Params[i].Type;
-						same &= sig[i].IsError || pt == sig[i] || T.Subst(pt, map) == sig[i] || TypeTable.IsOpen(pt);
+						same &= sig[i].IsError || pt == sig[i] || T.Subst(pt, map) == sig[i] || (TypeTable.IsOpen(pt) && !(pt.Kind == .Param && pt.Param.IsVector && !VectorArgFits(pt.Param, sig[i])));
 					}
 					if (same)
 					{
@@ -1091,6 +1116,8 @@ namespace Treadle.Compiler
 			b.Owner = inst;
 			b.Map = new .();
 			T.MapOf(inst, b.Map);
+			if (f.Owner.IsCore && f.Intrinsic == "Kernel.Shared")
+				BindKernelShared(b, f); // Kernel.bf: its element type from set type (GPU-Compute.md)
 			if (b.ReceiverIsBase && f.Abstract && !f.HasBody)
 				Err(b, "", "T2066", scope $"the base version of {f.Name} is abstract: there is nothing to call");
 			// The function's own generic parameters, from the arguments.
@@ -1142,6 +1169,10 @@ namespace Treadle.Compiler
 				BindCArgs(b, f);
 			if (f.Owner.IsCore && f.Owner.FullName == "Core.Atomic")
 				BindAtomic(b, f);
+			if (f.Owner.IsCore && KernelRules.IsDispatch(f.Intrinsic))
+				BindKernelCall(b, f); // Kernel.bf: the kernel's inputs (GPU-Compute.md)
+			if (f.Owner.IsCore && ((f.Name == "Start" && f.Owner.FullName == "Core.Thread") || (f.Name == "Run" && f.Owner.FullName == "Core.ThreadPool")))
+				CheckOwnedBody(b, f);
 			if (!f.Returns.IsVoid)
 				b.AddOut("result", T.Subst(f.Returns, b.Map));
 			for (let o in f.Outs)
@@ -1164,6 +1195,23 @@ namespace Treadle.Compiler
 						anyWire = true;
 				if (anyWire)
 					Err(b, "", "T2068", scope $"{f.Name} is not Pure: it has side effects, so it runs in the flow. Wire its flow pins.");
+			}
+		}
+
+		/// Thread.Start and ThreadPool.Run own their delegate (Threads.md 2): the thread or the pool
+		/// deletes it after the body ran, while a Local Bind Function or Lambda is freed when its
+		/// region ends, perhaps before the other thread runs it (T2224, as T2216 for an event's
+		/// handler; Debug's run-time check, fatal error 12, stays for delegates made elsewhere).
+		void CheckOwnedBody(BNode b, MemberSym f)
+		{
+			for (let p in f.Params)
+			{
+				if (p.Type == null || p.Type.Kind != .Delegate)
+					continue;
+				InType(b, p.Name);
+				let src = SourceNode(b, p.Name);
+				if (src != null && (src.Kind == .Bind || src.Kind == .Lambda) && src.Alloc == .Local)
+					Err(b, p.Name, "T2224", scope $"{p.Name}: {f.Owner.Name}.{f.Name} owns the delegate and deletes it after it ran on the other thread, but a Local one is freed when its region ends: make it with Allocation construct");
 			}
 		}
 
@@ -1460,11 +1508,53 @@ namespace Treadle.Compiler
 					op = op.Substring(0, op.Length - 1);
 				b.SetOp.Set(op);
 				b.OperandType = varType;
+				if (TryBindCompoundMixed(b, varType, op))
+					return;
 				if (!c.SupportsOperator(varType, op, r.Member))
 					Err(b, "", "T2082", scope $"{S!(varType)} has no operator {op} (set op {op}=)");
 				else
 					b.OpImpl = (varType.Kind == .Param) ? .Generic : ((c.FindUserOperator(varType, op) != null && !varType.IsNumeric) ? .User : .Builtin);
 			}
+		}
+
+		/// A compound Set whose operator takes two input types (`set op *=` of a Vec3 with a float,
+		/// a Mat4 with a float, a Color with a float): the operator is found as the Operator node
+		/// finds it (TryBindMixedOperator), from the variable's type and the type wired into Value
+		/// (or the number type its literal fits); its result must be the variable's type (T2083).
+		/// The Value input takes the operator's second input type.
+		bool TryBindCompoundMixed(BNode b, KType varType, StringView op)
+		{
+			if (varType == null || varType.IsError || varType.Kind != .Named)
+				return false;
+			var tb = InType(b, "value");
+			if (tb != null && tb.IsError)
+				return false;
+			if (tb == null)
+				tb = c.MixedLiteralSide(op, varType, false, Lit(b, "value"));
+			if (tb == null || tb == varType)
+				return false;
+			let user = c.FindMixedOperator(op, varType, tb, let owner);
+			if (user == null || user.Params.Count != 2)
+				return false;
+			Dictionary<GenericParamSym, KType> map = scope .();
+			T.MapOf(owner, map);
+			let returns = T.Subst(user.Returns, map);
+			if (returns != varType)
+			{
+				Err(b, "", "T2083", scope $"{S!(varType)} {op} {S!(tb)} gives a {S!(returns)}, not a {S!(varType)}: set op {op}= keeps the variable's type (use a Set of the Operator's result)");
+				return true;
+			}
+			b.OpImpl = .User;
+			b.Member = user;
+			b.Owner = owner;
+			b.OperandType = owner;
+			b.Map = new .();
+			T.MapOf(owner, b.Map);
+			c.Instances.AddType(owner, r.SiteType, b.Key);
+			let value = b.FindIn("value");
+			if (value != null)
+				value.Type = T.Subst(user.Params[1].Type, b.Map);
+			return true;
 		}
 
 		// ------------------------------------------------------------------ lifetime
@@ -1971,6 +2061,8 @@ namespace Treadle.Compiler
 				return;
 			}
 			if (!unary && TryBindMixedOperator(b, op))
+				return;
+			if (!unary && TryBindGenericVectorOperator(b, op, compare)) // BindVector.bf: `T : vector` beside a scalar
 				return;
 			var ta = InType(b, "a");
 			var tb = unary ? null : InType(b, "b");

@@ -44,29 +44,33 @@ param items Span<T>
 param body delegate:void(T)
 sheet body
 node c1 Entry
-node c2 Local ParallelForEach<T>
-node c3 Set ParallelForEach<T>.mItems
-node c4 Set ParallelForEach<T>.mBody
-node c5 Bind ParallelForEach<T>.Run
+node c2 Lambda
+	set type delegate:void(int)
 	set alloc local
-node c6 Break Span<T>
-node c7 Call Parallel.For
+	set inputs i
+node c3 Break Span<T>
+node c4 Call Parallel.For
 	in from 0
-node c8 Return
+node c5 Return
 wire c1.then c2.in
-wire c2.then c3.in
-wire c2.object c3.receiver
 wire c1.items c3.value
-wire c3.then c4.in
-wire c2.object c4.receiver
-wire c1.body c4.value
+wire c2.value c4.body
+wire c2.then c4.in
+wire c3.Length c4.to
 wire c4.then c5.in
-wire c2.object c5.receiver
-wire c1.items c6.value
-wire c5.value c7.body
-wire c5.then c7.in
-wire c6.Length c7.to
-wire c7.then c8.in
+sheet lambda:c2
+node l1 Entry
+node l2 Get param:items
+node l3 Index
+node l4 Get param:body
+node l5 Invoke
+node l6 Return
+wire l2.value l3.collection
+wire l1.i l3.index
+wire l3.value l5.arg0
+wire l4.value l5.delegate
+wire l1.then l5.in
+wire l5.then l6.in
 
 function k0020 rt_parallel_for
 	static

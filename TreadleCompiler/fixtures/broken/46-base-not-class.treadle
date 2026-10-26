@@ -1,0 +1,6 @@
+# treadle 1
+# expect - - T1012
+type BaseNotClass class
+	namespace Broken
+	base int
+	doc "A class derives from a class only: int is a primitive."

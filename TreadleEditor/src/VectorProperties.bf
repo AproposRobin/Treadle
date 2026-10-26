@@ -133,19 +133,25 @@ namespace Treadle.Editor
 			List<String> all = scope .();
 			defer { ClearAndDeleteItems!(all); }
 			VectorTypes.All(all);
-			List<DropItem> items = scope .();
-			int current = -1;
+			// The shared type picker (TypePickers.bf), its rows the vector types.
+			List<TypeEntry> entries = scope .();
+			defer { ClearAndDeleteItems!(entries); }
 			for (let t in all)
 			{
-				items.Add(.(t));
-				if (t == node.Text)
-					current = @t.Index;
+				TypeEntry en = new .();
+				en.Name.Set(t);
+				en.Group = "Vectors";
+				en.Glyph = Icon.Layers;
+				entries.Add(en);
 			}
-			let picked = PropertyGrid.DropdownRow("Vector Type", scope $"##vtype{node.Key}", node.Text, items, current,
-				"The vector type: one lane pin per lane (x y z w up to 4 lanes, lane0 ... above)", default, readOnly, default, Theme.TypeColor(node.Text));
-			if (picked < 0 || picked == current || readOnly)
+			PropertyGrid.Row("Vector Type", "The vector type: one lane pin per lane (x y z w up to 4 lanes, lane0 ... above)", Theme.TypeColor(node.Text));
+			Gui.igBeginDisabled(readOnly);
+			String picked = scope .();
+			let changed = TypeCombo.Draw(scope $"##vtype{node.Key}", node.Text, entries, picked);
+			Gui.igEndDisabled();
+			if (!changed || readOnly || picked.IsEmpty)
 				return false;
-			return SetVectorType(mg.Graph, node, all[picked]);
+			return SetVectorType(mg.Graph, node, picked);
 		}
 
 		/// Changes a vector Make / Break to `type` (one undo step): the subject, the `value` pin and the lane

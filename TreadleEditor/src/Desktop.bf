@@ -261,6 +261,58 @@ namespace Treadle.Editor
 		[CLink, CallingConvention(.Stdcall)] static extern int32 SetForegroundWindow(void* hwnd);
 #endif
 
+		/// Self tests: the last target a suppressed ShellOpen was given, and how many were suppressed.
+		public static String LastSuppressedOpen = new .() ~ delete _;
+		public static int SuppressedOpens;
+
+		/// The one way the editor hands something to the desktop: `program` (explorer.exe, notepad.exe,
+		/// xdg-open; SystemProgram resolves it) gets `target`, a folder or file (`select`: Explorer selects
+		/// the file) or an https:// address. Never in a test or capture run (TREADLE_SELFTEST, a quiet
+		/// window): logged as "[shell-open suppressed] <target>" instead. An empty target, a bare `\` or
+		/// `/`, or a path that does not exist never reaches the shell: false, and the caller shows its own
+		/// notice.
+		public static bool ShellOpen(StringView program, StringView targetIn, bool select = false)
+		{
+			var target = targetIn;
+			target.Trim();
+			bool url = target.StartsWith("https://");
+			bool bad = target.IsEmpty || target == "\\" || target == "/" || (target.StartsWith("\\\\") && target.Length <= 3);
+			if (!bad && !url && !System.IO.File.Exists(target) && !System.IO.Directory.Exists(target))
+				bad = true;
+			bool headless = QuietWindow;
+#if TREADLE_SELFTEST
+			String st = scope .();
+			if ((Environment.GetEnvironmentVariable("TREADLE_SELFTEST", st) case .Ok) && !st.IsEmpty)
+				headless = true;
+#endif
+			if (headless)
+			{
+				LastSuppressedOpen.Set(target);
+				SuppressedOpens++;
+				Notify.Log(.Info, "Shell", scope $"[shell-open suppressed] {target}");
+				return !bad;
+			}
+			if (bad)
+			{
+				Notify.Log(.Warning, "Shell", scope $"Not opened: '{target}' is not a folder, a file or an https:// address");
+				return false;
+			}
+			System.Diagnostics.ProcessStartInfo psi = scope .();
+			psi.SetFileName(SystemProgram(program, .. scope String()));
+			String arg = scope .(target);
+#if BF_PLATFORM_WINDOWS
+			if (!url)
+				arg.Replace('/', '\\');
+			psi.SetArguments(select ? scope:: $"/select,\"{arg}\"" : scope:: $"\"{arg}\"");
+#else
+			psi.SetArguments(scope:: $"\"{arg}\"");
+#endif
+			psi.UseShellExecute = false;
+			psi.CreateNoWindow = true;
+			System.Diagnostics.SpawnedProcess proc = scope .();
+			return proc.Start(psi) case .Ok;
+		}
+
 		/// The window is a quiet one (test and capture runs): off-screen, no taskbar button, never activated or
 		/// raised, still rendered (the host's th_set_window_quiet). Set by SetQuietWindow before th_init.
 		public static bool QuietWindow;

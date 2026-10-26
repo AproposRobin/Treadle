@@ -286,7 +286,11 @@ namespace Treadle.Graph
 					for (let sub in subs)
 					{
 						let field = StringView(sub.Name, pinName.Length + 1);
-						let fp = input ? g.AddDataIn(synth, field, field) : g.AddDataOut(synth, field, field);
+						// A vector's Make / Break has its lane pins already (Shape: x y z w, lane0 ...): a split
+						// vector pin's lanes go onto them, so the compiler reads them as the Make / Break per lane.
+						var fp = input ? synth.FindInput(field) : synth.FindOutput(field);
+						if (fp == null || fp.Kind != .Value)
+							fp = input ? g.AddDataIn(synth, field, field) : g.AddDataOut(synth, field, field);
 						fp.Role = input ? .Arg : .Result;
 						fp.SetType(TypeRef.CloneOrNull(sub.Type));
 						if (input)

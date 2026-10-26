@@ -1,0 +1,1345 @@
+# treadle 1
+type GpuMathMain class
+	namespace Cx
+	static
+	doc "GPU compute (docs/GPU-Compute.md): the transcendental Math functions in kernels (treadle_gpu_math.c on the GPU, the C library on the CPU). Four kernels compute Sin, Cos, Tan, Exp, Log, Pow, Atan2, Asin, Acos and Atan of 262,144 arguments each, in float and in double, once with Gpu.Dispatch and once with Kernel.RunCpu; the results must agree (|cpu - gpu| / max(|cpu|, 1) below 1e-5 in float, 1e-12 in double); the largest difference goes to stderr."
+
+function g01 KernelF1
+	static
+	attr Kernel
+	doc "The float functions of the arguments x = (i % 4001 - 2000) / 100, y = (i % 1000 + 1) / 100, u = (i % 2001 - 1000) / 1000 of index i."
+param s Span<float>
+param c Span<float>
+param tn Span<float>
+param e Span<float>
+param l Span<float>
+param p Span<float>
+sheet body
+node n0 Entry
+node n1 Call Kernel.Index
+node n2 Math
+	set expr "i % 4001 - 2000"
+node n3 Cast float
+node n4 Math
+	set expr "v * 0.01"
+node n5 Math
+	set expr "i % 1000 + 1"
+node n6 Cast float
+node n7 Math
+	set expr "v * 0.01"
+node n8 Math
+	set expr "i % 2001 - 1000"
+node n9 Cast float
+node na Math
+	set expr "v * 0.001"
+node nb Math
+	set expr "Math.Sin(x)"
+node nc Call Span<float>.SetAt
+node nd Math
+	set expr "Math.Cos(x)"
+node ne Call Span<float>.SetAt
+node nf Math
+	set expr "Math.Tan(x)"
+node ng Call Span<float>.SetAt
+node nh Math
+	set expr "Math.Exp(x * 0.5)"
+node ni Call Span<float>.SetAt
+node nj Math
+	set expr "Math.Log(y)"
+node nk Call Span<float>.SetAt
+node nl Math
+	set expr "Math.Pow(y, x * 0.25)"
+node nm Call Span<float>.SetAt
+node nn Return
+wire n1.result n2.i
+wire n2.result n3.value
+wire n3.result n4.v
+wire n1.result n5.i
+wire n5.result n6.value
+wire n6.result n7.v
+wire n1.result n8.i
+wire n8.result n9.value
+wire n9.result na.v
+wire n4.result nb.x
+wire n0.then nc.in
+wire n1.result nc.index
+wire n0.s nc.receiver
+wire nb.result nc.value
+wire n4.result nd.x
+wire nc.then ne.in
+wire n1.result ne.index
+wire n0.c ne.receiver
+wire nd.result ne.value
+wire n4.result nf.x
+wire ne.then ng.in
+wire n1.result ng.index
+wire n0.tn ng.receiver
+wire nf.result ng.value
+wire n4.result nh.x
+wire ng.then ni.in
+wire n1.result ni.index
+wire n0.e ni.receiver
+wire nh.result ni.value
+wire n7.result nj.y
+wire ni.then nk.in
+wire n1.result nk.index
+wire n0.l nk.receiver
+wire nj.result nk.value
+wire n4.result nl.x
+wire n7.result nl.y
+wire nk.then nm.in
+wire n1.result nm.index
+wire n0.p nm.receiver
+wire nl.result nm.value
+wire nm.then nn.in
+
+function g02 KernelF2
+	static
+	attr Kernel
+	doc "The float functions of the arguments x = (i % 4001 - 2000) / 100, y = (i % 1000 + 1) / 100, u = (i % 2001 - 1000) / 1000 of index i."
+param a2 Span<float>
+param as Span<float>
+param ac Span<float>
+param at Span<float>
+sheet body
+node n10 Call Span<float>.SetAt
+node n11 Math
+	set expr "Math.Asin(u)"
+node n12 Call Span<float>.SetAt
+node n13 Math
+	set expr "Math.Acos(u)"
+node n14 Call Span<float>.SetAt
+node n15 Math
+	set expr "Math.Atan(x)"
+node n16 Call Span<float>.SetAt
+node n17 Return
+node no Entry
+node np Call Kernel.Index
+node nq Math
+	set expr "i % 4001 - 2000"
+node nr Cast float
+node ns Math
+	set expr "v * 0.01"
+node nt Math
+	set expr "i % 1000 + 1"
+node nu Cast float
+node nv Math
+	set expr "v * 0.01"
+node nw Math
+	set expr "i % 2001 - 1000"
+node nx Cast float
+node ny Math
+	set expr "v * 0.001"
+node nz Math
+	set expr "Math.Atan2(x, y - 5)"
+wire no.then n10.in
+wire np.result n10.index
+wire no.a2 n10.receiver
+wire nz.result n10.value
+wire ny.result n11.u
+wire n10.then n12.in
+wire np.result n12.index
+wire no.as n12.receiver
+wire n11.result n12.value
+wire ny.result n13.u
+wire n12.then n14.in
+wire np.result n14.index
+wire no.ac n14.receiver
+wire n13.result n14.value
+wire ns.result n15.x
+wire n14.then n16.in
+wire np.result n16.index
+wire no.at n16.receiver
+wire n15.result n16.value
+wire n16.then n17.in
+wire np.result nq.i
+wire nq.result nr.value
+wire nr.result ns.v
+wire np.result nt.i
+wire nt.result nu.value
+wire nu.result nv.v
+wire np.result nw.i
+wire nw.result nx.value
+wire nx.result ny.v
+wire ns.result nz.x
+wire nv.result nz.y
+
+function g03 KernelD1
+	static
+	attr Kernel
+	doc "The double functions of the arguments x = (i % 4001 - 2000) / 100, y = (i % 1000 + 1) / 100, u = (i % 2001 - 1000) / 1000 of index i."
+param s Span<double>
+param c Span<double>
+param tn Span<double>
+param e Span<double>
+param l Span<double>
+param p Span<double>
+sheet body
+node n18 Entry
+node n19 Call Kernel.Index
+node n1a Math
+	set expr "i % 4001 - 2000"
+node n1b Cast double
+node n1c Math
+	set expr "v * 0.01"
+node n1d Math
+	set expr "i % 1000 + 1"
+node n1e Cast double
+node n1f Math
+	set expr "v * 0.01"
+node n1g Math
+	set expr "i % 2001 - 1000"
+node n1h Cast double
+node n1i Math
+	set expr "v * 0.001"
+node n1j Math
+	set expr "Math.Sin(x)"
+node n1k Call Span<double>.SetAt
+node n1l Math
+	set expr "Math.Cos(x)"
+node n1m Call Span<double>.SetAt
+node n1n Math
+	set expr "Math.Tan(x)"
+node n1o Call Span<double>.SetAt
+node n1p Math
+	set expr "Math.Exp(x * 0.5)"
+node n1q Call Span<double>.SetAt
+node n1r Math
+	set expr "Math.Log(y)"
+node n1s Call Span<double>.SetAt
+node n1t Math
+	set expr "Math.Pow(y, x * 0.25)"
+node n1u Call Span<double>.SetAt
+node n1v Return
+wire n19.result n1a.i
+wire n1a.result n1b.value
+wire n1b.result n1c.v
+wire n19.result n1d.i
+wire n1d.result n1e.value
+wire n1e.result n1f.v
+wire n19.result n1g.i
+wire n1g.result n1h.value
+wire n1h.result n1i.v
+wire n1c.result n1j.x
+wire n18.then n1k.in
+wire n19.result n1k.index
+wire n18.s n1k.receiver
+wire n1j.result n1k.value
+wire n1c.result n1l.x
+wire n1k.then n1m.in
+wire n19.result n1m.index
+wire n18.c n1m.receiver
+wire n1l.result n1m.value
+wire n1c.result n1n.x
+wire n1m.then n1o.in
+wire n19.result n1o.index
+wire n18.tn n1o.receiver
+wire n1n.result n1o.value
+wire n1c.result n1p.x
+wire n1o.then n1q.in
+wire n19.result n1q.index
+wire n18.e n1q.receiver
+wire n1p.result n1q.value
+wire n1f.result n1r.y
+wire n1q.then n1s.in
+wire n19.result n1s.index
+wire n18.l n1s.receiver
+wire n1r.result n1s.value
+wire n1c.result n1t.x
+wire n1f.result n1t.y
+wire n1s.then n1u.in
+wire n19.result n1u.index
+wire n18.p n1u.receiver
+wire n1t.result n1u.value
+wire n1u.then n1v.in
+
+function g04 KernelD2
+	static
+	attr Kernel
+	doc "The double functions of the arguments x = (i % 4001 - 2000) / 100, y = (i % 1000 + 1) / 100, u = (i % 2001 - 1000) / 1000 of index i."
+param a2 Span<double>
+param as Span<double>
+param ac Span<double>
+param at Span<double>
+sheet body
+node n1w Entry
+node n1x Call Kernel.Index
+node n1y Math
+	set expr "i % 4001 - 2000"
+node n1z Cast double
+node n20 Math
+	set expr "v * 0.01"
+node n21 Math
+	set expr "i % 1000 + 1"
+node n22 Cast double
+node n23 Math
+	set expr "v * 0.01"
+node n24 Math
+	set expr "i % 2001 - 1000"
+node n25 Cast double
+node n26 Math
+	set expr "v * 0.001"
+node n27 Math
+	set expr "Math.Atan2(x, y - 5)"
+node n28 Call Span<double>.SetAt
+node n29 Math
+	set expr "Math.Asin(u)"
+node n2a Call Span<double>.SetAt
+node n2b Math
+	set expr "Math.Acos(u)"
+node n2c Call Span<double>.SetAt
+node n2d Math
+	set expr "Math.Atan(x)"
+node n2e Call Span<double>.SetAt
+node n2f Return
+wire n1x.result n1y.i
+wire n1y.result n1z.value
+wire n1z.result n20.v
+wire n1x.result n21.i
+wire n21.result n22.value
+wire n22.result n23.v
+wire n1x.result n24.i
+wire n24.result n25.value
+wire n25.result n26.v
+wire n20.result n27.x
+wire n23.result n27.y
+wire n1w.then n28.in
+wire n1x.result n28.index
+wire n1w.a2 n28.receiver
+wire n27.result n28.value
+wire n26.result n29.u
+wire n28.then n2a.in
+wire n1x.result n2a.index
+wire n1w.as n2a.receiver
+wire n29.result n2a.value
+wire n26.result n2b.u
+wire n2a.then n2c.in
+wire n1x.result n2c.index
+wire n1w.ac n2c.receiver
+wire n2b.result n2c.value
+wire n20.result n2d.x
+wire n2c.then n2e.in
+wire n1x.result n2e.index
+wire n1w.at n2e.receiver
+wire n2d.result n2e.value
+wire n2e.then n2f.in
+
+function g05 WorstF
+	static
+	returns double
+	doc "The largest |w - g| / max(|w|, 1) over the elements."
+param want Span<float>
+param got Span<float>
+local worst double
+sheet body
+node n2g Entry
+node n2h For
+	in start 0
+node n2i Break Span<float>
+node n2j Call Span<float>.At
+node n2k Call Span<float>.At
+node n2l Cast double
+node n2m Cast double
+node n2n Get local:worst
+node n2o Math
+	set expr "Math.Max(o, Math.Abs(w - g) / Math.Max(Math.Abs(w), 1.0))"
+node n2p Set local:worst
+node n2q Return
+wire n2i.Length n2h.count
+wire n2g.then n2h.in
+wire n2g.want n2i.value
+wire n2h.body n2j.in
+wire n2h.index n2j.index
+wire n2g.want n2j.receiver
+wire n2j.then n2k.in
+wire n2h.index n2k.index
+wire n2g.got n2k.receiver
+wire n2j.result n2l.value
+wire n2k.result n2m.value
+wire n2m.result n2o.g
+wire n2n.value n2o.o
+wire n2l.result n2o.w
+wire n2k.then n2p.in
+wire n2o.result n2p.value
+wire n2h.done n2q.in
+wire n2n.value n2q.value
+
+function g06 WorstD
+	static
+	returns double
+	doc "The largest |w - g| / max(|w|, 1) over the elements."
+param want Span<double>
+param got Span<double>
+local worst double
+sheet body
+node n2r Entry
+node n2s For
+	in start 0
+node n2t Break Span<double>
+node n2u Call Span<double>.At
+node n2v Call Span<double>.At
+node n2w Cast double
+node n2x Cast double
+node n2y Get local:worst
+node n2z Math
+	set expr "Math.Max(o, Math.Abs(w - g) / Math.Max(Math.Abs(w), 1.0))"
+node n30 Set local:worst
+node n31 Return
+wire n2t.Length n2s.count
+wire n2r.then n2s.in
+wire n2r.want n2t.value
+wire n2s.body n2u.in
+wire n2s.index n2u.index
+wire n2r.want n2u.receiver
+wire n2u.then n2v.in
+wire n2s.index n2v.index
+wire n2r.got n2v.receiver
+wire n2u.result n2w.value
+wire n2v.result n2x.value
+wire n2x.result n2z.g
+wire n2y.value n2z.o
+wire n2w.result n2z.w
+wire n2v.then n30.in
+wire n2z.result n30.value
+wire n2s.done n31.in
+wire n2y.value n31.value
+
+function g07 RunF1
+	static
+	returns double
+	doc "KernelF1 with Kernel.RunCpu and with Gpu.Dispatch; the worst difference of their outputs."
+param n int
+local worst double
+sheet body
+node n32 Entry
+node n33 Construct float[]
+node n34 Construct GpuBuffer<float>
+	set ctor (int)
+node n35 Construct float[]
+node n36 Cast Span<float>
+node n37 Cast Span<float>
+node n38 Construct float[]
+node n39 Construct GpuBuffer<float>
+	set ctor (int)
+node n3a Construct float[]
+node n3b Cast Span<float>
+node n3c Cast Span<float>
+node n3d Construct float[]
+node n3e Construct GpuBuffer<float>
+	set ctor (int)
+node n3f Construct float[]
+node n3g Cast Span<float>
+node n3h Cast Span<float>
+node n3i Construct float[]
+node n3j Construct GpuBuffer<float>
+	set ctor (int)
+node n3k Construct float[]
+node n3l Cast Span<float>
+node n3m Cast Span<float>
+node n3n Construct float[]
+node n3o Construct GpuBuffer<float>
+	set ctor (int)
+node n3p Construct float[]
+node n3q Cast Span<float>
+node n3r Cast Span<float>
+node n3s Construct float[]
+node n3t Construct GpuBuffer<float>
+	set ctor (int)
+node n3u Construct float[]
+node n3v Cast Span<float>
+node n3w Cast Span<float>
+node n3x Call Kernel.RunCpu
+	set kernel Cx.GpuMathMain.KernelF1
+node n3y Call Gpu.Dispatch
+	set kernel Cx.GpuMathMain.KernelF1
+node n3z Get local:worst
+node n40 Call GpuBuffer<float>.Download
+node n41 Call GpuMathMain.WorstF
+node n42 Math
+	set expr "Math.Max(a, b)"
+node n43 Set local:worst
+node n44 Call GpuBuffer<float>.Download
+node n45 Call GpuMathMain.WorstF
+node n46 Math
+	set expr "Math.Max(a, b)"
+node n47 Set local:worst
+node n48 Call GpuBuffer<float>.Download
+node n49 Call GpuMathMain.WorstF
+node n4a Math
+	set expr "Math.Max(a, b)"
+node n4b Set local:worst
+node n4c Call GpuBuffer<float>.Download
+node n4d Call GpuMathMain.WorstF
+node n4e Math
+	set expr "Math.Max(a, b)"
+node n4f Set local:worst
+node n4g Call GpuBuffer<float>.Download
+node n4h Call GpuMathMain.WorstF
+node n4i Math
+	set expr "Math.Max(a, b)"
+node n4j Set local:worst
+node n4k Call GpuBuffer<float>.Download
+node n4l Call GpuMathMain.WorstF
+node n4m Math
+	set expr "Math.Max(a, b)"
+node n4n Set local:worst
+node n4o Delete
+node n4p Delete
+node n4q Delete
+node n4r Delete
+node n4s Delete
+node n4t Delete
+node n4u Delete
+node n4v Delete
+node n4w Delete
+node n4x Delete
+node n4y Delete
+node n4z Delete
+node n50 Delete
+node n51 Delete
+node n52 Delete
+node n53 Delete
+node n54 Delete
+node n55 Delete
+node n56 Return
+wire n32.n n33.count
+wire n32.then n33.in
+wire n32.n n34.count
+wire n33.then n34.in
+wire n32.n n35.count
+wire n34.then n35.in
+wire n33.object n36.value
+wire n35.object n37.value
+wire n32.n n38.count
+wire n35.then n38.in
+wire n32.n n39.count
+wire n38.then n39.in
+wire n32.n n3a.count
+wire n39.then n3a.in
+wire n38.object n3b.value
+wire n3a.object n3c.value
+wire n32.n n3d.count
+wire n3a.then n3d.in
+wire n32.n n3e.count
+wire n3d.then n3e.in
+wire n32.n n3f.count
+wire n3e.then n3f.in
+wire n3d.object n3g.value
+wire n3f.object n3h.value
+wire n32.n n3i.count
+wire n3f.then n3i.in
+wire n32.n n3j.count
+wire n3i.then n3j.in
+wire n32.n n3k.count
+wire n3j.then n3k.in
+wire n3i.object n3l.value
+wire n3k.object n3m.value
+wire n32.n n3n.count
+wire n3k.then n3n.in
+wire n32.n n3o.count
+wire n3n.then n3o.in
+wire n32.n n3p.count
+wire n3o.then n3p.in
+wire n3n.object n3q.value
+wire n3p.object n3r.value
+wire n32.n n3s.count
+wire n3p.then n3s.in
+wire n32.n n3t.count
+wire n3s.then n3t.in
+wire n32.n n3u.count
+wire n3t.then n3u.in
+wire n3s.object n3v.value
+wire n3u.object n3w.value
+wire n3b.result n3x.c
+wire n32.n n3x.count
+wire n3l.result n3x.e
+wire n3u.then n3x.in
+wire n3q.result n3x.l
+wire n3v.result n3x.p
+wire n36.result n3x.s
+wire n3g.result n3x.tn
+wire n39.object n3y.c
+wire n32.n n3y.count
+wire n3j.object n3y.e
+wire n3x.then n3y.in
+wire n3o.object n3y.l
+wire n3t.object n3y.p
+wire n34.object n3y.s
+wire n3e.object n3y.tn
+wire n3y.then n40.in
+wire n37.result n40.into
+wire n34.object n40.receiver
+wire n37.result n41.got
+wire n40.then n41.in
+wire n36.result n41.want
+wire n3z.value n42.a
+wire n41.result n42.b
+wire n41.then n43.in
+wire n42.result n43.value
+wire n43.then n44.in
+wire n3c.result n44.into
+wire n39.object n44.receiver
+wire n3c.result n45.got
+wire n44.then n45.in
+wire n3b.result n45.want
+wire n3z.value n46.a
+wire n45.result n46.b
+wire n45.then n47.in
+wire n46.result n47.value
+wire n47.then n48.in
+wire n3h.result n48.into
+wire n3e.object n48.receiver
+wire n3h.result n49.got
+wire n48.then n49.in
+wire n3g.result n49.want
+wire n3z.value n4a.a
+wire n49.result n4a.b
+wire n49.then n4b.in
+wire n4a.result n4b.value
+wire n4b.then n4c.in
+wire n3m.result n4c.into
+wire n3j.object n4c.receiver
+wire n3m.result n4d.got
+wire n4c.then n4d.in
+wire n3l.result n4d.want
+wire n3z.value n4e.a
+wire n4d.result n4e.b
+wire n4d.then n4f.in
+wire n4e.result n4f.value
+wire n4f.then n4g.in
+wire n3r.result n4g.into
+wire n3o.object n4g.receiver
+wire n3r.result n4h.got
+wire n4g.then n4h.in
+wire n3q.result n4h.want
+wire n3z.value n4i.a
+wire n4h.result n4i.b
+wire n4h.then n4j.in
+wire n4i.result n4j.value
+wire n4j.then n4k.in
+wire n3w.result n4k.into
+wire n3t.object n4k.receiver
+wire n3w.result n4l.got
+wire n4k.then n4l.in
+wire n3v.result n4l.want
+wire n3z.value n4m.a
+wire n4l.result n4m.b
+wire n4l.then n4n.in
+wire n4m.result n4n.value
+wire n4n.then n4o.in
+wire n33.object n4o.object
+wire n4o.then n4p.in
+wire n34.object n4p.object
+wire n4p.then n4q.in
+wire n35.object n4q.object
+wire n4q.then n4r.in
+wire n38.object n4r.object
+wire n4r.then n4s.in
+wire n39.object n4s.object
+wire n4s.then n4t.in
+wire n3a.object n4t.object
+wire n4t.then n4u.in
+wire n3d.object n4u.object
+wire n4u.then n4v.in
+wire n3e.object n4v.object
+wire n4v.then n4w.in
+wire n3f.object n4w.object
+wire n4w.then n4x.in
+wire n3i.object n4x.object
+wire n4x.then n4y.in
+wire n3j.object n4y.object
+wire n4y.then n4z.in
+wire n3k.object n4z.object
+wire n4z.then n50.in
+wire n3n.object n50.object
+wire n50.then n51.in
+wire n3o.object n51.object
+wire n51.then n52.in
+wire n3p.object n52.object
+wire n52.then n53.in
+wire n3s.object n53.object
+wire n53.then n54.in
+wire n3t.object n54.object
+wire n54.then n55.in
+wire n3u.object n55.object
+wire n55.then n56.in
+wire n3z.value n56.value
+
+function g08 RunF2
+	static
+	returns double
+	doc "KernelF2 with Kernel.RunCpu and with Gpu.Dispatch; the worst difference of their outputs."
+param n int
+local worst double
+sheet body
+node n57 Entry
+node n58 Construct float[]
+node n59 Construct GpuBuffer<float>
+	set ctor (int)
+node n5a Construct float[]
+node n5b Cast Span<float>
+node n5c Cast Span<float>
+node n5d Construct float[]
+node n5e Construct GpuBuffer<float>
+	set ctor (int)
+node n5f Construct float[]
+node n5g Cast Span<float>
+node n5h Cast Span<float>
+node n5i Construct float[]
+node n5j Construct GpuBuffer<float>
+	set ctor (int)
+node n5k Construct float[]
+node n5l Cast Span<float>
+node n5m Cast Span<float>
+node n5n Construct float[]
+node n5o Construct GpuBuffer<float>
+	set ctor (int)
+node n5p Construct float[]
+node n5q Cast Span<float>
+node n5r Cast Span<float>
+node n5s Call Kernel.RunCpu
+	set kernel Cx.GpuMathMain.KernelF2
+node n5t Call Gpu.Dispatch
+	set kernel Cx.GpuMathMain.KernelF2
+node n5u Get local:worst
+node n5v Call GpuBuffer<float>.Download
+node n5w Call GpuMathMain.WorstF
+node n5x Math
+	set expr "Math.Max(a, b)"
+node n5y Set local:worst
+node n5z Call GpuBuffer<float>.Download
+node n60 Call GpuMathMain.WorstF
+node n61 Math
+	set expr "Math.Max(a, b)"
+node n62 Set local:worst
+node n63 Call GpuBuffer<float>.Download
+node n64 Call GpuMathMain.WorstF
+node n65 Math
+	set expr "Math.Max(a, b)"
+node n66 Set local:worst
+node n67 Call GpuBuffer<float>.Download
+node n68 Call GpuMathMain.WorstF
+node n69 Math
+	set expr "Math.Max(a, b)"
+node n6a Set local:worst
+node n6b Delete
+node n6c Delete
+node n6d Delete
+node n6e Delete
+node n6f Delete
+node n6g Delete
+node n6h Delete
+node n6i Delete
+node n6j Delete
+node n6k Delete
+node n6l Delete
+node n6m Delete
+node n6n Return
+wire n57.n n58.count
+wire n57.then n58.in
+wire n57.n n59.count
+wire n58.then n59.in
+wire n57.n n5a.count
+wire n59.then n5a.in
+wire n58.object n5b.value
+wire n5a.object n5c.value
+wire n57.n n5d.count
+wire n5a.then n5d.in
+wire n57.n n5e.count
+wire n5d.then n5e.in
+wire n57.n n5f.count
+wire n5e.then n5f.in
+wire n5d.object n5g.value
+wire n5f.object n5h.value
+wire n57.n n5i.count
+wire n5f.then n5i.in
+wire n57.n n5j.count
+wire n5i.then n5j.in
+wire n57.n n5k.count
+wire n5j.then n5k.in
+wire n5i.object n5l.value
+wire n5k.object n5m.value
+wire n57.n n5n.count
+wire n5k.then n5n.in
+wire n57.n n5o.count
+wire n5n.then n5o.in
+wire n57.n n5p.count
+wire n5o.then n5p.in
+wire n5n.object n5q.value
+wire n5p.object n5r.value
+wire n5b.result n5s.a2
+wire n5l.result n5s.ac
+wire n5g.result n5s.as
+wire n5q.result n5s.at
+wire n57.n n5s.count
+wire n5p.then n5s.in
+wire n59.object n5t.a2
+wire n5j.object n5t.ac
+wire n5e.object n5t.as
+wire n5o.object n5t.at
+wire n57.n n5t.count
+wire n5s.then n5t.in
+wire n5t.then n5v.in
+wire n5c.result n5v.into
+wire n59.object n5v.receiver
+wire n5c.result n5w.got
+wire n5v.then n5w.in
+wire n5b.result n5w.want
+wire n5u.value n5x.a
+wire n5w.result n5x.b
+wire n5w.then n5y.in
+wire n5x.result n5y.value
+wire n5y.then n5z.in
+wire n5h.result n5z.into
+wire n5e.object n5z.receiver
+wire n5h.result n60.got
+wire n5z.then n60.in
+wire n5g.result n60.want
+wire n5u.value n61.a
+wire n60.result n61.b
+wire n60.then n62.in
+wire n61.result n62.value
+wire n62.then n63.in
+wire n5m.result n63.into
+wire n5j.object n63.receiver
+wire n5m.result n64.got
+wire n63.then n64.in
+wire n5l.result n64.want
+wire n5u.value n65.a
+wire n64.result n65.b
+wire n64.then n66.in
+wire n65.result n66.value
+wire n66.then n67.in
+wire n5r.result n67.into
+wire n5o.object n67.receiver
+wire n5r.result n68.got
+wire n67.then n68.in
+wire n5q.result n68.want
+wire n5u.value n69.a
+wire n68.result n69.b
+wire n68.then n6a.in
+wire n69.result n6a.value
+wire n6a.then n6b.in
+wire n58.object n6b.object
+wire n6b.then n6c.in
+wire n59.object n6c.object
+wire n6c.then n6d.in
+wire n5a.object n6d.object
+wire n6d.then n6e.in
+wire n5d.object n6e.object
+wire n6e.then n6f.in
+wire n5e.object n6f.object
+wire n6f.then n6g.in
+wire n5f.object n6g.object
+wire n6g.then n6h.in
+wire n5i.object n6h.object
+wire n6h.then n6i.in
+wire n5j.object n6i.object
+wire n6i.then n6j.in
+wire n5k.object n6j.object
+wire n6j.then n6k.in
+wire n5n.object n6k.object
+wire n6k.then n6l.in
+wire n5o.object n6l.object
+wire n6l.then n6m.in
+wire n5p.object n6m.object
+wire n6m.then n6n.in
+wire n5u.value n6n.value
+
+function g09 RunD1
+	static
+	returns double
+	doc "KernelD1 with Kernel.RunCpu and with Gpu.Dispatch; the worst difference of their outputs."
+param n int
+local worst double
+sheet body
+node n6o Entry
+node n6p Construct double[]
+node n6q Construct GpuBuffer<double>
+	set ctor (int)
+node n6r Construct double[]
+node n6s Cast Span<double>
+node n6t Cast Span<double>
+node n6u Construct double[]
+node n6v Construct GpuBuffer<double>
+	set ctor (int)
+node n6w Construct double[]
+node n6x Cast Span<double>
+node n6y Cast Span<double>
+node n6z Construct double[]
+node n70 Construct GpuBuffer<double>
+	set ctor (int)
+node n71 Construct double[]
+node n72 Cast Span<double>
+node n73 Cast Span<double>
+node n74 Construct double[]
+node n75 Construct GpuBuffer<double>
+	set ctor (int)
+node n76 Construct double[]
+node n77 Cast Span<double>
+node n78 Cast Span<double>
+node n79 Construct double[]
+node n7a Construct GpuBuffer<double>
+	set ctor (int)
+node n7b Construct double[]
+node n7c Cast Span<double>
+node n7d Cast Span<double>
+node n7e Construct double[]
+node n7f Construct GpuBuffer<double>
+	set ctor (int)
+node n7g Construct double[]
+node n7h Cast Span<double>
+node n7i Cast Span<double>
+node n7j Call Kernel.RunCpu
+	set kernel Cx.GpuMathMain.KernelD1
+node n7k Call Gpu.Dispatch
+	set kernel Cx.GpuMathMain.KernelD1
+node n7l Get local:worst
+node n7m Call GpuBuffer<double>.Download
+node n7n Call GpuMathMain.WorstD
+node n7o Math
+	set expr "Math.Max(a, b)"
+node n7p Set local:worst
+node n7q Call GpuBuffer<double>.Download
+node n7r Call GpuMathMain.WorstD
+node n7s Math
+	set expr "Math.Max(a, b)"
+node n7t Set local:worst
+node n7u Call GpuBuffer<double>.Download
+node n7v Call GpuMathMain.WorstD
+node n7w Math
+	set expr "Math.Max(a, b)"
+node n7x Set local:worst
+node n7y Call GpuBuffer<double>.Download
+node n7z Call GpuMathMain.WorstD
+node n80 Math
+	set expr "Math.Max(a, b)"
+node n81 Set local:worst
+node n82 Call GpuBuffer<double>.Download
+node n83 Call GpuMathMain.WorstD
+node n84 Math
+	set expr "Math.Max(a, b)"
+node n85 Set local:worst
+node n86 Call GpuBuffer<double>.Download
+node n87 Call GpuMathMain.WorstD
+node n88 Math
+	set expr "Math.Max(a, b)"
+node n89 Set local:worst
+node n8a Delete
+node n8b Delete
+node n8c Delete
+node n8d Delete
+node n8e Delete
+node n8f Delete
+node n8g Delete
+node n8h Delete
+node n8i Delete
+node n8j Delete
+node n8k Delete
+node n8l Delete
+node n8m Delete
+node n8n Delete
+node n8o Delete
+node n8p Delete
+node n8q Delete
+node n8r Delete
+node n8s Return
+wire n6o.n n6p.count
+wire n6o.then n6p.in
+wire n6o.n n6q.count
+wire n6p.then n6q.in
+wire n6o.n n6r.count
+wire n6q.then n6r.in
+wire n6p.object n6s.value
+wire n6r.object n6t.value
+wire n6o.n n6u.count
+wire n6r.then n6u.in
+wire n6o.n n6v.count
+wire n6u.then n6v.in
+wire n6o.n n6w.count
+wire n6v.then n6w.in
+wire n6u.object n6x.value
+wire n6w.object n6y.value
+wire n6o.n n6z.count
+wire n6w.then n6z.in
+wire n6o.n n70.count
+wire n6z.then n70.in
+wire n6o.n n71.count
+wire n70.then n71.in
+wire n6z.object n72.value
+wire n71.object n73.value
+wire n6o.n n74.count
+wire n71.then n74.in
+wire n6o.n n75.count
+wire n74.then n75.in
+wire n6o.n n76.count
+wire n75.then n76.in
+wire n74.object n77.value
+wire n76.object n78.value
+wire n6o.n n79.count
+wire n76.then n79.in
+wire n6o.n n7a.count
+wire n79.then n7a.in
+wire n6o.n n7b.count
+wire n7a.then n7b.in
+wire n79.object n7c.value
+wire n7b.object n7d.value
+wire n6o.n n7e.count
+wire n7b.then n7e.in
+wire n6o.n n7f.count
+wire n7e.then n7f.in
+wire n6o.n n7g.count
+wire n7f.then n7g.in
+wire n7e.object n7h.value
+wire n7g.object n7i.value
+wire n6x.result n7j.c
+wire n6o.n n7j.count
+wire n77.result n7j.e
+wire n7g.then n7j.in
+wire n7c.result n7j.l
+wire n7h.result n7j.p
+wire n6s.result n7j.s
+wire n72.result n7j.tn
+wire n6v.object n7k.c
+wire n6o.n n7k.count
+wire n75.object n7k.e
+wire n7j.then n7k.in
+wire n7a.object n7k.l
+wire n7f.object n7k.p
+wire n6q.object n7k.s
+wire n70.object n7k.tn
+wire n7k.then n7m.in
+wire n6t.result n7m.into
+wire n6q.object n7m.receiver
+wire n6t.result n7n.got
+wire n7m.then n7n.in
+wire n6s.result n7n.want
+wire n7l.value n7o.a
+wire n7n.result n7o.b
+wire n7n.then n7p.in
+wire n7o.result n7p.value
+wire n7p.then n7q.in
+wire n6y.result n7q.into
+wire n6v.object n7q.receiver
+wire n6y.result n7r.got
+wire n7q.then n7r.in
+wire n6x.result n7r.want
+wire n7l.value n7s.a
+wire n7r.result n7s.b
+wire n7r.then n7t.in
+wire n7s.result n7t.value
+wire n7t.then n7u.in
+wire n73.result n7u.into
+wire n70.object n7u.receiver
+wire n73.result n7v.got
+wire n7u.then n7v.in
+wire n72.result n7v.want
+wire n7l.value n7w.a
+wire n7v.result n7w.b
+wire n7v.then n7x.in
+wire n7w.result n7x.value
+wire n7x.then n7y.in
+wire n78.result n7y.into
+wire n75.object n7y.receiver
+wire n78.result n7z.got
+wire n7y.then n7z.in
+wire n77.result n7z.want
+wire n7l.value n80.a
+wire n7z.result n80.b
+wire n7z.then n81.in
+wire n80.result n81.value
+wire n81.then n82.in
+wire n7d.result n82.into
+wire n7a.object n82.receiver
+wire n7d.result n83.got
+wire n82.then n83.in
+wire n7c.result n83.want
+wire n7l.value n84.a
+wire n83.result n84.b
+wire n83.then n85.in
+wire n84.result n85.value
+wire n85.then n86.in
+wire n7i.result n86.into
+wire n7f.object n86.receiver
+wire n7i.result n87.got
+wire n86.then n87.in
+wire n7h.result n87.want
+wire n7l.value n88.a
+wire n87.result n88.b
+wire n87.then n89.in
+wire n88.result n89.value
+wire n89.then n8a.in
+wire n6p.object n8a.object
+wire n8a.then n8b.in
+wire n6q.object n8b.object
+wire n8b.then n8c.in
+wire n6r.object n8c.object
+wire n8c.then n8d.in
+wire n6u.object n8d.object
+wire n8d.then n8e.in
+wire n6v.object n8e.object
+wire n8e.then n8f.in
+wire n6w.object n8f.object
+wire n8f.then n8g.in
+wire n6z.object n8g.object
+wire n8g.then n8h.in
+wire n70.object n8h.object
+wire n8h.then n8i.in
+wire n71.object n8i.object
+wire n8i.then n8j.in
+wire n74.object n8j.object
+wire n8j.then n8k.in
+wire n75.object n8k.object
+wire n8k.then n8l.in
+wire n76.object n8l.object
+wire n8l.then n8m.in
+wire n79.object n8m.object
+wire n8m.then n8n.in
+wire n7a.object n8n.object
+wire n8n.then n8o.in
+wire n7b.object n8o.object
+wire n8o.then n8p.in
+wire n7e.object n8p.object
+wire n8p.then n8q.in
+wire n7f.object n8q.object
+wire n8q.then n8r.in
+wire n7g.object n8r.object
+wire n8r.then n8s.in
+wire n7l.value n8s.value
+
+function g010 RunD2
+	static
+	returns double
+	doc "KernelD2 with Kernel.RunCpu and with Gpu.Dispatch; the worst difference of their outputs."
+param n int
+local worst double
+sheet body
+node n8t Entry
+node n8u Construct double[]
+node n8v Construct GpuBuffer<double>
+	set ctor (int)
+node n8w Construct double[]
+node n8x Cast Span<double>
+node n8y Cast Span<double>
+node n8z Construct double[]
+node n90 Construct GpuBuffer<double>
+	set ctor (int)
+node n91 Construct double[]
+node n92 Cast Span<double>
+node n93 Cast Span<double>
+node n94 Construct double[]
+node n95 Construct GpuBuffer<double>
+	set ctor (int)
+node n96 Construct double[]
+node n97 Cast Span<double>
+node n98 Cast Span<double>
+node n99 Construct double[]
+node n9a Construct GpuBuffer<double>
+	set ctor (int)
+node n9b Construct double[]
+node n9c Cast Span<double>
+node n9d Cast Span<double>
+node n9e Call Kernel.RunCpu
+	set kernel Cx.GpuMathMain.KernelD2
+node n9f Call Gpu.Dispatch
+	set kernel Cx.GpuMathMain.KernelD2
+node n9g Get local:worst
+node n9h Call GpuBuffer<double>.Download
+node n9i Call GpuMathMain.WorstD
+node n9j Math
+	set expr "Math.Max(a, b)"
+node n9k Set local:worst
+node n9l Call GpuBuffer<double>.Download
+node n9m Call GpuMathMain.WorstD
+node n9n Math
+	set expr "Math.Max(a, b)"
+node n9o Set local:worst
+node n9p Call GpuBuffer<double>.Download
+node n9q Call GpuMathMain.WorstD
+node n9r Math
+	set expr "Math.Max(a, b)"
+node n9s Set local:worst
+node n9t Call GpuBuffer<double>.Download
+node n9u Call GpuMathMain.WorstD
+node n9v Math
+	set expr "Math.Max(a, b)"
+node n9w Set local:worst
+node n9x Delete
+node n9y Delete
+node n9z Delete
+node na0 Delete
+node na1 Delete
+node na2 Delete
+node na3 Delete
+node na4 Delete
+node na5 Delete
+node na6 Delete
+node na7 Delete
+node na8 Delete
+node na9 Return
+wire n8t.n n8u.count
+wire n8t.then n8u.in
+wire n8t.n n8v.count
+wire n8u.then n8v.in
+wire n8t.n n8w.count
+wire n8v.then n8w.in
+wire n8u.object n8x.value
+wire n8w.object n8y.value
+wire n8t.n n8z.count
+wire n8w.then n8z.in
+wire n8t.n n90.count
+wire n8z.then n90.in
+wire n8t.n n91.count
+wire n90.then n91.in
+wire n8z.object n92.value
+wire n91.object n93.value
+wire n8t.n n94.count
+wire n91.then n94.in
+wire n8t.n n95.count
+wire n94.then n95.in
+wire n8t.n n96.count
+wire n95.then n96.in
+wire n94.object n97.value
+wire n96.object n98.value
+wire n8t.n n99.count
+wire n96.then n99.in
+wire n8t.n n9a.count
+wire n99.then n9a.in
+wire n8t.n n9b.count
+wire n9a.then n9b.in
+wire n99.object n9c.value
+wire n9b.object n9d.value
+wire n8x.result n9e.a2
+wire n97.result n9e.ac
+wire n92.result n9e.as
+wire n9c.result n9e.at
+wire n8t.n n9e.count
+wire n9b.then n9e.in
+wire n8v.object n9f.a2
+wire n95.object n9f.ac
+wire n90.object n9f.as
+wire n9a.object n9f.at
+wire n8t.n n9f.count
+wire n9e.then n9f.in
+wire n9f.then n9h.in
+wire n8y.result n9h.into
+wire n8v.object n9h.receiver
+wire n8y.result n9i.got
+wire n9h.then n9i.in
+wire n8x.result n9i.want
+wire n9g.value n9j.a
+wire n9i.result n9j.b
+wire n9i.then n9k.in
+wire n9j.result n9k.value
+wire n9k.then n9l.in
+wire n93.result n9l.into
+wire n90.object n9l.receiver
+wire n93.result n9m.got
+wire n9l.then n9m.in
+wire n92.result n9m.want
+wire n9g.value n9n.a
+wire n9m.result n9n.b
+wire n9m.then n9o.in
+wire n9n.result n9o.value
+wire n9o.then n9p.in
+wire n98.result n9p.into
+wire n95.object n9p.receiver
+wire n98.result n9q.got
+wire n9p.then n9q.in
+wire n97.result n9q.want
+wire n9g.value n9r.a
+wire n9q.result n9r.b
+wire n9q.then n9s.in
+wire n9r.result n9s.value
+wire n9s.then n9t.in
+wire n9d.result n9t.into
+wire n9a.object n9t.receiver
+wire n9d.result n9u.got
+wire n9t.then n9u.in
+wire n9c.result n9u.want
+wire n9g.value n9v.a
+wire n9u.result n9v.b
+wire n9u.then n9w.in
+wire n9v.result n9w.value
+wire n9w.then n9x.in
+wire n8u.object n9x.object
+wire n9x.then n9y.in
+wire n8v.object n9y.object
+wire n9y.then n9z.in
+wire n8w.object n9z.object
+wire n9z.then na0.in
+wire n8z.object na0.object
+wire na0.then na1.in
+wire n90.object na1.object
+wire na1.then na2.in
+wire n91.object na2.object
+wire na2.then na3.in
+wire n94.object na3.object
+wire na3.then na4.in
+wire n95.object na4.object
+wire na4.then na5.in
+wire n96.object na5.object
+wire na5.then na6.in
+wire n99.object na6.object
+wire na6.then na7.in
+wire n9a.object na7.object
+wire na7.then na8.in
+wire n9b.object na8.object
+wire na8.then na9.in
+wire n9g.value na9.value
+
+function g011 Main
+	static
+	returns int
+sheet body
+node naa Entry
+node nab Call Gpu.PrintInfo
+node nac Call GpuMathMain.RunF1
+	in n 262144
+node nad Call GpuMathMain.RunF2
+	in n 262144
+node nae Call GpuMathMain.RunD1
+	in n 262144
+node naf Call GpuMathMain.RunD2
+	in n 262144
+node nag Math
+	set expr "Math.Max(a, b) > 0.00001 ? 1 : 0"
+node nah Call Console.Write
+	in text "float mismatches "
+node nai Call Console.WriteLine(int)
+node naj Math
+	set expr "Math.Max(a, b) > 0.000000000001 ? 1 : 0"
+node nak Call Console.Write
+	in text "double mismatches "
+node nal Call Console.WriteLine(int)
+node nam Local String
+node nan Call String.AppendF
+	in format "GPU math, worst |cpu - gpu| / max(|cpu|, 1): float {0} (Sin Cos Tan Exp Log Pow), {1} (Atan2 Asin Acos Atan); double {2}, {3}"
+node nao Call Console.ErrorLine
+node nap Return
+	in value 0
+wire naa.then nab.in
+wire nab.then nac.in
+wire nac.then nad.in
+wire nad.then nae.in
+wire nae.then naf.in
+wire nac.result nag.a
+wire nad.result nag.b
+wire naf.then nah.in
+wire nah.then nai.in
+wire nag.result nai.value
+wire nae.result naj.a
+wire naf.result naj.b
+wire nai.then nak.in
+wire nak.then nal.in
+wire naj.result nal.value
+wire nal.then nam.in
+wire nac.result nan.arg0
+wire nad.result nan.arg1
+wire nae.result nan.arg2
+wire naf.result nan.arg3
+wire nam.then nan.in
+wire nam.object nan.receiver
+wire nan.then nao.in
+wire nam.object nao.text
+wire nao.then nap.in

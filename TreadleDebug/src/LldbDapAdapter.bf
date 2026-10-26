@@ -459,6 +459,7 @@ namespace Treadle.Debug.Dap
 					busy = true;
 				}
 				delete cmd;
+				if (!mQuit && ServiceInspect()) busy = true; // DapInspect.bf: the Memory and Disassembly panels
 				if (!mQuit && mDap.Closed && mDeferred.IsEmpty)
 				{
 					// lldb-dap ended (or crashed) without saying the program ended.
@@ -1033,7 +1034,7 @@ namespace Treadle.Debug.Dap
 
 		/// The program's threads (lldb-dap `threads`): id and name, the current one (mThreadId) marked.
 		/// A thread without a name is `Thread <id>`.
-		List<DebugThread> ReadThreads()
+		List<DebugThread> ReadThreads(int64 frameId = 0)
 		{
 			List<DebugThread> list = new .();
 			// Right after a thread started, lldb-dap may list the threads it knew before the stop without the
@@ -1063,7 +1064,24 @@ namespace Treadle.Debug.Dap
 			Dictionary<int64, String> runtimeNames = scope .();
 			defer { for (let v in runtimeNames.Values) delete v; }
 			{
-				let e = Request("evaluate", "{\"expression\":\"rt_debug_thread_names\",\"context\":\"watch\"}");
+				// Right after a stop, lldb-dap on Linux may still answer "can't evaluate expressions when the
+				// process is running" (the stack was read already): asked again, a few times, 50 ms apart.
+				UpdateJson e = null;
+				for (int attempt < 6)
+				{
+					if (e != null)
+						delete e;
+					e = Request("evaluate", (frameId != 0)
+						? scope:: $"{{\"expression\":\"rt_debug_thread_names\",\"frameId\":{frameId},\"context\":\"watch\"}}"
+						: "{\"expression\":\"rt_debug_thread_names\",\"context\":\"watch\"}");
+					if (e == null || e.GetBool("success", false))
+						break;
+					String why = scope .();
+					e.Get("body")?.Get("error")?.GetString("format", why);
+					if (!why.Contains("running"))
+						break;
+					Thread.Sleep(50);
+				}
 				String v = scope .();
 				e?.Get("body")?.GetString("result", v);
 				delete e;
@@ -1150,7 +1168,7 @@ namespace Treadle.Debug.Dap
 			List<DebugFrame> frames = new .();
 			List<int64> ids = scope .();
 			ReadStack(mThreadId, frames, ids, 48);
-			let threadList = ReadThreads();
+			let threadList = ReadThreads(ids.IsEmpty ? 0 : ids[0]);
 			ClearSynth();
 			StopReason why = .Breakpoint;
 			switch (reason)

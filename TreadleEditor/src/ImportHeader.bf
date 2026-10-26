@@ -467,22 +467,12 @@ namespace Treadle.Editor
 		/// Opens a `.cimport` file in the system's text editor.
 		void OpenCImportFile(StringView path)
 		{
-			ProcessStartInfo psi = scope .();
-			String args = scope .();
 #if BF_PLATFORM_WINDOWS
-			psi.SetFileName(Desktop.SystemProgram("notepad.exe", .. scope String()));
-			String winPath = scope .(path);
-			winPath.Replace('/', '\\');
-			args.AppendF("\"{}\"", winPath);
+			bool ok = Desktop.ShellOpen("notepad.exe", path);
 #else
-			psi.SetFileName(Desktop.SystemProgram("xdg-open", .. scope String()));
-			args.AppendF("\"{}\"", path);
+			bool ok = Desktop.ShellOpen("xdg-open", path);
 #endif
-			psi.SetArguments(args);
-			psi.UseShellExecute = false;
-			psi.CreateNoWindow = true;
-			SpawnedProcess proc = scope .();
-			if (proc.Start(psi) case .Err)
+			if (!ok)
 				SetStatus(scope $"Could not open {path}", .Warning);
 		}
 

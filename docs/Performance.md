@@ -146,6 +146,26 @@ unrelated change elsewhere in the Treadle program (whether `rt_alloc` may be inl
 between 97 and 169 ms. The ratio in the table is therefore the placement of this build, not a cost of Treadle;
 an alignment flag was not taken, because it slowed m6-vm by 10%.
 
+**The alignment policy, evaluated again (2026-10-25, after the per-thread allocator).** Four link-time policies against
+none, each a fresh Release build of every kernel and of m6-vm, 5 runs each taking turns, two rounds (medians; the
+machine was busy, so absolute times are above the table's, and single runs moved by up to 2x on `strings`):
+
+| Policy (lld `-mllvm`) | vmdispatch | m6-vm loop | virtual | the other kernels |
+|---|---|---|---|---|
+| none (the current one) | 182 / 171 ms | 277 / 247 ms (min 232 / 229) | 709 / 673 ms | |
+| jump targets at 32 bytes (`-align-all-nofallthru-blocks=5`) | 97 / 84 ms | 235 / 237 ms (min 228 / 223) | 804 / 785 ms (+13% / +17%) | within the spread |
+| jump targets at 16 bytes (`=4`, round one only) | 109 ms | 235 ms | 900 ms (+27%) | alloc +6% |
+| functions at 32 bytes (`-align-all-functions=5`) | 64 / 64 ms | 256 / 268 ms (min 249 / 244) | 695 / 667 ms | strings 212 / 320 ms (one bad round) |
+| loops at 32 bytes (`-align-loops=32`, round one only) | 71 ms | 325 ms | 732 ms | within the spread |
+
+**Decision: no alignment flag (unchanged).** The policy best on m6-vm, the real program, is 32-byte jump targets
+(4-15% faster by medians, 2-3% by the fastest runs), but it slows `virtual` by 13-17% in both rounds, so it does not
+pass "no regression on the other kernels"; 32-byte functions fix vmdispatch for good (64 ms in every run, faster than
+C's 97) but are not better on m6-vm (slower in round two, slower by the fastest runs) and swung `strings` in one round.
+The caveat stays as written above: vmdispatch's 1.8x is where the linker places one dispatch loop, a C program built
+the same way lands in the same two modes, and m6-vm, the interpreter a user would write, is not helped by any one
+alignment without a cost elsewhere.
+
 **m6-vm (the sample interpreter, not a kernel).** `--bench` runs `fib(27)` and a loop of 130 million
 instructions: 16 and 246 ms before this work, 15 and 227 ms after (medians of 9). A Value (a payload enum) is
 now copied field by field (Compiler.md 6.4, "Payload enums in memory"), which removed a store-forwarding stall

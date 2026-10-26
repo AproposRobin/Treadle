@@ -129,7 +129,7 @@ namespace Treadle.Model
 		public TypeRef ConstType ~ delete _;
 		public List<GenericConstraint> Constraints = new .() ~ { for (let c in _) { delete c.Type; delete c.Word; } delete _; };
 
-		public static readonly String[] KeywordConstraints = new .("class", "struct", "enum", "interface", "delete", "new") ~ delete _;
+		public static readonly String[] KeywordConstraints = new .("class", "struct", "enum", "interface", "delete", "new", "vector") ~ delete _;
 
 		public void AddConstraint(StringView word)
 		{

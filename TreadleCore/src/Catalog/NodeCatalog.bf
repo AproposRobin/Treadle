@@ -645,6 +645,33 @@ namespace Treadle.Catalog
 
 		// ------------------------------------------------------------------ context
 
+		/// Whether a pin's type (normalised) names the type an entry belongs to: the same full name
+		/// (`Game.Engine`, generic arguments left out: `Core.List<int>` is `Core.List`), or the same
+		/// short name when either side is written without its namespace.
+		public static bool SameOwner(StringView pinCore, StringView owner)
+		{
+			StringView StripGenerics(StringView t)
+			{
+				var s = t;
+				s.Trim();
+				let lt = s.IndexOf('<');
+				if (lt > 0)
+					s = s.Substring(0, lt);
+				while (s.EndsWith('?'))
+					s.RemoveFromEnd(1);
+				return s;
+			}
+			let a = StripGenerics(pinCore);
+			let b = StripGenerics(owner);
+			if (a.IsEmpty || b.IsEmpty)
+				return false;
+			if (a == b)
+				return true;
+			if (!a.Contains('.') || !b.Contains('.'))
+				return TypeRules.BaseName(a) == TypeRules.BaseName(b);
+			return false;
+		}
+
 		/// Relevance of an entry to a pin (0 = can't connect, 1 = generic/unchecked,
 		/// 2 = implicit conversion, 3 = exact / receiver type).
 		public int8 ContextRelevance(int32 id, PinContext ctx, StringView pinType)
@@ -686,7 +713,7 @@ namespace Treadle.Catalog
 				{
 					String pinCore = scope .();
 					TypeRules.Normalize(pinType, pinCore);
-					if (TypeRules.BaseName(pinCore) == spec.OwnerType || (types != null && types.IsSubtype(pinCore, spec.OwnerType)))
+					if (SameOwner(pinCore, spec.OwnerType) || (types != null && types.IsSubtype(pinCore, spec.OwnerType)))
 						best = 3;
 				}
 				if (best < 3)

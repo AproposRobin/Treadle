@@ -1133,6 +1133,46 @@ namespace Treadle.Graph
 		public static Node Delete(Graph g) => Create(g, .Delete);
 		public static Node Defer(Graph g) => Create(g, .Defer);
 		public static Node DeferDelete(Graph g) => Create(g, .DeferDelete);
+
+		/// The Node menu's "Construct T + F" row: a Construct of `typeText`, a Defer Delete of its object
+		/// and `call` (an instance Call of a function of that type) after it, the object wired into the
+		/// Call's Receiver; the flow runs Construct -> Defer Delete -> Call. The Construct is returned
+		/// (the node the menu wires to the pin it was opened from); the other two sit to its right, at
+		/// `x`, `y` + the given steps.
+		public static Node ConstructDeferCall(Graph g, StringView typeText, Node call, float x, float y,
+			Span<StringView> ctorNames = default, Span<StringView> ctorTypes = default)
+		{
+			let make = Construct(g, typeText, false, false, ctorNames, ctorTypes);
+			let dd = DeferDelete(g);
+			let obj = make.Result ?? make.FindOutput("object");
+			g.Connect(make.FindOutput("then"), dd.ExecIn);
+			if (obj != null)
+				g.Connect(obj, dd.FindInput("object"));
+			if (call != null)
+			{
+				if (call.ExecIn != null)
+					g.Connect(dd.FindOutput("then"), call.ExecIn);
+				Pin recv = null;
+				for (let p in call.Inputs)
+					if (p.Role == .Receiver)
+						recv = p;
+				if (recv != null && obj != null)
+					g.Connect(obj, recv);
+			}
+			make.X = x;
+			make.Y = y;
+			make.HasPos = true;
+			dd.X = x + 300;
+			dd.Y = y;
+			dd.HasPos = true;
+			if (call != null)
+			{
+				call.X = x + 560;
+				call.Y = y;
+				call.HasPos = true;
+			}
+			return make;
+		}
 		public static Node Scope(Graph g) => Create(g, .Scope);
 		public static Node Try(Graph g) => Create(g, .Try);
 		public static Node Fatal(Graph g) => Create(g, .Fatal);

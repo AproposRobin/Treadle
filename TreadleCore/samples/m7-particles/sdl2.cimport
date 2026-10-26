@@ -1,0 +1,10 @@
+# cimport 1
+import sdl2
+	prefix SDL_
+	bin ${TREADLE_SDL2:-../../../tools/SDL2-2.32.10}/x86_64-w64-mingw32/bin/SDL2.dll
+	header SDL.h
+	include ${TREADLE_SDL2:-../../../tools/SDL2-2.32.10}/x86_64-w64-mingw32/include/SDL2
+	define SDL_MAIN_HANDLED
+	lib ${TREADLE_SDL2:-../../../tools/SDL2-2.32.10}/x86_64-w64-mingw32/lib/libSDL2.dll.a
+	only SDL_SetMainReady SDL_Init SDL_Quit SDL_GetError SDL_Log SDL_CreateWindow SDL_DestroyWindow SDL_CreateRenderer SDL_DestroyRenderer SDL_SetRenderDrawColor SDL_RenderClear SDL_RenderPresent SDL_RenderDrawPoints SDL_PollEvent SDL_Delay SDL_SetWindowTitle SDL_RenderReadPixels SDL_CreateRGBSurfaceWithFormatFrom SDL_FreeSurface SDL_SaveBMP_RW SDL_RWFromFile SDL_Point SDL_INIT_VIDEO SDL_WINDOWPOS_CENTERED_MASK SDL_EventType SDL_WindowFlags SDL_KeyCode SDL_RendererFlags
+	category "C / SDL2"

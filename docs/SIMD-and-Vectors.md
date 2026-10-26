@@ -185,8 +185,11 @@ The new op is `lanecheck %i <N>` (Debug only; Lower leaves it out in Release, li
   **lanes** shape: a rounded square with N/4 inner bars (one bar for 2-4 lanes, two for 8, ...); the tooltip
   says `float4 (4 x float, 16 bytes)`. `TypeRules.bf` gets the name rule for `NullTypeSystem`.
 * **Unwired input widget:** one number field per lane up to 4 lanes (`x y z w`), a single splat field above 4.
-* **Make / Break:** pins `x y z w` for 2-4 lanes, `lane0 ... laneN-1` above; Split / Recombine Pin works on
-  vector pins as on structs (`split <pin> float4`).
+* **Make / Break:** pins `x y z w` for 2-4 lanes, `lane0 ... laneN-1` above. Split Vector Pin / Recombine Vector
+  Pin (the pin menu) work on vector pins as on structs: one pin per lane on the node, `v.x` ... `v.w` (`v.lane0` ...
+  above 4 lanes), kept as `split <pin> float4`; the compiler reads a split input as a Make of the vector fed by the
+  lane pins and a split output as its Break (`SplitPins.Expand` puts the lanes on the Make / Break's own lane pins),
+  so a lane with no wire and no value is 0.
 * **New node kinds:** `Swizzle` (`value` -> `result`; `set lanes zyx`; title "Swizzle .zyx"; Properties: a lane
   picker) and `Shuffle` (`a`, `b` -> `result`; `set mask 0 4 1 5`; Properties: one dropdown per output lane).
   Everything else is a Call of `Core.Vector` or `Core.Math` (category `Math | Vector`).

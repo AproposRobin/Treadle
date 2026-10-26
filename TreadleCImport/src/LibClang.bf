@@ -436,7 +436,8 @@ namespace Treadle.CImport
 
 		/// Where the library is looked for, in order.
 		/// Windows: TREADLE_LIBCLANG (the DLL or a folder holding it or its bin\), tools\libclang\bin next
-		/// to the running exe (a package) or of the source tree above it, the exe's own folder, then (unless
+		/// to the running exe (a package) or of a development build's source tree (ToolDirs: no parent folder
+		/// walk), the exe's own folder, then (unless a package or
 		/// TREADLE_NO_FALLBACK) TREADLE_DEV_LIBCLANG (a developer-machine copy outside the checkout, the DLL
 		/// or a folder holding it or its bin\) and C:\Program Files\LLVM\bin (the LLVM installer's).
 		/// Linux: TREADLE_LIBCLANG (the .so or a folder holding it or its lib/), `lib/libclang.so` of the
@@ -480,20 +481,11 @@ namespace Treadle.CImport
 			Environment.GetExecutableFilePath(exe);
 			String dir = scope .();
 			System.IO.Path.GetDirectoryPath(exe, dir).IgnoreError();
-			String up = scope .(dir);
-			for (int i < 8)
-			{
-				let candidate = scope String()..AppendF("{}\\tools\\libclang\\bin\\libclang.dll", up);
-				if (File.Exists(candidate))
-				{
-					outPaths.Add(new String(candidate));
-					break;
-				}
-				String parent = scope .();
-				if (System.IO.Path.GetDirectoryPath(up, parent) case .Err || parent.IsEmpty || parent == up)
-					break;
-				up.Set(parent);
-			}
+			// tools\libclang beside the exe (a package), else the source tree of a development build
+			// (Treadle.Language.ToolDirs: the fixed build layout, no walk up the parent folders)
+			String found = scope .();
+			if (Treadle.Language.ToolDirs.Find("tools/libclang/bin/libclang.dll", "tools/libclang/bin/libclang.dll", found))
+				outPaths.Add(new String(found));
 			outPaths.Add(new $"{dir}\\libclang.dll");
 			if (Treadle.Language.LlvmRoot.NoFallback)
 				return; // TREADLE_NO_FALLBACK: no machine paths (a package is tested with its own copy only)
@@ -644,7 +636,8 @@ namespace Treadle.CImport
 			}
 			if (module == null)
 			{
-				sError.Set("libclang.dll was not found (TREADLE_LIBCLANG, tools\\libclang\\bin from scripts\\get-libclang.ps1, next to the editor, C:\\Program Files\\LLVM\\bin)");
+				Treadle.Language.ToolDirs.Missing("libclang.dll", "tools/libclang/bin/libclang.dll", "tools/libclang/bin/libclang.dll", "TREADLE_LIBCLANG", sError);
+				sError.Append(" (scripts\\get-libclang.ps1 fetches the pinned copy)");
 				return false;
 			}
 			bool ok = true;

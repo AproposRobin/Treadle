@@ -27,7 +27,7 @@ The words differ (see the [Glossary](#10-glossary)); the ideas do not.
 | Unit | What it is | Stored as |
 |---|---|---|
 | **Project** | A folder with a project file: name, output kind (console / windowed / library), entry type, imported C header sets, dependencies, build settings. | `<Name>.tproj` ([Graph-Format.md](Graph-Format.md)) |
-| **Type** | A class, struct, interface, enum, delegate type, extension or node library (static class). One type per file. The compile unit. | `<Type>.treadle` + optional `<Type>.treadle.layout` |
+| **Type** | A class, struct, interface, enum, delegate type, extension or node library (static class). One type per file. The compile unit. | `<Type>.treadle` + optional `layout/<Type>.layout` |
 | **Member** | A field, property, function, constructor, destructor, operator, or event (delegate field) of a type. | A record in the type file |
 | **Sheet** | The node graph of one function body (also: a getter, a setter, a constructor). | Records in the type file |
 | **Namespace** | A dotted name declared in the type's header. Folders do not define namespaces; a new type defaults to the namespace of its folder path. | `namespace` in the type header |
@@ -132,6 +132,7 @@ each distinct argument list is a separate type or function in the output. Constr
 | `T : delete` | `T` values may be deleted by the generic code (a class, array or delegate) |
 | `T : new` | `T` is a class or struct with a constructor without inputs: **Local `T`** makes one, **Construct `T`** too when `T : class` is also given (per instance, the type's constructor without inputs runs) |
 | `T : operator T + T` and the other operator constraints | The operator exists; Beef-style |
+| `T : vector` / `T : vector float` | `T` is a vector type (2.8); the second form also names the lane type (any lane type may follow `vector`). A `T` value takes the element-wise `+`, `-`, `*`, `/` and negation (the bitwise operators too when integer lanes are named); a number beside it splats into its lanes when the lanes are named (T2320 otherwise); the Core.Vector and Math vector functions take it (those that give or take a lane value need the lanes named). A comparison of two `T` would give a lane mask, which generic code cannot name (T2133: use `Vector.Equal`). A non-vector argument is T1007 |
 | `const int N` | A compile-time integer parameter (fixed arrays, SIMD widths) |
 
 Unconstrained `T` permits only: copy, compare for equality when `T` is a value type with `==`, pass along,
@@ -278,6 +279,20 @@ allocating node named.
 Field ownership choices in Properties (the original editor's list, kept): Owned made here, Owned set later,
 Reference, Appended, Value, Pointer (unsafe), Custom (a destructor Sheet does it).
 
+**Where values live.** Every value is in one of five places; the editor names it on Construct and Local nodes
+(a "lives in" badge) and in Properties' Storage row ([Debugging.md](Debugging.md), "Under the hood"):
+
+| Place | What lives there | Made | Freed |
+|---|---|---|---|
+| **frame** | local variables, parameters, pin values, a Local with Until Return | when the function is entered | when it returns |
+| **region** | a Local's object (or struct value); a Local delegate; a Local array (one over 16 KiB is put on the heap, still freed with the region) | when the node runs | when control leaves the node's region, destructor first |
+| **heap** | a Construct's object; arrays made by Construct; a Construct delegate | when the node runs | by Delete (or the owner's destructor for an Owned field); never: a leak |
+| **static** | static fields, constants | before Program Start | never |
+| **inline** | a struct's fields, an Appended object, a struct field of a class | with the value around it | with the value around it |
+
+A variable of a class type holds a reference (8 bytes) wherever it lives; the object is where its Construct or
+Local made it. A struct is copied by value into whichever place holds it.
+
 ### 3.1 Debug checks
 
 | Check | Debug build | Release build |
@@ -287,7 +302,7 @@ Reference, Appended, Value, Pointer (unsafe), Custom (a destructor Sheet does it
 | Use after free | Deleted objects keep a poison header; a member access or virtual call through one is a fatal error naming the node; memory is quarantined before reuse | Undefined |
 | Delete of a Local or Appended object | Fatal error | Undefined |
 | Null member access | Fatal error with the node | Crash |
-| Array index out of range | Fatal error with the node and index | Unchecked (an Index node's `set checked` is read but not honoured yet: Release stays unchecked) |
+| Array or Span index out of range | Fatal error with the node and index (a Span's against its Length) | Unchecked (an Index node's `set checked` is read but not honoured yet: Release stays unchecked) |
 | Array length below zero, or too large for memory (Construct / Local of an array) | Fatal error with the node and length | Fatal error with the node and length (one compare) |
 | Integer overflow | Unchecked (Beef); checked arithmetic nodes are not offered yet | Unchecked |
 | Fatal error | Message, node id, call stack; the IDE opens the Sheet on the node | Message and abort |
@@ -481,22 +496,41 @@ destructor unlocks: the region that owns the Local is the critical section, and 
 complete the set; the [Atomic Calls](#43-atomics) are the interlocked operations.
 
 * **Ownership.** `Thread.Start` and `ThreadPool.Run` own the delegate they are given and delete it after it ran, on
-  that thread: it must be made with Allocation **construct** (Debug stops with a fatal error on a Local one when Start
-  or Run is called; a Lambda dragged from their input starts as Construct). A Parallel body runs only during the call
+  that thread: it must be made with Allocation **construct** (a Bind Function or Lambda node with Allocation local
+  wired into `body` / `work` is error T2224; a Local delegate that reaches them another way stops a Debug run with a fatal
+  error when Start or Run is called; a Lambda dragged from their input starts as Construct). A Parallel body runs only during the call
   and is usually a Local Lambda, by-reference captures included. Objects may be made on one thread and deleted on
   another; a Local never leaves its thread's region (a Parallel body is the exception: the call returns only when it
   is done with it).
 * **Memory model.** C11's, through LLVM: two threads accessing one location, one of them writing, with no order
   between them (Start, Join, a Mutex, a Condition or WaitEvent, an Atomic release / acquire pair, Parallel's return)
   and not both Atomic, is a **data race**, undefined behaviour in Debug and Release. Debug does not detect races.
-* **Debug.** The allocator's checks work across threads (a lock around its live list, taken once a second thread
-  started); a leak or a fatal error on a thread other than the main one names the thread; the debugger lists the
+* **Debug.** The allocator's checks work across threads (each thread keeps its own live list once a second thread
+  started, Threads.md 5); a leak or a fatal error on a thread other than the main one names the thread; the debugger lists the
   threads and shows any thread's call stack ([Debugging.md](Debugging.md)).
 
 **Decision:** threads are library types over the runtime, not language nodes (no Spawn or Lock node). Reason: a Thread
 is an object with a lifetime (Construct, Delete) and a few calls, which the existing nodes express; the one thing a
 graph needs that a call cannot give, a lock held exactly for a region, is what a Local struct with a destructor
 already is.
+
+### 4.8 GPU kernels (experimental)
+
+**Experimental, NVIDIA only, not in a release** ([GPU-Compute.md](GPU-Compute.md)). A static function marked
+**`[Kernel]`** (`attr Kernel`) runs once per index of a dispatch: `Kernel.Index()` gives the index (and
+`BlockIndex`, `ThreadInBlock`, `BlockSize` its block), its inputs are Spans, numbers, bools, vectors and structs of
+them, it returns nothing and writes its results into Span inputs (`Span.SetAt`). Its Sheet is a subset of the
+language, checked at Validate (T2340-T2348): no allocation, no objects, strings, delegates or static fields, no C,
+virtual or recursive calls, only the core's Math (the transcendental functions on float and double, not on
+vectors), Vector, Atomic, Pointer, Kernel and the core structs. `Kernel.Shared<T>(count)` (`set type <T>`, the
+count typed on the node) is memory shared by one block's runs and `Kernel.Barrier()` waits for all of them; a kernel
+that uses either runs in whole blocks (its count a multiple of the block size). A Call of **`Kernel.RunCpu`**,
+**`Gpu.Dispatch`** or **`Gpu.DispatchAsync`** (on a `GpuStream`) names the kernel with `set kernel
+<Type.Function>`, optionally the block size with `set block <n>` (256), and takes `count` and the kernel's inputs.
+RunCpu runs it on the CPU over the thread pool with every Debug check; Dispatch on an NVIDIA GPU through the CUDA
+driver (a Span input takes a `GpuBuffer<T>` there, which stays on the GPU until `Download`), and on the CPU when
+there is no GPU, so a program behaves the same either way. A check that fails on the GPU stops the program at the
+next wait with `fatal: GPU: <message> at <Type.Function> node <id>` (exit code 3).
 
 ## 5. Sheets: flow, value nodes, evaluation order
 
@@ -647,7 +681,11 @@ region-scoped thing.
 
 Get and Set nodes name a field, a static field, a property, a local, or a parameter. A Set on an `out`
 parameter is how a function writes its further outputs (Return also has one input per output). A Get is a
-value node; a Set is a flow node with the new value as a pass-through output.
+value node; a Set is a flow node with the new value as a pass-through output. A compound Set (`set op += -= *= /=` and
+the other binary operators) applies the operator to the variable and Value and stores the result: the operator is found
+as the Operator node finds it, by the variable's type and Value's, so an operator of two input types works (`v *= 2`
+on a Vec3 with a float, a Mat4 or a Color times a float); its result must be the variable's type (T2083: `m *= v` with
+a Mat4 and a Vec4 gives a Vec4).
 
 ### 5.6 Math Expression
 
@@ -793,7 +831,7 @@ New or changed for Treadle:
 | Term | Meaning |
 |---|---|
 | **Type file** | The one file that holds a type and all its Sheets (`.treadle`) |
-| **Layout file** | The sidecar with node positions, comment boxes, knots (`.treadle.layout`) |
+| **Layout file** | The file with node positions, comment boxes, knots (`layout/<Type>.layout`, outside the source folders) |
 | **Value node** | Any node without flow pins (a Value call, an operator, a Get, Make / Break, Cast...) |
 | **Value pin** / **Wire** / **Knot** | A typed data pin; a connection; a reroute point on a wire |
 | **Construct** | Heap allocation; the caller owns the object and deletes it |

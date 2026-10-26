@@ -1,0 +1,479 @@
+# treadle 1
+type GpuResidentMain class
+	namespace Cx
+	static
+	doc "GPU compute (docs/GPU-Compute.md): device-resident data. 100 saxpy dispatches (y = 0.5 * x + y) over buffers that stay on the GPU, with one download; the same 100 steps with Kernel.RunCpu and with a float8 loop; then again on a GpuStream (async upload from a PinnedBuffer, 100 DispatchAsync, async download into it). Construct GpuBuffer with a count and GpuBuffer.Upload (a buffer refilled from pinned memory) make y. The four results must agree; the timings go to stderr. 262,144 floats, 16,777,216 with an argument (the Release run)."
+
+function g01 Saxpy
+	static
+	attr Kernel
+	doc "y[i] = a * x[i] + y[i] for the dispatch's index i."
+param x Span<float>
+param y Span<float>
+param a float
+sheet body
+node ka1 Entry
+node ka2 Call Kernel.Index
+node ka3 Call Span<float>.At
+node ka4 Call Span<float>.At
+node ka5 Math
+	set expr "a * xv + yv"
+node ka6 Call Span<float>.SetAt
+node ka7 Return
+wire ka1.then ka3.in
+wire ka2.result ka3.index
+wire ka1.x ka3.receiver
+wire ka3.then ka4.in
+wire ka2.result ka4.index
+wire ka1.y ka4.receiver
+wire ka1.a ka5.a
+wire ka3.result ka5.xv
+wire ka4.result ka5.yv
+wire ka4.then ka6.in
+wire ka2.result ka6.index
+wire ka1.y ka6.receiver
+wire ka5.result ka6.value
+wire ka6.then ka7.in
+
+function g02 SaxpySimd
+	static
+	doc "The same over float8 vectors on the CPU (n a multiple of 8)."
+param x Span<float>
+param y Span<float>
+param a float
+param n int
+sheet body
+node sa1 Entry
+node sa2 For
+	in start 0
+node sa3 Operator /
+	in b 8
+node sa4 Operator *
+	in b 8
+node sa5 Call Core.Vector.Load<float8>
+node sa6 Call Core.Vector.Load<float8>
+node sa7 Math
+	set expr "float8(a) * xv + yv"
+node sa8 Call Core.Vector.Store
+node sa9 Return
+wire sa3.result sa2.count
+wire sa1.then sa2.in
+wire sa1.n sa3.a
+wire sa2.index sa4.a
+wire sa4.result sa5.index
+wire sa1.x sa5.span
+wire sa4.result sa6.index
+wire sa1.y sa6.span
+wire sa1.a sa7.a
+wire sa5.result sa7.xv
+wire sa6.result sa7.yv
+wire sa2.body sa8.in
+wire sa4.result sa8.index
+wire sa1.y sa8.span
+wire sa7.result sa8.v
+wire sa2.done sa9.in
+
+function g03 Fill
+	static
+	doc "x[i] = i % 1000 and y[i] = i % 7 for every y."
+param x Span<float>
+param y1 Span<float>
+param y2 Span<float>
+param y3 Span<float>
+sheet body
+node fa1 Entry
+node fa2 For
+	in start 0
+node fa3 Break Span<float>
+node fa4 Math
+	set expr "i % 1000"
+node fa5 Math
+	set expr "i % 7"
+node fa6 Cast float
+node fa7 Cast float
+node fa8 Call Span<float>.SetAt
+node fa9 Call Span<float>.SetAt
+node fb1 Call Span<float>.SetAt
+node fb2 Call Span<float>.SetAt
+node fb3 Return
+wire fa3.Length fa2.count
+wire fa1.then fa2.in
+wire fa1.x fa3.value
+wire fa2.index fa4.i
+wire fa2.index fa5.i
+wire fa4.result fa6.value
+wire fa5.result fa7.value
+wire fa2.body fa8.in
+wire fa2.index fa8.index
+wire fa1.x fa8.receiver
+wire fa6.result fa8.value
+wire fa8.then fa9.in
+wire fa2.index fa9.index
+wire fa1.y1 fa9.receiver
+wire fa7.result fa9.value
+wire fa9.then fb1.in
+wire fa2.index fb1.index
+wire fa1.y2 fb1.receiver
+wire fa7.result fb1.value
+wire fb1.then fb2.in
+wire fa2.index fb2.index
+wire fa1.y3 fb2.receiver
+wire fa7.result fb2.value
+wire fa2.done fb3.in
+
+function g04 Mismatches
+	static
+	returns int
+	doc "How many elements of got differ from want by more than one part in a million."
+param want Span<float>
+param got Span<float>
+local bad int
+sheet body
+node ma1 Entry
+node ma2 For
+	in start 0
+node ma3 Break Span<float>
+node ma4 Call Span<float>.At
+node ma5 Call Span<float>.At
+node ma6 Math
+	set expr "Math.Abs(w - g) > Math.Abs(w) * 0.000001 + 0.000001 ? 1 : 0"
+node ma7 Set local:bad
+	set op +=
+node ma8 Get local:bad
+node ma9 Return
+wire ma3.Length ma2.count
+wire ma1.then ma2.in
+wire ma1.want ma3.value
+wire ma2.body ma4.in
+wire ma2.index ma4.index
+wire ma1.want ma4.receiver
+wire ma4.then ma5.in
+wire ma2.index ma5.index
+wire ma1.got ma5.receiver
+wire ma5.result ma6.g
+wire ma4.result ma6.w
+wire ma5.then ma7.in
+wire ma6.result ma7.value
+wire ma2.done ma9.in
+wire ma8.value ma9.value
+
+function g05 Main
+	static
+	returns int
+local n int
+local x float[]
+local yCpu float[]
+local ySimd float[]
+local yGpu float[]
+local pin PinnedBuffer<float>
+local bx GpuBuffer<float>
+local by GpuBuffer<float>
+local stream GpuStream
+local tCpu int
+local tSimd int
+local tUp int
+local tGpu int
+local tDown int
+local tStream int
+local onGpu bool
+sheet body
+node a1 Entry
+node a2 Call Environment.ArgCount
+node a3 Math
+	set expr "c > 0 ? 16777216 : 262144"
+node a4 Set local:n
+node a5 Get local:n
+node a6 Construct float[]
+node a7 Set local:x
+node a8 Construct float[]
+node a9 Set local:yCpu
+node b1 Construct float[]
+node b2 Set local:ySimd
+node b3 Construct float[]
+node b4 Set local:yGpu
+node b5 Construct PinnedBuffer<float>
+node b6 Set local:pin
+node b7 Get local:x
+node b8 Cast Span<float>
+node b9 Get local:yCpu
+node c1 Cast Span<float>
+node c2 Get local:ySimd
+node c3 Cast Span<float>
+node c4 Get local:yGpu
+node c5 Cast Span<float>
+node c6 Get local:pin
+node c7 Call PinnedBuffer<float>.AsSpan
+node c8 Call GpuResidentMain.Fill
+node c9 Local Stopwatch
+	set ctor (bool)
+	in startNow true
+node d1 For
+	in start 0
+	in count 100
+node d2 Call Kernel.RunCpu
+	set kernel Cx.GpuResidentMain.Saxpy
+	in a 0.5
+node d3 Call Stopwatch.ElapsedMicroseconds
+node d4 Set local:tCpu
+node d5 Call Stopwatch.Restart
+node d6 For
+	in start 0
+	in count 100
+node d7 Call GpuResidentMain.SaxpySimd
+	in a 0.5
+node d8 Call Stopwatch.ElapsedMicroseconds
+node d9 Set local:tSimd
+node e1 Call Gpu.PrintInfo
+node e2 Call Stopwatch.Restart
+node e3 Call Gpu.Upload
+node e4 Set local:bx
+node e5 Construct GpuBuffer<float>
+	set ctor (int)
+node e6 Set local:by
+node e7 Get local:by
+node e8 Call GpuBuffer<float>.Upload
+node e9 Call Gpu.Sync
+node f1 Call Stopwatch.ElapsedMicroseconds
+node f2 Set local:tUp
+node f3 Call Stopwatch.Restart
+node f4 For
+	in start 0
+	in count 100
+node f5 Get local:bx
+node f6 Call Gpu.Dispatch
+	set kernel Cx.GpuResidentMain.Saxpy
+	in a 0.5
+node f7 Set local:onGpu
+node f8 Call Gpu.Sync
+node f9 Call Stopwatch.ElapsedMicroseconds
+node g1 Set local:tGpu
+node g2 Call Stopwatch.Restart
+node g3 Call GpuBuffer<float>.Download
+node g4 Call Stopwatch.ElapsedMicroseconds
+node g5 Set local:tDown
+node g6 Call Stopwatch.Restart
+node g7 Construct GpuStream
+node g8 Set local:stream
+node g9 Get local:stream
+node h1 Call GpuBuffer<float>.UploadAsync
+node h2 For
+	in start 0
+	in count 100
+node h3 Call Gpu.DispatchAsync
+	set kernel Cx.GpuResidentMain.Saxpy
+	in a 0.5
+node h4 Call GpuBuffer<float>.DownloadAsync
+node h5 Call GpuStream.Sync
+node h6 Call Stopwatch.ElapsedMicroseconds
+node h7 Set local:tStream
+node h8 Call GpuResidentMain.Mismatches
+node h9 Call Console.Write
+	in text "GPU mismatches "
+node i1 Call Console.WriteLine(int)
+node i2 Call GpuResidentMain.Mismatches
+node i3 Call Console.Write
+	in text "SIMD mismatches "
+node i4 Call Console.WriteLine(int)
+node i5 Call GpuResidentMain.Mismatches
+node i6 Call Console.Write
+	in text "stream mismatches "
+node i7 Call Console.WriteLine(int)
+node i8 Local String
+node i9 Call String.AppendF
+	in format "resident saxpy x100 over {0} floats: GPU {1} us (ran on the GPU: {2}; upload {3} us, one download {4} us); "
+node j1 Get local:tGpu
+node j2 Get local:onGpu
+node j3 Get local:tUp
+node j4 Get local:tDown
+node j5 Call String.AppendF
+	in format "stream (async upload, 100 dispatches, async download) {0} us; CPU (Kernel.RunCpu) {1} us; SIMD CPU (float8) {2} us"
+node j6 Get local:tStream
+node j7 Get local:tCpu
+node j8 Get local:tSimd
+node j9 Call Console.ErrorLine
+node k1 Delete
+node k2 Delete
+node k3 Delete
+node k4 Get local:x
+node k5 Delete
+node k6 Get local:yCpu
+node k7 Delete
+node k8 Get local:ySimd
+node k9 Delete
+node l1 Get local:yGpu
+node l2 Delete
+node l3 Return
+	in value 0
+node l4 Delete
+wire a1.then a2.in
+wire a2.result a3.c
+wire a2.then a4.in
+wire a3.result a4.value
+wire a5.value a6.count
+wire a4.then a6.in
+wire a6.then a7.in
+wire a6.object a7.value
+wire a5.value a8.count
+wire a7.then a8.in
+wire a8.then a9.in
+wire a8.object a9.value
+wire a5.value b1.count
+wire a9.then b1.in
+wire b1.then b2.in
+wire b1.object b2.value
+wire a5.value b3.count
+wire b2.then b3.in
+wire b3.then b4.in
+wire b3.object b4.value
+wire a5.value b5.count
+wire b4.then b5.in
+wire b5.then b6.in
+wire b5.object b6.value
+wire b7.value b8.value
+wire b9.value c1.value
+wire c2.value c3.value
+wire c4.value c5.value
+wire c6.value c7.receiver
+wire b6.then c8.in
+wire b8.result c8.x
+wire c1.result c8.y1
+wire c3.result c8.y2
+wire c7.result c8.y3
+wire c8.then c9.in
+wire c9.then d1.in
+wire a5.value d2.count
+wire d1.body d2.in
+wire b8.result d2.x
+wire c1.result d2.y
+wire d1.done d3.in
+wire c9.object d3.receiver
+wire d3.then d4.in
+wire d3.result d4.value
+wire d4.then d5.in
+wire c9.object d5.receiver
+wire d5.then d6.in
+wire d6.body d7.in
+wire a5.value d7.n
+wire b8.result d7.x
+wire c3.result d7.y
+wire d6.done d8.in
+wire c9.object d8.receiver
+wire d8.then d9.in
+wire d8.result d9.value
+wire d9.then e1.in
+wire e1.then e2.in
+wire c9.object e2.receiver
+wire b8.result e3.data
+wire e2.then e3.in
+wire e3.then e4.in
+wire e3.result e4.value
+wire a5.value e5.count
+wire e4.then e5.in
+wire e5.then e6.in
+wire e5.object e6.value
+wire c7.result e8.data
+wire e6.then e8.in
+wire e7.value e8.receiver
+wire e8.then e9.in
+wire e9.then f1.in
+wire c9.object f1.receiver
+wire f1.then f2.in
+wire f1.result f2.value
+wire f2.then f3.in
+wire c9.object f3.receiver
+wire f3.then f4.in
+wire a5.value f6.count
+wire f4.body f6.in
+wire f5.value f6.x
+wire e7.value f6.y
+wire f6.then f7.in
+wire f6.result f7.value
+wire f4.done f8.in
+wire f8.then f9.in
+wire c9.object f9.receiver
+wire f9.then g1.in
+wire f9.result g1.value
+wire g1.then g2.in
+wire c9.object g2.receiver
+wire g2.then g3.in
+wire c5.result g3.into
+wire e7.value g3.receiver
+wire g3.then g4.in
+wire c9.object g4.receiver
+wire g4.then g5.in
+wire g4.result g5.value
+wire g5.then g6.in
+wire c9.object g6.receiver
+wire g6.then g7.in
+wire g7.then g8.in
+wire g7.object g8.value
+wire c7.result h1.data
+wire g8.then h1.in
+wire e7.value h1.receiver
+wire g9.value h1.stream
+wire h1.then h2.in
+wire a5.value h3.count
+wire h2.body h3.in
+wire g9.value h3.stream
+wire f5.value h3.x
+wire e7.value h3.y
+wire h2.done h4.in
+wire c7.result h4.into
+wire e7.value h4.receiver
+wire g9.value h4.stream
+wire h4.then h5.in
+wire g9.value h5.receiver
+wire h5.then h6.in
+wire c9.object h6.receiver
+wire h6.then h7.in
+wire h6.result h7.value
+wire c5.result h8.got
+wire h7.then h8.in
+wire c1.result h8.want
+wire h8.then h9.in
+wire h9.then i1.in
+wire h8.result i1.value
+wire c3.result i2.got
+wire i1.then i2.in
+wire c1.result i2.want
+wire i2.then i3.in
+wire i3.then i4.in
+wire i2.result i4.value
+wire c7.result i5.got
+wire i4.then i5.in
+wire c1.result i5.want
+wire i5.then i6.in
+wire i6.then i7.in
+wire i5.result i7.value
+wire i7.then i8.in
+wire a5.value i9.arg0
+wire j1.value i9.arg1
+wire j2.value i9.arg2
+wire j3.value i9.arg3
+wire j4.value i9.arg4
+wire i8.then i9.in
+wire i8.object i9.receiver
+wire j6.value j5.arg0
+wire j7.value j5.arg1
+wire j8.value j5.arg2
+wire i9.then j5.in
+wire i8.object j5.receiver
+wire j5.then j9.in
+wire i8.object j9.text
+wire j9.then k1.in
+wire g9.value k1.object
+wire k1.then k2.in
+wire f5.value k2.object
+wire k2.then k3.in
+wire e7.value k3.object
+wire l4.then k5.in
+wire k4.value k5.object
+wire k5.then k7.in
+wire k6.value k7.object
+wire k7.then k9.in
+wire k8.value k9.object
+wire k9.then l2.in
+wire l1.value l2.object
+wire l2.then l3.in
+wire k3.then l4.in
+wire c6.value l4.object

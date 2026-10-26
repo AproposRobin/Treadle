@@ -1,0 +1,122 @@
+# treadle 1
+type Gpu class
+	namespace Core
+	static
+	doc "Experimental (NVIDIA only): the GPU through the CUDA driver (loaded at run time; no GPU and no driver are not errors). Upload (a copy) or Construct GpuBuffer<T> with a count (zeros) makes a GpuBuffer, which stays on the GPU across dispatches; Dispatch runs a [Kernel] function over an index range (set block <n> for the block size, 256 by default); Download copies a buffer back; Sync waits. DispatchAsync and GpuStream queue work beside the host. Without a GPU (or with TREADLE_GPU=cpu) buffers live in host memory and Dispatch runs the kernel on the CPU (on the thread pool). docs: GPU-Compute."
+
+function g0001 IsAvailable
+	static
+	returns bool
+	doc "True when a CUDA GPU, its driver and the program's GPU code are usable (false with TREADLE_GPU=cpu)."
+sheet body
+node a1 Entry
+node a2 Call Gpu.rt_gpu_available
+node a3 Operator !=
+	in b 0
+node a4 Return
+wire a1.then a2.in
+wire a2.result a3.a
+wire a2.then a4.in
+wire a3.result a4.value
+
+function g0002 Sync
+	static
+	doc "Waits until every dispatch has finished (a Download waits by itself)."
+sheet body
+node b1 Entry
+node b2 Call Gpu.rt_gpu_sync
+node b3 Return
+wire b1.then b2.in
+wire b2.then b3.in
+
+function g0003 Dispatch
+	static
+	returns bool
+	attr Intrinsic Gpu.Dispatch
+	doc "Runs the kernel named by the node's `set kernel <Type.Function>` once for every index from 0 up to `count` on the GPU, in blocks of `set block <n>` threads (256 when not set); a Span<T> input of the kernel takes a GpuBuffer<T> here. Returns at once (the launch is queued); Sync or a Download waits for it. True when it runs on the GPU, false when it ran on the CPU (no GPU)."
+param count int
+
+function g0007 DispatchAsync
+	static
+	returns bool
+	attr Intrinsic Gpu.DispatchAsync
+	doc "Gpu.Dispatch queued on `stream`: it runs after the stream's earlier copies and launches, beside the host and other streams; the stream's Sync waits for it."
+param stream GpuStream
+param count int
+
+function g0004 Upload
+	static
+	returns GpuBuffer<T>
+	generic T
+	doc "A new GpuBuffer holding a copy of `data` (delete it like an object)."
+param data Span<T>
+sheet body
+node c1 Entry
+node c2 Construct GpuBuffer<T>
+	set ctor (Span<T>)
+node c3 Return
+wire c1.data c2.data
+wire c1.then c2.in
+wire c2.then c3.in
+wire c2.object c3.value
+
+function g0005 Download
+	static
+	generic T
+	doc "Copies the buffer into `into` (as many elements as both have), after every dispatch before it has finished."
+param buffer GpuBuffer<T>
+param into Span<T>
+sheet body
+node d1 Entry
+node d2 Call GpuBuffer<T>.Download
+node d3 Return
+wire d1.then d2.in
+wire d1.into d2.into
+wire d1.buffer d2.receiver
+wire d2.then d3.in
+
+function g0006 PrintInfo
+	static
+	doc "Writes one line to stderr: the GPU, its compute capability, the CUDA driver API version and the PTX the program loaded, or why there is no GPU."
+sheet body
+node e1 Entry
+node e2 Call Gpu.rt_gpu_print_info
+node e3 Return
+wire e1.then e2.in
+wire e2.then e3.in
+
+function g0020 rt_gpu_available
+	static
+	access private
+	returns int32
+	attr Import treadle_rt rt_gpu_available
+
+function g0021 rt_gpu_sync
+	static
+	access private
+	attr Import treadle_rt rt_gpu_sync
+
+function g0022 rt_gpu_print_info
+	static
+	access private
+	attr Import treadle_rt rt_gpu_print_info
+
+function g0023 rt_gpu_launch
+	static
+	access internal
+	returns int32
+	attr Import treadle_rt rt_gpu_launch
+param entry char8*
+param kinds char8*
+param count int
+param block int
+param stream void*
+param flags int32
+param a0 void*
+param a1 void*
+param a2 void*
+param a3 void*
+param a4 void*
+param a5 void*
+param a6 void*
+param a7 void*

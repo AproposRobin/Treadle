@@ -1,0 +1,42 @@
+# treadle 1
+# expect n4 body T2224
+# expect n7 work T2224
+type ThreadLocalBody class
+	namespace Broken
+	static
+	doc "Thread.Start and ThreadPool.Run delete their delegate after it ran on the other thread: a Local delegate (freed when its region ends) cannot be one."
+
+function f1 Work
+	static
+sheet body
+node w1 Entry
+node w2 Return
+wire w1.then w2.in
+
+function f2 Main
+	static
+sheet body
+node n1 Entry
+node n2 Construct Thread
+node n3 Bind ThreadLocalBody.Work
+	set alloc local
+node n4 Call Thread.Start
+node n5 Call Thread.Join
+node n6 Bind ThreadLocalBody.Work
+	set alloc local
+node n7 Call ThreadPool.Run
+node n8 Delete
+node n9 Return
+wire n1.then n2.in
+wire n2.then n3.in
+wire n3.then n4.in
+wire n3.value n4.body
+wire n2.object n4.receiver
+wire n4.then n5.in
+wire n2.object n5.receiver
+wire n5.then n6.in
+wire n6.then n7.in
+wire n6.value n7.work
+wire n7.then n8.in
+wire n2.object n8.object
+wire n8.then n9.in

@@ -1,0 +1,180 @@
+# treadle 1
+type ThreadsCrossMain class
+	namespace Cx
+	static
+	doc "The Debug allocator's per-thread lists across threads: Main makes 20000 Strings that the thread `freer` deletes while Main keeps making and deleting its own (deletes of another thread's blocks, swept by their maker), the Strings a joined thread made are deleted by Main (the list of ended threads), and the leak report runs while the thread `spinner` still allocates (the report freezes the lists); the String spinner keeps is the leak, named with its thread."
+
+field sItems List<String>
+	static
+
+field sHeld String
+	static
+
+function m1 FreeAll
+	static
+	doc "Deletes every String of sItems (on the thread freer)."
+sheet body
+node fa1 Entry
+node fa2 Get ThreadsCrossMain.sItems
+node fa3 Call List<String>.DeleteAll
+node fa4 Return
+wire fa1.then fa3.in
+wire fa2.value fa3.receiver
+wire fa3.then fa4.in
+
+function m2 MakeSome
+	static
+	doc "Adds 5000 Strings to sItems (on the thread maker)."
+sheet body
+node ma1 Entry
+node ma2 For
+	in start 0
+	in count 5000
+node ma3 Construct String
+	set ctor ()
+node ma4 Get ThreadsCrossMain.sItems
+node ma5 Call List<String>.Add
+node ma6 Return
+wire ma1.then ma2.in
+wire ma2.body ma3.in
+wire ma3.then ma5.in
+wire ma4.value ma5.receiver
+wire ma3.object ma5.value
+wire ma2.done ma6.in
+
+function m3 Spin
+	static
+	doc "Keeps one String (the leak) and makes and deletes Strings until the program ends."
+sheet body
+node s1 Entry
+node s2 Construct String
+	set ctor ()
+node s3 Set ThreadsCrossMain.sHeld
+node s4 For
+	in start 0
+	in count 2000000000
+node s5 Construct String
+	set ctor ()
+node s6 Delete
+node s7 Return
+wire s1.then s2.in
+wire s2.then s3.in
+wire s2.object s3.value
+wire s3.then s4.in
+wire s4.body s5.in
+wire s5.then s6.in
+wire s5.object s6.object
+wire s4.done s7.in
+
+function m4 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Construct List<String>
+node a3 Set ThreadsCrossMain.sItems
+node b1 For
+	in start 0
+	in count 20000
+node b2 Construct String
+	set ctor ()
+node b3 Get ThreadsCrossMain.sItems
+node b4 Call List<String>.Add
+node c1 Construct Thread
+	set ctor (StringView)
+	in name "freer"
+node c2 Bind ThreadsCrossMain.FreeAll
+	set alloc construct
+node c3 Call Thread.Start
+node d1 For
+	in start 0
+	in count 20000
+node d2 Construct String
+	set ctor ()
+node d3 Delete
+node e1 Call Thread.Join
+node e2 Delete
+node e3 Get ThreadsCrossMain.sItems
+node e4 Get List<String>.Count
+node e5 Call Console.WriteLine(int)
+node f1 Construct Thread
+	set ctor (StringView)
+	in name "maker"
+node f2 Bind ThreadsCrossMain.MakeSome
+	set alloc construct
+node f3 Call Thread.Start
+node f4 Call Thread.Join
+node f5 Delete
+node f6 Get ThreadsCrossMain.sItems
+node f7 Get List<String>.Count
+node f8 Call Console.WriteLine(int)
+node f9 Get ThreadsCrossMain.sItems
+node g1 Call List<String>.DeleteAll
+node g2 Get ThreadsCrossMain.sItems
+node g3 Delete
+node h1 Construct Thread
+	set ctor (StringView)
+	in name "spinner"
+node h2 Bind ThreadsCrossMain.Spin
+	set alloc construct
+node h3 Call Thread.Start
+node h4 Call Thread.Sleep
+	in milliseconds 50
+node h5 Call Thread.Detach
+node h6 Delete
+node h7 Call Console.WriteLine(StringView)
+	in text "done"
+node h8 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value
+wire a3.then b1.in
+wire b1.body b2.in
+wire b2.then b4.in
+wire b3.value b4.receiver
+wire b2.object b4.value
+wire b1.done c1.in
+wire c1.then c2.in
+wire c2.then c3.in
+wire c2.value c3.body
+wire c1.object c3.receiver
+wire c3.then d1.in
+wire d1.body d2.in
+wire d2.then d3.in
+wire d2.object d3.object
+wire d1.done e1.in
+wire c1.object e1.receiver
+wire e1.then e2.in
+wire c1.object e2.object
+wire e3.value e4.receiver
+wire e2.then e5.in
+wire e4.value e5.value
+wire e5.then f1.in
+wire f1.then f2.in
+wire f2.then f3.in
+wire f2.value f3.body
+wire f1.object f3.receiver
+wire f3.then f4.in
+wire f1.object f4.receiver
+wire f4.then f5.in
+wire f1.object f5.object
+wire f6.value f7.receiver
+wire f5.then f8.in
+wire f7.value f8.value
+wire f8.then g1.in
+wire f9.value g1.receiver
+wire g1.then g3.in
+wire g2.value g3.object
+wire g3.then h1.in
+wire h1.then h2.in
+wire h2.then h3.in
+wire h2.value h3.body
+wire h1.object h3.receiver
+wire h3.then h4.in
+wire h4.then h5.in
+wire h1.object h5.receiver
+wire h5.then h6.in
+wire h1.object h6.object
+wire h6.then h7.in
+wire h7.then h8.in

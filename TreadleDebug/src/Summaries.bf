@@ -622,8 +622,30 @@ namespace Treadle.Debug.Dap
 					dv.ChildrenRef = NewSynth(kind, addr, dyn, IsPathRoot(path) ? path : "");
 				return;
 			}
+			// a vector: lldb's `float __attribute__((ext_vector_type(4)))` is `float4`
+			String vectorName = scope .();
+			let isVector = VectorSpelling(dv.Type, vectorName);
+			if (isVector)
+				dv.Type.Set(vectorName);
+			// a byte is a number in Treadle (char8 is the character): lldb shows uint8 / int8 as C chars, '\xff'
+			if ((dv.Type == "uint8" || dv.Type == "int8") && dv.Value.StartsWith('\''))
+			{
+				String n = scope .();
+				if (ByteFromCharLiteral(dv.Value, dv.Type == "int8", n))
+					dv.Value.Set(n);
+			}
 			if (dv.ChildrenRef == 0 || depth >= 2)
 				return;
+			if (isVector || MathValueName(dv.Type) != "")
+			{
+				// `float4(1, 2, 3, 4)`, `Vec3(1, 2.25, -0.5)`: the type and its lanes or fields (still expandable)
+				String s = scope .();
+				s.Append(isVector ? (StringView)dv.Type : MathValueName(dv.Type));
+				AppendMembers(dv.ChildrenRef, depth, false, s);
+				if (s.Length > dv.Type.Length)
+					dv.Value.Set(s);
+				return;
+			}
 			let vr = Request("variables", scope $"{{\"variablesReference\":{dv.ChildrenRef}}}");
 			defer delete vr;
 			let list = vr?.Get("body")?.Get("variables");
@@ -695,6 +717,115 @@ namespace Treadle.Debug.Dap
 				AppendMembers(dv.ChildrenRef, depth, true, s);
 			if (!s.IsEmpty)
 				dv.Value.Set(s);
+		}
+
+		/// A vector's type as lldb names it from the back end's DWARF (`float __attribute__((ext_vector_type(4)))`,
+		/// `int __attribute__((ext_vector_type(4)))`) in Treadle's spelling (`float4`, `int32x4`; SIMD-and-Vectors.md).
+		public static bool VectorSpelling(StringView ctype, String outName)
+		{
+			const String cMark = " __attribute__((ext_vector_type(";
+			let at = ctype.IndexOf(cMark);
+			if (at <= 0)
+				return false;
+			var elem = ctype.Substring(0, at);
+			elem.Trim();
+			let rest = ctype.Substring(at + cMark.Length);
+			let close = rest.IndexOf(')');
+			if (close <= 0)
+				return false;
+			let parsed = int.Parse(rest.Substring(0, close));
+			if (parsed case .Err)
+				return false;
+			let lanes = parsed.Value;
+			StringView e;
+			switch (elem)
+			{
+			case "float", "double", "bool", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64": e = elem;
+			case "_Bool": e = "bool";
+			case "char", "signed char": e = "int8";
+			case "unsigned char": e = "uint8";
+			case "short": e = "int16";
+			case "unsigned short": e = "uint16";
+			case "int": e = "int32";
+			case "unsigned int": e = "uint32";
+			case "long", "long long": e = "int64";
+			case "unsigned long", "unsigned long long": e = "uint64";
+			default: return false;
+			}
+			outName.Append(e);
+			if (e[e.Length - 1].IsDigit)
+				outName.Append('x');
+			outName.AppendF("{}", lanes);
+			return true;
+		}
+
+		/// lldb's C character literal of a byte (`'\xff'`, `'\0'`, `'A'`, `'\n'`) as its number (`255`, `0`, `65`, `10`;
+		/// `-1` for 0xff when `signed`). False when it is not one.
+		public static bool ByteFromCharLiteral(StringView lit, bool signed, String outText)
+		{
+			if (lit.Length < 3 || lit[0] != '\'' || lit[lit.Length - 1] != '\'')
+				return false;
+			let body = lit.Substring(1, lit.Length - 2);
+			int v;
+			if (body.Length == 1)
+				v = (uint8)body[0];
+			else if (body[0] != '\\')
+				return false;
+			else if (body.Length >= 3 && body[1] == 'x')
+			{
+				if (!(int.Parse(body.Substring(2), .HexNumber) case .Ok(let h)))
+					return false;
+				v = h;
+			}
+			else if (body[1] >= '0' && body[1] <= '7')
+			{
+				v = 0;
+				for (let c in body.Substring(1).RawChars)
+				{
+					if (c < '0' || c > '7')
+						return false;
+					v = v * 8 + (c - '0');
+				}
+			}
+			else if (body.Length == 2)
+			{
+				switch (body[1])
+				{
+				case 'n': v = 10;
+				case 't': v = 9;
+				case 'r': v = 13;
+				case 'a': v = 7;
+				case 'b': v = 8;
+				case 'f': v = 12;
+				case 'v': v = 11;
+				case 'e': v = 27;
+				case '\\': v = 92;
+				case '\'': v = 39;
+				case '"': v = 34;
+				default: return false;
+				}
+			}
+			else
+				return false;
+			v &= 0xFF;
+			outText.AppendF("{}", signed ? (int)(int8)(uint8)v : v);
+			return true;
+		}
+
+		/// The short name a core math value is shown with (`Core.Vec3` -> `Vec3`: `Vec3(1, 2, 3)`), "" for any other
+		/// type (a matrix, a box or a ray keeps the named form, `{C0 = ..., ...}`).
+		public static StringView MathValueName(StringView type)
+		{
+			if (!type.StartsWith("Core."))
+				return "";
+			let name = type.Substring(5);
+			switch (name)
+			{
+			case "Vec2", "Vec3", "Vec4", "Vec2d", "Vec3d", "Vec4d", "Quat", "Color", "Color32", "Rect", "RectI":
+				return name;
+			default:
+				return "";
+			}
 		}
 
 		/// `(a, b)` (named: `{X = 3, Y = 4}`) of a structure's first members, each summarised.

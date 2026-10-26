@@ -94,6 +94,8 @@ namespace Treadle.Compiler
 				// library exports it
 				if (m.ExportName != null && F.Static && !thisParam)
 					F.Export = new String(m.ExportName);
+				if (m.KernelEntry != null && !R.IsLambda)
+					F.Kernel = new String(m.KernelEntry); // KernelLower.bf: also compiled for the GPU
 				if (!F.Static || thisParam)
 				{
 					IRValue t = new .();
@@ -183,14 +185,14 @@ namespace Treadle.Compiler
 		{
 			mLambda = true;
 			let lt = R.LambdaType;
-			M.LambdaKey(Inst, R.Sheet.LambdaNode, Sub(lt), F.Key);
+			M.LambdaKey(Inst, R.Sheet.LambdaNode, Sub(lt), F.Key, MethodArgs);
 			F.Display.AppendF("{}.{}.Lambda", R.Type.FullName, R.Member.Name);
 			F.Static = lt.Kind == .Function;
 			if (!F.Static)
 			{
 				IRValue t = new .();
 				t.Param = new String("this");
-				t.Type = M.Closure(Inst, R.Sheet.LambdaNode).Self;
+				t.Type = M.Closure(Inst, R.Sheet.LambdaNode, MethodArgs).Self;
 				F.Params.Add(t);
 				mClosureThis = t;
 			}
@@ -277,7 +279,16 @@ namespace Treadle.Compiler
 				{
 					NameCtx nc = .(R.Type, m, R.Site);
 					nc.Quiet = true;
-					let t = Sub(C.Resolve(l.Type, nc) ?? T.Error);
+					var t = Sub(C.Resolve(l.Type, nc) ?? T.Error);
+					if (t.IsError)
+					{
+						// Declare reports a missing type (T1078) and a build stops there; a variable without a
+						// type must never reach the IR (a slot of no type is a const with no result the back end
+						// cannot read): an internal error naming it and the function instead
+						C.Diags.Add(.Error, .Lower, "T4003", R.Site, "", "", scope $"{R.Type.FullName}.{m.Name}: {l.Name} has no type (an internal error: Validate should have stopped the build)").Variable.Set(scope $"local:{l.Name}");
+						M.Failed();
+						t = T.Int; // a placeholder: the failed lowering is not written
+					}
 					let s = F.NewSlot(t, .Variable, "", "", l.Name);
 					mVars[new String(scope $"local:{l.Name}")] = s;
 				}
@@ -340,7 +351,7 @@ namespace Treadle.Compiler
 				if ((b.Kind == .Bind || (b.Kind == .Lambda && b.Closure != null)) && b.Alloc == .Local)
 				{
 					// The delegate object lives in the node's region (`bind.local` / `local` of the closure).
-					let s = (b.Kind == .Bind) ? F.NewSlot(Sub(b.FindOut("value").Type, b), .Local, b.Key, "value") : F.NewSlot(M.Closure(Inst, b.Key).Self, .Local, b.Key, "value");
+					let s = (b.Kind == .Bind) ? F.NewSlot(Sub(b.FindOut("value").Type, b), .Local, b.Key, "value") : F.NewSlot(M.Closure(Inst, b.Key, MethodArgs).Self, .Local, b.Key, "value");
 					if (b.Kind == .Bind)
 						s.TypeText = new String("Core.Delegate");
 					s.Region = mRegions[b.Region ?? R.Regions[0]];
@@ -780,7 +791,33 @@ namespace Treadle.Compiler
 			}
 			if (want != null && want.Kind == .Nullable && token != "null" && token != "default")
 				return MakeNullable(E.Const(token, want.Element, node, pin), want, node, pin);
+			if (Literals.IsStructLiteral(token, want))
+				return StructLiteral(token, want, node, pin);
 			return E.Const(token, want, node, pin);
+		}
+
+		/// A struct literal (`1,2,3` for a Vec3; Literals.IsStructLiteral): the Make of its fields, each value a
+		/// constant of its field's type (an auto property's hidden field starts at default).
+		IRValue StructLiteral(StringView token, KType t, StringView node, StringView pin)
+		{
+			M.Need(t);
+			List<StringView> parts = scope .();
+			for (let part in token.Split(','))
+				parts.Add(part);
+			Dictionary<GenericParamSym, KType> fmap = scope .();
+			T.MapOf(t, fmap);
+			List<IRValue> fields = scope .();
+			int k = 0;
+			for (let f in t.Sym.AllFields)
+			{
+				let ft = T.Subst(f.Type, fmap);
+				fields.Add(E.Const((f.Synthetic || k >= parts.Count) ? "default" : parts[k], ft, node, pin));
+				if (!f.Synthetic)
+					k++;
+			}
+			let mk = E.Op(.Make, t, node, pin);
+			mk.Operands.AddRange(fields);
+			return mk;
 		}
 
 		/// A `T?` holding `v` (its has-value flag set).
@@ -942,7 +979,7 @@ namespace Treadle.Compiler
 				{
 					let coll = LoadSlot(OutSlot(src, "collection"), src.Key, "collection");
 					let idx = LoadSlot(OutSlot(src, "index"), src.Key, "index");
-					return Element(coll, idx, Sub(src.FindOut("element").Type), src.Key, pin);
+					return Element(coll, idx, Sub(src.FindOut("element").Type), src.Key, pin, false); // the loop keeps the index in range
 				}
 			case .Switch:
 				if (pin.StartsWith("case:"))
@@ -988,16 +1025,16 @@ namespace Treadle.Compiler
 			return op;
 		}
 
-		IRValue Element(IRValue coll, IRValue idx, KType elem, StringView node, StringView pin)
+		IRValue Element(IRValue coll, IRValue idx, KType elem, StringView node, StringView pin, bool check = true)
 		{
-			let addr = ElementAddr(coll, idx, elem, node, pin);
+			let addr = ElementAddr(coll, idx, elem, node, pin, check);
 			let ld = E.Op(.Load, elem, node, pin);
 			ld.Operands.Add(addr);
 			return ld;
 		}
 
 		/// The address of an element of an array, a span, a string or a pointer (Debug: bounds check).
-		IRValue ElementAddr(IRValue coll, IRValue idx, KType elem, StringView node, StringView pin)
+		IRValue ElementAddr(IRValue coll, IRValue idx, KType elem, StringView node, StringView pin, bool check = true)
 		{
 			if (coll.Type.Kind == .Array)
 			{
@@ -1020,6 +1057,18 @@ namespace Treadle.Compiler
 				ptr.Operands.Add(coll);
 				ptr.Index = 0;
 				basePtr = ptr;
+				// Debug: a Span's index is checked against its Length as an array's is (the emitter drops the
+				// check in Release; Compiler.md 6, "Span indices")
+				if (check && coll.Type.Sym == T.SpanSym)
+				{
+					let len = E.Op(.Extract, T.Int, node, pin);
+					len.Operands.Add(coll);
+					len.Index = 1;
+					let bc = E.Op(.BoundsCheck, T.Void, node, pin);
+					bc.Operands.Add(coll);
+					bc.Operands.Add(idx);
+					bc.Operands.Add(len);
+				}
 			}
 			let addr = E.Op(.ElemAddr, T.Pointer(elem), node, pin);
 			addr.Operands.Add(basePtr);
@@ -1246,7 +1295,7 @@ namespace Treadle.Compiler
 				{
 					let op = E.Op(.FnAddr, Sub(lr.LambdaType), key, pin);
 					op.Callee = new String();
-					M.LambdaKey(Inst, n.Key, Sub(lr.LambdaType), op.Callee);
+					M.LambdaKey(Inst, n.Key, Sub(lr.LambdaType), op.Callee, MethodArgs);
 					return op;
 				}
 			default:
@@ -1816,6 +1865,8 @@ namespace Treadle.Compiler
 				return E.Const("zero", T.Int, key, pin);
 			if (n.EventOp != .None)
 				return EventCall(n, pin);
+			if (n.KernelFn != null)
+				return KernelCallNode(n, pin); // KernelLower.bf: Gpu.Dispatch, Kernel.RunCpu
 			let owner = Sub(n.Owner, n);
 			List<IRValue> args = scope .();
 			if (!f.Static)
@@ -2287,7 +2338,7 @@ namespace Treadle.Compiler
 			let lr = n.LambdaSheet;
 			if (lr == null || n.Closure == null)
 				return;
-			let cl = M.Closure(Inst, n.Key).Self;
+			let cl = M.Closure(Inst, n.Key, MethodArgs).Self;
 			IROp c;
 			if (n.Alloc == .Local && mLocals.TryGetValue(n, let slot))
 			{
@@ -2342,7 +2393,7 @@ namespace Treadle.Compiler
 			let d = E.Op(.Closure, Sub(lr.LambdaType), key, "value");
 			d.Operands.Add(c);
 			d.Callee = new String();
-			M.LambdaKey(Inst, n.Key, Sub(lr.LambdaType), d.Callee);
+			M.LambdaKey(Inst, n.Key, Sub(lr.LambdaType), d.Callee, MethodArgs);
 			StoreSlot(OutSlot(n, "value"), d, key, "value");
 		}
 
@@ -2453,7 +2504,7 @@ namespace Treadle.Compiler
 					if (recv != null)
 						gargs.Add(recv);
 					let old = Invoke(n.Member, owner, null, .Get, gargs, t, key, "value", n.ReceiverIsBase);
-					v = Operate(n.SetOp, t, old, v, t, key, "value");
+					v = Operate(n.SetOp, Sub(n.OperandType ?? t, n), old, v, t, key, "value");
 				}
 				List<IRValue> args = scope .();
 				if (recv != null)

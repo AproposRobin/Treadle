@@ -1,0 +1,112 @@
+# treadle 1
+type MathCompoundMain class
+	namespace Cx
+	static
+	doc "Compound Sets with an operator of two input types: a Vec3, a Mat4 and a Color times or over a float, from a literal and from a wired float; a Vec3 += Vec3 keeps the one-type operator."
+
+function m000 Main
+	static
+	returns int
+local v Vec3
+local m Mat4
+local c Color
+local k float
+sheet body
+node a1 Entry
+node a2 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node a3 Set local:v
+node a4 Set local:v
+	set op *=
+	in value 2
+node a5 Set local:k
+	in value 0.5f
+node a6 Get local:k
+node a7 Set local:v
+	set op *=
+node a8 Set local:v
+	set op /=
+	in value 4.0f
+node a9 Make Core.Vec3
+	in X 10.0f
+	in Y 20.0f
+	in Z 30.0f
+node b1 Set local:v
+	set op +=
+node b2 Local String
+	set ctor ()
+node b3 Get local:v
+node b4 Call String.Append(Vec3)
+node b5 Call Console.WriteLine(StringView)
+node c1 Get Core.Mat4.Identity
+node c2 Set local:m
+node c3 Set local:m
+	set op *=
+	in value 3
+node c4 Get local:k
+node c5 Set local:m
+	set op *=
+node c6 Get local:m
+node c7 Call String.Clear
+node c8 Call String.Append(Mat4)
+node c9 Call Console.WriteLine(StringView)
+node d1 Make Core.Color
+	in R 0.5f
+	in G 0.25f
+	in B 1.0f
+	in A 1.0f
+node d2 Set local:c
+node d3 Set local:c
+	set op *=
+	in value 0.5f
+node d4 Get local:k
+node d5 Set local:c
+	set op *=
+node d6 Get local:c
+node d7 Call String.Clear
+node d8 Call String.Append(Color)
+node d9 Call Console.WriteLine(StringView)
+node e1 Return
+	in value 0
+wire a1.then a3.in
+wire a2.value a3.value
+wire a3.then a4.in
+wire a4.then a5.in
+wire a5.then a7.in
+wire a6.value a7.value
+wire a7.then a8.in
+wire a8.then b1.in
+wire a9.value b1.value
+wire b1.then b2.in
+wire b2.then b4.in
+wire b2.object b4.receiver
+wire b3.value b4.value
+wire b4.then b5.in
+wire b2.object b5.text
+wire b5.then c2.in
+wire c1.value c2.value
+wire c2.then c3.in
+wire c3.then c5.in
+wire c4.value c5.value
+wire c5.then c7.in
+wire b2.object c7.receiver
+wire c7.then c8.in
+wire b2.object c8.receiver
+wire c6.value c8.value
+wire c8.then c9.in
+wire b2.object c9.text
+wire c9.then d2.in
+wire d1.value d2.value
+wire d2.then d3.in
+wire d3.then d5.in
+wire d4.value d5.value
+wire d5.then d7.in
+wire b2.object d7.receiver
+wire d7.then d8.in
+wire b2.object d8.receiver
+wire d6.value d8.value
+wire d8.then d9.in
+wire b2.object d9.text
+wire d9.then e1.in

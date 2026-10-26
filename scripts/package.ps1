@@ -14,12 +14,16 @@
     tools\runtime\                        the C runtime sources every program is built with
     tools\llvm\                           the trimmed llvm-mingw toolchain (packaging\llvm-files.txt)
     tools\libclang\                       libclang.dll + its builtin headers (C header import)
-    samples\m1, samples\m3-core           two small projects to open and build
+    tools\SDL2\                           SDL2 2.32.10 headers, import library and SDL2.dll for the SDL samples
+    samples\                              the sample projects of packaging\samples.txt and their index README.md
     docs\                                 the user-facing pages (Getting-Started + the list in $Docs), docs\images\
     LICENSE, NOTICE, THIRD_PARTY.md, THIRD_PARTY\, VERSION.txt
+    files.txt                             every other file of the package (relative, / separators): the list the
+                                          in-app updater replaces and removes files by
 
   Inputs a clean clone gets with the get-*.ps1 scripts: the toolchain (scripts\get-llvm-mingw.ps1 ->
-  tools\llvm-mingw) and libclang (scripts\get-libclang.ps1 -> tools\libclang). The version is VERSION.txt; it must
+  tools\llvm-mingw) and libclang (scripts\get-libclang.ps1 -> tools\libclang) and SDL2 for the samples (scripts\get-sdl2.ps1 -> tools\SDL2-2.32.10, run by this script
+  when no SDL2 is found). The version is VERSION.txt; it must
   agree with TreadleInfo (TreadleCore\src\Document\CommandLine.bf) and the [Platform.Windows] versions of
   TreadleEditor\BeefProj.toml, and the packaged exe's --version must print it.
 
@@ -33,6 +37,11 @@
 .PARAMETER LibClang
   The libclang install (bin\libclang.dll, lib\clang\23\include). Default: TREADLE_LIBCLANG, else tools\libclang of
   the repository, else of the main checkout when this is a git worktree.
+
+.PARAMETER Sdl2
+  The SDL2 2.32.10 mingw development package root (the folder holding x86_64-w64-mingw32) whose files
+  packaging\sdl2-files.txt names. Default: TREADLE_SDL2, else tools\SDL2-2.32.10 of the repository, else of the
+  main checkout when this is a git worktree, else scripts\get-sdl2.ps1 installs it (pinned archive sha256).
 
 .PARAMETER NoDebugger
   Leave lldb-dap and its DLLs out of tools\llvm (the "[debug]" lines of packaging\llvm-files.txt).
@@ -50,10 +59,15 @@
 .PARAMETER Verify
   After zipping: unpack the zip into -VerifyDir and run the proof commands from the unpacked copy with
   TREADLE_LLVM / TREADLE_CORE / TREADLE_LIBCLANG unset, TREADLE_NO_FALLBACK=1 and a fresh LOCALAPPDATA:
-  --version, --build-run m1, --build-run m3-core -- a b c, --import-c small.cimport; the packaged exe ignores
+  --version, --build-run m1, --build-run m3-core -- a b c, --import-c small.cimport, then three shipped samples
+  built in place in the unpacked folder (samples\m3-core, samples\m2-sdl -- --frames 60 with SDL2 from
+  tools\SDL2, samples\m4-breakout -- --headless); the packaged exe ignores
   TREADLE_SELFTEST (starts normally, logs no self-test line), holds no "SELFTEST" string and is smaller than the
   Release build of the same source; the Release build (with the self tests), put into a copy of the unpacked
-  folder, runs TREADLE_SELFTEST=smoke,debug,quit there (the package's lldb-dap and toolchain).
+  folder, runs TREADLE_SELFTEST=smoke,debug,quit there (the package's lldb-dap and toolchain). Last, the update
+  rehearsal: a copy of the package claiming an older version updates itself to this zip through a local release
+  index (TREADLE_UPDATE_INDEX) with `Treadle.exe --update`; the new VERSION.txt and --version, B's files.txt, the
+  removal of a file only A listed and the survival of user files are checked.
 
 .PARAMETER VerifyDir
   Where -Verify unpacks (default %TEMP%\treadle-pkg-verify-<stamp>). Emptied first when it holds an earlier run.
@@ -62,6 +76,7 @@ param(
     [switch]$NoBuild,
     [string]$Llvm = "",
     [string]$LibClang = "",
+    [string]$Sdl2 = "",
     [switch]$NoDebugger,
     [string]$Out = "",
     [string]$ZipDir = "",
@@ -157,6 +172,67 @@ if ($TrimToolchainTo) {
 }
 
 $LibClangSrc = Find-LibClang
+
+# SDL2 for the SDL samples (tools\SDL2): the files of packaging\sdl2-files.txt, each checked against its sha256.
+$SdlFiles = @()
+foreach ($raw in Get-Content -LiteralPath (Join-Path $Repo "packaging\sdl2-files.txt")) {
+    $line = $raw.Trim()
+    if (-not $line -or $line.StartsWith("#")) { continue }
+    $parts = $line -split '\s+', 2
+    $SdlFiles += [pscustomobject]@{ Sha = $parts[0].ToLowerInvariant(); Rel = $parts[1].Replace('/', '\') }
+}
+function Test-Sdl2Root([string]$root) {
+    if (-not $root -or -not (Test-Path -LiteralPath $root)) { return $false }
+    foreach ($s in $SdlFiles) {
+        $p = Join-Path $root $s.Rel
+        if (-not (Test-Path -LiteralPath $p)) { return $false }
+        if ((Get-FileHash -Algorithm SHA256 -LiteralPath $p).Hash.ToLowerInvariant() -ne $s.Sha) { Write-Warning "$p does not match packaging\sdl2-files.txt"; return $false }
+    }
+    return (Test-Path -LiteralPath (Join-Path $root "x86_64-w64-mingw32\include\SDL2\SDL.h"))
+}
+function Find-Sdl2 {
+    $cands = @()
+    if ($Sdl2) { $cands += $Sdl2 }
+    elseif ($env:TREADLE_SDL2) { $cands += $env:TREADLE_SDL2 }
+    else {
+        $cands += (Join-Path $Repo "tools\SDL2-2.32.10")
+        $common = (git -C $Repo rev-parse --path-format=absolute --git-common-dir 2>$null)
+        if ($common) { $cands += (Join-Path (Split-Path -Parent $common) "tools\SDL2-2.32.10") }
+    }
+    foreach ($c in $cands) { if (Test-Sdl2Root $c) { return (Resolve-Path $c).Path } }
+    if ($Sdl2 -or $env:TREADLE_SDL2) { throw "SDL2 2.32.10 not found or not the pinned files ($($cands -join ', ')): packaging\sdl2-files.txt" }
+    Write-Host "== SDL2 not found ($($cands -join ', ')): scripts\get-sdl2.ps1"
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "get-sdl2.ps1") -Root $Repo
+    if ($LASTEXITCODE -ne 0) { throw "scripts\get-sdl2.ps1 failed (exit $LASTEXITCODE)" }
+    $got = Join-Path $Repo "tools\SDL2-2.32.10"
+    if (-not (Test-Sdl2Root $got)) { throw "scripts\get-sdl2.ps1 did not install the files of packaging\sdl2-files.txt into $got" }
+    return (Resolve-Path $got).Path
+}
+$SdlSrc = Find-Sdl2
+
+# The samples that ship (packaging\samples.txt): each needs a project file and a README.md. A folder with both that
+# the list does not name ships too, with a warning; "!name" lines keep folders out.
+$Samples = @()
+$NotShipped = @()
+foreach ($raw in Get-Content -LiteralPath (Join-Path $Repo "packaging\samples.txt")) {
+    $line = $raw.Trim()
+    if (-not $line -or $line.StartsWith("#")) { continue }
+    $name = ($line -split '\|', 2)[0].Trim()
+    if ($name.StartsWith("!")) { $NotShipped += $name.Substring(1); continue }
+    $sdir = Join-Path $Repo "TreadleCore\samples\$name"
+    if (-not (Test-Path -LiteralPath $sdir)) { throw "packaging\samples.txt names $name, which is not in TreadleCore\samples" }
+    if (-not (Get-ChildItem -LiteralPath $sdir -Filter *.tproj -File)) { throw "sample $name has no .tproj" }
+    if (-not (Test-Path -LiteralPath (Join-Path $sdir "README.md"))) { throw "sample $name has no README.md" }
+    $Samples += $name
+}
+foreach ($d in Get-ChildItem -LiteralPath (Join-Path $Repo "TreadleCore\samples") -Directory | Sort-Object Name) {
+    if ($Samples -contains $d.Name -or $NotShipped -contains $d.Name) { continue }
+    if ((Get-ChildItem -LiteralPath $d.FullName -Filter *.tproj -File) -and (Test-Path -LiteralPath (Join-Path $d.FullName "README.md"))) {
+        Write-Warning "sample $($d.Name) is not in packaging\samples.txt: it ships; add its line (or a !$($d.Name) line)"
+        $Samples += $d.Name
+    }
+}
+if (-not (Test-Path -LiteralPath (Join-Path $Repo "TreadleCore\samples\README.md"))) { throw "TreadleCore\samples\README.md (the samples index) is missing" }
 
 # ---------------------------------------------------------------------------------------------- version
 
@@ -259,13 +335,38 @@ Copy-Item (Join-Path $LibClangSrc "bin\libclang.dll") (Join-Path $Out "tools\lib
 New-Item -ItemType Directory -Force (Join-Path $Out "tools\libclang\lib\clang\23") | Out-Null
 Copy-Item -Recurse (Join-Path $LibClangSrc "lib\clang\23\include") (Join-Path $Out "tools\libclang\lib\clang\23\include")
 
-# Samples to open and build (copies of TreadleCore\samples\m1 and m3-core; SDL2's sample is not shipped).
-foreach ($s in @("m1", "m3-core")) {
-    New-Item -ItemType Directory -Force (Join-Path $Out "samples") | Out-Null
-    Copy-Item -Recurse (Join-Path $Repo "TreadleCore\samples\$s") (Join-Path $Out "samples\$s")
-    # A sample built or run in this checkout has a build folder: it does not ship.
-    $sb = Join-Path $Out "samples\$s\build"
-    if (Test-Path $sb) { Remove-Item -Recurse -Force $sb }
+# SDL2 for the SDL samples: headers, import library, DLL and licence (x86_64 only; packaging\sdl2-files.txt).
+Write-Host "== SDL2 from $SdlSrc"
+$SdlOut = Join-Path $Out "tools\SDL2"
+New-Item -ItemType Directory -Force (Join-Path $SdlOut "x86_64-w64-mingw32\include"), (Join-Path $SdlOut "x86_64-w64-mingw32\lib"), (Join-Path $SdlOut "x86_64-w64-mingw32\bin") | Out-Null
+Copy-Item -Recurse (Join-Path $SdlSrc "x86_64-w64-mingw32\include\SDL2") (Join-Path $SdlOut "x86_64-w64-mingw32\include\SDL2")
+foreach ($s in $SdlFiles) {
+    if ($s.Rel -like "x86_64-w64-mingw32\include\*") { continue }
+    Copy-Item -LiteralPath (Join-Path $SdlSrc $s.Rel) (Join-Path $SdlOut $s.Rel)
+}
+if (-not (Test-Sdl2Root $SdlOut)) { throw "tools\SDL2 in the package does not match packaging\sdl2-files.txt" }
+
+# The samples (packaging\samples.txt) and their index. A sample built or run in this checkout has a build folder and
+# may have written files next to its input: they do not ship. Paths that lead out of the source tree's sample are
+# rewritten for the package's layout: the SDL2 fallback (../../../tools/SDL2-2.32.10 -> ../../tools/SDL2, the
+# package's tools\SDL2 from samples\<name>) and m2-frontend's probe header (copied beside its set).
+New-Item -ItemType Directory -Force (Join-Path $Out "samples") | Out-Null
+Copy-Item (Join-Path $Repo "TreadleCore\samples\README.md") (Join-Path $Out "samples\README.md")
+foreach ($s in $Samples) {
+    $dst = Join-Path $Out "samples\$s"
+    Copy-Item -Recurse (Join-Path $Repo "TreadleCore\samples\$s") $dst
+    foreach ($left in @("build", "m3-files-out")) { $p = Join-Path $dst $left; if (Test-Path -LiteralPath $p) { Remove-Item -Recurse -Force $p } }
+    Get-ChildItem -LiteralPath $dst -Recurse -File -Filter *.pretty.json | Remove-Item -Force
+    foreach ($ci in Get-ChildItem -LiteralPath $dst -Recurse -File -Filter *.cimport) {
+        $text = [IO.File]::ReadAllText($ci.FullName)
+        $new = $text.Replace('${TREADLE_SDL2:-../../../tools/SDL2-2.32.10}', '${TREADLE_SDL2:-../../tools/SDL2}')
+        if ($new.Contains('../../../../tools/probe/headers/small.h')) {
+            $new = $new.Replace('../../../../tools/probe/headers/small.h', 'small.h')
+            Copy-Item (Join-Path $Repo "tools\probe\headers\small.h") (Join-Path $ci.DirectoryName "small.h") -Force
+        }
+        if ($new -ne $text) { [IO.File]::WriteAllText($ci.FullName, $new, (New-Object Text.UTF8Encoding $false)) }
+        if ($new -match '\.\./\.\./\.\./') { throw "$($ci.FullName) still names a path outside the package" }
+    }
 }
 
 # Docs: the named user-facing pages only (no developer pages, tests or fixtures).
@@ -302,6 +403,11 @@ try {
 } finally { Remove-Item -Force -ErrorAction SilentlyContinue $vOut }
 if ($reported -notlike "Treadle $FullVersion (host contract *") { throw "Treadle.exe --version printed '$reported', expected 'Treadle $FullVersion (host contract n)'" }
 
+# The file list the updater installs by (docs\Releasing.md, "The update path"): every file of the package, relative,
+# with / separators; files.txt itself is not listed.
+$manifest = @(Get-ChildItem -Recurse -Force -File $Out | ForEach-Object { $_.FullName.Substring($Out.Length + 1).Replace('\', '/') } | Where-Object { $_ -ne "files.txt" } | Sort-Object)
+[IO.File]::WriteAllText((Join-Path $Out "files.txt"), (($manifest -join "`n") + "`n"), (New-Object Text.UTF8Encoding $false))
+
 # ---------------------------------------------------------------------------------------------- zip
 
 New-Item -ItemType Directory -Force $ZipDir | Out-Null
@@ -323,8 +429,17 @@ $folderBytes = Get-FolderBytes $Out
 $llvmBytes = Get-FolderBytes (Join-Path $Out "tools\llvm")
 $clangBytes = Get-FolderBytes (Join-Path $Out "tools\libclang")
 Write-Host "Packaged $Out"
-Write-Host "  folder $(Format-MB $folderBytes) (tools\llvm $(Format-MB $llvmBytes), tools\libclang $(Format-MB $clangBytes))"
-Write-Host "  zip    $zip ($(Format-MB (Get-Item $zip).Length))"
+# What tools\SDL2 and samples\ add to the zip (the compressed sizes of their entries).
+$za = [System.IO.Compression.ZipFile]::OpenRead($zip)
+try {
+    $sdlZip = [int64](($za.Entries | Where-Object { $_.FullName.StartsWith("tools/SDL2/") } | Measure-Object -Property CompressedLength -Sum).Sum)
+    $samplesZip = [int64](($za.Entries | Where-Object { $_.FullName.StartsWith("samples/") } | Measure-Object -Property CompressedLength -Sum).Sum)
+} finally { $za.Dispose() }
+$zipBytes = (Get-Item $zip).Length
+Write-Host "  folder $(Format-MB $folderBytes) (tools\llvm $(Format-MB $llvmBytes), tools\libclang $(Format-MB $clangBytes), tools\SDL2 $(Format-MB (Get-FolderBytes $SdlOut)), samples $(Format-MB (Get-FolderBytes (Join-Path $Out 'samples'))))"
+Write-Host "  zip    $zip ($(Format-MB $zipBytes); tools\SDL2 $(Format-MB $sdlZip), samples $(Format-MB $samplesZip) of it)"
+Write-Host "  samples $($Samples -join ', ')"
+if ($zipBytes -gt 150MB) { throw "the zip is $(Format-MB $zipBytes): over the 150 MB limit (docs\Releasing.md)" }
 Write-Host "  sha256 $sha"
 Write-Host "  exe    $reported"
 
@@ -335,6 +450,7 @@ if (-not $Verify) { exit 0 }
 # Runs the packaged exe with a clean environment: no TREADLE_* lookups, no machine fallback, a fresh LOCALAPPDATA
 # (so no cached runtime object and no settings), and returns exit code + stdout + stderr.
 function Invoke-Packaged([string]$exePath, [string[]]$argv, [hashtable]$extraEnv, [int]$timeoutSec) {
+    if (-not [IO.Path]::IsPathRooted($exePath) -or -not (Test-Path -LiteralPath $exePath -PathType Leaf)) { throw "not starting $exePath`: no such file" }
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = $exePath
     $psi.Arguments = (($argv | ForEach-Object { if ($_ -match '[\s"]') { '"' + $_.Replace('"', '\"') + '"' } else { $_ } }) -join ' ')
@@ -342,7 +458,7 @@ function Invoke-Packaged([string]$exePath, [string[]]$argv, [hashtable]$extraEnv
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
     $psi.WorkingDirectory = Split-Path -Parent $exePath
-    foreach ($k in @("TREADLE_LLVM", "TREADLE_CORE", "TREADLE_LIBCLANG", "TREADLE_RUNTIME", "TREADLE_SAMPLES", "TREADLE_LLDB_DAP", "TREADLE_SELFTEST", "TREADLE_HOME", "TREADLE_UPDATE_REPOSITORY")) {
+    foreach ($k in @("TREADLE_LLVM", "TREADLE_CORE", "TREADLE_LIBCLANG", "TREADLE_RUNTIME", "TREADLE_SAMPLES", "TREADLE_LLDB_DAP", "TREADLE_SELFTEST", "TREADLE_HOME", "TREADLE_SDL2", "TREADLE_UPDATE_INDEX")) {
         if ($psi.EnvironmentVariables.ContainsKey($k)) { $psi.EnvironmentVariables.Remove($k) }
     }
     $psi.EnvironmentVariables["TREADLE_NO_FALLBACK"] = "1"
@@ -437,6 +553,69 @@ $done = if ($logFile) { @(Select-String -Path $logFile.FullName -Pattern '\[SELF
 $dap = if ($logFile) { @(Select-String -Path $logFile.FullName -Pattern 'lldb-dap: ([^)]+)\)' | Select-Object -Last 1) } else { @() }
 $r.Out = (@($done | ForEach-Object { $_.Line.Trim() }) + @($dap | ForEach-Object { $_.Line.Trim() })) -join "`n"
 Report "TREADLE_SELFTEST=smoke,debug,quit (the Release build in the package layout)" $r ($done.Count -eq 1 -and $done[0].Matches[0].Groups[1].Value -eq "0" -and $dap.Count -eq 1 -and $dap[0].Matches[0].Groups[1].Value -like "$tl\tools\llvm\*")
+
+# Shipped samples, built and run in place in the unpacked folder (their build folders land there): no TREADLE_SDL2,
+# so the SDL samples take SDL2 from the package's tools\SDL2 through the rewritten fallback of their sdl2.cimport,
+# and Build copies tools\SDL2's SDL2.dll next to the program. m2-sdl opens a 640x480 window for about one second.
+$ps = Join-Path $unz "samples"
+$r = Invoke-Packaged $pexe @("--build-run", (Join-Path $ps "m3-core")) $env1 300
+Report "--build-run samples\m3-core (shipped, in place)" $r ($r.Code -eq 0 -and $r.Out -match "counted in")
+$r = Invoke-Packaged $pexe @("--build-run", (Join-Path $ps "m2-sdl"), "--", "--frames", "60") $env1 300
+$sdlDll = Join-Path $ps "m2-sdl\build\Debug\SDL2.dll"
+$sdlSame = (Test-Path -LiteralPath $sdlDll) -and ((Get-FileHash -Algorithm SHA256 -LiteralPath $sdlDll).Hash -eq (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $unz "tools\SDL2\x86_64-w64-mingw32\bin\SDL2.dll")).Hash)
+$sdlPaths = ($r.Out + $r.Err).Contains($unz.Replace('\', '/') + "/tools/SDL2/")
+Report "--build-run samples\m2-sdl -- --frames 60 (SDL2.dll from tools\SDL2: $sdlSame, its paths named: $sdlPaths)" $r ($r.Code -eq 0 -and $r.Out -match "frames 60" -and $sdlSame -and $sdlPaths)
+$r = Invoke-Packaged $pexe @("--build-run", (Join-Path $ps "m4-breakout"), "--", "--headless") $env1 300
+Report "--build-run samples\m4-breakout -- --headless" $r ($r.Code -eq 0 -and $r.Out -match "frames 600 score")
+
+# The update rehearsal (docs\Releasing.md, "The update path"): package A is this package with an older VERSION.txt, one
+# extra listed file (docs\rehearsal-old-page.md, which B no longer has) and user files the update must keep; a local
+# release index (TREADLE_UPDATE_INDEX, the same override every build honours) holds this zip as release B with its
+# SHA256SUMS. A's `Treadle.exe --update` checks, downloads, verifies and starts the helper; the helper replaces A's files
+# by B's files.txt and restarts with --update-health. Every process here is started and waited for by this script.
+$reh = Join-Path $VerifyDir "update-rehearsal"
+$rA = Join-Path $reh "Treadle"
+$rIndex = Join-Path $reh "index"
+New-Item -ItemType Directory -Force $rIndex | Out-Null
+Copy-Item -Recurse $unz $rA
+Set-Content -Path (Join-Path $rA "VERSION.txt") -Value "0.0.1-rehearsal" -Encoding ascii
+New-Item -ItemType Directory -Force (Join-Path $rA "projects\MyGame"), (Join-Path $rA "samples\m1") | Out-Null
+Set-Content -Path (Join-Path $rA "projects\MyGame\MyGame.tproj") -Value "user project" -Encoding ascii
+Set-Content -Path (Join-Path $rA "samples\m1\my-notes.txt") -Value "user notes inside a package folder" -Encoding ascii
+Set-Content -Path (Join-Path $rA "docs\rehearsal-old-page.md") -Value "only in A" -Encoding ascii
+Add-Content -Path (Join-Path $rA "files.txt") -Value "docs/rehearsal-old-page.md" -Encoding ascii
+Copy-Item $zip (Join-Path $rIndex (Split-Path -Leaf $zip))
+$zipLen = (Get-Item $zip).Length
+Set-Content -Path (Join-Path $rIndex "SHA256SUMS") -Value "$sha  $(Split-Path -Leaf $zip)" -Encoding ascii
+$relJson = '[{"tag_name": "v' + $FullVersion + '", "draft": false, "prerelease": false, "body": "Rehearsal release", "assets": [{"name": "' + (Split-Path -Leaf $zip) + '", "size": ' + $zipLen + '}, {"name": "SHA256SUMS", "size": 100}]}]'
+[IO.File]::WriteAllText((Join-Path $rIndex "releases.json"), $relJson)
+$rEnv = @{ LOCALAPPDATA = $lad; TREADLE_HOME = (Join-Path $reh "home"); TREADLE_UPDATE_INDEX = $rIndex }
+$r = Invoke-Packaged (Join-Path $rA "Treadle.exe") @("--update") $rEnv 600
+$helperOk = $r.Out -match 'Update helper started \(process (\d+)\)'
+Report "update rehearsal: 0.0.1-rehearsal --update finds $FullVersion in the local index, verifies it and starts the helper" $r ($r.Code -eq 0 -and $helperOk)
+$updLog = Join-Path $rA "update\update.log"
+if ($helperOk) {
+    $hp = Get-Process -Id ([int]$Matches[1]) -ErrorAction SilentlyContinue
+    if ($hp) {
+        $null = $hp.Handle
+        if (-not $hp.WaitForExit(600000)) { try { $hp.Kill(); $hp.WaitForExit(10000) | Out-Null } catch {}; Write-Host "    ! the helper did not finish in 600 s (stopped)" }
+    }
+    # The helper's last step: it ends after the restarted --update-health process; wait for the log line too.
+    $sw = [Diagnostics.Stopwatch]::StartNew()
+    while ($sw.ElapsedMilliseconds -lt 60000 -and -not ((Test-Path $updLog) -and (Select-String -Path $updLog -Pattern "update complete|restoring|update failed|did not close" -Quiet))) { Start-Sleep -Milliseconds 250 }
+}
+$logText = if (Test-Path $updLog) { Get-Content -Raw $updLog } else { "" }
+$vA = (Get-Content (Join-Path $rA "VERSION.txt") -TotalCount 1).Trim()
+$r2 = Invoke-Packaged (Join-Path $rA "Treadle.exe") @("--version") $rEnv 30
+$kept = (Test-Path (Join-Path $rA "projects\MyGame\MyGame.tproj")) -and (Test-Path (Join-Path $rA "samples\m1\my-notes.txt"))
+$gone = -not (Test-Path (Join-Path $rA "docs\rehearsal-old-page.md"))
+$sameList = (Get-FileHash (Join-Path $rA "files.txt")).Hash -eq (Get-FileHash (Join-Path $unz "files.txt")).Hash
+$noPrev = -not (Test-Path (Join-Path $rA "update\old"))
+$r2.Out = ($r2.Out.Trim() + "`n" + (($logText -split "`r?`n" | Where-Object { $_ }) -join "`n")).Trim()
+Report "update rehearsal: VERSION.txt $vA, user files kept $kept, A-only file removed $gone, files.txt is B's $sameList, rollback copy cleared $noPrev" $r2 ($r2.Code -eq 0 -and $vA -eq $FullVersion -and $r2.Out -like "Treadle $FullVersion (host contract *" -and $kept -and $gone -and $sameList -and $noPrev -and $logText -match "update complete")
+# A second --update on the updated copy: up to date, nothing started.
+$r3 = Invoke-Packaged (Join-Path $rA "Treadle.exe") @("--update") $rEnv 120
+Report "update rehearsal: --update again says up to date" $r3 ($r3.Code -eq 0 -and $r3.Out -match "is up to date")
 
 if ($failures -gt 0) { throw "verify: $failures check(s) failed (work files in $VerifyDir)" }
 Write-Host "Verified from $unz with only the package's contents. Work files: $VerifyDir"

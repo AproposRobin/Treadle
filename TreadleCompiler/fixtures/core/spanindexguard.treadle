@@ -1,0 +1,54 @@
+# treadle 1
+type SpanIndexGuardMain class
+	namespace Cx
+	static
+	doc "Get [ ] on a Span is bounds-checked in Debug as on an array: index 2 of a 3-element Span reads, index 5 is a fatal error naming the Index node (exit code 3). Release has no check."
+
+function f001 Peek
+	static
+	pure
+	returns int
+	doc "Element i of the span."
+param s Span<int>
+param i int
+sheet body
+node p1 Entry
+node p2 Index
+node p3 Return
+wire p1.s p2.collection
+wire p1.i p2.index
+wire p1.then p3.in
+wire p2.value p3.value
+
+function m000 Main
+	static
+	returns int
+local a int[]
+sheet body
+node a1 Entry
+node a2 Construct int[]
+	in count 3
+node a3 Set local:a
+node a4 Get local:a
+node a5 Call SpanIndexGuardMain.Peek
+	in i 2
+node a6 Call Console.WriteLine(int)
+node a7 Call SpanIndexGuardMain.Peek
+	in i 5
+node a8 Call Console.WriteLine(int)
+node a9 Get local:a
+node b1 Delete
+node b2 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value
+wire a4.value a5.s
+wire a3.then a6.in
+wire a5.result a6.value
+wire a4.value a7.s
+wire a6.then a8.in
+wire a7.result a8.value
+wire a8.then b1.in
+wire a9.value b1.object
+wire b1.then b2.in

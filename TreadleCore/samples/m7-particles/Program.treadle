@@ -1,0 +1,527 @@
+# treadle 1
+type Program class
+	namespace Particles
+	static
+	doc "Program Start: --selftest runs the eight checks; --headless [--frames n] steps the 200,000 particles n times (300 by default) and prints a summary that is the same on every run, with the timings on stderr; the two checksums are computed at once by two ThreadPool jobs; otherwise an SDL window shows them (--frames n stops after n frames, --shot <file.bmp> saves frame 150)."
+
+field sCPar int
+	static
+	doc "The parallel Sim's checksum, written by a ThreadPool job."
+
+field sCSer int
+	static
+	doc "The serial Sim's checksum, written by the other job."
+
+function m0001 Main
+	static
+	returns int
+	doc "Reads the command line and runs one of the three modes."
+param args String[]
+local selftest bool
+local headless bool
+local frames int
+local shot int
+	init -1
+sheet body
+node a01 Entry
+node a02 Get String[].Length
+node a03 For
+	in start 0
+node a04 Index
+node a05 Call String.Equals
+	in other "--selftest"
+node a06 Branch
+node a07 Set local:selftest
+	in value true
+node a08 Call String.Equals
+	in other "--headless"
+node a09 Branch
+node a0a Set local:headless
+	in value true
+node a0b Operator +
+	in b 1
+node a0c Operator <
+node a0d Call String.Equals
+	in other "--frames"
+node a0e Operator &&
+node a0f Branch
+node a0g Index
+node a0h Call Int.TryParse
+node a0i Set local:frames
+node a0j Call String.Equals
+	in other "--shot"
+node a0k Operator &&
+node a0l Branch
+node a0m Set local:shot
+node a0n Get local:selftest
+node a0o Branch
+node a0p Call Particles.SelfTest.Run
+node a0q Return
+node a0r Get local:headless
+node a0s Branch
+node a0t Get local:frames
+node a0u Math
+	set expr "f > 0 ? f : 300"
+node a0v Call Particles.Program.Headless
+node a0w Return
+node a0x Get local:shot
+node a0y Operator >=
+	in b 0
+node a0z Index
+node a10 Select
+	in false null
+node a11 Call Particles.Program.Windowed
+node a12 Return
+wire a01.args a02.receiver
+wire a02.value a03.count
+wire a01.then a03.in
+wire a01.args a04.collection
+wire a03.index a04.index
+wire a04.value a05.receiver
+wire a05.result a06.condition
+wire a03.body a06.in
+wire a06.true a07.in
+wire a04.value a08.receiver
+wire a08.result a09.condition
+wire a06.false a09.in
+wire a09.true a0a.in
+wire a03.index a0b.a
+wire a0b.result a0c.a
+wire a02.value a0c.b
+wire a04.value a0d.receiver
+wire a0d.result a0e.a
+wire a0c.result a0e.b
+wire a0e.result a0f.condition
+wire a09.false a0f.in
+wire a01.args a0g.collection
+wire a0b.result a0g.index
+wire a0f.true a0h.in
+wire a0g.value a0h.text
+wire a0h.then a0i.in
+wire a0h.parsed a0i.value
+wire a04.value a0j.receiver
+wire a0j.result a0k.a
+wire a0c.result a0k.b
+wire a0k.result a0l.condition
+wire a0f.false a0l.in
+wire a0l.true a0m.in
+wire a0b.result a0m.value
+wire a0n.value a0o.condition
+wire a03.done a0o.in
+wire a0o.true a0p.in
+wire a0p.then a0q.in
+wire a0p.result a0q.value
+wire a0r.value a0s.condition
+wire a0o.false a0s.in
+wire a0t.value a0u.f
+wire a0u.result a0v.frames
+wire a0s.true a0v.in
+wire a0v.then a0w.in
+wire a0v.result a0w.value
+wire a0x.value a0y.a
+wire a01.args a0z.collection
+wire a0x.value a0z.index
+wire a0y.result a10.condition
+wire a0z.value a10.true
+wire a0t.value a11.frames
+wire a0s.false a11.in
+wire a10.result a11.shot
+wire a11.then a12.in
+wire a11.result a12.value
+
+function m0002 Headless
+	static
+	returns int
+	doc "Steps a Sim frames times with Parallel.For and a second one from the same seed with the plain loop; projects the last frame on the named threads; prints the summary (stdout, the same on every run) and the milliseconds per frame (stderr). Exit code 0 when both Sims agree."
+param frames int
+local tPar int
+local tSer int
+local cPar int
+local cSer int
+local vis int
+local same bool
+local par Sim
+local ser Sim
+sheet body
+node b01 Entry
+node b02 Get Particles.Tuning.CountA
+node b03 Get Particles.Tuning.CountB
+node b04 Get Particles.Tuning.Seed
+node b05 Construct Particles.Sim
+	set ctor (int,int,int)
+node b06 DeferDelete
+node b07 Call Particles.Sim.Run
+	in parallel true
+node b08 Set local:tPar
+node b09 Get Particles.Sim.mTime
+node b0a Math
+	set expr "t * 0.25f"
+node b0b Make Particles.Camera
+	in Pitch -0.45f
+	in Distance 210.0f
+node b0c Get Particles.Tuning.Width
+node b0d Get Particles.Tuning.Height
+node b0e Math
+	set expr "w / h"
+node b0f Call Particles.Camera.ViewProj
+node b0g Construct Particles.Projector
+	set ctor (Sim)
+node b0h DeferDelete
+node b0i Call Particles.Projector.ProjectAll
+node b0j Set local:vis
+node b0k Construct Particles.Sim
+	set ctor (int,int,int)
+node b0l DeferDelete
+node b0m Call Particles.Sim.Run
+	in parallel false
+node b0n Set local:tSer
+node b0p Set local:cPar
+node b0r Set local:cSer
+node b0s Get Particles.Sim.mStats
+node b0t Get Particles.Sim.mStats
+node b0u Get Particles.Stats.mSum
+node b0v Get Particles.Stats.mSum
+node b0w Get Particles.Stats.mMin
+node b0x Get Particles.Stats.mMin
+node b0y Get Particles.Stats.mMax
+node b0z Get Particles.Stats.mMax
+node b10 Get local:cPar
+node b11 Get local:cSer
+node b12 Math
+	set expr "a == b && s1 == s2 && n1 == n2 && x1 == x2"
+node b13 Set local:same
+node b14 Cast float
+node c01 Local String
+	set ctor ()
+node c02 Call Particles.Sim.Total
+node c03 Call String.AppendF
+	in format "particles {0} ({1} in float4 lanes, {2} as Vec3), frames {3}, seed {4}"
+node c04 Call Console.WriteLine(String)
+node c05 Local String
+	set ctor ()
+node c06 Call String.AppendF
+	in format "checksum {0}"
+node c07 Call Console.WriteLine(String)
+node c08 Local String
+	set ctor ()
+node c09 Call Particles.Stats.Avg
+node c0a Get Particles.Stats.mCount
+node c0b Get Particles.Stats.mMerges
+node c0c Call String.AppendF
+	in format "speed min {0:F3} max {1:F3} avg {2:F3} over {3} particles from {4} chunks"
+node c0d Call Console.WriteLine(String)
+node c0e Local String
+	set ctor ()
+node c0f Get Particles.Sim.mBursts
+node c0g Get Particles.Bursts.mFired
+node c0h Call Particles.Bursts.OnBurst.Count
+node c0i Get Particles.Sim.mReseeder
+node c0j Get Particles.Reseeder.mReseeded
+node c0k Call String.AppendF
+	in format "bursts {0} ({1} handler), particles re-seeded {2}"
+node c0l Call Console.WriteLine(String)
+node c0m Local String
+	set ctor ()
+node c0n Call Particles.Sim.CountInside
+node c0o Call Particles.Sim.AnyNaN
+node c0p Get local:vis
+node c0q Call String.AppendF
+	in format "inside the world {0} of {1}, NaN {2}, on screen {3}"
+node c0r Call Console.WriteLine(String)
+node c0s Local String
+	set ctor ()
+node c0t Get local:same
+node c0u Call String.AppendF
+	in format "parallel == serial: {0}"
+node c0v Call Console.WriteLine(String)
+node c0w Local String
+	set ctor ()
+node c0x Get local:tSer
+node c0y Get local:tPar
+node c0z Math
+	set expr "s / 1000.0 / f"
+node c10 Math
+	set expr "p / 1000.0 / f"
+node c11 Math
+	set expr "s * 1.0 / p"
+node c12 Call Thread.HardwareThreads
+node c13 Call String.AppendF
+	in format "ms per frame: serial {0:F3}, parallel {1:F3}, speedup {2:F2}x on {3} hardware threads\n"
+node c14 Call Console.Error(StringView)
+node c15 Select
+	in true 0
+	in false 1
+node c16 Return
+node c17 Cast double
+node c18 Cast double
+node c19 Cast double
+node j0 Set local:par
+node j1 Lambda
+	set type delegate:void()
+	set alloc construct
+node j2 Call ThreadPool.Run
+node j3 Lambda
+	set type delegate:void()
+	set alloc construct
+node j4 Call ThreadPool.Run
+node j5 Call ThreadPool.WaitAll
+node j6 Get Particles.Program.sCPar
+node j7 Get Particles.Program.sCSer
+node j9 Set local:ser
+wire b02.value b05.countA
+wire b03.value b05.countB
+wire b01.then b05.in
+wire b04.value b05.seed
+wire b05.then b06.in
+wire b05.object b06.object
+wire b01.frames b07.frames
+wire b06.then b07.in
+wire b05.object b07.receiver
+wire b07.then b08.in
+wire b07.result b08.value
+wire b05.object b09.receiver
+wire b09.value b0a.t
+wire b0a.result b0b.Yaw
+wire b0d.value b0e.h
+wire b14.result b0e.w
+wire b0e.result b0f.aspect
+wire b0b.value b0f.receiver
+wire b08.then b0g.in
+wire b05.object b0g.sim
+wire b0g.then b0h.in
+wire b0g.object b0h.object
+wire b0h.then b0i.in
+wire b0g.object b0i.receiver
+wire b0f.result b0i.vp
+wire b0i.then b0j.in
+wire b0i.result b0j.value
+wire b02.value b0k.countA
+wire b03.value b0k.countB
+wire b0j.then b0k.in
+wire b04.value b0k.seed
+wire b0k.then b0l.in
+wire b0k.object b0l.object
+wire b01.frames b0m.frames
+wire b0l.then b0m.in
+wire b0k.object b0m.receiver
+wire b0m.then b0n.in
+wire b0m.result b0n.value
+wire j5.then b0p.in
+wire j6.value b0p.value
+wire b0p.then b0r.in
+wire j7.value b0r.value
+wire b05.object b0s.receiver
+wire b0k.object b0t.receiver
+wire b0s.value b0u.receiver
+wire b0t.value b0v.receiver
+wire b0s.value b0w.receiver
+wire b0t.value b0x.receiver
+wire b0s.value b0y.receiver
+wire b0t.value b0z.receiver
+wire b10.value b12.a
+wire b11.value b12.b
+wire b0w.value b12.n1
+wire b0x.value b12.n2
+wire b0u.value b12.s1
+wire b0v.value b12.s2
+wire b0y.value b12.x1
+wire b0z.value b12.x2
+wire b0r.then b13.in
+wire b12.result b13.value
+wire b0c.value b14.value
+wire b13.then c01.in
+wire b05.object c02.receiver
+wire c02.result c03.arg0
+wire b02.value c03.arg1
+wire b03.value c03.arg2
+wire b01.frames c03.arg3
+wire b04.value c03.arg4
+wire c01.then c03.in
+wire c01.object c03.receiver
+wire c03.then c04.in
+wire c01.object c04.value
+wire c04.then c05.in
+wire b10.value c06.arg0
+wire c05.then c06.in
+wire c05.object c06.receiver
+wire c06.then c07.in
+wire c05.object c07.value
+wire c07.then c08.in
+wire b0s.value c09.receiver
+wire b0s.value c0a.receiver
+wire b0s.value c0b.receiver
+wire b0w.value c0c.arg0
+wire b0y.value c0c.arg1
+wire c09.result c0c.arg2
+wire c0a.value c0c.arg3
+wire c0b.value c0c.arg4
+wire c08.then c0c.in
+wire c08.object c0c.receiver
+wire c0c.then c0d.in
+wire c08.object c0d.value
+wire c0d.then c0e.in
+wire b05.object c0f.receiver
+wire c0f.value c0g.receiver
+wire c0f.value c0h.receiver
+wire b05.object c0i.receiver
+wire c0i.value c0j.receiver
+wire c0g.value c0k.arg0
+wire c0h.result c0k.arg1
+wire c0j.value c0k.arg2
+wire c0e.then c0k.in
+wire c0e.object c0k.receiver
+wire c0k.then c0l.in
+wire c0e.object c0l.value
+wire c0l.then c0m.in
+wire c0m.then c0n.in
+wire b05.object c0n.receiver
+wire c0n.then c0o.in
+wire b05.object c0o.receiver
+wire c0n.result c0q.arg0
+wire c02.result c0q.arg1
+wire c0o.result c0q.arg2
+wire c0p.value c0q.arg3
+wire c0o.then c0q.in
+wire c0m.object c0q.receiver
+wire c0q.then c0r.in
+wire c0m.object c0r.value
+wire c0r.then c0s.in
+wire c0t.value c0u.arg0
+wire c0s.then c0u.in
+wire c0s.object c0u.receiver
+wire c0u.then c0v.in
+wire c0s.object c0v.value
+wire c0v.then c0w.in
+wire c19.result c0z.f
+wire c17.result c0z.s
+wire c19.result c10.f
+wire c18.result c10.p
+wire c18.result c11.p
+wire c17.result c11.s
+wire c0w.then c12.in
+wire c0z.result c13.arg0
+wire c10.result c13.arg1
+wire c11.result c13.arg2
+wire c12.result c13.arg3
+wire c12.then c13.in
+wire c0w.object c13.receiver
+wire c13.then c14.in
+wire c0w.object c14.text
+wire c0t.value c15.condition
+wire c14.then c16.in
+wire c15.result c16.value
+wire c0x.value c17.value
+wire c0y.value c18.value
+wire b01.frames c19.value
+wire b0n.then j0.in
+wire b05.object j0.value
+wire j9.then j1.in
+wire j1.then j2.in
+wire j1.value j2.work
+wire j2.then j3.in
+wire j3.then j4.in
+wire j3.value j4.work
+wire j4.then j5.in
+wire j0.then j9.in
+wire b0k.object j9.value
+sheet lambda:j1
+node la1 Entry
+node la2 Get local:par
+node la3 Call Particles.Sim.Checksum
+node la4 Set Particles.Program.sCPar
+node la5 Return
+wire la1.then la3.in
+wire la2.value la3.receiver
+wire la3.then la4.in
+wire la3.result la4.value
+wire la4.then la5.in
+sheet lambda:j3
+node lb1 Entry
+node lb2 Get local:ser
+node lb3 Call Particles.Sim.Checksum
+node lb4 Set Particles.Program.sCSer
+node lb5 Return
+wire lb1.then lb3.in
+wire lb2.value lb3.receiver
+wire lb3.then lb4.in
+wire lb3.result lb4.value
+wire lb4.then lb5.in
+
+function m0003 Windowed
+	static
+	returns int
+	doc "Opens the window and runs the frame loop on a Sim and a Projector; prints the frames drawn and the checksum. Exit code 1 when SDL could not start."
+param frames int
+param shot String
+local drawn int
+sheet body
+node d01 Entry
+node d02 Get Particles.Tuning.CountA
+node d03 Get Particles.Tuning.CountB
+node d04 Get Particles.Tuning.Seed
+node d05 Construct Particles.Sim
+	set ctor (int,int,int)
+node d06 DeferDelete
+node d07 Construct Particles.Projector
+	set ctor (Sim)
+node d08 DeferDelete
+node d09 Local Particles.Window
+	set ctor ()
+node d0a Call Particles.Window.IsOpen
+node d0b Branch
+node d0c Call Console.ErrorLine
+	in text "SDL could not open the window"
+node d0d Call C.sdl2.SDL_GetError
+node d0e Call C.sdl2.SDL_Log
+	in fmt "SDL: %s"
+node d0f Return
+	in value 1
+node d0g Call Particles.Window.Run
+	in shotFrame 150
+node d0h Set local:drawn
+node d0i Local String
+	set ctor ()
+node d0j Get local:drawn
+node d0k Call Particles.Sim.Checksum
+node d0l Call String.AppendF
+	in format "frames {0}, checksum {1}"
+node d0m Call Console.WriteLine(String)
+node d0n Return
+	in value 0
+wire d02.value d05.countA
+wire d03.value d05.countB
+wire d01.then d05.in
+wire d04.value d05.seed
+wire d05.then d06.in
+wire d05.object d06.object
+wire d06.then d07.in
+wire d05.object d07.sim
+wire d07.then d08.in
+wire d07.object d08.object
+wire d08.then d09.in
+wire d09.object d0a.receiver
+wire d0a.result d0b.condition
+wire d09.then d0b.in
+wire d0b.false d0c.in
+wire d0c.then d0d.in
+wire d0d.then d0e.in
+wire d0d.result d0e.va0
+wire d0e.then d0f.in
+wire d01.frames d0g.frames
+wire d0b.true d0g.in
+wire d07.object d0g.proj
+wire d09.object d0g.receiver
+wire d01.shot d0g.shot
+wire d05.object d0g.sim
+wire d0g.then d0h.in
+wire d0g.result d0h.value
+wire d0h.then d0i.in
+wire d0i.then d0k.in
+wire d05.object d0k.receiver
+wire d0j.value d0l.arg0
+wire d0k.result d0l.arg1
+wire d0k.then d0l.in
+wire d0i.object d0l.receiver
+wire d0l.then d0m.in
+wire d0i.object d0m.value
+wire d0m.then d0n.in

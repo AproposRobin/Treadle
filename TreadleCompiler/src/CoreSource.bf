@@ -27,11 +27,13 @@ namespace Treadle.Compiler
 			"CodePointEnumerator.treadle", "Utf8.treadle", "Build.treadle", "Sorting.treadle",
 			"ProcessError.treadle", "ProcessHandle.treadle", "Process.treadle", "DateTime.treadle",
 			"Thread.treadle", "Mutex.treadle", "LockGuard.treadle", "Condition.treadle", "WaitEvent.treadle", "ThreadLocal.treadle",
-			"ThreadPool.treadle", "Parallel.treadle", "ParallelForEach.treadle",
+			"ThreadPool.treadle", "Parallel.treadle",
 			// the math library (SIMD-and-Vectors.md 2)
 			"Vec2.treadle", "Vec3.treadle", "Vec4.treadle", "Vec2d.treadle", "Vec3d.treadle", "Vec4d.treadle", "Mat3.treadle", "Mat4.treadle",
 			"Quat.treadle", "Color.treadle", "Color32.treadle", "Rect.treadle", "RectI.treadle", "AABB.treadle", "Plane.treadle", "Ray.treadle",
-			"Transform.treadle", "MathFormat.treadle");
+			"Transform.treadle", "MathFormat.treadle", "VectorFormat.treadle",
+			// GPU compute (experimental, NVIDIA only, GPU-Compute.md)
+			"Kernel.treadle", "GpuBuffer.treadle", "Gpu.treadle", "GpuStream.treadle", "PinnedBuffer.treadle");
 
 		[Comptime(ConstEval=true)]
 		static String Embed(String name)
@@ -94,27 +96,18 @@ namespace Treadle.Compiler
 				outDir.Set(dir);
 				return;
 			}
+			// A package (docs/Releasing.md) ships the core as `core` next to the exe; a development build
+			// reads its source tree's TreadleCore/core (Treadle.Language.ToolDirs: no parent folder walk).
 			String exeDir = scope .();
-			Environment.GetExecutableFilePath(exeDir);
-			for (int up < 8)
+			Treadle.Language.ToolDirs.ExeDir(exeDir);
+			if (File.Exists(scope $"{exeDir}/core/Object.treadle"))
 			{
-				String parent = scope .();
-				if (Path.GetDirectoryPath(exeDir, parent) case .Err)
-					break;
-				exeDir.Set(parent);
-				// A package (docs/Releasing.md) ships the core as `core` next to the exe.
-				if (up == 0 && File.Exists(scope $"{exeDir}/core/Object.treadle"))
-				{
-					outDir.Set(scope $"{exeDir}/core");
-					return;
-				}
-				let probe = scope $"{exeDir}/TreadleCore/core";
-				if (File.Exists(scope $"{probe}/Object.treadle"))
-				{
-					outDir.Set(probe);
-					return;
-				}
+				outDir.Set(scope $"{exeDir}/core");
+				return;
 			}
+			String tree = scope .();
+			if (Treadle.Language.ToolDirs.DevTree(tree) && File.Exists(scope $"{tree}/TreadleCore/core/Object.treadle"))
+				outDir.Set(scope $"{tree}/TreadleCore/core");
 		}
 
 		static void Stamp(StringView dir, String outStamp)

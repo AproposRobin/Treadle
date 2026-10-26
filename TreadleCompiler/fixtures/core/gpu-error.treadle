@@ -1,0 +1,67 @@
+# treadle 1
+type GpuErrorMain class
+	namespace Cx
+	static
+	doc "GPU compute (docs/GPU-Compute.md): a failed check inside a kernel. Fill writes x[i] for 1,001 indices over a 1,000-element buffer; Span.SetAt's check fails for index 1000. On the GPU the device-side error record names the node and the program stops at Gpu.Sync with a fatal error (exit 3); on the CPU path the same check stops it with the same text without the GPU: prefix."
+
+function g01 Fill
+	static
+	attr Kernel
+	doc "x[i] = 1 for the dispatch's index i."
+param x Span<float>
+sheet body
+node ka1 Entry
+node ka2 Call Kernel.Index
+node ka3 Call Span<float>.SetAt
+	in value 1
+node ka4 Return
+wire ka1.then ka3.in
+wire ka2.result ka3.index
+wire ka1.x ka3.receiver
+wire ka3.then ka4.in
+
+function g02 Main
+	static
+	returns int
+local x float[]
+local bx GpuBuffer<float>
+sheet body
+node a1 Entry
+node a2 Construct float[]
+	in count 1000
+node a3 Set local:x
+node a4 Get local:x
+node a5 Cast Span<float>
+node a6 Call Gpu.Upload
+node a7 Set local:bx
+node a8 Get local:bx
+node a9 Call Console.WriteLine(StringView)
+	in text "before the dispatch"
+node b1 Call Gpu.Dispatch
+	set kernel Cx.GpuErrorMain.Fill
+	in count 1001
+node b2 Call Gpu.Sync
+node b3 Call Console.WriteLine(StringView)
+	in text "not reached"
+node b4 Delete
+node b5 Delete
+node b6 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value
+wire a4.value a5.value
+wire a5.result a6.data
+wire a3.then a6.in
+wire a6.then a7.in
+wire a6.result a7.value
+wire a7.then a9.in
+wire a9.then b1.in
+wire a8.value b1.x
+wire b1.then b2.in
+wire b2.then b3.in
+wire b3.then b4.in
+wire a8.value b4.object
+wire b4.then b5.in
+wire a4.value b5.object
+wire b5.then b6.in

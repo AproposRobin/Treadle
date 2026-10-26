@@ -1,0 +1,409 @@
+# treadle 1
+type Sim class
+	namespace Particles
+	doc "The particle system: the two emitters, the world box (an AABB), the speed Stats, the burst clock and its Reseeder. Step cuts the particles into chunks and steps them with Parallel.For (a Local Lambda per step) or with a plain loop; both run the same chunk function, so they give the same result."
+
+field mA EmitterA
+	owner owned
+
+field mB EmitterB
+	owner owned
+
+field mStats Stats
+	owner owned
+
+field mBursts Bursts
+	owner owned
+
+field mReseeder Reseeder
+	owner owned
+
+field mBox AABB
+	doc "The world: Half in every direction from the origin."
+
+field mFrame int
+
+field mTime float
+	doc "Simulated seconds."
+
+field mCenter float4
+	doc "The repelling point of the step running now."
+
+ctor s0001
+	doc "Fills both emitters from one Random seeded with seed, makes the Stats, the burst clock and the Reseeder (seed + 1), and subscribes it to OnBurst."
+param countA int
+param countB int
+param seed int
+sheet body
+node a1 Entry
+node a2 Local Random
+	set ctor (int)
+node a3 Construct Particles.EmitterA
+	set ctor (int,Random)
+node a4 Set this.mA
+node a5 Construct Particles.EmitterB
+	set ctor (int,Random)
+node a6 Set this.mB
+node a7 Construct Particles.Stats
+	set ctor ()
+node a8 Set this.mStats
+node a9 Construct Particles.Bursts
+	set ctor ()
+node b1 Set this.mBursts
+node b2 This
+node b3 Operator +
+	in b 1
+node b4 Construct Particles.Reseeder
+	set ctor (Sim,int)
+node b5 Set this.mReseeder
+node b6 Get this.mReseeder
+node b7 Bind Particles.Reseeder.OnBurst
+	set alloc construct
+node b8 Get this.mBursts
+node b9 Call Particles.Bursts.OnBurst.Add
+node c1 Make Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node c2 Get Particles.Tuning.Half
+node c3 Make Vec3
+node c4 Call AABB.FromCenterExtents
+node c5 Set this.mBox
+node c6 Return
+wire a1.then a2.in
+wire a1.seed a2.seed
+wire a1.countA a3.count
+wire a2.then a3.in
+wire a2.object a3.rng
+wire a3.then a4.in
+wire a3.object a4.value
+wire a1.countB a5.count
+wire a4.then a5.in
+wire a2.object a5.rng
+wire a5.then a6.in
+wire a5.object a6.value
+wire a6.then a7.in
+wire a7.then a8.in
+wire a7.object a8.value
+wire a8.then a9.in
+wire a9.then b1.in
+wire a9.object b1.value
+wire a1.seed b3.a
+wire b1.then b4.in
+wire b3.result b4.seed
+wire b2.value b4.sim
+wire b4.then b5.in
+wire b4.object b5.value
+wire b5.then b7.in
+wire b6.value b7.receiver
+wire b7.value b9.handler
+wire b7.then b9.in
+wire b8.value b9.receiver
+wire c2.value c3.X
+wire c2.value c3.Y
+wire c2.value c3.Z
+wire c1.value c4.center
+wire c3.value c4.extents
+wire b9.then c5.in
+wire c4.result c5.value
+wire c5.then c6.in
+
+function s0002 Lo
+	pure
+	returns float4
+	doc "The box's minimum corner as a float4 (4th lane 0)."
+sheet body
+node d1 Entry
+node d2 Get this.mBox
+node d3 Break AABB
+node d4 Call Core.Vec4.FromVec3
+	in w 0.0f
+node d5 Call Core.Vec4.ToVector
+node d6 Return
+wire d2.value d3.value
+wire d3.Min d4.v
+wire d4.result d5.receiver
+wire d1.then d6.in
+wire d5.result d6.value
+
+function s0003 Hi
+	pure
+	returns float4
+	doc "The box's maximum corner as a float4 (4th lane 0)."
+sheet body
+node e1 Entry
+node e2 Get this.mBox
+node e3 Break AABB
+node e4 Call Core.Vec4.FromVec3
+	in w 0.0f
+node e5 Call Core.Vec4.ToVector
+node e6 Return
+wire e2.value e3.value
+wire e3.Max e4.v
+wire e4.result e5.receiver
+wire e1.then e6.in
+wire e5.result e6.value
+
+function s0004 CenterAt
+	static
+	pure
+	returns float4
+	doc "Where the repelling point is at time t: a circle of radius 25 in XZ, bobbing in Y."
+param t float
+sheet body
+node f1 Entry
+node f2 Math
+	set expr "float4(Cos(t * 0.7f) * 25, Sin(t * 1.3f) * 10 - 10, Sin(t * 0.7f) * 25, 0)"
+node f3 Return
+wire f1.t f2.t
+wire f1.then f3.in
+wire f2.result f3.value
+
+function s0005 StepChunk
+	doc "Steps chunk c: the first ChunksA chunks cut emitter A evenly, the rest emitter B. Reads fields only and writes its own slots, so chunks may run at the same time."
+param c int
+local lo4 float4
+local hi4 float4
+sheet body
+node g1 Entry
+node g2 Call this.Lo
+node g3 Set local:lo4
+node g4 Call this.Hi
+node g5 Set local:hi4
+node g6 Get Particles.Tuning.ChunksA
+node g7 Operator <
+node g8 Branch
+node g9 Get this.mA
+node h1 Get Particles.EmitterA.mCount
+node h2 Math
+	set expr "c * n / k"
+node h3 Math
+	set expr "(c + 1) * n / k"
+node h4 Get this.mCenter
+node h5 Get local:lo4
+node h6 Get local:hi4
+node h7 Get this.mStats
+node h8 Call Particles.EmitterA.StepRange
+node h9 Get this.mB
+node i1 Get Particles.EmitterB.mCount
+node i2 Get Particles.Tuning.ChunksB
+node i3 Operator -
+node i4 Math
+	set expr "c * n / k"
+node i5 Math
+	set expr "(c + 1) * n / k"
+node i6 Call Particles.EmitterB.StepRange
+node i7 Return
+wire g1.then g3.in
+wire g2.result g3.value
+wire g3.then g5.in
+wire g4.result g5.value
+wire g1.c g7.a
+wire g6.value g7.b
+wire g7.result g8.condition
+wire g5.then g8.in
+wire g9.value h1.receiver
+wire g1.c h2.c
+wire g6.value h2.k
+wire h1.value h2.n
+wire g1.c h3.c
+wire g6.value h3.k
+wire h1.value h3.n
+wire h4.value h8.center
+wire h3.result h8.hi
+wire g8.true h8.in
+wire h2.result h8.lo
+wire g9.value h8.receiver
+wire h7.value h8.stats
+wire h6.value h8.whi
+wire h5.value h8.wlo
+wire h9.value i1.receiver
+wire g1.c i3.a
+wire g6.value i3.b
+wire i3.result i4.c
+wire i2.value i4.k
+wire i1.value i4.n
+wire i3.result i5.c
+wire i2.value i5.k
+wire i1.value i5.n
+wire h4.value i6.center
+wire i5.result i6.hi
+wire g8.false i6.in
+wire i4.result i6.lo
+wire h9.value i6.receiver
+wire h7.value i6.stats
+wire h6.value i6.whi
+wire h5.value i6.wlo
+wire h8.then i7.in
+wire i6.then i7.in
+
+function s0006 Step
+	doc "One step of dt: clears the Stats, moves the repelling point, steps every chunk (Parallel.For with a Local Lambda when parallel, else a For loop), then advances the clock and lets the burst clock fire."
+param parallel bool
+sheet body
+node j1 Entry
+node j2 Get this.mStats
+node j3 Call Particles.Stats.Reset
+node j4 Get this.mTime
+node j5 Call Particles.Sim.CenterAt
+node j6 Set this.mCenter
+node j7 Branch
+node j8 Lambda
+	set type delegate:void(int)
+	set alloc local
+	set inputs c
+node j9 Get Particles.Tuning.Chunks
+node k1 Call Parallel.For
+	in from 0
+node k2 For
+	in start 0
+node k3 Call this.StepChunk
+node k4 Set this.mFrame
+	set op +=
+	in value 1
+node k5 Get Particles.Tuning.Dt
+node k6 Get this.mTime
+node k7 Operator +
+node k8 Set this.mTime
+node k9 Get this.mBursts
+node l1 Get this.mFrame
+node l2 Call Particles.Bursts.Tick
+node l3 Return
+wire j1.then j3.in
+wire j2.value j3.receiver
+wire j4.value j5.t
+wire j3.then j6.in
+wire j5.result j6.value
+wire j1.parallel j7.condition
+wire j6.then j7.in
+wire j7.true j8.in
+wire j8.value k1.body
+wire j8.then k1.in
+wire j9.value k1.to
+wire j9.value k2.count
+wire j7.false k2.in
+wire k2.index k3.c
+wire k2.body k3.in
+wire k1.then k4.in
+wire k2.done k4.in
+wire k6.value k7.a
+wire k5.value k7.b
+wire k4.then k8.in
+wire k7.result k8.value
+wire l1.value l2.frame
+wire k8.then l2.in
+wire k9.value l2.receiver
+wire l2.then l3.in
+sheet lambda:j8
+node la1 Entry
+node la2 Call this.StepChunk
+node la3 Return
+wire la1.c la2.c
+wire la1.then la2.in
+wire la2.then la3.in
+
+function s0007 Run
+	returns int
+	doc "frames steps; returns the microseconds they took (Stopwatch)."
+param frames int
+param parallel bool
+sheet body
+node m1 Entry
+node m2 Local Stopwatch
+	set ctor (bool)
+	in startNow true
+node m3 For
+	in start 0
+node m4 Call this.Step
+node m5 Call Stopwatch.ElapsedMicroseconds
+node m6 Return
+wire m1.then m2.in
+wire m1.frames m3.count
+wire m2.then m3.in
+wire m3.body m4.in
+wire m1.parallel m4.parallel
+wire m3.done m5.in
+wire m2.object m5.receiver
+wire m5.then m6.in
+wire m5.result m6.value
+
+function s0008 Checksum
+	returns int
+	doc "Emitter A's positions folded into 17, then emitter B's."
+sheet body
+node n1 Entry
+node n2 Get this.mA
+node n3 Call Particles.EmitterA.Checksum
+	in h 17
+node n4 Get this.mB
+node n5 Call Particles.EmitterB.Checksum
+node n6 Return
+wire n1.then n3.in
+wire n2.value n3.receiver
+wire n3.result n5.h
+wire n3.then n5.in
+wire n4.value n5.receiver
+wire n5.then n6.in
+wire n5.result n6.value
+
+function s0009 AnyNaN
+	returns bool
+	doc "True when a position or velocity of either emitter is not a number."
+sheet body
+node o1 Entry
+node o2 Get this.mA
+node o3 Call Particles.EmitterA.AnyNaN
+node o4 Get this.mB
+node o5 Call Particles.EmitterB.AnyNaN
+node o6 Operator ||
+node o7 Return
+wire o1.then o3.in
+wire o2.value o3.receiver
+wire o3.then o5.in
+wire o4.value o5.receiver
+wire o3.result o6.a
+wire o5.result o6.b
+wire o5.then o7.in
+wire o6.result o7.value
+
+function s000a CountInside
+	returns int
+	doc "Particles of both emitters inside the world box."
+sheet body
+node p1 Entry
+node p2 Get this.mA
+node p3 Get this.mBox
+node p4 Call Particles.EmitterA.CountInside
+node p5 Get this.mB
+node p6 Call Particles.EmitterB.CountInside
+node p7 Operator +
+node p8 Return
+wire p3.value p4.box
+wire p1.then p4.in
+wire p2.value p4.receiver
+wire p3.value p6.box
+wire p4.then p6.in
+wire p5.value p6.receiver
+wire p4.result p7.a
+wire p6.result p7.b
+wire p6.then p8.in
+wire p7.result p8.value
+
+function s000b Total
+	pure
+	returns int
+	doc "Particles in both emitters."
+sheet body
+node q1 Entry
+node q2 Get this.mA
+node q3 Get Particles.EmitterA.mCount
+node q4 Get this.mB
+node q5 Get Particles.EmitterB.mCount
+node q6 Operator +
+node q7 Return
+wire q2.value q3.receiver
+wire q4.value q5.receiver
+wire q3.value q6.a
+wire q5.value q6.b
+wire q1.then q7.in
+wire q6.result q7.value

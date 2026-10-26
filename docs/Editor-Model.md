@@ -65,7 +65,7 @@ is typed by it. Reason: no re-parsing of type text, no heuristics for colour and
 
 Subtitles carry what the user must know: `Construct` "heap: you delete it"; `Local` "freed when this region
 ends" / "freed when the function returns"; a value node consumed by N flow nodes "evaluated Nx" (the count is
-the compiler's, `FrontEndServices.EvaluationCount`); `Try` "returns early on error".
+the compiler's, `FrontEndServices.EvaluationCounts`, shown after a Validate, section 7.1); `Try` "returns early on error".
 
 ### 2.2 Pins
 
@@ -131,7 +131,11 @@ else changes; Follow-ups.md, "Vector types").
   (`VectorNodes.Sync`, run when a wire comes or goes and after a file is read). The editor's checks
   (`GraphValidator` -> `VectorNodes.Check`) name a letter or lane beyond the input (T2301, "'w' is lane 3, the
   input has 3 lanes (xyz)"), `&&` / `||` on vectors (T2300) and a scalar wired into a Swizzle or Shuffle.
-  Split / Recombine Pin works on vector pins as on structs, through the Make / Break rows (`split value float4`).
+  Split Vector Pin / Recombine Vector Pin (the pin menu's names for a vector) work as on structs, through the Make /
+  Break rows (`split value float4`): one float pin per lane, `value.x` ... `value.w` (`value.lane0` ... above 4 lanes),
+  labelled `Value x`; Properties lists the lanes, not the hidden vector pin. For the compiler `SplitPins.Expand`
+  moves each lane's wire and value onto the lane pin the vector Make / Break already has (`NodeFactory.Shape` gives
+  it `x y z w`), so Bind reads it as that Make / Break per lane.
 * **Node menu**: dragged from a vector output, the group **Vector | float4** comes first (Break, Swizzle,
   Shuffle, Get Lane, Set Lane, the reductions; Any / All for a mask), then Math and Comparison (the operators take
   vectors as they are); dragged into a vector input, Make and Splat first. These rows are made for the pin's
@@ -143,6 +147,28 @@ else changes; Follow-ups.md, "Vector types").
   `VectorCatalogSource` replaces every `Core.Vector` call row, so Make / Break / Splat, Swizzle and Shuffle stay.
 * **Math Expression**: the field reads `v.zyx`, `v.x` and `float4(a, b, c, d)` as paths and calls (the inputs
   are `v`, `a`, `b`, `c`); what they mean is the compiler's, and the node shows its message until it binds them.
+
+### 2.4 Core math types on pins
+
+The core math structs ([Core-Library.md 4.5](Core-Library.md#45-the-math-library)) have value widgets of their own on
+an unwired input, on the canvas and in Properties' Inputs alike (`PinValueKind.Fields`; `PinValue.MathInfo`,
+`SplitFields`, `JoinFields`; `PinValueEditor.DrawFields`):
+
+| Type | Fields shown | Swatch |
+|---|---|---|
+| `Vec2`, `Vec3`, `Vec4` (and `Vec2d` ... `Vec4d`), `Quat` | `x y (z w)` | - |
+| `Rect`, `RectI` | `x y w h` (whole numbers for RectI) | - |
+| `Color` | `r g b a`, linear light | a swatch that opens the colour picker (ImGui `ColorEdit4` with an alpha bar); the swatch and the picker show the colour as it looks (sRGB), the fields keep the stored linear values |
+| `Color32` | `r g b a`, 0 to 255 | the same, its bytes as they are (sRGB) |
+
+The value is stored as a struct literal, one value per field in declaration order with no spaces (`in translation
+1,2.5,-3`, `in value 255,128,0,255`; Graph-Format.md 2); typed `1, 2, 3` is stored `1,2,3`, a value the field cannot
+hold (a letter, 256 in a Color32, 1.5 in a RectI) is refused with its reason, and a drag in the picker is one undo
+step. Both type systems decide it (`TreadleTypeSystem.ValueKind` for the resolved type, `ProjectTypeSystem` for the
+stand-in) through `PinValue.MathValueKind`, so a user type named `Vec3` keeps its plain pin; a Receiver takes a wire,
+not a literal, and shows no fields; a value that is not a literal (an expression) shows read-only as before. The
+compiler reads a struct literal as the Make of its fields (`Literals.IsStructLiteral` / `StructLiteralFits`,
+`LowerSheet.StructLiteral`), for any struct whose fields are all numbers, bools or characters.
 
 ## 3. The Node menu catalogue
 
@@ -171,16 +197,135 @@ overloads of WriteLine"); picking that row lists them, Enter never takes it (`No
 
 | Panel | Content as built | Not built yet |
 |---|---|---|
-| **Outline** (`Outline.bf`) | Type Settings row, **FUNCTIONS** (functions, constructors, destructor, properties; **+** adds Function / Property / Constructor / Destructor), **VARIABLES** (fields with type pill, Category headers; **+**), **CASES** for enums (**+**), **LOCAL VARIABLES** of the front Sheet (**+**, **L** on the Sheet). Drag a variable onto the canvas: Get (Ctrl), Set (Alt), plain asks; onto a pin: wired. | **+** for Operator and Override; Problems row |
-| **Type Settings** (`TypeSettings.bf`, Properties' type page) | Name, Kind, Namespace, Access, Abstract / Sealed / Static, Underlying Type (enum), Doc; **Extension** (extension types): Extends, a type field with a picker of the class, struct and enum types of the project, its dependencies, the core library and the C imports (a generic one with its parameters, `Core.List<T>`); **Signature** (delegate types): Returns, one Input row per parameter type (an X removes it), Add Input (a signature the rows cannot show is one text row); **Uses**: one namespace per row with a picker of the known namespaces and an X, Add Namespace; Base Type, Implements / Extends (interfaces), Generic Parameters with constraints, Attributes. Each edit is one undo step. A member's page: Name, Type, Default Value, Value (case), Inheritance, Access, Pure / Unsafe, Runs First (constructor), Inputs / Outputs with Move Up / Down. | Implement Missing Members, Add Override (Review-2026-10-26.md) |
+| **Outline** (`Outline.bf`) | The header line (`Dog : Animal, IPet`, the kind, an **N required** badge; right-click: Make Child Class, Duplicate, Type Settings), the Type Settings row, then only the sections the kind has (section 4.1): **REQUIRED OVERRIDES** (classes and structs, when any: each row with **Implement**, the **+** implements all), **FUNCTIONS** (functions, constructors, destructor, properties, bodiless functions as signature rows; **+** adds Function / Property / Constructor / Destructor, an interface's **+** a signature; **Override...** on a class's header), **VARIABLES** (fields with type pill, Category headers; **+**), **CASES** (enums, first), **SIGNATURE** (delegates), **LOCAL VARIABLES** of the front Sheet (**+**, **L** on the Sheet). A function row's menu sets its inheritance (Normal / Virtual / Override / Abstract). With the Outline focused: **Delete** removes the selected member or local (one undo step; the canvas keeps its selection), **F2** renames, **Enter** opens. Drag a variable onto the canvas: Get (Ctrl), Set (Alt), plain asks; onto a pin: wired. | **+** for Operator; Problems row |
+| **Type Settings** (`TypeSettings.bf`, Properties' type page) | The kind's own section first: **Inheritance** (a class: **Base Class**, its first row, then the "Dog : Animal" line; classes and structs: **Interfaces**, an interface: the interfaces it **Extends**; each a type picker, section 4.2), **Enum** (Underlying Type: the integer types), **Extension** (Extends: the class, struct and enum types of the project, its dependencies, the core library and the C imports, a generic one with its parameters, `Core.List<T>`), **Signature** (delegates: Returns, one Input per parameter type with an X, Add Input; a signature the rows cannot show is one text row). Then **Type**: Name, Kind, Namespace, Access, Abstract / Sealed (classes), Static, Doc; **Uses** (one namespace per row with a picker and an X); **Generic Parameters** (each parameter's constraints as rows with an X and an Add Constraint picker: class, struct, operator==, the interfaces and classes); Attributes. Each edit is one undo step. A member's page: Name, Type, Default Value, Value (case), **Inheritance** (a class function: Normal / Virtual / Override / Abstract as one segmented control; Sealed with Override), Access, Pure / Unsafe, Runs First (constructor), Inputs / Outputs with Move Up / Down. | |
 | **Properties: node** (`PropertiesPanel.bf`, `LambdaProperties.bf`) | Subject, Type, the kind's settings (Constructor, Lifetime / Until Return on Local, Checked and Kind on Cast, State Field on stateful nodes, Allocation / Signature / Captures on a Lambda and Bind, Operator on a compound Set), Inputs (one widget per unwired input), Outputs, Comment, Disabled, problems; comment boxes, multi-select, the Sheet page. | quick fixes other than the ref strip's |
-| **Project Browser** (`ProjectBrowser.bf`) | Folders and `.treadle` tiles, `.cimport` and `.tproj` tiles, tree + tiles + Project Drawer (Ctrl+Space), New Type..., New Project, rename, delete to the Recycle Bin; the project page in Properties (below). | |
+| **Project Browser** (`ProjectBrowser.bf`) | Folders and `.treadle` tiles (the second line names the kind: Class, Struct...; the tooltip Base, Interfaces and N required), `.cimport` and `.tproj` tiles, tree + tiles + Project Drawer (Ctrl+Space), **+ Add**: New Folder, New Class / Struct / Enum / Interface / Delegate / Extension, New C Import Set (section 4.1); a type tile's menu: Make Child Class (classes), Duplicate; New Project, rename, delete to the Recycle Bin; the project page in Properties (below). | |
 | **Project page** (`ProjectSettings.bf`, `ImportHeader.bf`; the project tile selected) | **Project**: Name, Kind (console / windowed / library), Entry Type, Output, Version, Namespace, File. **Configs**: Active Config (what Build and Run use). One section per config: Make Active, Optimize (`optimize` 0 / 1 / 2 / 3 / size), Checks (`checks` on / off), Defines (one `define NAME[=value]` per row, an X removes it, a field adds them), Debug Format (`debugFormat` dwarf / codeview / both), and any other key as a text row; a row shows the file's value or the config name's default (Release: 2, off; any other: 0, on), and a default with no line writes nothing. **C Imports**: each `cimport` file (Open in a text editor, Remove: the file stays), each set in it with its headers and its `only` names (one row each with an X, a field adds names), Add Set (a `.cimport` file is listed; a header gets a set of its own), Import Again. **Files**: Source, Depends. An edit writes the project file (an `only` edit the `.cimport` file). | Add / remove a config; a set's headers, includes and libs (Open edits the file) |
-| **Problems** | Compiler diagnostics (From: Validate / Build / Run), click opens the Sheet on the node and selects the pin; the node draws a problem strip under its header. | |
+| **Problems** (`OutputLog.bf`) | Compiler diagnostics (From: Validate / Build / Run), click opens the Sheet on the node and selects the pin; the node draws a problem strip under its header. Filled by Validate, Build and Run only; after an edit the rows dim under "Not validated since the last change: press Validate" (section 7.1). | |
 | **Output Log** | Editor messages, compiler and clang/lld output, the program's console output. | |
 | **Find in Sheets** (`FindPanel.bf`) | Ctrl+Shift+F over the project's Sheets and nodes; Ctrl+F in one Sheet. | |
-| **Locals / Call Stack / Debug Output** (`Debugger.bf`) | From lldb-dap (section 10). | |
+| **Locals / Call Stack / Debug Output** (`Debugger.bf`) | From lldb-dap (section 10). Call Stack: the thread rows `Main` first, then by name, then `Thread <n>` (`DebugSession.SortThreads`), the current thread selected with the stop arrow; each row cut in the middle to the panel's width, whole in its tooltip (`CallStackRow`). The narrow right dock's tabs (Properties, Locals, Call Stack) share its width rather than scroll behind arrows (`Panels.FitTabWidth`, `NoteNarrow`). | |
+| **Under the hood** (Debugging.md, "Under the hood") | **Layout** section of Type Settings (`TypeLayoutSection.bf`; the numbers from `HoodLayout.bf`: the compiler's `LayoutRecords` writes the type records of the type and everything it lays out, the back end's `IRReader` and `Emit.Layout` lay them out, so they are the build's); **lives in** badges and Storage rows (`LivesIn.bf`); **Memory** (`MemoryPanel.bf`) and the live instruction of **Disassembly** read through `InspectRequest` (`TreadleDebug/src/DapInspect.bf`: DAP `readMemory`, the variables' `memoryReference`, registers and `image lookup` on the lldb-dap worker); **Disassembly** (`DisassemblyPanel.bf`, `FunctionListing.bf`: the function found by the DISubprogram that starts on the Sheet's Entry line in the build's `.ll` files, `llvm-objdump -d -l --disassemble-symbols` on the exe, or on the unit's `.ll` compiled alone for a stripped Release exe, grouped by the listing line's node). The hooks in shared files are one line each. | Writing memory; a live disassembly of code without symbols |
 | **Graph Source** | - | **Decision:** a read-only view of the type file's records for the front Sheet, no live text editing (the format is for diffs, not authoring). Not built. |
+
+
+### 4.1 Making a type
+
+The Project Browser's **+ Add** button and a folder's right-click menu list one entry per kind:
+**New Folder...**, then under TYPES **New Class...**, **New Struct...**, **New Enum...**, **New Interface...**,
+**New Delegate...**, **New Extension...**, then **New C Import Set...** (File > Import C Headers). **File > New
+Class...** is the same as + Add > New Class in the selected folder. There are no shortcuts for them.
+Each entry opens the **Create Type** dialog (`NewTypes.bf`): the kind's glyph and
+"New Class", the folder it goes to, **Type name (also the file name)** with a proposed name selected (`NewClass`,
+`NewStruct`, `NewEnum`, `INewInterface`, `NewDelegate`, `NewExtension`, a number added when that file exists),
+the problem with the typed name (a letter or `_` first, then letters, digits and `_`; no file or project type of
+that name), and "Creates Dog.treadle (namespace Zoo)": the namespace is the project's root namespace plus the
+folder's path under its source folder (`NamespaceFor`). A class takes a **Base Class** and **Interfaces**, a
+struct **Interfaces**, from the type pickers (4.2), with the "Dog : Animal, IPet" line under them. **Create**
+(or Enter) writes the file from the kind's template (`TypeDocument.InitFromTemplate`) and opens its first view:
+
+| Kind | Template | First view |
+|---|---|---|
+| Class | a constructor with an empty Sheet, no other members | the constructor's Sheet; Type Settings when a base or interfaces were chosen |
+| Struct | no members, not Copyable | Type Settings |
+| Enum | the case `None`; the Outline's CASES section first and open | Type Settings (Enum: Underlying Type) |
+| Interface | no members; FUNCTIONS **+** adds signatures without Sheets | Type Settings (Inheritance: Extends) |
+| Delegate | the signature `void()` | Type Settings (Signature); the Outline shows SIGNATURE only |
+| Extension | no `extends` yet | Type Settings, the Extends picker open with its search focused |
+
+With a base class, the constructor's Sheet gets a **Base Constructor** node wired from Entry when the base declares
+constructors (the first one; Properties lists the others). With interfaces, each interface function the base chain
+does not provide gets a function with its signature and an empty Sheet; the base's abstract functions are left to
+**Required overrides**. The template is where the type's history starts: there is no undo step behind a new type.
+
+A class tile's right-click menu (and the Outline's header) has **Make Child Class...**: the Create Type dialog for
+a class in the same folder, named `<Name>Child`, its Base Class that class. A struct, an enum, an interface or a
+delegate cannot be derived from (Language.md 2.5), so theirs has no such entry; nor has a sealed or static class.
+Every type tile has **Duplicate...**: a copy of the type file named `<Name>2` (changeable), next to it, with all
+members and Sheets, every member id new, every word that names the type outside quoted text renamed, and the
+layout copied; the copy opens. Deleting the new file undoes it.
+
+### 4.2 Type pickers
+
+Every place a type is chosen uses one control (`TypePickers.bf`): the closed control shows the type's pin colour
+(PinStyle's family colours), its kind's glyph and its name; a click opens a panel with a search field (focused;
+every word typed must be in the name, in any order; a name that starts with the text comes first: "ani" finds
+Animal), **Recently used**, then collapsible groups **Primitives**, **Vectors**, **Generic parameters** (of the
+type being edited), **Project types**, **Core**, **Libraries** and **C imports**, each row a pin in the type's
+colour, the glyph, the name and its namespace dimmed. Up / Down move, Enter takes the row, Esc closes. Each slot
+lists only what is legal there:
+
+| Slot | Offers |
+|---|---|
+| Base Class | classes that are not sealed or static, not the class itself or one of its descendants; None (Object) first. A generic base is typed as `Box<int>` |
+| Interfaces, an interface's Extends | interfaces |
+| Field, input, output, local, Cast To, Literal type | every value type (no extension, no node library); Plain / Array / List / Span / Nullable under the list; a spelled type (`Core.Dictionary<String, int>`) through its "Use ..." row |
+| Return Type, a delegate's Returns | the same and `void` (None: no result) |
+| Construct / Local type | classes and structs that are not abstract or static; a spelled generic one |
+| Underlying Type, For's Index Type | the integer types |
+| Switch On | integers, char8, char32, String and enums |
+| Extends (extensions) | classes, structs and enums, a generic one with its parameters |
+| Vector Make / Break | the vector types |
+
+The compiler refuses what the pickers leave out: `base int` is T1012, a struct's or an interface's base T1015.
+
+### 4.3 Overrides
+
+A function's inheritance is set on the function: the segmented **Inheritance** row of its page (Normal / Virtual /
+Override / Abstract, class functions only; a struct's, an interface's and an extension's functions bind statically)
+or its Outline row's menu, both writing `virtual`, `override` and `abstract`. A class's (or a struct's) Outline
+lists **REQUIRED OVERRIDES** when there are any: every abstract function of its base chain that no class from it up
+overrides, and every function of its interfaces (and theirs) that nothing provides; each row's **Implement** makes
+the function with the exact signature and an empty Sheet (Override for a base's, plain for an interface's) and
+opens it, one undo step; the section's **+** implements them all. The section is gone when nothing is left, and the
+Outline header and the type's tile tooltip show **N required** until then. An abstract class lists none. The
+FUNCTIONS header of a class has **Override...**: the base chain's virtual and abstract functions the class does not
+declare yet; choosing one makes its override the same way. Validate and Build refuse a class not marked Abstract
+that leaves an abstract function of its bases (T1053), as they refuse a missing interface function (T1050).
+
+### 4.4 Type context
+
+One type is in front at a time (`EditorApp.Doc`), and the Graph area belongs to it (`GraphTabs.bf`,
+`DocumentHeader.bf`). The original editor showed one file as one document: the window title named it, the Outline
+listed it, and the Project Browser switched files; its function tabs from several files sat in one row and the tab
+in front decided the file. Treadle keeps that "one document in front" idea but gives each type its own context:
+
+- **Type strip**: the top row of the Graph area has a tab per open type (`TypeContext`: the document, the Sheet
+  tab last in front there, its place in the row). A tab shows the kind icon and the name (`*` when unsaved); the
+  type in front has the overline and a tint in its kind colour (`TypeStyle`: class blue as the Project Browser's
+  type tiles, struct teal, enum amber, interface violet, delegate rose, extension steel). Tabs reorder by drag,
+  close with the **x**, the middle button or the menu (Type Settings, Show in Project Browser, Close, Close Other
+  Types, Close All Types). Closing a type closes its Sheet tabs only: the document stays loaded with any unsaved
+  edits (Save All and the quit prompt still see them), and the neighbour in the row comes to the front. A type
+  with none of its Sheets open keeps its tab; the area under it shows the header strip and a hint.
+- **Sheet tabs**: under the type strip, only the type in front's Sheets (functions, property get / set,
+  constructors, destructor, Lambda Sheets). Each type has a tab bar of its own (`##graphs<uid>`), so it keeps its
+  order and its Sheet in front while another type is in front. `EditorApp.Tabs` still holds every open Sheet; a
+  per-frame `SyncTypeContexts` keeps `ActiveTab` on one of `Doc`'s tabs (the one last in front there) and makes a
+  context for any type that gets a Sheet (opening a Sheet anywhere, a Find in Sheets result, a Problems row, a
+  double-click on a Call, the debugger stopping, all bring their type to the front through `OpenTab`).
+- **Header strip** (over the canvas): kind icon, `Dog : Animal, IDamageable` (an extension: `: extends T`), the
+  namespace, the file name, **Type Settings** and **Validate**, and on the right the Sheet's signature
+  (`TakeDamage(amount: int) -> bool`, `get Name -> String`, `Lambda b12(x: int)`); narrow windows drop the file,
+  then the namespace, then the button labels.
+- The canvas watermark reads `<Type> · <Sheet>` in the kind colour; the window title
+  `Treadle alpha - <project> - <Type> - <Sheet> *`. The breadcrumbs (type > Sheet > Lambda Sheets) stay.
+- The Outline and Properties follow the type in front; a local's page is dropped when the type changes (it
+  belonged to a Sheet of the other type).
+- **Keys**: Ctrl+Tab's list holds the Sheets of the type in front; Ctrl+Page Down / Up step through its Sheet tabs;
+  Ctrl+Shift+Page Down / Up step through the types.
+- **Drag between types**: a variable or function dragged from the Outline and held over another type's tab for
+  0.4 s brings that type to the front; the dragged row is kept (`HeldDrag`, the payload is an index into the
+  Outline's rows, which now list the other type), so the drop on that type's Sheet places a Call of `Animal.Legs`
+  or a Get / Set as usual.
+- **Layout per project**: `settings.json`, `projects.<folder>.typeLayout` = `{types: [{file, sheets, sheet}],
+  active}`, file paths relative to the project folder, written when it changes; on opening the project the types
+  come back with their Sheet tabs and their Sheet in front, and the saved type is in front unless a file outside
+  the layout was asked for (the command line). The format files are untouched.
+- Self test: the `editor` case (`SelfTestDocTabs.bf`) opens Animal and Dog of `samples/m1` and checks the strip,
+  the header, the title, the watermark, the Outline, Ctrl+Tab's list, Ctrl+Shift+Page Down / Up, the drag between
+  types, the saved layout and its restore, and closing a type. Capture steps `doc.*` for pixel passes.
 
 ## 5. Nodes with special editor behaviour
 
@@ -229,8 +374,8 @@ file (one undo step). A local's `owner owned` makes the compiler delete it at fu
 
 | Command | Does | Shows |
 |---|---|---|
-| **Validate** (Shift+F7, and after each edit for the edited Sheets) | Compiler Load..Check on the in-memory documents (incremental, Compiler.md 9); no files written | Node problem strips, Problems rows (From: Validate), status bar |
-| **Build** (F7; Ctrl+F7 Force Build) | Saves, runs the full pipeline for stale units, links | Output Log streams clang/lld; Problems rows (From: Build) |
+| **Validate** (Shift+F7, toolbar) | Compiler Load..Check on the in-memory documents (incremental, Compiler.md 9); no files written | Node problem strips, pin badges, "evaluated Nx", Problems rows (From: Validate), status bar |
+| **Build** (F7; Ctrl+F7 Force Build) | Validates as above, saves, runs the full pipeline for stale units, links | What Validate shows; Output Log streams clang/lld; Problems rows (From: Build) |
 | **Run** (Ctrl+F5) / **Start Debugging** (F5) | Builds when stale, then runs plain or under lldb-dap (Debug) | Debug Output, Locals, Call Stack; a fatal error stops on the node |
 
 Because Validate is the same compiler, there is no "Level 1 / Level 2" split and no resident helper process.
@@ -238,6 +383,35 @@ The three commands go through `IToolchain` (`TreadleCore/src/Language/Toolchain.
 end's `BackendToolchain`, whose Validate runs the generic `GraphValidator` and then `ILanguageRules.Check` (the
 compiler's `TreadleRules`), and whose Build / Run lower through `FrontEndProgramSource` (the front end). Run under
 the debugger goes through `DebugSession` and its `IDebugAdapter` (section 10).
+
+### 7.1 When problems are shown
+
+Problems appear when you ask for them, never because of an edit (`TreadleEditor/src/ValidationState.bf`). Every
+compiler diagnostic (the T-codes: errors, warnings, the C import path warning, the project-load warnings), the
+graph checks ("needs a value or a wire", a wire that cannot take a type) and the "evaluated Nx" counts are shown only
+after **Validate** (Shift+F7 or the toolbar), **Build** or **Run** (both validate first, also when the build
+cannot start).
+
+* **On an edit** the editor still runs the graph checks and the front end's incremental pass on the edited Sheet
+  (`EditorApp.CheckSheet`), so the Node menu's catalogue, the type colours and wire compatibility follow at once.
+  What the checks find is dropped: a Sheet keeps showing `Graph.Errors` / `Graph.Warnings` as the last Validate left
+  them, and every panel (the Sheet, Properties, the Outline, Problems) reads those. A Sheet shown for the first time
+  is checked the same way; it shows what it finds only while the workspace is validated as it is.
+* **Stale**: each open document has an edit serial that moves whenever its Version moves (an edit, an undo, a
+  reload); Validate records the serials it saw. Any difference means the problems shown are from before the last
+  change: the Sheet draws its strips, error outlines, pin badges and "evaluated Nx" badges faint (40% alpha, the
+  strip's text in the problem's colour, a tooltip line "From the last Validate"), the Problems rows are drawn at half
+  alpha under the header **Not validated since the last change: press Validate**, the status bar says **Not
+  validated** before the build state (**Validated** once Validate ran with nothing changed since, in the result's
+  colour), and the toolbar's Validate button carries a small yellow dot. The next Validate, Build or Run clears it.
+* **Stays live** (editor-local feedback, no compiler message): a wire dropped on a pin that cannot take it is refused
+  at once with its reason; a Math Expression's text is checked as you type; a node not wired into the flow is drawn
+  faded with "Not connected" in its tooltip; the "needs a type" states the editor itself cannot shape (a Lambda
+  without a signature, Make local variable on a pin with no type yet); the "captures N" badge of a Lambda. A build's
+  own errors (Problems rows From: Build, and on their nodes) also stay until the next build.
+* **Preference**: Editor Preferences > Build > **Validate automatically after edits** (off by default,
+  `validateAfterEdits` in settings.json) restores the earlier behaviour: each edit shows the edited Sheet's problems
+  at once, logs them to the Output Log and refreshes its Problems rows; nothing is ever stale.
 
 ## 8. The original editor's layers: kept, changed, replaced
 
@@ -250,7 +424,7 @@ what happened, folder by folder, with the seams at `file:line`. In short, as of 
 | `Graph/Graph.bf`, `NodeFactory`, `FlowMacros`, `FlowTypes`, `Layout`, `PinValue`, `GraphValidator` (generic checks only) | **Kept**, trimmed to the GraphModel of section 1 |
 | `Catalog/NodeCatalog`, `NodeHotkeys`, `MergedCategories`, `TypeRules` | **Kept**; entries from `INodeCatalogSource` |
 | `Document/GraphDocument` | **Replaced** by `TypeDocument` |
-| `Document/FileSafety`, `RecentProjects`, `Diagnostics`, `CommandLine`, `LayoutExtras`, crash and trash helpers, `Update/*` | **Kept** (the updater's repository and key emptied, [Releasing.md](Releasing.md)) |
+| `Document/FileSafety`, `RecentProjects`, `Diagnostics`, `CommandLine`, `LayoutExtras`, crash and trash helpers, `Update/*` | **Changed**: GitHub Releases + SHA256SUMS instead of the signed descriptor, install by the package's `files.txt` ([Releasing.md](Releasing.md), "The update path") |
 | `Language/LanguageContext` | **Rewritten** as the one facade per workspace: `Types` (`ITypeSystem`), `Catalog` (`INodeCatalogSource`), `Codec` (`IGraphCodec`), `Rules` (`ILanguageRules`), `Index` (`ProjectIndex`), `Toolchain` (`IToolchain`); null services by default (`Language/Seams.bf`), the compiler's installed by the editor |
 | `Debug/DebugSession` | **Rewritten** over `IDebugAdapter`; the engine is `TreadleDebug` (section 10) |
 | The editor's shell, canvas, panels, Node menu, Prefs, Theme, start page, recovery, updates, docs panel | **Kept**, Beef strings neutralised; `ProjectBrowser`, `PropertiesPanel`, `FindPanel`, `Debugger`, `PinVariables`, `TypeSettings`, `ProjectSettings`, `SelfTest*` **rewritten** over the new model |
@@ -281,10 +455,18 @@ host's framebuffer capture (a name written to `capture.request` there comes back
   graphs, the header and members, and the layout per step; files are small. Folding a node group is layout and
   not an undo step.
 * Save writes the type file and, when layout changed, the layout file, both through the codec, with an atomic
-  write and `.bak` (`FileSafety.AtomicWrite`). A document with unresolved diagnostics **saves anyway** (unlike
+  write and a backup in the project's `backup` folder (`FileSafety.AtomicWrite`; the layout file goes to `layout/<path>.layout`, Graph-Format.md 4). A document with unresolved diagnostics **saves anyway** (unlike
   the original editor, which refused because its text would have been wrong): the graph is the truth and an error is a
   state of the program, not of the file. Build refuses while errors exist.
 * External change detection, read-only mode, recovery journal and crash reports stay as they were.
+* Updates (`Updates.bf`, `UpdateCli.bf`, `TreadleCore/src/Update/`): the check runs on a worker thread and the UI
+  reads its status each frame; the offer is a notice line under the toolbar (Update now / What changed / Later /
+  Skip this version), never modal and never repeated in a session once hidden. Restart to finish saves every file
+  first (an untitled one blocks it), refuses during a build or a debugging session, then hands over to the helper
+  (a copy of the program in `<install>/update/helper`) and quits; the new editor answers the helper's health check
+  after 30 frames. Settings: `updates.checkForUpdates`, `updates.channel`, `updates.skippedVersions`,
+  `updates.lastCheck`, `preferences.workOffline` in settings.json. Help > About Treadle shows
+  `TreadleInfo.FullVersion`, the one version string (also the title bar and `--version`).
 
 ### Fatal errors and crash reports
 
@@ -433,6 +615,12 @@ locals (`Some(5)`, `None`, `Err(7)`, `Green`, `(3, true)`, `9`, `null`, `[10, 20
 0), and on Windows the CodeView builds: `vdispatch` with `both` and `codeview` (the PDB's line table has node
 a4's listing line, `llvm-pdbutil dump -l`; lldb breaks there through the DWARF, and through the PDB after
 `target symbols add`) and the adapter launching a `codeview` build of `attachwait` and stopping on a3.
+After the threads part (`SelfTestDebugThreads.bf`: threads-basic stopped on a worker, the thread rows `Main` first
+then by name, another thread's stack read without resuming), the vectors part (`SelfTestDebugVectors.bf`) copies
+the core fixture `struct-literal`, stops on a8 and reads Locals: `v` as `float4(1, 2, 3, 4)` (type `float4`), `p`
+as `Vec3(1, 2.25, -0.5)` (still expandable) and `c` as `Color32(255, 128, 0, 255)` (`Summaries.bf`:
+`VectorSpelling`, `MathValueName`, `ByteFromCharLiteral`). With `TREADLE_CAPTURE_DIR` set the steps hold for
+captures: `debug-threads-worker`, `debug-threads-main` (Call Stack in front) and `debug-vectors` (Locals).
 `debugstop` (captures) starts debugging the open project with a breakpoint on
 `TREADLE_DEBUG_BREAK=<type file>,<Sheet name>,<node id>` and stays on the stop.
 

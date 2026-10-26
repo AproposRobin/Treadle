@@ -369,6 +369,8 @@ namespace Treadle.Format
 						case "output": p.Output.Clear(); RecordText.Unquote(arg, p.Output);
 						case "version": p.Version.Set(arg);
 						case "namespace": p.Namespace.Set(arg);
+						case "layoutDir": p.LayoutDir.Clear(); RecordText.Unquote(arg, p.LayoutDir);
+						case "backupDir": p.BackupDir.Clear(); RecordText.Unquote(arg, p.BackupDir);
 						default: p.Extras.AddInner("", line);
 						}
 					}
@@ -407,6 +409,8 @@ namespace Treadle.Format
 			if (!p.Output.IsEmpty) pw.Add("output", RecordText.Text(p.Output, .. scope String()));
 			if (!p.Version.IsEmpty) pw.Add("version", p.Version);
 			if (!p.Namespace.IsEmpty) pw.Add("namespace", p.Namespace);
+			if (!p.LayoutDir.IsEmpty) pw.Add("layoutDir", RecordText.Text(p.LayoutDir, .. scope String()));
+			if (!p.BackupDir.IsEmpty) pw.Add("backupDir", RecordText.Text(p.BackupDir, .. scope String()));
 			pw.Emit(p.Extras, outText);
 			for (let d in p.Depends)
 				outText.AppendF("depends {}\n", RecordText.Text(d, .. scope String()));

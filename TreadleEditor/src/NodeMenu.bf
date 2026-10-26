@@ -58,7 +58,8 @@ namespace Treadle.Editor
 		Reroute,        // a knot on the wire the menu was dragged from (layout), not a node
 		NewFunction,    // a new function of the type and a Call of it
 		MoreOverloads,  // "N more overloads" under the overload the search names: A = the overload key; picking it lists them
-		VectorNode      // a vector row for the context pin's vector type (VectorCatalog.Typed): A = the row's key word, B = the vector type
+		VectorNode,     // a vector row for the context pin's vector type (VectorCatalog.Typed): A = the row's key word, B = the vector type
+		ConstructCall   // "Construct T + F": a Construct of T (A, its full name), a Defer Delete and a Call of its function F (B); C = the constructor's parameters, Extra = F's parameter types ("int,float")
 	}
 
 	class NodeItem
@@ -88,10 +89,13 @@ namespace Treadle.Editor
 		/// CallMethod of the type being edited: a static function (no Target pin). OnType holds
 		/// the type, so the node is a member call with self otherwise.
 		public bool Static;
+		/// ConstructCall: the parameter types of the function it calls ("int,float").
+		public String Extra = new .() ~ delete _;
 
 		public void CopyFrom(NodeItem o)
 		{
 			Kind = o.Kind;
+			Extra.Set(o.Extra);
 			Category.Set(o.Category);
 			Label.Set(o.Label);
 			A.Set(o.A);
@@ -118,7 +122,7 @@ namespace Treadle.Editor
 				{
 				case .Catalog, .CallOwn, .SetVar, .LocalVar, .Branch, .While, .DoWhile, .For, .ForEach, .Return, .Break, .Continue,
 					 .Switch, .Flow, .LoopBreak, .Construct, .Delete, .DeferDelete, .Defer, .Scope, .ResultMatch, .Try, .Fatal,
-					 .Invoke, .NewFunction:
+					 .Invoke, .NewFunction, .ConstructCall:
 					return true;
 				case .Cast:
 					return C == "checked";
@@ -639,6 +643,7 @@ namespace Treadle.Editor
 					item.Tooltip.AppendF("\n{}", m.Doc);
 			}
 			Add(.NewFunction, "Functions", "Add Function").Tooltip.Set("Adds a new function to this type and a Call of it here");
+			AddConstructCallRows(mg, selfName, staticSheet);
 
 			// A constructor's Sheet: the constructor it runs first (one Base / This Constructor node).
 			if (mg.Member != null && mg.Member.Kind == .Ctor && !mg.Key.StartsWith("lambda:"))
@@ -786,6 +791,108 @@ namespace Treadle.Editor
 				Add(.Comment, "Utilities", "Add Comment").Tooltip.Set("A comment box around the selected nodes (or here)");
 			if (mContext != .None)
 				Add(.Reroute, "Utilities", "Add Reroute Knot").Tooltip.Set("Draws the wire through a knot here");
+		}
+
+		/// "Construct Engine + Run": for each function of the project's other classes (and of the open
+		/// class in a static Sheet, where there is no `this`), one row that places a Construct of the
+		/// class, a Defer Delete of the object and the Call with the object as its Receiver. Listed
+		/// when the menu opens on the canvas or from a flow pin; a Call needs an object, and this row
+		/// brings one.
+		void AddConstructCallRows(Sheet mg, StringView selfName, bool staticSheet)
+		{
+			if (mContext != .None && mContext != .Flow)
+				return;
+			for (let t in mApp.ProjectTypes.Types)
+			{
+				if (t.Kind != .Class || t.Static || t.Abstract || !t.Generics.IsEmpty)
+					continue;
+				bool own = t.FullName == selfName;
+				if (own && !staticSheet)
+					continue;
+				// The constructor the Construct runs: the one without parameters, else the first.
+				Treadle.Model.MemberDecl ctor = null;
+				bool plain = true;
+				for (let m in t.Members)
+				{
+					if (m.Kind != .Ctor || m.Static || (!own && !ProjectType.Visible(m)))
+						continue;
+					if (m.Params.IsEmpty)
+					{
+						ctor = null;
+						plain = true;
+						break;
+					}
+					if (ctor == null)
+					{
+						ctor = m;
+						plain = false;
+					}
+				}
+				String ctorParams = scope .();
+				if (!plain && ctor != null)
+					for (let p in ctor.Params)
+					{
+						if (!ctorParams.IsEmpty)
+							ctorParams.Append(", ");
+						ctorParams.AppendF("{} {}", p.Type?.ToString(.. scope String()), p.Name);
+					}
+				for (let m in t.Members)
+				{
+					if (m.Kind != .Function || m.Static || (!own && !ProjectType.Visible(m)))
+						continue;
+					String sig = scope .();
+					String label = scope .();
+					for (let p in m.Params)
+					{
+						if (@p.Index > 0)
+						{
+							sig.Append(',');
+							label.Append(", ");
+						}
+						p.Type?.ToString(sig);
+						p.Type?.ToString(label);
+					}
+					int sameName = 0;
+					for (let o in t.Members)
+						if (o.Kind == .Function && !o.Static && o.Name == m.Name)
+							sameName++;
+					let item = Add(.ConstructCall, scope $"Functions | {t.Name}",
+						(sameName > 1) ? scope $"Construct {t.Name} + {m.Name} ({label})" : scope $"Construct {t.Name} + {m.Name}",
+						t.FullName, m.Name, ctorParams);
+					item.Extra.Set(sig);
+					item.OnType.Set(t.FullName);
+					item.Tooltip.AppendF("Makes a {0} (Construct), deletes it when this region ends (Defer Delete) and calls its {1} on it.\nTo call {1} on a {0} you already have, place {1} and wire the object into its Receiver.", t.Name, m.Name);
+				}
+			}
+		}
+
+		/// The catalogue entry of the instance function `name` of `owner` whose parameter types are
+		/// `sig` ("int,float"; the only one by that name when no entry matches exactly), or -1.
+		int32 FindMemberEntry(StringView owner, StringView name, StringView sig)
+		{
+			int32 any = -1;
+			for (int32 id < (int32)Catalog.TotalEntries)
+			{
+				let spec = Catalog.Spec(id);
+				if (spec.Label != name || spec.IsStatic || !spec.KindWord.IsEmpty || spec.Kind == .Get || spec.Kind == .Set || spec.Kind == .Event)
+					continue;
+				if (!NodeCatalog.SameOwner(owner, spec.OwnerType))
+					continue;
+				String have = scope .();
+				for (let p in spec.Pins)
+				{
+					if (p.IsOutput || p.Name == "receiver" || p.Type.IsEmpty)
+						continue;
+					if (!have.IsEmpty)
+						have.Append(',');
+					have.Append(p.Type);
+				}
+				if (NoSpaces(have, .. scope String()) == NoSpaces(sig, .. scope String()))
+					return id;
+				if (any < 0)
+					any = id;
+			}
+			return any;
 		}
 
 		/// Construct / Local rows of the open type (one per constructor).
@@ -1988,6 +2095,16 @@ namespace Treadle.Editor
 				return NodeFactory.MathExpression(g, "a * b");
 			case .MoreOverloads:
 				return null; // a list row, not a node
+			case .ConstructCall:
+				// Construct T, Defer Delete, then the Call of T's function on the new object.
+				let id = FindMemberEntry(item.A, item.B, item.Extra);
+				Node call = null;
+				if (id >= 0)
+					call = CreateCatalogNode(g, CatalogItem(id), true);
+				if (call == null && !probe)
+					return null;
+				SplitParamText(item.C, names, types);
+				return NodeFactory.ConstructDeferCall(g, item.A, call, SpawnPos.x, SpawnPos.y, names, types);
 			case .VectorNode:
 				let spec = scope NodeSpec();
 				if (!VectorCatalog.Typed(item.A, item.B, spec))
@@ -2259,6 +2376,20 @@ namespace Treadle.Editor
 			}
 		}
 
+		/// A catalogue row that is a member (call, Get, Set) of the context pin's type or of one of its
+		/// base types or interfaces: the pin can be its Receiver.
+		bool IsReceiverRow(NodeItem r)
+		{
+			if (r.Kind != .Catalog || r.CatalogId < 0 || IsWild(mContextType))
+				return false;
+			let spec = Catalog.Spec(r.CatalogId);
+			if (spec == null || spec.IsStatic || spec.OwnerType.IsEmpty || !spec.KindWord.IsEmpty || spec.Kind == .Event)
+				return false;
+			String pinCore = scope .();
+			TypeRules.Normalize(mContextType, pinCore);
+			return NodeCatalog.SameOwner(pinCore, spec.OwnerType) || (mApp.Language.Types != null && mApp.Language.Types.IsSubtype(pinCore, spec.OwnerType));
+		}
+
 		/// The position of a group path's top level in `sGroupOrder` (others after them). Opened from a
 		/// vector pin: the vector's own rows first, then the operators and comparisons (they take vectors).
 		int GroupRank(StringView path)
@@ -2272,6 +2403,14 @@ namespace Treadle.Editor
 					return -5;
 				if (top == "Comparison")
 					return -4;
+			}
+			// Dragged from an object's output: the functions of its type (and of its base types and
+			// interfaces) first, then its variables, then everything else that takes it.
+			if (mContext == .DataOut && (top == "Functions" || top == "Variables") && mGroups.TryGetValueAlt(path, let rows))
+			{
+				for (let r in rows)
+					if (IsReceiverRow(r))
+						return (top == "Functions") ? -9 : -8;
 			}
 			if (path == cSuggestedGroup)
 				return -3;
@@ -2308,6 +2447,9 @@ namespace Treadle.Editor
 			List<NodeItem> scored = scope .();
 			void ConsiderLocal(NodeItem item)
 			{
+				// "Construct T + F" rows are one per function of every class: listed for a search only.
+				if (search.IsEmpty && item.Kind == .ConstructCall)
+					return;
 				if (mContext == .None)
 					item.Relevance = 1;
 				if (filterByContext && item.Relevance == 0)
@@ -2363,6 +2505,38 @@ namespace Treadle.Editor
 				item.Relevance = (int32)Math.Max(1, (ctxKind != .None) ? Catalog.ContextRelevance(h.Id, ctxKind, mContextType) : 1);
 				item.Score = h.Score + (search.IsEmpty ? 0 : 0);
 				scored.Add(item);
+			}
+			// A "Construct T + F" row sits right under the Call of F (unless the search says "construct")
+			// and the Construct / Local of T (unless the search names F): Enter places the single node the
+			// search names, and the combined row when the search names both.
+			String searchLower = scope String(search)..ToLower();
+			for (let combo in scored)
+			{
+				if (combo.Kind != .ConstructCall)
+					continue;
+				let typeName = Node.ShortTypeName(combo.A, .. scope String());
+				bool saysConstruct = searchLower.Contains("construct");
+				bool saysFunction = searchLower.Contains(scope String(combo.B)..ToLower());
+				for (let other in scored)
+				{
+					if (other.Kind != .Catalog || other.Score > combo.Score)
+						continue;
+					bool isCall = !saysConstruct && other.A == "call" && NodeCatalog.SameOwner(combo.A, other.OnType) && other.Label.StartsWith(combo.B) &&
+						(other.Label.Length == combo.B.Length || other.Label[combo.B.Length] == ' ');
+					bool isAlloc = false;
+					for (let word in StringView[?]("Construct ", "Local "))
+						if (!saysFunction)
+					{
+						let lbl = StringView(other.Label);
+						if (lbl.StartsWith(word) && lbl.Substring(word.Length).StartsWith(typeName))
+						{
+							let rest = lbl.Substring(word.Length + typeName.Length);
+							isAlloc |= rest.IsEmpty || rest.StartsWith(" (");
+						}
+					}
+					if (isCall || isAlloc)
+						combo.Score = other.Score - 0.01f;
+				}
 			}
 			ClearAndDeleteItems!(mMoreRows);
 			if (!search.IsEmpty)

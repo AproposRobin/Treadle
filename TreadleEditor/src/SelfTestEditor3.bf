@@ -188,6 +188,12 @@ namespace Treadle.Editor
 				SelfTestE3CImports(mE3Phase - 3);
 				mSelfTestWait = 3;
 				return false;
+			case 4:
+				// Making types (SelfTestNewType.bf): one phase per frame on this project.
+				if (!SelfTestNewTypes())
+					mE3Phase--;
+				mSelfTestWait = Math.Max(mSelfTestWait, 2);
+				return false;
 			default:
 				// File > Close Project, then the folder goes.
 				for (let d in mDocs)

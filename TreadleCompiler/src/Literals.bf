@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Treadle.Format;
 
 namespace Treadle.Compiler
@@ -132,6 +133,46 @@ namespace Treadle.Compiler
 			}
 		}
 
+		/// A struct literal (Graph-Format.md, "Literals"): one value per field in declaration order, separated
+		/// by commas without spaces (`1,2,3` for a Vec3, `255,128,0,255` for a Color32), for a struct whose
+		/// fields are all numbers, bools or characters (the core math types: the editor's per-field inputs).
+		public static bool IsStructLiteral(StringView tok, KType t) => t != null && t.IsStruct && !t.Sym.CBlob && tok.Contains(',') && !tok.StartsWith('"') && !tok.StartsWith('\'');
+
+		/// The field types a struct literal of `t` fills, in order (an auto property's hidden field is not one).
+		public static void StructLiteralFields(KType t, TypeTable table, List<KType> outTypes)
+		{
+			Dictionary<GenericParamSym, KType> fmap = scope .();
+			table.MapOf(t, fmap);
+			for (let f in t.Sym.AllFields)
+				if (!f.Synthetic)
+					outTypes.Add(table.Subst(f.Type, fmap));
+		}
+
+		static bool StructLiteralFits(StringView tok, KType t, TypeTable table, String why)
+		{
+			List<KType> fields = scope .();
+			StructLiteralFields(t, table, fields);
+			for (let ft in fields)
+				if (ft == null || !(ft.Kind == .Int || ft.Kind == .Float || ft.Kind == .Bool || ft.Kind == .Char))
+				{
+					why.AppendF("{} is not {}: a literal with one value per field is for a struct of numbers", tok, TypeTable.WithArticle(t, .. scope .()));
+					return false;
+				}
+			int count = 0;
+			for (let part in tok.Split(','))
+			{
+				if (count < fields.Count && !Fits(part, fields[count], table, why))
+					return false;
+				count++;
+			}
+			if (count != fields.Count)
+			{
+				why.AppendF("{} is not {}: {} values for its {} fields", tok, TypeTable.WithArticle(t, .. scope .()), count, fields.Count);
+				return false;
+			}
+			return true;
+		}
+
 		/// Whether the literal can stand for a value of `t`; `why` says why not.
 		public static bool Fits(StringView tok, KType t, TypeTable table, String why)
 		{
@@ -139,6 +180,8 @@ namespace Treadle.Compiler
 				return true;
 			if (t.IsVector)
 				return VectorRules.LiteralFits(tok, t, table, why); // `0,1,0,0`, or one value that splats
+			if (IsStructLiteral(tok, t))
+				return StructLiteralFits(tok, t, table, why); // `1,2,3`: one value per field
 			let kind = Classify(tok, var i, var f);
 			KType target = t;
 			if (t.Kind == .Nullable && kind != .Null && kind != .Default)

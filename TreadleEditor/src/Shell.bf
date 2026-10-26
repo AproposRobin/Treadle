@@ -47,6 +47,10 @@ namespace Treadle.Editor
 		/// widest title of that dock at the current font and scale, so they stay whole; a longer
 		/// title in the wide bottom dock can still shrink to it (its tooltip shows the full name),
 		/// and a dock too narrow for its tabs scrolls them.
+		/// When that dock is too narrow for its tabs whole (three tabs at 1280x800: Properties, Locals and Call
+		/// Stack during a debug session), the floor drops to an equal share of the dock's width so every tab
+		/// stays reachable without the scroll arrows (the arrows hid Call Stack); a cut title shows "..." and
+		/// its whole name in the tab's tooltip. Below `cNarrowTabMin` of the scale the tabs scroll again.
 		public static void FitTabWidth()
 		{
 			let style = Gui.igGetStyle();
@@ -57,7 +61,57 @@ namespace Treadle.Editor
 				let w = Gui.igCalcTextSize(title.Ptr, title.Ptr + ((end < 0) ? title.Length : end), false, -1).x;
 				widest = Math.Max(widest, w);
 			}
-			style.TabMinWidthShrink = widest + style.FramePadding.x * 2 + 1;
+			float whole = widest + style.FramePadding.x * 2 + 1;
+			float floor = whole;
+			// the dock most narrow panels sat in last frame, and how many tabs it had
+			int n = 0;
+			float dockW = 0;
+			for (int i < sNarrowSeen)
+			{
+				int same = 0;
+				for (int j < sNarrowSeen)
+					if (sNarrowDock[j] == sNarrowDock[i])
+						same++;
+				if (same > n)
+				{
+					n = same;
+					dockW = sNarrowW[i];
+				}
+			}
+			sNarrowSeen = 0;
+			if (n >= 2)
+			{
+				let spacing = style.ItemInnerSpacing.x;
+				// the tab bar: the dock less its border and frame padding each side (DockNodeCalcTabBarLayout)
+				let room = dockW - 2 * (style.WindowBorderSize + style.FramePadding.x) - (n - 1) * spacing - 2;
+				if (n * whole > room)
+					floor = Math.Max(room / n, cNarrowTabMin * Look.Scale);
+			}
+			style.TabMinWidthShrink = floor;
+			NarrowTabFloor = floor;
+			NarrowTabs = n;
+			NarrowDockW = dockW;
+		}
+
+		const float cNarrowTabMin = 44;
+		static uint32[3] sNarrowDock;
+		static float[3] sNarrowW;
+		static int sNarrowSeen;
+		/// The tab floor `FitTabWidth` chose this frame (the `editor` self test reads it).
+		public static float NarrowTabFloor;
+		/// The tabs of that dock last frame and its width.
+		public static int NarrowTabs;
+		public static float NarrowDockW;
+
+		/// Called by each narrow-dock panel between its Begin and End: notes the dock it sits in and its width
+		/// for the next frame's `FitTabWidth`.
+		public static void NoteNarrow()
+		{
+			if (sNarrowSeen >= 3 || !Gui.igIsWindowDocked())
+				return;
+			sNarrowDock[sNarrowSeen] = Gui.igGetWindowDockID();
+			sNarrowW[sNarrowSeen] = Gui.igGetWindowWidth();
+			sNarrowSeen++;
 		}
 	}
 
@@ -439,14 +493,26 @@ namespace Treadle.Editor
 				Gui.igPopStyleVar(1);
 				mToolbarFullW = 0;
 				let state = GetCompileState();
-				if (ToolbarButton("validate", Icon.CircleCheck, "Validate", "Validate (Shift+F7): check the open Sheets now, without saving or building", !Doc.FilePath.IsEmpty || !Tabs.IsEmpty))
+				// A small dot on Validate while what is shown is from before the last edit (ValidationState.bf).
+				let validateStale = ProblemsStale;
+				if (ToolbarButton("validate", Icon.CircleCheck, "Validate",
+					validateStale ? "Validate (Shift+F7): check the open Sheets now, without saving or building\nChanged since the last Validate: the problems shown are dimmed until you validate" : "Validate (Shift+F7): check the open Sheets now, without saving or building",
+					!Doc.FilePath.IsEmpty || !Tabs.IsEmpty, 0, false, validateStale ? Icon.Circle : default, Look.AccentYellow))
 					Validate();
+				// Run first: one action that builds when needed and starts the program (RunProgram.bf).
+				if (ProgramRunning)
+				{
+					if (ToolbarButton("stoprun", Icon.Square, "Stop", "Stop the running program", true, Look.Error, true))
+						StopProgram();
+				}
+				else if (ToolbarButton("run", Icon.Play, "Run", "Run (Ctrl+F5): build if needed, then start the program", !mProjectRoot.IsEmpty && (mBuild == null || !mBuild.Running), Look.Success))
+					RunProgram();
 				if (mBuild != null && mBuild.Running)
 				{
 					if (ToolbarButton("cancelbuild", Icon.CircleX, "Cancel", "Cancel Build: stop the build tool now\nThe output files may be incomplete; the next Build starts from scratch.", true, 0, true))
 						CancelBuild();
 				}
-				else if (ToolbarButton("compile", Icon.Compile, "Build", scope $"Build (F7)\n{CompileTip(state)}", true, 0, false, CompileBadge(state), CompileColor(state)))
+				else if (ToolbarButton("compile", Icon.Compile, "Build", scope $"Build (F7): produce the exe without starting it\n{CompileTip(state)}", true, 0, false, CompileBadge(state), CompileColor(state)))
 					Build();
 				bool canSave = !Doc.FilePath.IsEmpty && !Doc.IsNewerFormat;
 				if (ToolbarButton("save", Icon.Save, "Save", "Save the current file (Ctrl+S)", canSave, 0, false,
@@ -586,11 +652,15 @@ namespace Treadle.Editor
 				float w0 = locked ? (Gui.CalcTextSize(lockText).x + fs * 1.6f + 24 * Look.Scale) : 0;
 				float w1 = Gui.CalcTextSize(compileText).x + fs * 1.6f;
 				float w2 = Gui.CalcTextSize(saveText).x + fs * 1.6f;
+				// "Validated" / "Not validated" before the build state (ValidationState.bf).
+				String validateText = scope .();
+				ValidateStateText(validateText, let validateColor, let validateIcon);
+				float wv = Gui.CalcTextSize(validateText).x + fs * 1.6f + 24 * Look.Scale;
 				// Update item (only while the notice line is hidden by Later): the far right, after the save state.
 				String updLabel = scope .();
 				UpdateStatusLabel(updLabel);
 				float updW = updLabel.IsEmpty ? 0 : Gui.CalcTextSize(updLabel).x + Gui.igGetStyle().FramePadding.x * 2 + 24 * Look.Scale;
-				float total = w0 + w1 + w2 + 24 * Look.Scale + updW;
+				float total = w0 + wv + w1 + w2 + 24 * Look.Scale + updW + EntryStatusWidth(); // EntryStatusWidth: "Entry: Program.Main" (EntryPoint.bf)
 				// The latest status text, cut with "..." where the right side starts (a long path
 				// must not run under the compile state); the whole text is the tooltip.
 				if (!mStatus.IsEmpty && Gui.igGetTime() - mStatusTime < 8)
@@ -617,6 +687,12 @@ namespace Treadle.Editor
 					Gui.DrawText(dl, .(p.x + fs * 1.4f, ty), Look.Warning, lockText);
 					p.x += w0;
 				}
+				Gui.DrawText(dl, .(p.x, ty), validateColor, validateIcon);
+				Gui.DrawText(dl, .(p.x + fs * 1.4f, ty), Look.Foreground, validateText);
+				if (Gui.igIsMouseHoveringRect(.(p.x, p.y), .(p.x + wv - 24 * Look.Scale, p.y + mStatusH), true))
+					Gui.Tooltip(Validated ? "The problems shown are of the Sheets as they are now (Validate, Build or Run)" : "Not validated: press Validate (Shift+F7) to check the open Sheets; problems shown from an earlier Validate are dimmed");
+				p.x += wv;
+				DrawEntryStatus(dl, ref p, ty); // "Entry: Program.Main" next to the build state; a click opens it (EntryPoint.bf)
 				Gui.DrawText(dl, .(p.x, ty), CompileColor(state), CompileBadge(state));
 				Gui.DrawText(dl, .(p.x + fs * 1.4f, ty), Look.Foreground, compileText);
 				p.x += w1 + 24 * Look.Scale;
@@ -640,22 +716,22 @@ namespace Treadle.Editor
 
 		// ---------------------------------------------------------------- window title
 
-		/// "Treadle dev - <Project> - <Document> *", following the active tab.
+		/// "Treadle alpha - <Project> - <Type> - <Sheet> *", following the type and the Sheet in front.
 		void UpdateWindowTitle()
 		{
-			String title = scope .(scope $"{TreadleInfo.Name} {TreadleInfo.Channel}");
+			String title = scope .(scope $"{TreadleInfo.Name} {TreadleInfo.FullVersion}");
 			if (!mProjectRoot.IsEmpty)
 			{
 				String name = scope .();
 				Path.GetFileName(mProjectRoot, name);
 				title.AppendF(" - {}", name);
 			}
-			String asset = scope .();
-			GetCurrentAssetName(asset);
-			if (!asset.IsEmpty)
+			String front = scope .();
+			FrontTypeAndSheet(front);
+			if (!front.IsEmpty)
 			{
-				title.AppendF(" - {}", asset);
-				if (!Doc.FilePath.IsEmpty && Doc.Modified)
+				title.AppendF(" - {}", front);
+				if (Doc.Modified)
 					title.Append(" *");
 			}
 			if (title != mWindowTitle)

@@ -8,7 +8,8 @@ namespace Treadle.Language
 	///
 	/// Windows (the pinned llvm-mingw): `TREADLE_LLVM`, else `tools/llvm`
 	/// next to the running exe (the trimmed copy a package ships, docs/Releasing.md), else
-	/// `tools/llvm-mingw` of the repository (found above the running exe, not committed), else
+	/// `tools/llvm-mingw` of the source tree of a development build (ToolDirs: the fixed build layout, no
+	/// walk up the parent folders; not committed), else
 	/// the folder named by `TREADLE_DEV_LLVM` (`DevFallbackVar`: a developer-machine convenience, a
 	/// shared llvm-mingw outside the repository, docs/Toolchain.md). `TREADLE_NO_FALLBACK=1` skips that
 	/// last one (and the other developer fallbacks: `NoFallback`), so a package can be tested on a
@@ -32,12 +33,15 @@ namespace Treadle.Language
 		/// The LLVM major version tried first on Linux.
 		public const int PreferredLinuxVersion = 22;
 
-		/// True when `TREADLE_NO_FALLBACK` is set (and not "0"): no machine-specific last fallback is used.
+		/// True when `TREADLE_NO_FALLBACK` is set (and not "0"), or in a package (`VERSION.txt` beside the exe):
+		/// no machine-specific last fallback is used.
 		public static bool NoFallback
 		{
 			get
 			{
 				String v = scope .();
+				if (ToolDirs.IsPackage())
+					return true; // a package uses its own tools only (Security-Review.md finding 8)
 				return Environment.GetEnvironmentVariable("TREADLE_NO_FALLBACK", v) case .Ok && !v.IsEmpty && v != "0";
 			}
 		}
@@ -62,18 +66,12 @@ namespace Treadle.Language
 				outRoot.Set(packaged);
 				return;
 			}
-			String dir = scope .(exe);
-			for (int up < 8)
+			// a development build: the source tree's tools\llvm-mingw (ToolDirs: no parent folder walk)
+			String tree = scope .();
+			if (ToolDirs.DevTree(tree) && File.Exists(scope $"{tree}\\tools\\llvm-mingw\\bin\\clang.exe"))
 			{
-				String parent = scope .();
-				if (Path.GetDirectoryPath(dir, parent) case .Err)
-					break;
-				dir.Set(parent);
-				if (File.Exists(scope $"{dir}\\tools\\llvm-mingw\\bin\\clang.exe"))
-				{
-					outRoot.AppendF("{}\\tools\\llvm-mingw", dir);
-					return;
-				}
+				outRoot.AppendF("{}\\tools\\llvm-mingw", tree);
+				return;
 			}
 			if (!NoFallback && Environment.GetEnvironmentVariable(DevFallbackVar, outRoot) case .Ok && !outRoot.IsEmpty)
 				return;

@@ -169,12 +169,16 @@ namespace Treadle.Compiler
 			if (q.MethodArgs != null)
 				for (int i < Math.Min(q.Member.Generics.Count, q.MethodArgs.Count))
 					map[q.Member.Generics[i]] = q.MethodArgs[i];
+			let prevScope = M.ClosureScope;
+			M.ClosureScope = (q.Member.Extension != null && q.Member.Extension.IsCore) ? q.Member.Extension : null;
 			FnLowerer fl = scope .(M, r, q.Owner, map);
 			fl.MethodArgs = q.MethodArgs;
 			let f = fl.Run();
 			String text = new .();
 			KirWriter.Function(f, text);
 			delete f;
+			LowerLambdas(r, q.Member.Extension ?? q.Member.Owner, q.Owner, q.MethodArgs, map, text);
+			M.ClosureScope = prevScope;
 			let unitName = (q.Member.Extension ?? q.Member.Owner).FullName;
 			List<(String key, String text)> list;
 			if (!mOut.TryGetValueAlt(unitName, out list))
@@ -184,6 +188,36 @@ namespace Treadle.Compiler
 			}
 			list.Add((new String(q.Key), text));
 			return true;
+		}
+
+		/// The Lambdas of a lowered core Sheet, and theirs (Lambdas in Lambdas), for the same
+		/// instance: each delegate Lambda's closure class and each Lambda's function, written with the
+		/// function in its unit. A generic function's Lambda is one per instance of the function
+		/// (`Core.Parallel.$lambda_c3<int>`, ProgramLowerer.Closure).
+		void LowerLambdas(SheetResult r, TypeSym home, KType owner, List<KType> methodArgs, Dictionary<GenericParamSym, KType> map, String text)
+		{
+			for (let b in r.Nodes)
+			{
+				if (b.Kind != .Lambda || b.LambdaSheet == null)
+					continue;
+				let lr = M.C.CoreSheet(home, b.LambdaSheet.Sheet);
+				if (lr == null || lr.LambdaType == null || lr.LambdaType.IsError)
+					continue;
+				if (lr.HasErrors)
+				{
+					M.C.Diags.Add(.Error, .Lower, "T4001", lr.Site, "", "", "the core library Sheet has errors: it is not compiled");
+					M.Failed();
+					continue;
+				}
+				if (lr.LambdaType.Kind == .Delegate)
+					M.ClosureDecl(lr, owner, map, text, methodArgs);
+				FnLowerer fl = scope .(M, lr, owner, map);
+				fl.MethodArgs = methodArgs;
+				let f = fl.Run();
+				KirWriter.Function(f, text);
+				delete f;
+				LowerLambdas(lr, home, owner, methodArgs, map, text);
+			}
 		}
 
 		/// Global lines for the unit `name` (a core type's or a C import set's constants).

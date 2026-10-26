@@ -133,9 +133,15 @@ Span<T>` (pure; a view of the storage, no copy; a range outside `[0, Count)` is 
 delete`), `GetEnumerator()` (For Each, with `ListEnumerator<T>`). Structs with a destructor: section 3.1.
 
 **Span\<T>** (struct, fields `Ptr`, `Length`): a pointer and a length over elements someone else owns (an array
-converts to it; `List.Slice` makes one). Get [ ] and For Each read it (built in; Get [ ] is checked in Debug),
+converts to it; `List.Slice` makes one). Get [ ] and For Each read it (built in; in Debug an index outside
+`0 .. Length - 1` is a fatal error naming the Index node, as for an array; Release does not check),
 `Slice(start, length) -> Span<T>` (a range outside it is a fatal error), `IsEmpty()`, `Sort(comparer)` and `Sort()`
-(section 4.4: a Slice of a List sorts that part of the list).
+(section 4.4: a Slice of a List sorts that part of the list), `At(index)` and `SetAt(index, value)` (read and write an
+element, the index checked in every config). **Kernel** (Index, BlockIndex, ThreadInBlock, BlockSize, Shared,
+Barrier, RunCpu), **Gpu** (Upload, Download, Dispatch, DispatchAsync, Sync, IsAvailable, PrintInfo),
+**GpuBuffer<T>** (on the GPU until Download; Upload, UploadAsync, DownloadAsync, Count; Construct with a Span or a
+count), **GpuStream** (Sync) and **PinnedBuffer<T>** (page-locked host memory: AsSpan, Count) are the experimental,
+NVIDIA-only GPU compute types ([GPU-Compute.md](GPU-Compute.md)).
 
 **Dictionary\<K,V>** (class, `K : IHashable`; open addressing, grows at three quarters full): `this()`, `Count`,
 `Add(key, value)` (a key already there is a fatal error), `TryAdd` (false when there), `SetItem(key, value)` (add or
@@ -290,7 +296,8 @@ the name is typed on the node, not wired. A Branch on `Build.IsDefined("PROFILE"
 * **Parallel** (static): `For(from, to, body)` calls `body(i)` (a `delegate:void(int)`) for every `i` from `from` up to
   `to`, on the pool's threads and the calling thread at once, and returns when all calls returned; `ForRange(from, to,
   body)` calls `body(lo, hi)` once per chunk of the range (for sums and counts: add up the chunk in a local, publish once
-  with an Atomic call); `ForEach(span, body)` calls `body(element)` per element. The calls run in any order and at the
+  with an Atomic call); `ForEach(span, body)` calls `body(element)` per element (a Lambda over `For`, one per instance
+  of the generic function). The calls run in any order and at the
   same time: what they write must be one slot per index, Atomic calls, or under a Mutex.
 
 Ownership across threads: an object may be made on one thread and deleted on another, once no thread uses it any
@@ -446,12 +453,15 @@ Every function is Pure (a value node) but `Mat3` / `Mat4.ToStd430`. Angles are r
 
 **Operators with a number.** A type may declare an operator more than once with other input types (`Vec3 * Vec3`,
 `Vec3 * float`, `float * Vec3`); the Operator node and a Math Expression pick the one that takes both sides' types,
-and a literal beside such a type takes the number type (`v * 2` scales a Vec3, as `v * 2.0f` does).
+and a literal beside such a type takes the number type (`v * 2` scales a Vec3, as `v * 2.0f` does). A compound Set
+picks it the same way: `set op *=` on a Vec3, a Mat4 or a Color with a float (wired or a literal) scales the variable.
 
 **Text.** `String.Append` has an overload for every math type (the extension `MathFormat`): vectors, quaternions,
 colours and rectangles as `(1, 2.25, -0.5)`, matrices as their rows `[(1, 0, 0), (0, 1, 0), (0, 0, 1)]`, AABB, Ray
 and Transform as their parts in brackets, each number as `Append(float)` writes it (7 significant digits; 15 for the
-double vectors). AppendF uses them: `AppendF("at {0}", position)`.
+double vectors). AppendF uses them: `AppendF("at {0}", position)`. The vector primitives have one generic overload
+(the extension `VectorFormat`, `Append<T>(value) where T : vector`): `float4(1, 2, 3, 4)` is `(1, 2, 3, 4)`, each lane as
+Append writes a value of its type (a lane mask's lanes as `true` and `false`); AppendF takes vectors the same way.
 
 **How they compute.** The Sheets of `Vec2` and `Vec4` (and the double forms) make the vector primitive from the
 fields, operate on it and break it back (`float4(a.X, a.Y, a.Z, a.W) + float4(...)`): in Release a `Vec4` addition is

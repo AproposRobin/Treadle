@@ -20,6 +20,41 @@ namespace Treadle.Compiler
 	/// binder goes on).
 	extension SheetBinder
 	{
+		/// A generic parameter with the `vector` constraint (`T : vector`, Language.md 2.4).
+		static bool IsVectorParam(KType t) => t != null && t.Kind == .Param && t.Param.IsVector;
+
+		/// A vector function on a `T : vector` value: the lanes the function takes must follow from
+		/// the constraint (`vector float` for the float-only ones), a lane value in or out needs the
+		/// lane type named, and a lane mask cannot be named in a generic Sheet.
+		bool GenericLanesFit(VectorRules.FnInfo* f, KType vt, String why)
+		{
+			let e = vt.Param.VectorElement;
+			if (f.Pins.Contains(":M") || f.Lanes == 'm')
+			{
+				why.AppendF("{}.{} works on a lane mask, which {} : vector cannot name: use it on a vector type", (f.Owner == 'M') ? "Math" : "Vector", f.Name, vt.Name);
+				return false;
+			}
+			let needsElem = f.Lanes != 'a' || f.Result == 'E' || f.Pins.Contains(":E") || f.Pins.Contains(":S") || f.Pins.Contains(":P") || f.Pins.Contains(":X");
+			if (needsElem && e == null)
+			{
+				why.AppendF("{}: what the lanes of {} are is not known here: name them in the constraint (`{} : vector float`)", f.Name, vt.Name, vt.Name);
+				return false;
+			}
+			if (e == null)
+				return true;
+			bool ok;
+			switch (f.Lanes)
+			{
+			case 'f': ok = e.Kind == .Float;
+			case 'n': ok = e.Kind == .Float || e.Kind == .Int;
+			case 'i': ok = e.Kind == .Int;
+			default: ok = true;
+			}
+			if (!ok)
+				why.AppendF("{} takes {} lanes, not the {} lanes of {}", f.Name, (f.Lanes == 'f') ? "float" : ((f.Lanes == 'n') ? "number" : "integer"), e.Name, vt.Name);
+			return ok;
+		}
+
 		/// The type an input brings: its wire's, else its literal's when that is a plain scalar.
 		KType VecIn(BNode b, StringView pin, out bool literal)
 		{
@@ -99,6 +134,61 @@ namespace Treadle.Compiler
 			if (!unary)
 				b.AddIn("b", PinType(tb, litB), false, "B");
 			b.AddOut("result", compare ? T.MaskOf(vec) : vec);
+			return true;
+		}
+
+		/// A generic parameter with the `vector` constraint (`T : vector`) beside a scalar: the scalar
+		/// splats per instance as it does beside a vector (Lower), so it must convert to the lane type
+		/// the constraint names (`T : vector float`). Two T operands take the generic path of
+		/// BindOperator. A comparison gives a lane mask, which a generic Sheet cannot name (T2133).
+		bool TryBindGenericVectorOperator(BNode b, StringView op, bool compare)
+		{
+			let ta = InType(b, "a");
+			let tb = InType(b, "b");
+			bool IsVecParam(KType t) => t != null && t.Kind == .Param && t.Param.IsVector;
+			KType vec = null;
+			bool vecIsA = true;
+			if (IsVecParam(ta))
+				vec = ta;
+			else if (IsVecParam(tb))
+			{
+				vec = tb;
+				vecIsA = false;
+			}
+			if (vec == null)
+				return false;
+			let other = vecIsA ? tb : ta;
+			let otherPin = vecIsA ? "b" : "a";
+			if (other == vec || (other != null && other.IsError))
+				return false;
+			b.Flow = false;
+			let elem = vec.Param.VectorElement;
+			KType otherType = other;
+			if (other == null)
+			{
+				let lit = Lit(b, otherPin);
+				if (lit.IsEmpty)
+					return false;
+				String why = scope .();
+				if (elem == null)
+					Err(b, otherPin, "T2320", scope $"{op}: a number beside {vec.Name} splats into its lanes, but `{vec.Name} : vector` names no lane type: write `vector float` (or the lane type) in the constraint");
+				else if (!Literals.Fits(lit, elem, T, why))
+					Err(b, otherPin, "T2320", scope $"{op}: {why}");
+				otherType = elem ?? T.Error;
+			}
+			else if (elem == null || T.CanConvert(other, elem) == .Refused)
+				Err(b, otherPin, "T2320", (elem == null) ?
+					scope $"{op}: {S!(other)} beside {vec.Name} would splat into its lanes, but `{vec.Name} : vector` names no lane type: write `vector float` (or the lane type) in the constraint" :
+					scope $"{op}: {S!(other)} does not splat into {vec.Name} (its lanes are {elem.Name}): Cast it first");
+			if (compare)
+				Err(b, "", "T2133", scope $"{op} on {vec.Name} gives a lane mask, which a generic Sheet cannot name: use Vector.Equal (every lane), or a type with the vector's name");
+			else if (!c.SupportsOperator(vec, op, r.Member))
+				Err(b, "", "T2133", scope $"{vec.Name} has no operator {op}");
+			b.OpImpl = .Generic;
+			b.OperandType = vec;
+			b.AddIn("a", vecIsA ? vec : otherType, false, "A");
+			b.AddIn("b", vecIsA ? otherType : vec, false, "B");
+			b.AddOut("result", compare ? T.Error : vec);
 			return true;
 		}
 
@@ -316,7 +406,7 @@ namespace Treadle.Compiler
 					if (p.Kind == .Value)
 					{
 						let t = InType(b, p.Name);
-						if (t != null && t.IsVector)
+						if (t != null && (t.IsVector || IsVectorParam(t)))
 							any = true;
 					}
 				if (!any)
@@ -342,7 +432,7 @@ namespace Treadle.Compiler
 					if (p.kind == 'V' || p.kind == 'M')
 					{
 						let t = InType(b, p.name);
-						if (t != null && t.IsVector)
+						if (t != null && (t.IsVector || IsVectorParam(t)))
 						{
 							vt = t;
 							break;
@@ -353,18 +443,21 @@ namespace Treadle.Compiler
 			else if (vt == null)
 				Err(b, "", "T2329", scope $"{(isVector ? "Vector" : "Math")}.{f.Name}: wire a vector into it (the type follows the vector)");
 			String why = scope .();
-			if (vt != null && !VectorRules.LanesFit(f, vt, why))
+			let generic = vt != null && IsVectorParam(vt);
+			if (generic && !GenericLanesFit(f, vt, why))
+				Err(b, "", "T2328", why);
+			else if (vt != null && !generic && !VectorRules.LanesFit(f, vt, why))
 				Err(b, "", (f.Fn == .Sum || f.Fn == .Product || f.Fn == .MinLane || f.Fn == .MaxLane || f.Fn == .And || f.Fn == .Or || f.Fn == .Xor) ? "T2328" : "T2329", why);
 			let v = vt ?? T.Error;
 			b.Subject = v;
-			let e = vt?.Element ?? T.Error;
+			let e = (generic ? vt.Param.VectorElement : vt?.Element) ?? T.Error;
 			for (let p in pins)
 			{
 				KType pt;
 				switch (p.kind)
 				{
 				case 'V': pt = v;
-				case 'M': pt = (vt != null) ? (vt.IsMask ? vt : T.MaskOf(vt)) : T.Error;
+				case 'M': pt = (vt != null && !generic) ? (vt.IsMask ? vt : T.MaskOf(vt)) : T.Error;
 				case 'E': pt = e;
 				case 'I': pt = T.Int;
 				case 'S': pt = (T.SpanSym != null && vt != null) ? T.Named(T.SpanSym, scope KType[](e)) : T.Error;
@@ -372,7 +465,7 @@ namespace Treadle.Compiler
 				case 'X':
 					// a scalar splats (a literal is one; a wired lane value too)
 					let wired = InType(b, p.name);
-					pt = (wired != null && !wired.IsVector && vt != null && T.CanConvert(wired, e) != .Refused) ? wired : v;
+					pt = (wired != null && !wired.IsVector && wired != vt && vt != null && !e.IsError && T.CanConvert(wired, e) != .Refused) ? wired : v;
 				default: pt = T.Error;
 				}
 				b.AddIn(p.name, pt, false, p.name);
@@ -388,7 +481,7 @@ namespace Treadle.Compiler
 					if (w != null && !w.IsError && T.CanConvert(w, pt) == .Refused)
 						Err(b, p.name, "T2327", scope $"{p.name}: Vector.{f.Name} reads {e.Name} lanes, so it takes {S!(pt)}, not {S!(w)}");
 				}
-				if (p.kind == 'I' && (f.Fn == .GetLane || f.Fn == .WithLane) && vt != null)
+				if (p.kind == 'I' && (f.Fn == .GetLane || f.Fn == .WithLane) && vt != null && !generic)
 				{
 					let lit = Lit(b, p.name);
 					if (!lit.IsEmpty && int64.Parse(lit) case .Ok(let li) && (li < 0 || li >= vt.Length))

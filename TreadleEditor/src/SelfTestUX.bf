@@ -421,7 +421,7 @@ namespace Treadle.Editor
 		{
 			if (phase == 0)
 			{
-				SelfTestCheck(mGraphPanel.CrumbsText == "Player > TakeDamage", scope $"editor: the breadcrumbs name the type and the Sheet ({mGraphPanel.CrumbsText})");
+				SelfTestCheck(mGraphPanel.CrumbsText == "Player : Actor > TakeDamage", scope $"editor: the breadcrumbs name the type (with its base) and the Sheet ({mGraphPanel.CrumbsText})");
 				let lambda = FindNode(CurrentMethod.Graph, .Lambda);
 				if (lambda != null)
 					OpenLambdaSheet(lambda);
@@ -429,7 +429,7 @@ namespace Treadle.Editor
 			}
 			let crumbs = scope String(mGraphPanel.CrumbsText);
 			let lambdaSheet = CurrentMethod;
-			SelfTestCheck(lambdaSheet != null && lambdaSheet.Role == .Lambda && crumbs.StartsWith("Player > TakeDamage > Lambda "), scope $"editor: a Lambda Sheet's breadcrumbs go through the Sheet holding its node ({crumbs})");
+			SelfTestCheck(lambdaSheet != null && lambdaSheet.Role == .Lambda && crumbs.StartsWith("Player : Actor > TakeDamage > Lambda "), scope $"editor: a Lambda Sheet's breadcrumbs go through the Sheet holding its node ({crumbs})");
 			let take = Doc.FindSheetByName("TakeDamage");
 			if (take != null)
 				OpenTab(take);

@@ -1,7 +1,7 @@
 ---
 audience: user
 title: Debugging
-summary: The graph debugger: breakpoints on nodes, stops and steps by node, pin values, Locals and the call stack, fatal runtime errors, other debuggers, and its limits.
+summary: The graph debugger: breakpoints on nodes, stops and steps by node, pin values, Locals and the call stack, what is under the hood (type layouts, where values live, memory, disassembly), fatal runtime errors, other debuggers, and its limits.
 order: 8
 ---
 
@@ -24,6 +24,8 @@ debugger (lldb, shipped with Treadle). This page is how to use it and what it do
 | **F11** | Step Into | Goes into the function the node calls (also the calls of the value nodes it reads) when it is project code; anything else (the runtime, the C library, the core library) is stepped over. |
 | **Shift+F11** | Step Out | Runs to the end of the function; stops on the calling node. |
 | Debug menu | Remove All Breakpoints | For the open project. |
+| Debug menu | Disassembly | The machine code of the function of the selected frame (or of the Sheet in front) from the last build ([Disassembly](#disassembly)). |
+| Debug menu | Memory | Shows or hides the Memory panel ([Memory](#memory)). |
 
 * **Breakpoints**: a red dot on the node's top-left corner. Only flow nodes take one: a value node's code
   runs inside the flow node that reads it, so the breakpoint goes there. They are kept per project in
@@ -41,10 +43,11 @@ debugger (lldb, shipped with Treadle). This page is how to use it and what it do
   by member, Lists, Dictionaries and arrays element by element. The box at the top evaluates a pin
   (`a2.object`), a local (`pet`), a member path (`pet.mLegs`) or an expression lldb reads.
 * **Call Stack**: one row per frame; project frames read `Zoo.Program.Main   b7  Call Zoo.Animal.Speak()`,
-  other frames are dimmed. A click selects the frame (Locals and the pin values follow) and opens its node.
-* **Threads**: a program with more than one thread lists them at the top of Call Stack, by name (`Main`, the name a
-  Thread was made with, `Pool 1` for the thread pool, `Thread <n>` for one without a name), the thread that stopped
-  selected. A click on another thread shows its call stack (and its Locals) without running the program, and opens its
+  other frames are dimmed. A row wider than the panel is cut in the middle (`Cx.ThreadsBas...l Thread.Join`); its
+  tooltip has it whole. A click selects the frame (Locals and the pin values follow) and opens its node.
+* **Threads**: a program with more than one thread lists them at the top of Call Stack, `Main` first, then by name (the
+  name a Thread was made with, `Pool 1` for the thread pool; `worker 2` before `worker 10`), then `Thread <n>` for the
+  ones without a name; the current thread is selected and marked with the stop arrow. A click on another thread shows its call stack (and its Locals) without running the program, and opens its
   node. A breakpoint hit on any thread stops the whole program there; Continue runs all threads, and the steps step
   the selected thread while the others run on.
 * **Debug Output** (docked with the Output Log): what the program writes (stdout and stderr), and dimmed,
@@ -71,7 +74,9 @@ debugger (lldb, shipped with Treadle). This page is how to use it and what it do
 
   | Type | Shows | Expands to |
   |---|---|---|
-  | basic types | the value (`5`, `true`, `'A'`, `2.25`) | |
+  | basic types | the value (`5`, `true`, `'A'`, `2.25`; a `uint8` / `int8` as a number, `255`, not lldb's `'\xff'`) | |
+  | vector | its type and lanes, `float4(1, 2, 3, 4)` (the first 6 lanes, then `...`); the type reads `float4`, `int32x4` rather than lldb's `float __attribute__((ext_vector_type(4)))` | the lanes `[0]`, `[1]`, ... |
+  | `Vec2` ... `Vec4d`, `Quat`, `Color`, `Color32`, `Rect`, `RectI` | the type and its fields, `Vec3(1, 2.25, -0.5)`, `Color32(255, 128, 0, 255)` | its fields |
   | simple enum | the case name (`Green`) | |
   | `String` | its text, quoted (`"13 words, 10 different"`, the first 200 bytes) | its fields |
   | `StringView` | its text, quoted | `Ptr`, `Length` |
@@ -88,6 +93,118 @@ debugger (lldb, shipped with Treadle). This page is how to use it and what it do
 * **Pin values on the canvas** come from the selected frame: a flow node's output pin is its `<node>.<pin>`
   value; an input pin takes the value of the pin wired to it; a Get of a local or parameter is that variable; an
   unwired Receiver is `this`. Other value nodes keep no value ("shown only by running code").
+
+## Under the hood
+
+A graph hides the machine, but nothing about it is secret. Five views show what the compiler made of a type
+or a Sheet and what the running program holds: **Layout** and **Lives in** work without a build, the
+**Disassembly** needs one, **Call Stack** and **Memory** need a stopped program. All of them are read-only.
+
+### Layout
+
+**Type Settings > Layout** (the type header in the Outline, then the Layout section at the bottom of
+Properties) shows where each field of a class, struct or enum sits in memory, computed by the compiler's own
+layout rules, so the numbers are the ones the build uses. No build or run is needed; unsaved edits count.
+
+![Type Settings > Layout of a struct with padding](images/hood-layout-struct.png)
+
+* **Size**: the bytes one value takes, padding included, and its alignment (an array or a field of the type
+  repeats both). The total padding is named.
+* **The bar**: one cell per byte, each field in the colour its pins have, padding hatched in grey. A thin gap
+  marks where a field ends. Hover a cell for the field.
+* **The table**: offset, field, type, size (and alignment when the panel is wide; otherwise in the tooltip).
+  Padding rows are muted: those bytes are unused so that the next field starts aligned. Hover a row for the byte
+  range and, for a class, the base class that declares the field.
+* **A class** starts with the **vtable pointer** (8 bytes at offset 0), then the base classes' fields, then its
+  own. Its Size is one object; a variable, field or pin of the class holds an 8-byte reference to it (the
+  **Reference** row). **Vtable** counts its virtual slots.
+* **A payload enum** has a **tag** (which case it holds, 4 bytes at 0) and a **payload** area shared by the
+  cases; each case's fields follow, indented, at their offsets. A simple enum is its tag type.
+* **A generic type** has no layout of its own: type an instantiation (`Zoo.Box<int>`, `Zoo.Box<Zoo.Point>`) in
+  the **Instantiation** row.
+
+![A class: the vtable pointer, then the inherited field](images/hood-layout-class.png)
+
+### Lives in
+
+Every Construct and Local node carries a small badge above its header saying where the object it makes lives
+(a Bind or Lambda that allocates its delegate too), and Properties has a **Storage** row with a one-line
+explanation; the Outline's variables say it in their tooltip, and a field's or a local variable's page in
+Properties has the same Storage row. The places are those of [Language.md](Language.md), "Where values live":
+
+| Shown as | Where | Freed |
+|---|---|---|
+| `lives in heap` | Construct: heap memory | by a Delete (or an owner's destructor); otherwise a leak the Debug build reports |
+| `lives in region` | Local: stack memory of the part of the Sheet the node is in | when control leaves that part (each pass of a loop body) |
+| `lives in frame` | Local with Until Return; local variables and parameters (Properties, Outline) | when the function returns |
+| `static` | static fields and constants (Properties, Outline) | never: one copy for the program |
+| `inline` | a struct's fields, an appended object (Properties, Outline) | with the value they are inside |
+
+![Lives in: the badges on Construct and Local, the Storage row](images/hood-badges.png)
+
+A variable of a class type is a reference: its Storage reads `frame slot holding a reference`, and the object
+lives where it was made.
+
+### Call Stack
+
+One row per frame: the Sheet and the node the frame is at (`Zoo.Program.Main   c9  Call Console.WriteLine(int)`,
+through the build's `.nodemap`), frames outside the project dimmed. A click selects the frame: Locals, the pin
+values on the canvas and the Disassembly's marked instruction follow it, and its node is shown. With several
+threads, their rows come first (see Threads above). Right-click a frame: **Show Frame in Memory** (the frame's
+stack bytes) and **Disassembly** (its function).
+
+![Call Stack at a stop, with the thread rows](images/hood-callstack.png)
+
+### Memory
+
+The bytes behind a value while the program is stopped. Open it from a row of **Locals** (right-click > **Show in
+Memory**: a local, a parameter, `this` or a pin value such as `c6.object`), from a frame of **Call Stack**
+(right-click > **Show Frame in Memory**), from **Debug > Memory** or **Window > Memory**; or type any address
+(`0x...`) into its address box. Bottom dock, next to Debug Output.
+
+* **Structured** lays the type's fields over the bytes: offset, field (struct fields down to their basic values,
+  `mValue.X`), the decoded value, the raw bytes. Padding rows are muted. The type comes from the variable, and
+  the **as type** box reads the bytes as any other type.
+* **A reference is followed**: a class variable or pin holds an address; Memory shows the object it references
+  (the header line says `c6.object  ->  Zoo.Box<Zoo.Point>  at 0x...`, its tooltip where the reference was read).
+  A pointer field or reference field has a **Follow** button; **Back** returns.
+* **Hex** shows 16 bytes per row: the address, the bytes (coloured by field when the type is known) and the
+  characters. **Copy** puts the hex text on the clipboard.
+* **Show Frame in Memory** reads from the frame's stack pointer to just above its frame pointer: the frame's
+  slots, the caller's saved frame pointer and the return address.
+* It reads again at every stop and step. Memory that cannot be read (address 0, an address the program has not
+  mapped, a variable kept in a register) says so; nothing is written.
+
+![Memory, Structured: the Local Box<Point> behind c6.object](images/hood-memory.png)
+
+![Memory, Hex: the same object, bytes coloured by field](images/hood-memory-hex.png)
+
+### Disassembly
+
+The machine code a function was built into, grouped under the node each instruction was made for (the line
+table points at the unit's listing, whose lines are nodes). Open it from a function's right-click menu in the
+Outline (**Disassembly**), from **Debug > Disassembly** (the function of the selected frame, else the Sheet in
+front), from a Call Stack frame, or **Window > Disassembly**. It opens as a tab next to the graph.
+
+* It reads the **last build of the active configuration** (`build/<Config>`): build first (F7). The function
+  is found by its Sheet, so a generic type's function lists every instantiation built (a list at the top picks
+  one); a Sheet nothing calls was not built.
+* Each **node heading** (`b7  Call Zoo.Animal.Speak()`) is followed by its instructions; a node can appear more
+  than once (a loop's test after its body, a Defer at the region's end). A click on a heading shows the node.
+  Code before the first node is the function's set-up.
+* **Addresses** and **Bytes** (the encoding) are toggles. **Find** highlights matches; Enter goes to the next.
+  **Copy** puts the tab's text on the clipboard.
+* **While stopped**, the instruction the selected frame is on is marked in yellow.
+* **Sheet IR** is the function in the Sheet IR (`.tir`, Compiler.md 4) as Build lowers the saved files;
+  **LLVM IR** is its `define` from the unit's `.ll`.
+* **Release**: the Release exe carries no symbols, so the listing comes from the unit's `.ll` compiled again
+  on its own with the build's flags (into `build/Release/disasm/`); a note says so. The code is the same except
+  where the link inlined calls between types. Instructions inlined from another type are grouped under that
+  type's node, marked `(inlined from <Type>)`.
+
+![Disassembly of Main grouped by node, the stopped instruction marked](images/hood-disassembly.png)
+
+![The same function's Sheet IR](images/hood-sheet-ir.png)
 
 ## Windowed programs
 
@@ -116,6 +233,13 @@ has nothing to run; debug it by attaching to the host:
 4. When the host calls into the library, it stops on the node. Locals, pin values and the steps work as in a
    program; the call stack shows the library's Sheets above the host's own frames (dimmed). Stop Debugging
    detaches and leaves the host running.
+
+On Linux the library is `build/Debug/lib<Name>.so`, and Attach to Process finds the hosts that mapped it by reading
+`/proc/<pid>/maps`. Yama's `ptrace_scope` 1 (the Ubuntu default) lets only a process's ancestors attach, and the
+editor's lldb-dap is not the host's ancestor: a Debug library's `treadle_init` therefore allows any debugger of the
+same user to attach to its host (`PR_SET_PTRACER_ANY`, what a Debug program does at its start; a Release library
+leaves the host alone). The `debug` self test runs the whole sequence on Linux too (a C host that `dlopen`s the
+library, Attach, the stop on `a3` of `Lib.Mathx.Twice` with `x = 21` in Locals, the host's `main` below it).
 
 ## Fatal runtime errors
 
@@ -175,3 +299,7 @@ DWARF and says so in the Output Log). Each link writes `build/<Config>/debug-for
 * Value nodes keep no value; their pins show a value only when it comes from a variable or a flow node's output.
 * Editing a Sheet while stopped is allowed; the running program is the one that was built, so lines and nodes
   may not match until the next F5.
+* Memory reads, it never writes. Show in Memory works on the top-level rows of Locals (a member's bytes are inside
+  its owner's: show the owner, or Follow a reference field). A struct larger than 4 KiB shows its first 4 KiB.
+* The Disassembly is of the last build, not of the edits since; its Sheet IR is lowered from the saved files.
+  The marked instruction needs a Debug build of the exe (Release listings are compiled again, at other addresses).

@@ -257,6 +257,7 @@ namespace Treadle.Editor
 		}
 
 		static bool SkippedFolder(StringView name) => name.Equals("build", true) || name == ".git";
+		String mBackupDir = new .() ~ delete _;
 
 		void ScanProject(StringView dir, StringView rel)
 		{
@@ -288,7 +289,7 @@ namespace Treadle.Editor
 			{
 				String name = scope .();
 				d.GetFileName(name);
-				if (SkippedFolder(name))
+				if (SkippedFolder(name) || (!mBackupDir.IsEmpty && Treadle.Document.ProjectIndex.SamePath(d.GetFilePath(.. scope String()), mBackupDir)))
 					continue;
 				ScanProject(d.GetFilePath(.. scope String()), scope $"{rel}{name}/");
 				if (ProjectCut)
@@ -337,7 +338,16 @@ namespace Treadle.Editor
 				Add(crash);
 			}
 			if (IncludeProject && !ProjectRoot.IsEmpty && Directory.Exists(ProjectRoot))
+			{
+				{
+					// The backup folder is old copies, not the project; the layout folder stays in (positions help).
+					Treadle.Document.SidecarInfo sc = scope .();
+					mBackupDir.Clear();
+					if (Treadle.Document.Sidecars.Find(scope $"{ProjectRoot}/.report", sc))
+						mBackupDir.Set(sc.BackupDir);
+				}
 				ScanProject(ProjectRoot, "");
+			}
 		}
 
 		/// Refreshes report.txt's size after the texts changed (cheap: no file scan).

@@ -190,6 +190,11 @@ namespace Treadle.Backend.IR
 				outText.Append(" export ");
 				Quote(f.ExportName, outText);
 			}
+			if (f.KernelName != null)
+			{
+				outText.Append(" kernel "); // EmitKernel.bf (GPU-Compute.md)
+				Quote(f.KernelName, outText);
+			}
 			switch (f.Conv)
 			{
 			case .CDecl: outText.Append(" cconv cdecl");

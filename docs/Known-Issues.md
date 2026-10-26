@@ -32,14 +32,19 @@ Each line says what does not work and what to do today.
 * **Vectors (SIMD)** ([Language.md 2.8](Language.md#28-vectors-simd)): `Sin`, `Cos`, `Exp`, `Log` and `Pow` on
   vectors are correct but slow (LLVM calls the C library once per lane). There is no gather / scatter, no
   `[Align(32)]` (vectors are aligned to 16 at most; an AVX load of a 32-byte vector is unaligned) and no generic code
-  over vector widths (`Vector<T, N>` with a constant `N` is reserved). Split Pin does not split a vector pin yet:
-  use a Break node. A vector does not print as one value yet: Break it and write its lanes. Programs are compiled
+  over vector widths (`Vector<T, N>` with a constant `N` is reserved; a generic function over any vector type,
+  `T : vector`, works, Language.md 2.4). Programs are compiled
   for `x86-64-v2` (SSE4.2) unless the project's config says `simd x86-64-v3` (AVX2) or another level.
 * **Threads** have no race detection: two threads that change the same variable or collection without a Mutex (a
   Local LockGuard) or an Atomic call give wrong results in Debug too, with no message. Lock around shared data.
   A Lambda handed to `Thread.Start` or `ThreadPool.Run` must be made with Allocation construct: a Local one is caught
   in Debug only when the program runs (a fatal error), not by Validate. Deep recursion on a thread other than the main
   one has a 1 MB stack unless the Thread was made with a larger `stackSize`.
+* **GPU compute is experimental and NVIDIA only** ([GPU-Compute.md](GPU-Compute.md)): `[Kernel]` functions run on
+  an NVIDIA GPU (Turing or newer) through the CUDA driver, and on the CPU everywhere else. There is no Vulkan path
+  (AMD, Intel and Apple GPUs run the CPU path), no editor UI (a dispatch is a Call of `Gpu.Dispatch` with `set
+  kernel` typed in the file) and the API may change. The transcendental Math functions are not available on
+  vectors in a kernel.
 * **Core library gaps** (no For Each over Queue and Stack, whole-file reads and writes only, ASCII-only
   ToUpper / ToLower, Dictionary order, an unstable List.Sort, no stdin or stderr for a child process):
   [Core-Library.md](Core-Library.md) lists them.
@@ -55,7 +60,11 @@ Each line says what does not work and what to do today.
   Calls either: open the Sheets that call the function and check Problems.
 * **The project page** cannot add or remove a config, or edit a C import set's headers, includes and
   libraries: **Open** the set and edit it in a text editor, then **Import Again**.
-* **Run Without Debugging** (Ctrl+F5) runs the program in its build folder (`build/<config>`), while
+* **The entry point is a type's static `Main`**: Set as entry point is offered on a static function named Main
+  only. To start at another function (an `Engine.Run`), call it from Main: Construct Engine + Run in the Node
+  menu places the object and the call together. Undo of Set as entry point works while it is the last edit of
+  the type in front.
+* **Run** (Ctrl+F5) runs the program in its build folder (`build/<config>`), while
   `--build-run` runs it in the project folder: a relative path is read from there. Pass a full path to be sure.
 * **Events**: making a field an event needs the line `attr Event` under the field in its type file, written
   in a text editor; the event's Calls look like plain Calls.
@@ -70,9 +79,19 @@ Each line says what does not work and what to do today.
 * **Linux**: x86-64 with **glibc 2.43 or newer** (made on Ubuntu 26.04; Ubuntu 24.04 cannot run it yet). It
   needs `sudo apt install libc6-dev` and, for the editor, a desktop session (X11, or Wayland with XWayland).
   Building from the command line needs no desktop. Attaching the debugger needs `ptrace_scope` 0 or 1.
+* **Samples that need SDL2** (`samples\m2-sdl`, `samples\m4-breakout`): on Windows they use the SDL2 in the
+  Treadle folder's `tools\SDL2` and Build copies `SDL2.dll` next to the program; a copy of such a sample outside
+  the Treadle folder needs `TREADLE_SDL2` set to an SDL 2.32.10 mingw development package. On Linux they link the
+  Treadle folder's `libSDL2-2.0.so.0` and run with the system's SDL2 (`sudo apt install libsdl2-2.0-0`), or with
+  `LD_LIBRARY_PATH` set to the Treadle folder. Opening a sample in place writes its `build` folder into
+  `samples\`. `samples\README.md` in the Treadle folder has the list.
 * **No macOS** build.
-* **No updates**: this version makes no update requests. Install a new version into a new folder (on Linux,
-  unpack the new tarball next to the old one).
+* **Updates** come from GitHub Releases and install into the Treadle folder itself, so that folder must be
+  writable (not Program Files) and its path short enough for the package's deepest files (about 150 characters
+  on Windows). Releases are not code-signed: the download is checked against the release's SHA256SUMS, which
+  proves it is the file the release published, not who published it (Security-Review.md, finding 18). A copy
+  installed by a host tool (`host-install.json`) and a build from source never update themselves. 0.1.0-alpha
+  has no working updater: install 0.1.1-alpha by hand once.
 
 ## Format stability
 
@@ -80,7 +99,7 @@ The graph files are your program, so this matters:
 
 * **Nothing is frozen in the alpha.** The format is version 1 (the first line of every file, `# treadle 1`).
   Before the beta, record and key names may still change.
-* **File names.** Type files are `.treadle` (layout sidecars `.treadle.layout`), project files `.tproj`. Files
+* **File names.** Type files are `.treadle` (layout files `layout/<Type>.layout`), project files `.tproj`. Files
   with the names from before the product's rename (`.vtype`, `.vtype.layout`, `.vproject`, first line
   `# vtype 1`) open and build as they are and are saved under their own names; `Treadle --format --migrate
   <project folder>` renames them once, and `Treadle --format --check <project folder>` lists them. A folder
@@ -90,12 +109,12 @@ The graph files are your program, so this matters:
   loading under their old names.
 * **Moving alpha files to the beta**: the beta migrates an older file when it opens it, and its
   `Treadle --format --migrate <project>` does a whole project at once. Before a migrated file is first
-  saved, a backup is written beside it (`<file>.v1.bak`).
+  saved, a backup is written to the project's `backup` folder (`backup/<path>.v1.bak`).
 * **Keep your projects in version control.** The files are line-based text and diff well. A file of a newer
   version than the editor knows is refused, not changed.
 * **Today**, `Treadle --format <project> [--check]` rewrites files in canonical form (or, with
   `--check`, only lists the ones that are not).
-* The `.layout` files beside your type files only hold positions and folds: deleting one never changes the
+* The `.layout` files in your project's `layout` folder only hold positions and folds: deleting one never changes the
   program.
 
 ## Performance
@@ -123,7 +142,9 @@ The graph files are your program, so this matters:
   `%LOCALAPPDATA%\Treadle\logs\treadle-crash-<date>-<time>.log`, with a `.dmp` beside it. On Linux: settings in
   `~/.local/share/Treadle`, crash reports in `~/.local/state/treadle/crashes`. Your projects stay where you put
   them; each build goes into the project's `build` folder.
-* **No telemetry.** Treadle sends nothing anywhere: no usage data, no crash uploads, no update checks. A crash
+* **No telemetry.** Treadle sends nothing anywhere: no usage data, no crash uploads. The only request it makes is the update check to GitHub (once a day, off with
+  Work Offline or Check for Updates in Editor Preferences > Updates), which sends nothing but the program's version
+  in its user agent. A crash
   report stays on your computer until you send it.
 * To remove Treadle, delete its folder and `%LOCALAPPDATA%\Treadle` (on Linux, `~/.local/share/Treadle`,
   `~/.local/state/treadle` and `~/.cache/treadle`).

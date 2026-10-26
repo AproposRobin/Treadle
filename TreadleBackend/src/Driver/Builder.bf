@@ -65,25 +65,18 @@ namespace Treadle.Backend.Driver
 				outC.Clear();
 				outH.Clear();
 			}
-			String exeDir = scope .();
-			Environment.GetExecutableFilePath(exeDir);
-			for (int up < 8)
+			// tools/runtime beside the exe (a package), else the source tree of a development build
+			// (Treadle.Language.ToolDirs: the fixed build layout, no walk up the parent folders)
+			String found = scope .();
+			if (Treadle.Language.ToolDirs.Find("tools/runtime", "tools/runtime/treadle_rt.c", found))
 			{
-				String parent = scope .();
-				if (Path.GetDirectoryPath(exeDir, parent) case .Err)
-					break;
-				exeDir.Set(parent);
-				String probe = scope $"{exeDir}/tools/runtime/treadle_rt.c";
-				if (File.Exists(probe))
+				if (File.ReadAllText(scope $"{found}/treadle_rt.c", outC) case .Ok && File.ReadAllText(scope $"{found}/treadle_rt.h", outH) case .Ok)
 				{
-					if (File.ReadAllText(probe, outC) case .Ok && File.ReadAllText(scope $"{exeDir}/tools/runtime/treadle_rt.h", outH) case .Ok)
-					{
-						outFrom.AppendF("{}/tools/runtime", exeDir);
-						return;
-					}
-					outC.Clear();
-					outH.Clear();
+					outFrom.Set(found);
+					return;
 				}
+				outC.Clear();
+				outH.Clear();
 			}
 			outC.Set(EmbeddedC);
 			outH.Set(EmbeddedH);
@@ -338,7 +331,15 @@ namespace Treadle.Backend.Driver
 				String root = scope .();
 				ToolchainPaths.Root(root);
 #if BF_PLATFORM_WINDOWS
-				report.AddError(scope $"clang was not found at {clang}. Set TREADLE_LLVM to the llvm-mingw root (docs/Toolchain.md).");
+				String env = scope .();
+				if (Environment.GetEnvironmentVariable("TREADLE_LLVM", env) case .Ok && !env.IsEmpty)
+					report.AddError(scope $"clang was not found at {clang} (TREADLE_LLVM={env}). Set TREADLE_LLVM to the llvm-mingw root (docs/Toolchain.md).");
+				else
+				{
+					String why = scope .();
+					Treadle.Language.ToolDirs.Missing("clang", "tools/llvm/bin/clang.exe", "tools/llvm-mingw/bin/clang.exe", "TREADLE_LLVM", why);
+					report.AddError(scope $"{why} (the llvm-mingw root; docs/Toolchain.md).");
+				}
 #else
 				report.AddError(scope $"clang was not found at {clang}. Install clang and lld (docs/Linux.md) or set TREADLE_LLVM to an LLVM root.");
 #endif
@@ -373,6 +374,8 @@ namespace Treadle.Backend.Driver
 					report.AddError(e);
 				return false;
 			}
+			if (!KernelBuild.AddGpuUnit(program, emitter, clang, opts, units, report)) // EmitKernelBuild.bf: the [Kernel] functions' PTX
+				return false;
 			List<String> stale = scope .();
 			defer { ClearAndDeleteItems!(stale); }
 			List<String> objects = scope .();
@@ -422,6 +425,7 @@ namespace Treadle.Backend.Driver
 			String rtH = scope .();
 			String rtFrom = scope .();
 			RuntimeSource.Get(rtC, rtH, rtFrom);
+			KernelBuild.AppendGpuRuntime(rtC, rtFrom); // EmitKernelBuild.bf: tools/runtime/treadle_gpu.c
 			String rtObj = scope $"{rtDir}/treadle_rt.o";
 			// the runtime's flags: the config's optimize level and debug info, the Debug runtime
 			// (TREADLE_DEBUG) when checks are on; a build with debug info and CodeView compiles the

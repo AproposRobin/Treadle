@@ -25,7 +25,22 @@ namespace Treadle.Graph
 		Custom,
 		/// A vector (`float4`): one number field per lane up to 4 lanes (`x y z w`), one splat field above;
 		/// stored as one token, `0,1,0,0` (a single number splats, `true,false,...` for a mask).
-		Vector
+		Vector,
+		/// A core math struct (`Vec2` / `Vec3` / `Vec4` and the double forms, `Quat`, `Color`, `Color32`, `Rect`,
+		/// `RectI`; `PinValue.MathInfo`): one number field per field (`x y z w`, `r g b a`, `x y w h`), a colour
+		/// swatch with a picker in front for `Color` / `Color32`; stored as one token, one value per field in
+		/// declaration order, `1,2,3` (a struct literal, Graph-Format.md 2).
+		Fields
+	}
+
+	/// The number type of a core math struct's fields (`PinValue.MathInfo`).
+	enum MathFieldKind : uint8
+	{
+		Float,
+		Double,
+		Int,
+		/// 0 to 255 (`Color32`).
+		Byte
 	}
 
 	/// The typed value rules of an unwired input pin, one place for the node canvas and the
@@ -84,6 +99,97 @@ namespace Treadle.Graph
 						}
 				}
 			return true;
+		}
+
+		/// The core math struct `typeName` names (`Core.Vec3`, or `Vec3` as a pin may spell it; the type
+		/// system decides whether the short name is the core one, `MathValueKind`): its field count, one hint
+		/// letter per field (`xyzw`, `rgba`, `xywh`) and the fields' number type. False for any other type.
+		public static bool MathInfo(StringView typeName, out int count, out StringView hints, out MathFieldKind kind)
+		{
+			var n = typeName;
+			n.Trim();
+			if (n.StartsWith("Core."))
+				n.RemoveFromStart(5);
+			count = 0;
+			hints = default;
+			kind = .Float;
+			switch (n)
+			{
+			case "Vec2": count = 2; hints = "xy";
+			case "Vec3": count = 3; hints = "xyz";
+			case "Vec4", "Quat": count = 4; hints = "xyzw";
+			case "Vec2d": count = 2; hints = "xy"; kind = .Double;
+			case "Vec3d": count = 3; hints = "xyz"; kind = .Double;
+			case "Vec4d": count = 4; hints = "xyzw"; kind = .Double;
+			case "Color": count = 4; hints = "rgba";
+			case "Color32": count = 4; hints = "rgba"; kind = .Byte;
+			case "Rect": count = 4; hints = "xywh";
+			case "RectI": count = 4; hints = "xywh"; kind = .Int;
+			default: return false;
+			}
+			return true;
+		}
+
+		/// Whether `typeName` is `Color` or `Color32` (the swatch and the picker).
+		public static bool IsColor(StringView typeName) => MathInfo(typeName, ?, let hints, ?) && hints == "rgba";
+
+		/// For a type system that resolved a pin's type to `fullName`: `.Fields` for a core math struct holding
+		/// nothing, `default` or a literal of it; `.Custom` for one holding anything else; `.None` for any other
+		/// type (the caller decides). A Receiver (`receiver`) takes a wire, not a literal: `.None`.
+		public static PinValueKind MathValueKind(StringView fullName, StringView current, StringView pinName)
+		{
+			if (!fullName.StartsWith("Core.") || !MathInfo(fullName, ?, ?, ?) || pinName == "receiver")
+				return .None;
+			return (current.IsEmpty || current == "default" || SplitFields(fullName, current, null)) ? .Fields : .Custom;
+		}
+
+		/// The field values of a core math struct literal (`1,2,3`; one value per field, integers for `Color32`
+		/// and `RectI`, 0 to 255 for `Color32`) into `outFields` (may be null: only checked). An empty value or
+		/// `default` gives zeros.
+		public static bool SplitFields(StringView typeName, StringView literal, List<String> outFields)
+		{
+			if (!MathInfo(typeName, let count, ?, let kind))
+				return false;
+			var t = literal;
+			t.Trim();
+			if (t.IsEmpty || t == "default")
+			{
+				if (outFields != null)
+					for (int i < count)
+						outFields.Add(new String("0"));
+				return true;
+			}
+			if (t.Contains(' '))
+				return false;
+			int k = 0;
+			for (var part in t.Split(','))
+			{
+				if (!LooksNumeric(part))
+					return false;
+				if (kind == .Int || kind == .Byte)
+				{
+					if (!(int64.Parse(part) case .Ok(let v)) || (kind == .Byte && (v < 0 || v > 255)))
+						return false;
+				}
+				k++;
+			}
+			if (k != count)
+				return false;
+			if (outFields != null)
+				for (var part in t.Split(','))
+					outFields.Add(new String(part));
+			return true;
+		}
+
+		/// Joins field values into a struct literal: every field, in order (`1,0,0`).
+		public static void JoinFields(List<String> fields, String outLiteral)
+		{
+			for (let f in fields)
+			{
+				if (@f.Index > 0)
+					outLiteral.Append(',');
+				outLiteral.Append(f);
+			}
 		}
 
 		/// Joins lane values into a vector literal: one value when all lanes are the same (a splat).
@@ -179,6 +285,22 @@ namespace Treadle.Graph
 			{
 				why?.Set("A bool is true or false.");
 				return false;
+			}
+			if (kind == .Fields && t != "default")
+			{
+				// `1, 2, 3` as typed is `1,2,3` (the format's one token).
+				String packed = scope .();
+				for (let c in t.RawChars)
+					if (c != ' ')
+						packed.Append(c);
+				if (!SplitFields(typeName, packed, null))
+				{
+					MathInfo(typeName, let count, ?, let mk);
+					why?.Set(scope $"'{t}' is not a {typeName}: {count} {(mk == .Byte) ? "numbers from 0 to 255" : ((mk == .Int) ? "whole numbers" : "numbers")} separated by commas.");
+					return false;
+				}
+				outLiteral.Append(packed);
+				return true;
 			}
 			if (kind == .Vector && t != "default")
 			{

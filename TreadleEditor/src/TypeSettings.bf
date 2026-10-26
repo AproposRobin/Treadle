@@ -30,6 +30,8 @@ namespace Treadle.Editor
 	{
 		public OutlineSelection OutlineSel;
 		int32 mSelMemberSerial;
+		/// Problems chose a variable with no type (T1078): the next Type field drawn takes the keyboard.
+		bool mFocusTypeField;
 		/// The canvas selection when the Outline row was chosen (a different one hands Properties
 		/// back to the canvas).
 		int32 mSelCanvasStamp;
@@ -669,14 +671,12 @@ namespace Treadle.Editor
 				outTypes.Add(new String(t.FullName));
 		}
 
-		/// A type row: a text field (any type the format spells) and a dropdown of the known types.
-		/// True (with the type in `outValue`) when a type was chosen or typed.
-		bool TsType(StringView label, StringView id, StringView current, String outValue, StringView tip = default)
+		/// A type row: the searchable dropdown of the types legal in `slot` (TypePickers.bf); a value
+		/// slot also takes a spelled type (`Core.List<int>`). True (with the type in `outValue`) when
+		/// another type was chosen.
+		bool TsType(StringView label, StringView id, StringView current, String outValue, StringView tip = default, TypeSlot slot = .Value, StringView noneLabel = default)
 		{
-			List<String> types = scope .();
-			defer { ClearAndDeleteItems!(types); }
-			PickableTypes(types);
-			return TsPick(label, id, current, outValue, types, tip, "type", "Choose a type", Theme.TypeColor(current), ?);
+			return TsTypeRow(label, id, current, outValue, slot, tip, noneLabel);
 		}
 
 		/// A row with a text field and a dropdown of `choices` next to it (and, `removable`, an X that
@@ -783,6 +783,9 @@ namespace Treadle.Editor
 
 		static StringView[?] sKindNames = .("Class", "Struct", "Interface", "Enum", "Delegate", "Extension");
 
+		/// Type Settings: the kind's own section first (a class's or a struct's Inheritance, an enum's
+		/// Underlying Type, a delegate's Signature, an extension's Extends), then the Type section, Uses,
+		/// Generic Parameters and Attributes.
 		void DrawTypeSettings()
 		{
 			let h = Doc.Header;
@@ -791,6 +794,46 @@ namespace Treadle.Editor
 			if (!PropertyGrid.Begin("##typesettings"))
 				return;
 			String v = scope .();
+			switch (h.Kind)
+			{
+			case .Class, .Struct, .Interface:
+				if (PropertyGrid.Section("Inheritance", true))
+					DrawInheritanceRows(h);
+			case .Enum:
+				if (PropertyGrid.Section("Enum", true))
+				{
+					v.Clear();
+					if (TsTypeRow("Underlying Type", "##tsunder", h.Underlying?.ToString(.. scope String()) ?? "", v, .Integer, "The integer type the cases are stored as", "int (default)") && BeginTypeEdit())
+					{
+						delete h.Underlying;
+						h.Underlying = v.IsEmpty ? null : TypeRef.Parse(v);
+						EndTypeEdit();
+					}
+				}
+			case .Extension:
+				if (PropertyGrid.Section("Extension", true))
+				{
+					List<String> types = scope .();
+					defer { ClearAndDeleteItems!(types); }
+					ExtendableTypes(types);
+					String cur = h.Extends?.ToString(.. scope String()) ?? "";
+					PropertyGrid.Row("Extends", "The type this extension adds members to: a class, a struct or an enum of the project, a dependency, the core library or a C import. A generic type is extended with its parameters (Core.List<T>).", cur.IsEmpty ? 0 : Theme.TypeColor(cur));
+					if (mFocusTsId == "##tsextends")
+					{
+						// New Extension: the picker opens on its own, its search field focused.
+						mFocusTsId.Clear();
+						TypeCombo.TestOpen.Set("##tsextends");
+					}
+					v.Clear();
+					if (NameComboFor("##tsextends", cur, types, v))
+						SetTypeExtends(v);
+					if (cur.IsEmpty)
+						PropertyGrid.InfoRow("", "Choose the type it extends", default, Look.Warning, 0, true);
+				}
+			case .Delegate:
+				if (PropertyGrid.Section("Signature", true))
+					DrawDelegateSignatureRows(h);
+			}
 			if (PropertyGrid.Section("Type", true))
 			{
 				if (TsText("Name", "##tsname", h.Name, v, "The type's name (the file keeps its own name)") && BeginTypeEdit())
@@ -823,126 +866,193 @@ namespace Treadle.Editor
 				}
 				if (h.Kind == .Class || h.Kind == .Struct)
 					TsCheck("Static", "##tsstatic", ref h.Static, "Only static members: a node library");
-				if (h.Kind == .Enum)
-				{
-					v.Clear();
-					if (TsType("Underlying Type", "##tsunder", h.Underlying?.ToString(.. scope String()) ?? "", v, "The integer type the cases are stored as") && BeginTypeEdit())
-					{
-						delete h.Underlying;
-						h.Underlying = v.IsEmpty ? null : TypeRef.Parse(v);
-						EndTypeEdit();
-					}
-				}
 				TsDoc("##tsdoc", ref h.Doc);
 			}
-			if (h.Kind == .Extension && PropertyGrid.Section("Extension", true))
-			{
-				List<String> types = scope .();
-				defer { ClearAndDeleteItems!(types); }
-				ExtendableTypes(types);
-				String cur = h.Extends?.ToString(.. scope String()) ?? "";
-				v.Clear();
-				if (TsPick("Extends", "##tsextends", cur, v, types, "The type this extension adds members to: a class, a struct or an enum of the project, a dependency, the core library or a C import. A generic type is extended with its parameters (Core.List<T>).",
-					"type", "Choose the type to extend", Theme.TypeColor(cur), ?))
-					SetTypeExtends(v);
-				if (cur.IsEmpty)
-					PropertyGrid.InfoRow("", "Choose the type it extends", default, Look.Warning, 0, true);
-			}
-			if (h.Kind == .Delegate && PropertyGrid.Section("Signature", true))
-				DrawDelegateSignatureRows(h);
 			if (PropertyGrid.Section("Uses", !h.Uses.IsEmpty))
 				DrawUsesRows(h);
-			if ((h.Kind == .Class || h.Kind == .Struct || h.Kind == .Interface) && PropertyGrid.Section("Inheritance", true))
-			{
-				if (h.Kind == .Class)
-				{
-					v.Clear();
-					if (TsType("Base Type", "##tsbase", h.Base?.ToString(.. scope String()) ?? "", v, "The class this one derives from (none: Object)") && BeginTypeEdit())
-					{
-						delete h.Base;
-						h.Base = v.IsEmpty ? null : TypeRef.Parse(v);
-						EndTypeEdit();
-					}
-				}
-				for (let t in h.Implements)
-				{
-					Gui.PushID((int32)@t.Index);
-					v.Clear();
-					String cur = t.ToString(.. scope String());
-					if (TsType((h.Kind == .Interface) ? "Extends" : "Implements", scope $"##tsimpl{@t.Index}", cur, v) && BeginTypeEdit())
-					{
-						if (v.IsEmpty)
-						{
-							h.Implements.RemoveAt(@t.Index);
-							delete t;
-						}
-						else
-						{
-							delete t;
-							h.Implements[@t.Index] = TypeRef.Parse(v);
-						}
-						EndTypeEdit();
-						Gui.PopID();
-						break;
-					}
-					Gui.PopID();
-				}
-				if (PropertyGrid.ButtonRow("", scope $"{Icon.Plus} Add Interface", "An interface this type implements") && BeginTypeEdit())
-				{
-					h.Implements.Add(TypeRef.Parse("IInterface"));
-					EndTypeEdit();
-				}
-			}
-			if (h.Kind != .Enum && PropertyGrid.Section("Generic Parameters", !h.Generics.IsEmpty))
-			{
-				for (let gp in h.Generics)
-				{
-					Gui.PushID((int32)(100 + @gp.Index));
-					String cons = scope .();
-					for (let c in gp.Constraints)
-					{
-						if (!cons.IsEmpty)
-							cons.Append(' ');
-						if (c.Type != null)
-							c.Type.ToString(cons);
-						else if (c.Word != null)
-							cons.Append(c.Word);
-					}
-					v.Clear();
-					if (TsText(gp.Name, scope $"##tsgen{@gp.Index}", cons, v, "Constraints, space separated: class, struct, an interface or base type, operator==") && BeginTypeEdit())
-					{
-						for (let c in gp.Constraints)
-						{
-							delete c.Type;
-							delete c.Word;
-						}
-						gp.Constraints.Clear();
-						for (var w in v.Split(' '))
-						{
-							w.Trim();
-							if (!w.IsEmpty)
-								gp.AddConstraint(w);
-						}
-						EndTypeEdit();
-					}
-					Gui.PopID();
-				}
-				if (PropertyGrid.ButtonRow("", scope $"{Icon.Plus} Add Generic Parameter", "A type the user of this type chooses (T)") && BeginTypeEdit())
-				{
-					GenericParam gp = new .();
-					gp.Name.Set((h.Generics.Count == 0) ? "T" : scope $"T{h.Generics.Count + 1}");
-					h.Generics.Add(gp);
-					EndTypeEdit();
-				}
-				if (!h.Generics.IsEmpty && PropertyGrid.ButtonRow("", scope $"{Icon.Trash2} Remove the Last One") && BeginTypeEdit())
-				{
-					delete h.Generics.PopBack();
-					EndTypeEdit();
-				}
-			}
+			if (h.Kind != .Enum && h.Kind != .Delegate && PropertyGrid.Section("Generic Parameters", !h.Generics.IsEmpty))
+				DrawGenericRows(h);
 			if (PropertyGrid.Section("Attributes", !h.Attrs.IsEmpty))
 				DrawAttrRows(h.Attrs, "type");
+			if ((h.Kind == .Class || h.Kind == .Struct || h.Kind == .Enum) && PropertyGrid.Section("Layout", false)) DrawLayoutSection(h); // TypeLayoutSection.bf
 			PropertyGrid.End();
+		}
+
+		/// `Zoo.Animal` -> `Animal` (a generic one is kept whole: `Core.List<int>`).
+		public static void ShortTypeName(StringView name, String outText)
+		{
+			let dot = name.LastIndexOf('.');
+			outText.Append((dot >= 0 && !name.Contains('<')) ? name.Substring(dot + 1) : name);
+		}
+
+		/// "Dog : Animal, IPet": the type's name and what it derives from and implements (short names).
+		public static void InheritanceLine(TypeDecl h, String outText)
+		{
+			outText.Append(h.Name);
+			bool first = true;
+			if (h.Kind == .Class && h.Base != null && !h.Base.IsNone)
+			{
+				outText.Append(" : ");
+				ShortTypeName(h.Base.ToString(.. scope String()), outText);
+				first = false;
+			}
+			if (h.Kind == .Class || h.Kind == .Struct || h.Kind == .Interface)
+				for (let i in h.Implements)
+				{
+					outText.Append(first ? " : " : ", ");
+					ShortTypeName(i.ToString(.. scope String()), outText);
+					first = false;
+				}
+		}
+
+		/// Inheritance: a class's Base Class (a dropdown of the classes it may derive from, None first)
+		/// with the "Dog : Animal" line under it, then the interfaces (an interface's: the ones it
+		/// extends), each a dropdown of interfaces with an X, and Add Interface.
+		void DrawInheritanceRows(TypeDecl h)
+		{
+			String v = scope .();
+			if (h.Kind == .Class)
+			{
+				String cur = h.Base?.ToString(.. scope String()) ?? "";
+				if (TsTypeRow("Base Class", "##tsbase", cur, v, .BaseClass, "The class this one derives from: a class of the project, the core library or a dependency that is not sealed or static (none: Object)", "None (Object)"))
+					SetTypeBase(v);
+			}
+			StringView what = (h.Kind == .Interface) ? "Extends" : "Interfaces";
+			for (let t in h.Implements)
+			{
+				Gui.PushID((int32)(200 + @t.Index));
+				String cur = t.ToString(.. scope String());
+				PropertyGrid.Row((@t.Index == 0) ? what : "", "An interface this type implements", Theme.TypeColor(cur));
+				float bw = Gui.igGetFrameHeight() + 4 * Look.Scale;
+				v.Clear();
+				bool picked = TypeComboFor("##tsimpl", cur, v, .Interface, default, Math.Max(40 * Look.Scale, Gui.igGetContentRegionAvail().x - bw - 4 * Look.Scale));
+				Gui.SameLine(0, 4 * Look.Scale);
+				bool remove = Gui.Button(scope $"{Icon.X}##rm", .(bw - 4 * Look.Scale, 0));
+				if (Gui.igIsItemHovered(0))
+					Gui.Tooltip("Remove this interface");
+				Gui.PopID();
+				if (remove)
+				{
+					SetTypeInterface(@t.Index, "");
+					break;
+				}
+				if (picked && !v.IsEmpty)
+				{
+					SetTypeInterface(@t.Index, v);
+					break;
+				}
+			}
+			PropertyGrid.Row(h.Implements.IsEmpty ? what : "", "Add an interface this type implements");
+			v.Clear();
+			if (TypeComboFor("##tsaddimpl", "", v, .Interface, default, -1, default, "Add an interface") && !v.IsEmpty)
+				SetTypeInterface(-1, v);
+			String line = scope .();
+			InheritanceLine(h, line);
+			PropertyGrid.InfoRow("", line, default, Look.ForegroundDim, 0, true);
+		}
+
+		/// The class's `base` (empty: none, Object). One undo step.
+		public bool SetTypeBase(StringView type)
+		{
+			var type;
+			type.Trim();
+			let h = Doc.Header;
+			if (type == (h.Base?.ToString(.. scope String()) ?? "") || !BeginTypeEdit())
+				return false;
+			DeleteAndNullify!(h.Base);
+			if (!type.IsEmpty)
+				h.Base = TypeRef.Parse(type);
+			EndTypeEdit();
+			return true;
+		}
+
+		/// Sets the interface at `index` (empty: removes it; -1: adds `type`, once). One undo step.
+		public bool SetTypeInterface(int index, StringView type)
+		{
+			let h = Doc.Header;
+			if (index < 0)
+			{
+				for (let i in h.Implements)
+					if (i.ToString(.. scope String()) == type)
+						return false;
+				if (type.IsEmpty || !BeginTypeEdit())
+					return false;
+				h.Implements.Add(TypeRef.Parse(type));
+				EndTypeEdit();
+				return true;
+			}
+			if (index >= h.Implements.Count || !BeginTypeEdit())
+				return false;
+			delete h.Implements[index];
+			if (type.IsEmpty)
+				h.Implements.RemoveAt(index);
+			else
+				h.Implements[index] = TypeRef.Parse(type);
+			EndTypeEdit();
+			return true;
+		}
+
+		/// Generic Parameters: each parameter's constraints as removable rows and an Add Constraint
+		/// dropdown (class, struct, operator==, the interfaces and the classes), then Add / Remove.
+		void DrawGenericRows(TypeDecl h)
+		{
+			for (let gp in h.Generics)
+			{
+				Gui.PushID((int32)(100 + @gp.Index));
+				int removeAt = -1;
+				for (let c in gp.Constraints)
+				{
+					String text = scope .();
+					if (c.Type != null)
+						c.Type.ToString(text);
+					else if (c.Word != null)
+						text.Append(c.Word);
+					PropertyGrid.Row((@c.Index == 0) ? gp.Name : "", "A constraint on the type the user chooses");
+					float bw = Gui.igGetFrameHeight() + 4 * Look.Scale;
+					PropertyGrid.Box(text, Math.Max(40 * Look.Scale, Gui.igGetContentRegionAvail().x - bw - 4 * Look.Scale), (c.Type != null) ? Theme.TypeColor(text) : 0);
+					Gui.SameLine(0, 4 * Look.Scale);
+					if (Gui.Button(scope $"{Icon.X}##gc{@c.Index}", .(bw - 4 * Look.Scale, 0)))
+						removeAt = @c.Index;
+				}
+				PropertyGrid.Row(gp.Constraints.IsEmpty ? gp.Name : "", "Add a constraint: class, struct, operator==, an interface or a base class");
+				List<String> choices = scope .();
+				defer { ClearAndDeleteItems!(choices); }
+				for (let w in StringView[?]("class", "struct", "operator=="))
+					choices.Add(new String(w));
+				String self = Doc.Header.GetFullName(.. scope String());
+				TypeChoices(.Interface, self, choices);
+				TypeChoices(.BaseClass, self, choices);
+				String add = scope .();
+				bool added = NameComboFor("##gcadd", "", choices, add, -1, "Add a constraint") && !add.IsEmpty;
+				Gui.PopID();
+				if (removeAt >= 0 && BeginTypeEdit())
+				{
+					let c = gp.Constraints[removeAt];
+					delete c.Type;
+					delete c.Word;
+					gp.Constraints.RemoveAt(removeAt);
+					EndTypeEdit();
+					return;
+				}
+				if (added && BeginTypeEdit())
+				{
+					gp.AddConstraint(add);
+					EndTypeEdit();
+					return;
+				}
+			}
+			if (PropertyGrid.ButtonRow("", scope $"{Icon.Plus} Add Generic Parameter", "A type the user of this type chooses (T)") && BeginTypeEdit())
+			{
+				GenericParam gp = new .();
+				gp.Name.Set((h.Generics.Count == 0) ? "T" : scope $"T{h.Generics.Count + 1}");
+				h.Generics.Add(gp);
+				EndTypeEdit();
+			}
+			if (!h.Generics.IsEmpty && PropertyGrid.ButtonRow("", scope $"{Icon.Trash2} Remove the Last One") && BeginTypeEdit())
+			{
+				delete h.Generics.PopBack();
+				EndTypeEdit();
+			}
 		}
 
 		/// The types an extension can extend (Language.md 4.4): the classes, structs and enums of the
@@ -1068,22 +1178,23 @@ namespace Treadle.Editor
 				SetDelegateSignature(ret, views);
 			}
 			v.Clear();
-			if (TsType("Returns", "##tssigret", ret, v, "What a delegate of this type returns (void: nothing)"))
+			if (TsType("Returns", "##tssigret", ret, v, "What a delegate of this type returns (void: nothing)", .Result))
 			{
 				ret.Set(v.IsEmpty ? "void" : v);
 				Commit();
 				return;
 			}
-			List<String> types = scope .();
-			defer { ClearAndDeleteItems!(types); }
-			PickableTypes(types);
 			for (int i < inputs.Count)
 			{
 				Gui.PushID((int32)(600 + i));
 				v.Clear();
-				bool remove;
-				let picked = TsPick(scope $"Input {i + 1}", scope $"##tssigin{i}", inputs[i], v, types, "The type of this input (a Lambda of this type names it a, b, ...)",
-					"type", "Choose a type", Theme.TypeColor(inputs[i]), out remove, true, "Remove this input");
+				PropertyGrid.Row(scope $"Input {i + 1}", "The type of this input (a Lambda of this type names it a, b, ...)", Theme.TypeColor(inputs[i]));
+				float bw = Gui.igGetFrameHeight() + 4 * Look.Scale;
+				let picked = TypeComboFor(scope $"##tssigin{i}", inputs[i], v, .Value, default, Math.Max(40 * Look.Scale, Gui.igGetContentRegionAvail().x - bw - 4 * Look.Scale));
+				Gui.SameLine(0, 4 * Look.Scale);
+				bool remove = Gui.Button(scope $"{Icon.X}##rmin", .(bw - 4 * Look.Scale, 0));
+				if (Gui.igIsItemHovered(0))
+					Gui.Tooltip("Remove this input");
 				Gui.PopID();
 				if (remove)
 				{
@@ -1238,7 +1349,6 @@ namespace Treadle.Editor
 
 		// ------------------------------------------------------------------ member pages
 
-		static StringView[?] sInheritNames = .("None", "Virtual", "Abstract", "Override", "Sealed Override");
 		static StringView[?] sOwnerNames = .("(default)", "Owned", "Reference", "Appended", "Pointer", "Custom");
 		static StringView[?] sModeNames = .("value", "ref", "out", "in");
 
@@ -1269,6 +1379,11 @@ namespace Treadle.Editor
 				if (m.Kind == .Field || m.Kind == .Property)
 				{
 					v.Clear();
+					if (mFocusTypeField)
+					{
+						Gui.igSetKeyboardFocusHere(0);
+						mFocusTypeField = false;
+					}
 					if (TsType("Type", scope $"##mtype{id}", m.Type?.ToString(.. scope String()) ?? "", v) && BeginTypeEdit())
 					{
 						delete m.Type;
@@ -1288,6 +1403,7 @@ namespace Treadle.Editor
 						EndTypeEdit();
 					}
 				}
+				if (m.Kind == .Field) StorageRowField(m); // LivesIn.bf
 				if (m.Kind == .Case)
 				{
 					v.Clear();
@@ -1344,14 +1460,13 @@ namespace Treadle.Editor
 				}
 				if (m.Kind == .Function)
 				{
-					int32 inherit = m.Override ? (m.Sealed ? 4 : 3) : (m.Abstract ? 2 : (m.Virtual ? 1 : 0));
-					if (PropertyGrid.ComboRow("Inheritance", scope $"##minherit{id}", ref inherit, sInheritNames, "Virtual: derived classes may override it. Override: replaces a base function.") && BeginTypeEdit())
+					// A class function's inheritance (Overrides.bf); a struct's, an interface's or an
+					// extension's functions bind statically and have none.
+					if (Doc.Header.Kind == .Class && !m.Static)
 					{
-						m.Virtual = inherit == 1;
-						m.Abstract = inherit == 2;
-						m.Override = inherit >= 3;
-						m.Sealed = inherit == 4;
-						EndTypeEdit();
+						DrawInheritanceSegments(m);
+						if (m.Override)
+							TsCheck("Sealed", scope $"##msealed{id}", ref m.Sealed, "No class below may override it again");
 					}
 					TsCheck("Pure", scope $"##mpure{id}", ref m.Pure, "No side effects: its Calls are value nodes");
 					TsCheck("Unsafe", scope $"##munsafe{id}", ref m.Unsafe, "Pointer nodes allowed in its Sheet");
@@ -1378,7 +1493,7 @@ namespace Treadle.Editor
 				if (m.Kind != .Ctor && PropertyGrid.Section("Outputs", true, Icon.ArrowLeft))
 				{
 					v.Clear();
-					if (TsType("Return Type", scope $"##mret{id}", m.Returns?.ToString(.. scope String()) ?? "", v, "What the function returns (empty: nothing)") && BeginTypeEdit())
+					if (TsType("Return Type", scope $"##mret{id}", m.Returns?.ToString(.. scope String()) ?? "", v, "What the function returns (None: nothing)", .Result, "None") && BeginTypeEdit())
 					{
 						delete m.Returns;
 						m.Returns = (v.IsEmpty || v == "void") ? null : TypeRef.Parse(v);
@@ -1394,7 +1509,7 @@ namespace Treadle.Editor
 				{
 					Gui.PushID((int32)(300 + @p.Index));
 					v.Clear();
-					if (TsType(p.Name, scope $"##mpay{id}_{@p.Index}", p.Type?.ToString(.. scope String()) ?? "", v, "Empty the type to remove the field") && BeginTypeEdit())
+					if (TsType(p.Name, scope $"##mpay{id}_{@p.Index}", p.Type?.ToString(.. scope String()) ?? "", v, "The type of this payload field (Remove: the field goes)", .Value, "Remove") && BeginTypeEdit())
 					{
 						if (v.IsEmpty)
 						{
@@ -1453,10 +1568,9 @@ namespace Treadle.Editor
 				float bw = Gui.igGetFrameHeight() + 4 * Look.Scale;
 				// The passing dropdown gives way first in a narrow panel, so the remove button stays in view.
 				float modeW = outs ? 0 : Math.Clamp(Gui.igGetContentRegionAvail().x - bw - 52 * Look.Scale, 44 * Look.Scale, 74 * Look.Scale);
-				let typeBuf = TsBuf(scope $"##pt{m.Serial}_{outs}_{@p.Index}", p.Type?.ToString(.. scope String()) ?? "");
-				Gui.igSetNextItemWidth(Math.Max(40 * Look.Scale, Gui.igGetContentRegionAvail().x - bw - modeW - 8 * Look.Scale));
-				bool typeDone = PropertyGrid.Text("##ptype", typeBuf, ?, false, null, "type");
-				bool typeActive = Gui.igIsItemActive();
+				String typeNow = p.Type?.ToString(.. scope String()) ?? "";
+				String typePicked = scope .();
+				bool typeDone = TypeComboFor("##ptype", typeNow, typePicked, .Value, default, Math.Max(40 * Look.Scale, Gui.igGetContentRegionAvail().x - bw - modeW - 8 * Look.Scale));
 				if (!outs)
 				{
 					Gui.SameLine(0, 4 * Look.Scale);
@@ -1472,7 +1586,6 @@ namespace Treadle.Editor
 				bool remove = Gui.Button(Icon.X, .(bw - 4 * Look.Scale, 0));
 				if (Gui.igIsItemHovered(0))
 					Gui.Tooltip(outs ? "Remove this output" : "Remove this input");
-				String typeNow = p.Type?.ToString(.. scope String()) ?? "";
 				if (remove)
 				{
 					RemoveParam(m, p);
@@ -1510,15 +1623,13 @@ namespace Treadle.Editor
 				}
 				else if (!nameActive && nameBuf != p.Name)
 					nameBuf.Set(p.Name);
-				if (typeDone && typeBuf != typeNow && BeginTypeEdit())
+				if (typeDone && typePicked != typeNow && BeginTypeEdit())
 				{
 					delete p.Type;
-					p.Type = typeBuf.IsEmpty ? null : TypeRef.Parse(typeBuf);
+					p.Type = typePicked.IsEmpty ? null : TypeRef.Parse(typePicked);
 					SyncSheets(m);
 					EndTypeEdit();
 				}
-				else if (!typeActive && typeBuf != typeNow)
-					typeBuf.Set(typeNow);
 				Gui.PopID();
 			}
 			if (PropertyGrid.ButtonRow("", outs ? scope $"{Icon.Plus} Add Output" : scope $"{Icon.Plus} Add Input"))
@@ -1552,6 +1663,11 @@ namespace Treadle.Editor
 					}
 				}
 				v.Clear();
+				if (mFocusTypeField)
+				{
+					Gui.igSetKeyboardFocusHere(0);
+					mFocusTypeField = false;
+				}
 				if (TsType("Type", "##ltype", type, v) && BeginTypeEdit())
 				{
 					delete l.Type;
@@ -1580,6 +1696,7 @@ namespace Treadle.Editor
 					l.Owner = (Ownership)owner;
 					EndTypeEdit();
 				}
+				StorageRowLocal(l); // LivesIn.bf
 			}
 			PropertyGrid.End();
 		}

@@ -1,0 +1,5 @@
+# treadle 1
+type BurstHandler delegate
+	namespace Particles
+	signature void(int)
+	doc "The handlers of Bursts.OnBurst: the number of the burst (1, 2, ...) in, nothing out."

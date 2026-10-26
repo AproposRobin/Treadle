@@ -16,9 +16,10 @@ keyboard (its tab in front, no text field in edit).
 |---|---|
 | **Ctrl+S** / **Ctrl+Shift+S** | Save / Save All |
 | **Ctrl+O** | Open a type file or a project folder |
-| **Ctrl+W** | Close the Sheet tab in front (also middle-click a tab, or its menu: Close, Close Others, Close All, Close to the Right) |
-| **Ctrl+Tab** / **Ctrl+Shift+Tab** | The list of open Sheets, most recently used first, opened on the Sheet used before this one: **Tab** / **Shift+Tab** move while Ctrl is held, releasing **Ctrl** opens the highlighted Sheet, **Esc** closes the list, a click opens a row; a quick tap goes back and forth between the last two |
-| **Ctrl+Page Down** / **Ctrl+Page Up** | The next / previous Sheet tab, in the tab bar's order |
+| **Ctrl+W** | Close the Sheet tab in front (also middle-click a tab, or its menu: Close, Close Others, Close All, Close to the Right, all among the Sheets of the type in front) |
+| **Ctrl+Tab** / **Ctrl+Shift+Tab** | The list of the open Sheets of the type in front, most recently used first, opened on the Sheet used before this one: **Tab** / **Shift+Tab** move while Ctrl is held, releasing **Ctrl** opens the highlighted Sheet, **Esc** closes the list, a click opens a row; a quick tap goes back and forth between the last two |
+| **Ctrl+Page Down** / **Ctrl+Page Up** | The next / previous Sheet tab of the type in front, in the tab bar's order |
+| **Ctrl+Shift+Page Down** / **Ctrl+Shift+Page Up** | The next / previous open type, in the type tabs' order: its Sheet tabs, Outline and Properties come with it |
 | **Ctrl+Z** / **Ctrl+Y** (or **Ctrl+Shift+Z**) | Undo / Redo of the document in front: a placement, a drag, a property edit is one step |
 | **Ctrl+B** | Show the open type in the Project Browser |
 | **Ctrl+Space** | Project Drawer |
@@ -26,7 +27,7 @@ keyboard (its tab in front, no text field in edit).
 | **Shift+F7** | Validate (the graph checks and the compiler's, nothing written) |
 | **F7** / **Ctrl+F7** | Build / Force Build |
 | **F5** | Start Debugging; Continue when stopped |
-| **Ctrl+F5** | Run without debugging |
+| **Ctrl+F5** | Run: build if needed, then start the program (without the debugger) |
 | **Shift+F5** | Stop Debugging |
 | **F9** | Breakpoint on the selected node(s) (or click the circle on a node's corner) |
 | **F10** / **F11** / **Shift+F11** | Step Over / Into / Out while stopped |
@@ -94,14 +95,23 @@ output (with two or more): the Entry, the Return and every Call follow the order
 | Where | Keys | Does |
 |---|---|---|
 | Outline | **F2** | Rename the selected member or local (its Name in Properties) |
+| Outline | **Delete** | Delete the selected variable, function, case or local (one undo step; only when the Outline has the focus: the Sheet's selection stays) |
+| Outline | **Enter** | Open the selected member: its Sheet, else its page in Properties |
+| Outline | **Override...** on FUNCTIONS (a class); **Implement** on a REQUIRED OVERRIDES row, its **+** | Override a base function; implement a required one; implement them all |
+| Outline | Right-click the type's header | Make Child Class (a class), Duplicate, Type Settings |
 | Outline | Drag a variable onto the Sheet: **Ctrl** = Get, **Alt** = Set, plain = asks; onto a pin: wired to it | Get / Set |
 | Outline | **+** of FUNCTIONS, VARIABLES, CASES, LOCAL VARIABLES | Add one, its Name in edit |
 | Outline | Click a Category header under VARIABLES | Fold / open that Category's variables (a variable's Category is set in its Properties) |
 | Project Browser | **F2**, **Del**, **Enter**, **F5**, **Ctrl+A** | Rename, delete (to the Recycle Bin), open, refresh, select all |
+| Project Browser | **+ Add** or right-click a folder | New Folder, New Class, New Struct, New Enum, New Interface, New Delegate, New Extension, New C Import Set: each asks for the name in the Create Type dialog (Enter creates, Esc cancels); no shortcuts |
+| Project Browser | Right-click a type tile | Make Child Class (a class that is not sealed or static), Duplicate |
+| A type picker | Type, **Up** / **Down**, **Enter**, **Esc** | Search (words in any order), move, take the row, close |
 | Node menu | Type, Arrows, Page Up / Down, **Enter**, **Esc**; the star; the key box of a favorite | Search, move, place, close; favorite; give it a node hotkey |
 | Canvas sheet tabs | Middle-click | Close the tab |
+| Type tabs (over the Sheet tabs) | Click; middle-click or the **x**; right-click (Type Settings, Show in Project Browser, Close, Close Other Types, Close All Types); drag along the row | Bring the type to the front; close the type (its Sheet tabs close, the file stays as it is); the menu; reorder |
+| Type tabs | Drag a variable or function from the Outline and hold it over another type's tab | That type comes to the front; drop on its Sheet for a Call / Get / Set |
 
 ## Breadcrumbs
 
 The upper left of the Sheet shows the type, the function and any Lambda Sheet down to the one in front
-(`Program > Main > Lambda a8`). Clicking the type opens Type Settings, clicking a Sheet opens it.
+(`Program > Main > Lambda a8`; a class with a base reads `Dog : Animal > Speak`). Clicking the type opens Type Settings, clicking a Sheet opens it.

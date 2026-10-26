@@ -1,0 +1,8 @@
+# A failed check in a kernel: on the GPU the device-side error record gives "fatal: GPU: <message> at <Type.Function> node <id> (in the kernel ...)" at Gpu.Sync; on the CPU path the same check, without "GPU:"; exit 3 either way.
+== exit
+3
+== stdout
+before the dispatch
+== stderr
+Span.SetAt: the index is out of range
+at Core.Span.SetAt node e05

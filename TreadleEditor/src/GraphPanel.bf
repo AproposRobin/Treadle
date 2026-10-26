@@ -548,6 +548,15 @@ namespace Treadle.Editor
 		int32 mFanOutSerial = -1;
 		int32 mFanOutVersion = -1;
 		int32 mFanOutGeneration = -1;
+		/// The Validate generation, stale state and preference the counts were taken for.
+		int32 mFanOutShown = -1;
+		/// This frame: the problems shown are from before the last edit (strips, outlines, pin badges and
+		/// "evaluated Nx" drawn faint until the next Validate).
+		bool mProblemsDim;
+		/// The last frame drew the problems dimmed (the self test).
+		public bool ProblemsDim => mProblemsDim;
+		/// `c` with its alpha scaled down when the problems shown are stale.
+		uint32 ProblemColor(uint32 c) => mProblemsDim ? ((c & 0x00FFFFFF) | ((((c >> 24) * 40) / 100) << 24)) : c;
 
 		/// Whether the layout file draws this node collapsed (`collapsed <id>`).
 		public bool IsCollapsed(GraphTab tab, Node node)
@@ -645,6 +654,22 @@ namespace Treadle.Editor
 				p.Default.IsEmpty && !Linked(p);
 		}
 
+		/// An instance Call whose Receiver is not wired, has no value and cannot be `this` (a static
+		/// Sheet, or a Sheet of a type that is not `owner` nor derived from it).
+		public bool NeedsReceiver(Graph g, Node node, Pin target, StringView owner)
+		{
+			if (node.Binding != .Instance || Linked(target) || !target.Default.IsEmpty)
+				return false;
+			if (g.StaticContext || g.SelfType.IsEmpty)
+				return true;
+			String self = scope .();
+			Treadle.Catalog.TypeRules.Normalize(g.SelfType, self);
+			if (Treadle.Catalog.NodeCatalog.SameOwner(self, owner))
+				return false;
+			let types = mApp.Language.Types;
+			return types == null || !types.IsSubtype(self, owner);
+		}
+
 		/// A Set node's unlinked "receiver" pin that is shown as the label of its value row.
 		bool IsSetVariableLabel(Graph g, Pin p)
 		{
@@ -729,7 +754,13 @@ namespace Treadle.Editor
 			if (target == null)
 				return;
 			StringView name = (node.Binding == .Instance && node.OwnerType != null) ? (StringView)node.OwnerType : (StringView)target.TypeName;
-			if (!name.IsEmpty)
+			if (!name.IsEmpty && NeedsReceiver(g, node, target, name))
+			{
+				// Nothing wired and no `this` of that type here: say where the object comes from.
+				let shortName = Node.ShortTypeName(name, .. scope String());
+				sub.AppendF("needs a{} {}: drag from a Construct {} or a variable", (!shortName.IsEmpty && "AEIOUaeiou".Contains(shortName[0])) ? "n" : "", shortName, shortName);
+			}
+			else if (!name.IsEmpty)
 				sub.AppendF("Receiver is {}", name);
 		}
 
@@ -1310,15 +1341,17 @@ namespace Treadle.Editor
 			BuildLinked(graph);
 			let frontEnd = mApp.FrontEnd;
 			let generation = (frontEnd != null) ? frontEnd.Generation : 0;
-			if (graph.Serial != mFanOutSerial || graph.Version != mFanOutVersion || generation != mFanOutGeneration)
+			// Problems shown from an earlier Validate are drawn dimmed after an edit (ValidationState.bf).
+			mProblemsDim = mApp.ProblemsStale;
+			let shownKey = mApp.ValidateGeneration * 4 + (mProblemsDim ? 1 : 0) + (Prefs.ValidateAfterEdits ? 2 : 0);
+			if (graph.Serial != mFanOutSerial || graph.Version != mFanOutVersion || generation != mFanOutGeneration || shownKey != mFanOutShown)
 			{
 				mFanOutSerial = graph.Serial;
 				mFanOutVersion = graph.Version;
 				mFanOutGeneration = generation;
-				// The front end's evaluation plan when its last compilation is of this graph as it is;
-				// the local estimate (wires to flow nodes) until Validate has run.
-				if (frontEnd == null || !frontEnd.EvaluationCounts(graph, mFanOut))
-					PinMatch.FanOut(graph, mFanOut);
+				mFanOutShown = shownKey;
+				// "evaluated Nx": the front end's counts after a Validate (kept, dimmed, after an edit); none before.
+				mApp.ShownEvaluationCounts(graph, mFanOut);
 			}
 			mSelectedNow.Clear();
 			for (let id in tab.SelectedNodes)
@@ -1340,7 +1373,7 @@ namespace Treadle.Editor
 				if (!mNodeWarnings.ContainsKey(e.NodeId))
 					mNodeWarnings[e.NodeId] = new String(e.Message);
 			mApp.GetNodeDiagnostics(mg, mNodeErrors, mNodeWarnings);
-			// The self test's long error (it outlives the Validate that runs after each edit).
+			// The self test's long error (it outlives the checks each edit runs).
 			if (SelfTestErrorNode != 0 && graph.FindNode(SelfTestErrorNode) != null)
 			{
 				if (mNodeErrors.TryGetValue(SelfTestErrorNode, let old))
@@ -1934,12 +1967,15 @@ namespace Treadle.Editor
 			float fh = mFontSize;
 			let s0 = ImVec2(p0.x + ((L.Shape == .Normal) ? 1 : 0), p0.y + L.StripY * z);
 			let s1 = ImVec2(p0.x + L.StripW * z - ((L.Shape == .Normal) ? 1 : 0), s0.y + L.StripH * z);
-			uint32 fill = isError ? Theme.WithAlpha(Theme.ErrorHeader, 235) : Theme.WithAlpha(Theme.ProblemWarningFill, 235);
+			uint32 fill = ProblemColor(isError ? Theme.WithAlpha(Theme.ErrorHeader, 235) : Theme.WithAlpha(Theme.ProblemWarningFill, 235));
 			uint32 ink = isError ? Gui.Color(255, 235, 235) : Gui.Color(30, 24, 4);
+			// Stale (an edit since the last Validate): a faint band, its text in the problem's colour, dimmed.
+			if (mProblemsDim)
+				ink = isError ? Gui.Color(255, 170, 170, 190) : Gui.Color(240, 210, 120, 190);
 			float r = (L.Shape == .Normal) ? 0 : 3 * z;
 			Gui.ImDrawList_AddRectFilled(dl, s0, s1, fill, r, 0);
 			if (L.Shape != .Normal)
-				Gui.ImDrawList_AddRect(dl, s0, s1, isError ? Theme.NodeError : Theme.Warning, r, 1, 0);
+				Gui.ImDrawList_AddRect(dl, s0, s1, ProblemColor(isError ? Theme.NodeError : Theme.Warning), r, 1, 0);
 			if (!details)
 				return;
 			Text(dl, .(s0.x + 7 * z, s0.y + 3 * z), fh * cStripScale * z, ink, L.StripText);
@@ -1967,7 +2003,7 @@ namespace Treadle.Editor
 			if (overStrip && mHoverPin == 0)
 			{
 				mStripHover = L.Node.Id; // the node tooltip waits its turn
-				Gui.Tooltip(scope $"{isError ? "Error" : "Warning"}: {isError ? L.Error : L.Warning}");
+				Gui.Tooltip(scope $"{isError ? "Error" : "Warning"}: {isError ? L.Error : L.Warning}{mProblemsDim ? "\n\nFrom the last Validate; the Sheet changed since: press Validate (Shift+F7)." : ""}");
 			}
 		}
 
@@ -2204,9 +2240,9 @@ namespace Treadle.Editor
 
 			// Outline
 			if (L.Error != null)
-				Gui.ImDrawList_AddRect(dl, p0, p1, Theme.NodeError, r, Math.Max(1.5f, 2 * z), 0);
+				Gui.ImDrawList_AddRect(dl, p0, p1, ProblemColor(Theme.NodeError), r, Math.Max(1.5f, 2 * z), 0);
 			else if (L.Warning != null)
-				Gui.ImDrawList_AddRect(dl, p0, p1, Theme.WithAlpha(Theme.Warning, 200), r, Math.Max(1.2f, 1.5f * z), 0);
+				Gui.ImDrawList_AddRect(dl, p0, p1, ProblemColor(Theme.WithAlpha(Theme.Warning, 200)), r, Math.Max(1.2f, 1.5f * z), 0);
 			else
 				Gui.ImDrawList_AddRect(dl, p0, p1, hovered ? Gui.Color(90, 90, 90, 220) : Theme.NodeOutline, r, 1, 0);
 			if (L.Selected)
@@ -2223,9 +2259,9 @@ namespace Treadle.Editor
 				float bw = Gui.CalcTextSize(badge).x * (bs / Math.Max(Gui.igGetFontSize(), 1.0f)) + 10 * z;
 				let b0 = ImVec2(p1.x - bw, p0.y - bs - 6 * z);
 				let b1 = ImVec2(p1.x, p0.y - 2 * z);
-				Gui.ImDrawList_AddRectFilled(dl, b0, b1, Gui.Color(60, 48, 10, 230), 4 * z, 0);
-				Gui.ImDrawList_AddRect(dl, b0, b1, Theme.WithAlpha(Theme.Warning, 180), 4 * z, 1, 0);
-				Text(dl, .(b0.x + 5 * z, b0.y + 2 * z), bs, Gui.Color(250, 220, 130), badge);
+				Gui.ImDrawList_AddRectFilled(dl, b0, b1, ProblemColor(Gui.Color(60, 48, 10, 230)), 4 * z, 0);
+				Gui.ImDrawList_AddRect(dl, b0, b1, ProblemColor(Theme.WithAlpha(Theme.Warning, 180)), 4 * z, 1, 0);
+				Text(dl, .(b0.x + 5 * z, b0.y + 2 * z), bs, mProblemsDim ? Gui.Color(250, 220, 130, 150) : Gui.Color(250, 220, 130), badge);
 			}
 			// A Lambda that captures: "captures N" (the list is in Properties).
 			if (node.Kind == .Lambda && L.Shape == .Normal && L.Evaluated < 2)
@@ -2244,6 +2280,7 @@ namespace Treadle.Editor
 					Text(dl, .(b0.x + 5 * z, b0.y + 2 * z), bs, Look.Foreground, badge);
 				}
 			}
+			if (L.Shape == .Normal) DrawLivesInBadge(node, dl, p0, p1, fh, z); // "lives in heap / region": LivesIn.bf
 			// Collapsed: unwired pins are hidden; a small mark says there is more.
 			if (L.Collapsed && L.Shape == .Normal)
 				Text(dl, .(p1.x - 18 * z, p0.y + 5 * z), fh * z, Theme.WithAlpha(Theme.NodeTitle, 160), Icon.ChevronDown);
@@ -2348,7 +2385,7 @@ namespace Treadle.Editor
 			let pinProblem = graph.FindPinProblem(p, let pinIsError);
 			if (pinProblem != null)
 			{
-				uint32 pc = pinIsError ? Theme.NodeError : Theme.Warning;
+				uint32 pc = ProblemColor(pinIsError ? Theme.NodeError : Theme.Warning);
 				Gui.ImDrawList_AddCircle(dl, c, 8.5f * z, pc, 0, Math.Max(1.5f, 2 * z));
 				let bc = ImVec2(c.x + (p.IsInput ? -13 : 13) * z, c.y - 9 * z);
 				Gui.ImDrawList_AddCircleFilled(dl, bc, 5.5f * z, pc, 0);
@@ -3786,14 +3823,20 @@ namespace Treadle.Editor
 
 		void DrawWatermark(GraphTab tab, Sheet mg, ImDrawList* dl)
 		{
-			// UE's faint graph-type label in the bottom-right corner.
-			String text = scope .("TREADLE");
-			text.AppendF("  \u{00B7}  {}", mg.Name);
+			// The faint label in the bottom-right corner: "<Type> · <Sheet>" in the type's kind colour
+			// (TypeStyle, DocumentHeader.bf), so the canvas itself says whose graph it is.
+			String text = scope .();
+			mg.Doc.GetName(text);
+			text.AppendF("  \u{00B7}  {}", tab.Title);
+			WatermarkText.Set(text);
 			float size = mFontSize * 2.6f;
 			let tw = Gui.CalcTextSize(text).x * 2.6f;
 			let pos = tab.CanvasOrigin + tab.CanvasSize - ImVec2(tw + 28, size + 22);
-			Text(dl, pos, size, Gui.Color(255, 255, 255, 26), text);
+			Text(dl, pos, size, Theme.WithAlpha(TypeStyle.KindColor(mg.Doc.Header.Kind), 46), text);
 		}
+
+		/// The watermark drawn last frame (the self test).
+		public String WatermarkText = new .() ~ delete _;
 
 		void DrawFindBox(GraphTab tab, Graph graph)
 		{
@@ -4888,25 +4931,30 @@ namespace Treadle.Editor
 							mCommitted = true;
 					}
 					// A struct pin: Split Struct Pin (one pin per field on this node), or Recombine on a split one.
+					// A vector pin (float4): the same, its lanes as the fields (`v.x` ... `v.w`).
 					if (SplitPins.IsSplit(pin) || SplitPins.IsSubPin(pin))
 					{
-						if (Gui.MenuItem("Recombine Struct Pin"))
+						let parentName = SplitPins.ParentOf(pin);
+						let parent = parentName.IsEmpty ? pin : (pin.IsInput ? pin.Owner.FindInput(parentName) : pin.Owner.FindOutput(parentName));
+						let lanes = parent != null && Treadle.Model.VectorTypes.LanesOf(parent.TypeName) > 0;
+						if (Gui.MenuItem(lanes ? "Recombine Vector Pin" : "Recombine Struct Pin"))
 						{
 							if (mApp.RecombineStructPin(mg, pin))
 								mCommitted = true;
 						}
 						if (Gui.igIsItemHovered(0))
-							Gui.Tooltip("The field pins go (with their wires and values); the struct pin is shown again");
+							Gui.Tooltip(lanes ? "The lane pins go (with their wires and values); the vector pin is shown again" : "The field pins go (with their wires and values); the struct pin is shown again");
 					}
 					else if (!mCtxStructKey.IsEmpty && pin.Name != "receiver")
 					{
-						if (Gui.MenuItem("Split Struct Pin"))
+						let lanes = Treadle.Model.VectorTypes.LanesOf(pin.TypeName) > 0;
+						if (Gui.MenuItem(lanes ? "Split Vector Pin" : "Split Struct Pin"))
 						{
 							if (mApp.SplitStructPin(mg, pin))
 								mCommitted = true;
 						}
 						if (Gui.igIsItemHovered(0))
-							Gui.Tooltip("One pin per field on this node (no Make / Break node); Recombine puts the struct pin back");
+							Gui.Tooltip(lanes ? "One pin per lane on this node (x y z w; no Make / Break node); Recombine puts the vector pin back" : "One pin per field on this node (no Make / Break node); Recombine puts the struct pin back");
 					}
 					// A struct pin: the Break / Make node of its type, wired to it.
 					if (!mCtxStructKey.IsEmpty && !SplitPins.IsSubPin(pin) && !SplitPins.IsSplit(pin))

@@ -25,8 +25,11 @@ namespace Treadle.Editor
 #if BF_PLATFORM_WINDOWS
 		const String WinProgramFile = "Win\\Program.treadle";
 		const String LibMathFile = "Lib\\Mathx.treadle";
+		const String LibModuleName = "MathLib.dll";
 #else
 		const String WinProgramFile = "Win/Program.treadle";
+		const String LibMathFile = "Lib/Mathx.treadle";
+		const String LibModuleName = "libMathLib.so";
 #endif
 		/// What m1 writes (its Console lines, in order).
 		const String M1Output = "Woof\n4\nTweet\n2\n7\n7\ndone\ngoodbye from Defer\nan animal is freed\nan animal is freed\n";
@@ -37,6 +40,7 @@ namespace Treadle.Editor
 		/// The host of the library test: loads the library by path (argv[1]), treadle_init, says
 		/// "ready" and waits for the file argv[2], then calls the exported fl_twice(21) and
 		/// treadle_shutdown.
+#if BF_PLATFORM_WINDOWS
 		const String LibHostSource = """
 			#include <stdio.h>
 			#include <windows.h>
@@ -63,6 +67,35 @@ namespace Treadle.Editor
 			    return 0;
 			}
 			""";
+#else
+		const String LibHostSource = """
+			#include <stdio.h>
+			#include <dlfcn.h>
+			#include <unistd.h>
+			typedef void (*init_fn)(void);
+			typedef int (*shut_fn)(void);
+			typedef long long (*twice_fn)(long long);
+			int main(int argc, char** argv)
+			{
+			    void* lib;
+			    int i;
+			    if (argc < 3) return 2;
+			    lib = dlopen(argv[1], RTLD_NOW);
+			    if (!lib) { puts("no library"); puts(dlerror()); return 2; }
+			    ((init_fn)dlsym(lib, "treadle_init"))();
+			    puts("ready");
+			    fflush(stdout);
+			    for (i = 0; i < 3000 && access(argv[2], F_OK) != 0; i++)
+			        usleep(20000);
+			    printf("twice %lld", ((twice_fn)dlsym(lib, "fl_twice"))(21));
+			    putchar(10);
+			    printf("leaks %d", ((shut_fn)dlsym(lib, "treadle_shutdown"))());
+			    putchar(10);
+			    fflush(stdout);
+			    return 0;
+			}
+			""";
+#endif
 
 		/// Copies m1 as `Win` with `kind windowed`, the library fixture as `Lib` and writes the
 		/// host's source to `Host` (case 0 of SelfTestDebug).
@@ -83,13 +116,11 @@ namespace Treadle.Editor
 			text.Replace("\tkind console\n", "\tkind windowed\n");
 			File.WriteAllText(proj, text).IgnoreError();
 			SelfTestCheck(changed, "debug: the Win copy of m1 is kind windowed");
-#if BF_PLATFORM_WINDOWS
 			String fixtures = scope .();
 			if (FindFixtures(samples, fixtures))
 				CopyTree(scope $"{fixtures}/projects/library", scope $"{mDbgDir}{DbgSep}Lib");
 			Directory.CreateDirectory(scope $"{mDbgDir}{DbgSep}Host").IgnoreError();
 			File.WriteAllText(scope $"{mDbgDir}{DbgSep}Host{DbgSep}host.c", LibHostSource).IgnoreError();
-#endif
 		}
 
 		/// The Debug exe of the Win copy.
@@ -210,6 +241,7 @@ namespace Treadle.Editor
 				Debug.ClearBreakpoints();
 #if BF_PLATFORM_WINDOWS
 				DbgWindowedStarts();
+#endif
 				if (!Directory.Exists(scope $"{mDbgDir}{DbgSep}Lib"))
 				{
 					// a package has no fixtures folder: the library part needs TreadleCompiler/fixtures
@@ -223,11 +255,6 @@ namespace Treadle.Editor
 				mSelfTestWait = 3;
 				mDbgWatch.Restart();
 				return false;
-#else
-				mSelfTestStep = cDbgThreads - 1;
-				return false;
-#endif
-#if BF_PLATFORM_WINDOWS
 			case 29:
 				{
 					String o = scope .();
@@ -254,7 +281,7 @@ namespace Treadle.Editor
 				for (let p in mAttachList)
 					if (p.Pid == mDbgHostPid)
 						host = p;
-				SelfTestCheck(host != null && host.Module.EndsWith("MathLib.dll", .OrdinalIgnoreCase),
+				SelfTestCheck(host != null && host.Module.EndsWith(LibModuleName, .OrdinalIgnoreCase),
 					scope $"debug: Attach to Process lists the C host that loaded the library ({mAttachList.Count} listed, module {(host != null) ? host.Module : "(not listed)"})");
 				if (host == null)
 					return DbgAbort();
@@ -305,14 +332,12 @@ namespace Treadle.Editor
 				SelfTestCheck(Debug.State == .Exited, scope $"debug: the attached session ends with the host ({Debug.State})");
 				mSelfTestStep = cDbgThreads - 1;
 				return false;
-#endif
 			default:
 				mSelfTestStep = cDbgThreads - 1;
 				return false;
 			}
 		}
 
-#if BF_PLATFORM_WINDOWS
 		/// Compiles the host, builds the library in Debug and starts the host on it (case 28).
 		bool DbgLibraryStart()
 		{
@@ -320,22 +345,28 @@ namespace Treadle.Editor
 			Treadle.Backend.Driver.BuildReport rep = scope .();
 			String msgs = scope .();
 			let built = SelfTestBuildOnce(libProj, "Debug", rep, msgs);
-			SelfTestCheck(built && rep.ExePath.EndsWith(".dll"), scope $"debug: the library fixture builds in Debug ({rep.ExePath}){msgs}");
+			SelfTestCheck(built && (rep.ExePath.EndsWith(".dll") || rep.ExePath.EndsWith(".so")), scope $"debug: the library fixture builds in Debug ({rep.ExePath}){msgs}");
 			if (!built)
 				return false;
 			String clang = scope .();
 			Treadle.Language.LlvmRoot.Tool("clang", clang);
 			String hostDir = scope $"{mDbgDir}{DbgSep}Host";
-			String hostExe = scope $"{hostDir}{DbgSep}host.exe";
+			String hostExe = scope $"{hostDir}{DbgSep}host{Treadle.Language.LlvmRoot.ExeSuffix}";
 			String o = scope .();
 			String e = scope .();
-			let code = Treadle.Backend.Driver.RunningProcess.Run(clang, scope List<String>() { "-g", "-O0", "-o", hostExe, scope $"{hostDir}{DbgSep}host.c" }, hostDir, o, e, 120000);
+			List<String> hostArgs = scope .() { "-g", "-O0", "-o", hostExe, scope $"{hostDir}{DbgSep}host.c" };
+#if !BF_PLATFORM_WINDOWS
+			hostArgs.Add("-ldl"); // dlopen (part of libc since glibc 2.34; harmless there)
+#endif
+			let code = Treadle.Backend.Driver.RunningProcess.Run(clang, hostArgs, hostDir, o, e, 120000);
 			SelfTestCheck(code == 0 && File.Exists(hostExe), scope $"debug: the C host compiles (clang exit {code}{e.IsEmpty ? "" : ": "}{e})");
 			if (code != 0)
 				return false;
 			File.Delete(scope $"{hostDir}{DbgSep}go.txt").IgnoreError();
 			String dll = scope .(rep.ExePath);
+#if BF_PLATFORM_WINDOWS
 			dll.Replace('/', '\\');
+#endif
 			DeleteAndNullify!(mDbgHost);
 			mDbgHost = new .();
 			if (!mDbgHost.Start(hostExe, scope List<String>() { dll, scope $"{hostDir}{DbgSep}go.txt" }, hostDir))
@@ -347,6 +378,7 @@ namespace Treadle.Editor
 			return true;
 		}
 
+#if BF_PLATFORM_WINDOWS
 		[CRepr]
 		struct DbgStartupInfo
 		{

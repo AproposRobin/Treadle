@@ -19,3 +19,5 @@ packaging/*.cfg text eol=lf
 packaging/*-linux.txt text eol=lf
 Native/bin/** -text
 THIRD_PARTY/*.txt text eol=lf
+packaging/samples.txt text eol=lf
+packaging/sdl2-files.txt text eol=lf

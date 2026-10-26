@@ -32,6 +32,15 @@ namespace Treadle.Document
 
 		public static StringView ReadOnlyMessage => "Read-only project: nothing was written. (File > Open Project reopens it editable.)";
 
+		/// Creates the folder of `path` when it is missing.
+		public static void EnsureParent(StringView path)
+		{
+			String dir = scope .();
+			Path.GetDirectoryPath(path, dir).IgnoreError();
+			if (!dir.IsEmpty && !Directory.Exists(dir))
+				Directory.CreateDirectory(dir).IgnoreError();
+		}
+
 		/// FNV-1a over the text bytes.
 		public static uint64 Hash(StringView text)
 		{
@@ -54,14 +63,18 @@ namespace Treadle.Document
 				outError?.Append(ReadOnlyMessage);
 				return .Err;
 			}
-			return AtomicWriteAppFile(path, content, backup, outError);
+			EnsureParent(path);
+			String bak = scope .();
+			if (backup)
+				Sidecars.BackupPathOf(path, bak);
+			return AtomicWriteAppFile(path, content, backup, outError, bak);
 		}
 
 		/// The same replace-in-one-step write for the editor's own files (settings, recovery
 		/// journals, recent nodes): not refused in a read-only project, which only protects the
 		/// user's files. The old file is never deleted first: a crash or a failed move leaves
 		/// either the old content or the new, never neither.
-		public static Result<void> AtomicWriteAppFile(StringView path, StringView content, bool backup, String outError = null)
+		public static Result<void> AtomicWriteAppFile(StringView path, StringView content, bool backup, String outError = null, StringView bakPath = default)
 		{
 #if BF_PLATFORM_WINDOWS
 			String tmp = scope .(path);
@@ -77,7 +90,13 @@ namespace Treadle.Document
 			if (exists && backup)
 			{
 				String bak = scope .(path);
-				bak.Append(".bak");
+				if (bakPath.IsEmpty)
+					bak.Append(".bak");
+				else
+				{
+					bak.Set(bakPath);
+					EnsureParent(bak);
+				}
 				ok = ReplaceWith(path, tmp, bak);
 				if (!ok)
 				{
@@ -125,7 +144,13 @@ namespace Treadle.Document
 			if (backup && File.Exists(path))
 			{
 				String bak = scope .(path);
-				bak.Append(".bak");
+				if (bakPath.IsEmpty)
+					bak.Append(".bak");
+				else
+				{
+					bak.Set(bakPath);
+					EnsureParent(bak);
+				}
 				File.Copy(path, bak, true).IgnoreError(); // no backup is not a reason to refuse the save
 			}
 			if (File.Move(tmp, path) case .Err)

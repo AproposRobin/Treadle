@@ -93,6 +93,12 @@ namespace Treadle.Editor
 					if (!Debug.IsStopped)
 						return DbgAbort();
 					SelfTestCheck(cur != null && cur.Name.StartsWith("worker "), scope $"debug: the stop is on a worker thread, listed by its name ({names})");
+					// the Call Stack's order: Main first, then the workers by name
+					bool ordered = !Debug.Threads.IsEmpty && Debug.Threads[0].Name == "Main";
+					for (int i = 1; i < Debug.Threads.Count - 1; i++)
+						if (DebugSession.NaturalCompare(Debug.Threads[i].Name, Debug.Threads[i + 1].Name) > 0 && (Debug.Threads[i].Name.StartsWith("Thread ") || !Debug.Threads[i + 1].Name.StartsWith("Thread ")))
+							ordered = false;
+					SelfTestCheck(ordered, scope $"debug: the thread rows are Main first, then the workers by name, then the system's by number ({names})");
 					SelfTestCheck(Debug.Threads.Count >= 2, scope $"debug: the session lists the program's threads ({Debug.Threads.Count})");
 					// another thread whose stack is not the Lambda's: try them in order (the main thread
 					// is the one waiting in Main)
@@ -135,7 +141,7 @@ namespace Treadle.Editor
 						scope $"debug: selecting another thread shows its stack without resuming: the main thread ({(cur != null) ? cur.Name : "?"}) is in Cx.ThreadsBasicMain.Main ({Debug.Frames.Count} frames)");
 					Debug.Stop();
 					mSelfTestWait = 10;
-					mSelfTestStep = cDbgCleanup - 1;
+					mSelfTestStep = cDbgVectors - 1; // then the vectors part (SelfTestDebugVectors.bf)
 				}
 				return false;
 			default:
@@ -146,7 +152,7 @@ namespace Treadle.Editor
 
 		/// With TREADLE_CAPTURE_DIR set (a pixel pass): logs `[SELFTEST] hold <name>` and stays on the step about
 		/// 4 s by the clock so a capture can be asked for (FORK-NOTES, Build and run 3); true at once otherwise.
-		bool DbgCaptureHold(StringView name)
+		bool DbgCaptureHold(StringView name, bool locals = false)
 		{
 			String dir = scope .();
 			if (!(Environment.GetEnvironmentVariable("TREADLE_CAPTURE_DIR", dir) case .Ok) || dir.IsEmpty)
@@ -154,13 +160,16 @@ namespace Treadle.Editor
 			let now = ImGui.Gui.igGetTime();
 			if (mDbgHoldUntil == 0)
 			{
-				ShowCallStack = true; // the thread rows are what the capture is for
+				if (locals)
+					ShowLocals = true;
+				else
+					ShowCallStack = true; // the thread rows are what the capture is for
 				mDbgHoldUntil = now + 4.0;
 				Notify.Log(.Info, "SelfTest", scope $"[SELFTEST] hold {name}");
 			}
 			if (now < mDbgHoldUntil)
 			{
-				Panels.Focus(Panels.CallStackId);
+				Panels.Focus(locals ? Panels.LocalsId : Panels.CallStackId);
 				mDbgWatch.Restart();
 				mSelfTestStep--;
 				return false;

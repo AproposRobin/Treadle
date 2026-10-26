@@ -1,0 +1,11 @@
+# The [Kernel] Saxpy on the CPU (Kernel.RunCpu), on the GPU (the CPU without one) and a float8 loop agree.
+== exit
+0
+== stdout
+0
+2497.5
+GPU mismatches 0
+SIMD mismatches 0
+== stderr
+GPU:
+saxpy over 1000000 floats: GPU

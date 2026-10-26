@@ -1,0 +1,19 @@
+# treadle 1
+type VectorFormat extension
+	namespace Core
+	extends Core.String
+	doc "String.Append for the vector primitives: float4(1, 2, 3, 4) as (1, 2, 3, 4), each lane as Append writes a value of the lane type (a lane mask's lanes as true and false). AppendF uses it for its arguments."
+
+function v000 Append
+	generic T vector
+	doc "Appends the vector's lanes in parentheses, separated by a comma and a space: (1, 2, 3, 4)."
+param value T
+sheet body
+node n00000 Entry
+node n00001 This
+node n00002 Call String.AppendVector
+node n00003 Return
+wire n00000.then n00002.in
+wire n00001.value n00002.into
+wire n00000.value n00002.value
+wire n00002.then n00003.in

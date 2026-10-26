@@ -1,0 +1,817 @@
+# treadle 1
+type GpuSharedMain class
+	namespace Cx
+	static
+	doc "GPU compute (docs/GPU-Compute.md): Kernel.Shared, Kernel.Barrier and the block indices. A block reduction (each of 65,536 threads sums its share, then a tree in shared memory; one partial sum per block) and a tiled 16x16 matrix multiply, each on the GPU, with Kernel.RunCpu (whole blocks on fibers) and against a CPU version (a double loop; a float8 matrix multiply). The results must agree; the timings go to stderr. 1,048,576 floats and 128x128, or 16,777,216 floats and 1024x1024 with an argument (the Release run)."
+
+function g01 BlockSum
+	static
+	attr Kernel
+	doc "partial[block] = the sum of x over the block's threads, each thread summing x[i + j * stride] for j below per."
+param x Span<float>
+param partial Span<float>
+param stride int
+param per int
+local s float
+sheet body
+node r1 Entry
+node r2 Call Kernel.Index
+node r3 Call Kernel.ThreadInBlock
+node r4 Call Kernel.BlockIndex
+node r5 Call Kernel.Shared
+	set type float
+	in count 256
+node r6 For
+	in start 0
+node r7 Math
+	set expr "i + j * stride"
+node r8 Call Span<float>.At
+node r9 Set local:s
+	set op +=
+node s1 Call Span<float>.SetAt
+node s2 Get local:s
+node s3 For
+	in start 0
+	in count 8
+node s4 Call Kernel.Barrier
+node s5 Math
+	set expr "t < (128 >> k)"
+node s6 Branch
+node s7 Math
+	set expr "t + (128 >> k)"
+node s8 Call Span<float>.At
+node s9 Call Span<float>.At
+node t1 Math
+	set expr "p + q"
+node t2 Call Span<float>.SetAt
+node t3 Call Kernel.Barrier
+node t4 Math
+	set expr "t == 0"
+node t5 Branch
+node t6 Call Span<float>.At
+	in index 0
+node t7 Call Span<float>.SetAt
+node t8 Return
+node t9 Return
+wire r1.then r5.in
+wire r1.per r6.count
+wire r5.then r6.in
+wire r2.result r7.i
+wire r6.index r7.j
+wire r1.stride r7.stride
+wire r6.body r8.in
+wire r7.result r8.index
+wire r1.x r8.receiver
+wire r8.then r9.in
+wire r8.result r9.value
+wire r6.done s1.in
+wire r3.result s1.index
+wire r5.result s1.receiver
+wire s2.value s1.value
+wire s1.then s3.in
+wire s3.body s4.in
+wire s3.index s5.k
+wire r3.result s5.t
+wire s5.result s6.condition
+wire s4.then s6.in
+wire s3.index s7.k
+wire r3.result s7.t
+wire s6.true s8.in
+wire r3.result s8.index
+wire r5.result s8.receiver
+wire s8.then s9.in
+wire s7.result s9.index
+wire r5.result s9.receiver
+wire s8.result t1.p
+wire s9.result t1.q
+wire s9.then t2.in
+wire r3.result t2.index
+wire r5.result t2.receiver
+wire t1.result t2.value
+wire s3.done t3.in
+wire r3.result t4.t
+wire t4.result t5.condition
+wire t3.then t5.in
+wire t5.true t6.in
+wire r5.result t6.receiver
+wire t6.then t7.in
+wire r4.result t7.index
+wire r1.partial t7.receiver
+wire t6.result t7.value
+wire t7.then t8.in
+wire t5.false t9.in
+
+function g02 MatMulTiled
+	static
+	attr Kernel
+	doc "c = a * b for n x n matrices (n a multiple of 16), one 16x16 tile of c per block of 256: the tiles of a and b go through shared memory."
+param a Span<float>
+param b Span<float>
+param c Span<float>
+param n int
+local acc float
+sheet body
+node m1 Entry
+node m2 Call Kernel.ThreadInBlock
+node m3 Call Kernel.BlockIndex
+node m4 Math
+	set expr "(bi / (n / 16)) * 16 + t / 16"
+node m5 Math
+	set expr "(bi % (n / 16)) * 16 + t % 16"
+node m6 Call Kernel.Shared
+	set type float
+	in count 256
+node m7 Call Kernel.Shared
+	set type float
+	in count 256
+node m8 For
+	in start 0
+node m9 Math
+	set expr "n / 16"
+node n1 Math
+	set expr "row * n + tt * 16 + t % 16"
+node n2 Call Span<float>.At
+node n3 Call Span<float>.SetAt
+node n4 Math
+	set expr "(tt * 16 + t / 16) * n + col"
+node n5 Call Span<float>.At
+node n6 Call Span<float>.SetAt
+node n7 Call Kernel.Barrier
+node n8 For
+	in start 0
+	in count 16
+node n9 Math
+	set expr "(t / 16) * 16 + kk"
+node o1 Call Span<float>.At
+node o2 Math
+	set expr "kk * 16 + t % 16"
+node o3 Call Span<float>.At
+node o4 Math
+	set expr "p * q"
+node o5 Set local:acc
+	set op +=
+node o6 Call Kernel.Barrier
+node o7 Math
+	set expr "row * n + col"
+node o8 Get local:acc
+node o9 Call Span<float>.SetAt
+node p1 Return
+wire m3.result m4.bi
+wire m1.n m4.n
+wire m2.result m4.t
+wire m3.result m5.bi
+wire m1.n m5.n
+wire m2.result m5.t
+wire m1.then m6.in
+wire m6.then m7.in
+wire m9.result m8.count
+wire m7.then m8.in
+wire m1.n m9.n
+wire m1.n n1.n
+wire m4.result n1.row
+wire m2.result n1.t
+wire m8.index n1.tt
+wire m8.body n2.in
+wire n1.result n2.index
+wire m1.a n2.receiver
+wire n2.then n3.in
+wire m2.result n3.index
+wire m6.result n3.receiver
+wire n2.result n3.value
+wire m5.result n4.col
+wire m1.n n4.n
+wire m2.result n4.t
+wire m8.index n4.tt
+wire n3.then n5.in
+wire n4.result n5.index
+wire m1.b n5.receiver
+wire n5.then n6.in
+wire m2.result n6.index
+wire m7.result n6.receiver
+wire n5.result n6.value
+wire n6.then n7.in
+wire n7.then n8.in
+wire n8.index n9.kk
+wire m2.result n9.t
+wire n8.body o1.in
+wire n9.result o1.index
+wire m6.result o1.receiver
+wire n8.index o2.kk
+wire m2.result o2.t
+wire o1.then o3.in
+wire o2.result o3.index
+wire m7.result o3.receiver
+wire o1.result o4.p
+wire o3.result o4.q
+wire o3.then o5.in
+wire o4.result o5.value
+wire n8.done o6.in
+wire m5.result o7.col
+wire m1.n o7.n
+wire m4.result o7.row
+wire m8.done o9.in
+wire o7.result o9.index
+wire m1.c o9.receiver
+wire o8.value o9.value
+wire o9.then p1.in
+
+function g03 MatMulSimd
+	static
+	doc "c += a * b for n x n matrices on the CPU, row by row over float8 vectors (n a multiple of 8); the same order of additions as the tiled kernel."
+param a Span<float>
+param b Span<float>
+param c Span<float>
+param n int
+sheet body
+node q1 Entry
+node q2 For
+	in start 0
+node q3 For
+	in start 0
+node q4 Math
+	set expr "i * n + k"
+node q5 Call Span<float>.At
+node q6 For
+	in start 0
+node q7 Math
+	set expr "n / 8"
+node q8 Math
+	set expr "i * n + j * 8"
+node q9 Math
+	set expr "k * n + j * 8"
+node u1 Call Core.Vector.Load<float8>
+node u2 Call Core.Vector.Load<float8>
+node u3 Math
+	set expr "cv + float8(av) * bv"
+node u4 Call Core.Vector.Store
+node u5 Return
+wire q1.n q2.count
+wire q1.then q2.in
+wire q1.n q3.count
+wire q2.body q3.in
+wire q2.index q4.i
+wire q3.index q4.k
+wire q1.n q4.n
+wire q3.body q5.in
+wire q4.result q5.index
+wire q1.a q5.receiver
+wire q7.result q6.count
+wire q5.then q6.in
+wire q1.n q7.n
+wire q2.index q8.i
+wire q6.index q8.j
+wire q1.n q8.n
+wire q6.index q9.j
+wire q3.index q9.k
+wire q1.n q9.n
+wire q8.result u1.index
+wire q1.c u1.span
+wire q9.result u2.index
+wire q1.b u2.span
+wire q5.result u3.av
+wire u2.result u3.bv
+wire u1.result u3.cv
+wire q6.body u4.in
+wire q8.result u4.index
+wire q1.c u4.span
+wire u3.result u4.v
+wire q2.done u5.in
+
+function g04 FillX
+	static
+	doc "x[i] = (i % 1000) / 1000."
+param x Span<float>
+sheet body
+node v1 Entry
+node v2 For
+	in start 0
+node v3 Break Span<float>
+node v4 Math
+	set expr "i % 1000"
+node v5 Cast float
+node v6 Call Span<float>.SetAt
+node v7 Return
+node v8 Math
+	set expr "v * 0.001"
+wire v3.Length v2.count
+wire v1.then v2.in
+wire v1.x v3.value
+wire v2.index v4.i
+wire v4.result v5.value
+wire v2.body v6.in
+wire v2.index v6.index
+wire v1.x v6.receiver
+wire v8.result v6.value
+wire v2.done v7.in
+wire v5.result v8.v
+
+function g05 FillAB
+	static
+	doc "a[i] = (i % 7) / 4, b[i] = (i % 5) / 2: sums of their products are exact in float."
+param a Span<float>
+param b Span<float>
+sheet body
+node w1 Entry
+node w2 For
+	in start 0
+node w3 Break Span<float>
+node w4 Math
+	set expr "i % 7"
+node w5 Math
+	set expr "i % 5"
+node w6 Cast float
+node w7 Cast float
+node w8 Call Span<float>.SetAt
+node w9 Call Span<float>.SetAt
+node x1 Return
+node x2 Math
+	set expr "v * 0.25"
+node x3 Math
+	set expr "v * 0.5"
+wire w3.Length w2.count
+wire w1.then w2.in
+wire w1.a w3.value
+wire w2.index w4.i
+wire w2.index w5.i
+wire w4.result w6.value
+wire w5.result w7.value
+wire w2.body w8.in
+wire w2.index w8.index
+wire w1.a w8.receiver
+wire x2.result w8.value
+wire w8.then w9.in
+wire w2.index w9.index
+wire w1.b w9.receiver
+wire x3.result w9.value
+wire w2.done x1.in
+wire w6.result x2.v
+wire w7.result x3.v
+
+function g06 SumD
+	static
+	returns double
+	doc "The sum of the span's elements, in double."
+param s Span<float>
+local sum double
+sheet body
+node y1 Entry
+node y2 For
+	in start 0
+node y3 Break Span<float>
+node y4 Call Span<float>.At
+node y5 Cast double
+node y6 Set local:sum
+	set op +=
+node y7 Get local:sum
+node y8 Return
+wire y3.Length y2.count
+wire y1.then y2.in
+wire y1.s y3.value
+wire y2.body y4.in
+wire y2.index y4.index
+wire y1.s y4.receiver
+wire y4.result y5.value
+wire y4.then y6.in
+wire y5.result y6.value
+wire y2.done y8.in
+wire y7.value y8.value
+
+function g07 Mismatches
+	static
+	returns int
+	doc "How many elements of got differ from want by more than one part in a million."
+param want Span<float>
+param got Span<float>
+local bad int
+sheet body
+node ma1 Entry
+node ma2 For
+	in start 0
+node ma3 Break Span<float>
+node ma4 Call Span<float>.At
+node ma5 Call Span<float>.At
+node ma6 Math
+	set expr "Math.Abs(w - g) > Math.Abs(w) * 0.000001 + 0.000001 ? 1 : 0"
+node ma7 Set local:bad
+	set op +=
+node ma8 Get local:bad
+node ma9 Return
+wire ma3.Length ma2.count
+wire ma1.then ma2.in
+wire ma1.want ma3.value
+wire ma2.body ma4.in
+wire ma2.index ma4.index
+wire ma1.want ma4.receiver
+wire ma4.then ma5.in
+wire ma2.index ma5.index
+wire ma1.got ma5.receiver
+wire ma5.result ma6.g
+wire ma4.result ma6.w
+wire ma5.then ma7.in
+wire ma6.result ma7.value
+wire ma2.done ma9.in
+wire ma8.value ma9.value
+
+function g08 Main
+	static
+	returns int
+local bigN int
+local n int
+local x float[]
+local p float[]
+local pk float[]
+local a float[]
+local b float[]
+local cRef float[]
+local cGpu float[]
+local cKern float[]
+local bx GpuBuffer<float>
+local bp GpuBuffer<float>
+local ba GpuBuffer<float>
+local bb GpuBuffer<float>
+local bc GpuBuffer<float>
+local ref double
+local gsum double
+local ksum double
+local tSumCpu int
+local tSumGpu int
+local tSumKern int
+local tMmCpu int
+local tMmGpu int
+local tMmKern int
+local onGpu bool
+sheet body
+node za1 Entry
+node za2 Call Environment.ArgCount
+node za3 Math
+	set expr "c > 0 ? 16777216 : 1048576"
+node za4 Math
+	set expr "c > 0 ? 1024 : 128"
+node za5 Set local:bigN
+node za6 Set local:n
+node za7 Get local:bigN
+node za8 Get local:n
+node za9 Construct float[]
+node zb1 Set local:x
+node zb2 Construct float[]
+	in count 256
+node zb3 Set local:p
+node zb4 Construct float[]
+	in count 256
+node zb5 Set local:pk
+node zb6 Math
+	set expr "n * n"
+node zb7 Construct float[]
+node zb8 Set local:a
+node zb9 Construct float[]
+node zc1 Set local:b
+node zc2 Construct float[]
+node zc3 Set local:cRef
+node zc4 Construct float[]
+node zc5 Set local:cGpu
+node zc6 Construct float[]
+node zc7 Set local:cKern
+node zc8 Get local:x
+node zc9 Cast Span<float>
+node zd1 Get local:p
+node zd2 Cast Span<float>
+node zd3 Get local:pk
+node zd4 Cast Span<float>
+node zd5 Get local:a
+node zd6 Cast Span<float>
+node zd7 Get local:b
+node zd8 Cast Span<float>
+node zd9 Get local:cRef
+node ze1 Cast Span<float>
+node ze2 Get local:cGpu
+node ze3 Cast Span<float>
+node ze4 Get local:cKern
+node ze5 Cast Span<float>
+node ze6 Call GpuSharedMain.FillX
+node ze7 Call GpuSharedMain.FillAB
+node ze8 Local Stopwatch
+	set ctor (bool)
+	in startNow true
+node ze9 Call GpuSharedMain.SumD
+node zf1 Set local:ref
+node zf2 Call Stopwatch.ElapsedMicroseconds
+node zf3 Set local:tSumCpu
+node zf4 Call Gpu.PrintInfo
+node zf5 Call Gpu.Upload
+node zf6 Set local:bx
+node zf7 Construct GpuBuffer<float>
+	set ctor (int)
+	in count 256
+node zf8 Set local:bp
+node zf9 Get local:bx
+node zg1 Get local:bp
+node zg2 Call Stopwatch.Restart
+node zg3 Call Gpu.Dispatch
+	set kernel Cx.GpuSharedMain.BlockSum
+	set block 256
+	in count 65536
+	in stride 65536
+node zg4 Math
+	set expr "nn / 65536"
+node zg5 Set local:onGpu
+node zg6 Call Gpu.Sync
+node zg7 Call Stopwatch.ElapsedMicroseconds
+node zg8 Set local:tSumGpu
+node zg9 Call GpuBuffer<float>.Download
+node zh1 Call GpuSharedMain.SumD
+node zh2 Set local:gsum
+node zh3 Call Stopwatch.Restart
+node zh4 Call Kernel.RunCpu
+	set kernel Cx.GpuSharedMain.BlockSum
+	set block 256
+	in count 65536
+	in stride 65536
+node zh5 Call Stopwatch.ElapsedMicroseconds
+node zh6 Set local:tSumKern
+node zh7 Call GpuSharedMain.SumD
+node zh8 Set local:ksum
+node zh9 Call Stopwatch.Restart
+node zi1 Call GpuSharedMain.MatMulSimd
+node zi2 Call Stopwatch.ElapsedMicroseconds
+node zi3 Set local:tMmCpu
+node zi4 Call Gpu.Upload
+node zi5 Set local:ba
+node zi6 Call Gpu.Upload
+node zi7 Set local:bb
+node zi8 Construct GpuBuffer<float>
+	set ctor (int)
+node zi9 Set local:bc
+node zj1 Get local:ba
+node zj2 Get local:bb
+node zj3 Get local:bc
+node zj4 Call Stopwatch.Restart
+node zj5 Call Gpu.Dispatch
+	set kernel Cx.GpuSharedMain.MatMulTiled
+	set block 256
+node zj6 Call Gpu.Sync
+node zj7 Call Stopwatch.ElapsedMicroseconds
+node zj8 Set local:tMmGpu
+node zj9 Call GpuBuffer<float>.Download
+node zk1 Call Stopwatch.Restart
+node zk2 Call Kernel.RunCpu
+	set kernel Cx.GpuSharedMain.MatMulTiled
+	set block 256
+node zk3 Call Stopwatch.ElapsedMicroseconds
+node zk4 Set local:tMmKern
+node zk5 Get local:ref
+node zk6 Get local:gsum
+node zk7 Get local:ksum
+node zk8 Math
+	set expr "(Math.Abs(r - g) > Math.Abs(r) * 0.0001 ? 1 : 0) + (Math.Abs(r - k) > Math.Abs(r) * 0.0001 ? 1 : 0)"
+node zk9 Call Console.Write
+	in text "reduce mismatches "
+node zl1 Call Console.WriteLine(int)
+node zl2 Call GpuSharedMain.Mismatches
+node zl3 Call GpuSharedMain.Mismatches
+node zl4 Math
+	set expr "g + k"
+node zl5 Call Console.Write
+	in text "matmul mismatches "
+node zl6 Call Console.WriteLine(int)
+node zl7 Local String
+node zl8 Call String.AppendF
+	in format "block reduction of {0} floats: GPU {1} us (ran on the GPU: {2}), Kernel.RunCpu (blocks on fibers) {3} us, CPU loop {4} us; "
+node zl9 Call String.AppendF
+	in format "tiled matmul {0}x{0}: GPU {1} us, Kernel.RunCpu (blocks on fibers) {2} us, CPU float8 {3} us"
+node zm1 Get local:tSumGpu
+node zm2 Get local:onGpu
+node zm3 Get local:tSumKern
+node zm4 Get local:tSumCpu
+node zm5 Get local:tMmGpu
+node zm6 Get local:tMmKern
+node zm7 Get local:tMmCpu
+node zm8 Call Console.ErrorLine
+node zm9 Delete
+node zn1 Delete
+node zn2 Delete
+node zn3 Delete
+node zn4 Delete
+node zn5 Delete
+node zn6 Delete
+node zn7 Delete
+node zn8 Delete
+node zn9 Delete
+node zo1 Delete
+node zo2 Delete
+node zo3 Delete
+node zo4 Return
+	in value 0
+wire za1.then za2.in
+wire za2.result za3.c
+wire za2.result za4.c
+wire za2.then za5.in
+wire za3.result za5.value
+wire za5.then za6.in
+wire za4.result za6.value
+wire za7.value za9.count
+wire za6.then za9.in
+wire za9.then zb1.in
+wire za9.object zb1.value
+wire zb1.then zb2.in
+wire zb2.then zb3.in
+wire zb2.object zb3.value
+wire zb3.then zb4.in
+wire zb4.then zb5.in
+wire zb4.object zb5.value
+wire za8.value zb6.n
+wire zb6.result zb7.count
+wire zb5.then zb7.in
+wire zb7.then zb8.in
+wire zb7.object zb8.value
+wire zb6.result zb9.count
+wire zb8.then zb9.in
+wire zb9.then zc1.in
+wire zb9.object zc1.value
+wire zb6.result zc2.count
+wire zc1.then zc2.in
+wire zc2.then zc3.in
+wire zc2.object zc3.value
+wire zb6.result zc4.count
+wire zc3.then zc4.in
+wire zc4.then zc5.in
+wire zc4.object zc5.value
+wire zb6.result zc6.count
+wire zc5.then zc6.in
+wire zc6.then zc7.in
+wire zc6.object zc7.value
+wire zc8.value zc9.value
+wire zd1.value zd2.value
+wire zd3.value zd4.value
+wire zd5.value zd6.value
+wire zd7.value zd8.value
+wire zd9.value ze1.value
+wire ze2.value ze3.value
+wire ze4.value ze5.value
+wire zc7.then ze6.in
+wire zc9.result ze6.x
+wire zd6.result ze7.a
+wire zd8.result ze7.b
+wire ze6.then ze7.in
+wire ze7.then ze8.in
+wire ze8.then ze9.in
+wire zc9.result ze9.s
+wire ze9.then zf1.in
+wire ze9.result zf1.value
+wire zf1.then zf2.in
+wire ze8.object zf2.receiver
+wire zf2.then zf3.in
+wire zf2.result zf3.value
+wire zf3.then zf4.in
+wire zc9.result zf5.data
+wire zf4.then zf5.in
+wire zf5.then zf6.in
+wire zf5.result zf6.value
+wire zf6.then zf7.in
+wire zf7.then zf8.in
+wire zf7.object zf8.value
+wire zf8.then zg2.in
+wire ze8.object zg2.receiver
+wire zg2.then zg3.in
+wire zg1.value zg3.partial
+wire zg4.result zg3.per
+wire zf9.value zg3.x
+wire za7.value zg4.nn
+wire zg3.then zg5.in
+wire zg3.result zg5.value
+wire zg5.then zg6.in
+wire zg6.then zg7.in
+wire ze8.object zg7.receiver
+wire zg7.then zg8.in
+wire zg7.result zg8.value
+wire zg8.then zg9.in
+wire zd2.result zg9.into
+wire zg1.value zg9.receiver
+wire zg9.then zh1.in
+wire zd2.result zh1.s
+wire zh1.then zh2.in
+wire zh1.result zh2.value
+wire zh2.then zh3.in
+wire ze8.object zh3.receiver
+wire zh3.then zh4.in
+wire zd4.result zh4.partial
+wire zg4.result zh4.per
+wire zc9.result zh4.x
+wire zh4.then zh5.in
+wire ze8.object zh5.receiver
+wire zh5.then zh6.in
+wire zh5.result zh6.value
+wire zh6.then zh7.in
+wire zd4.result zh7.s
+wire zh7.then zh8.in
+wire zh7.result zh8.value
+wire zh8.then zh9.in
+wire ze8.object zh9.receiver
+wire zd6.result zi1.a
+wire zd8.result zi1.b
+wire ze1.result zi1.c
+wire zh9.then zi1.in
+wire za8.value zi1.n
+wire zi1.then zi2.in
+wire ze8.object zi2.receiver
+wire zi2.then zi3.in
+wire zi2.result zi3.value
+wire zd6.result zi4.data
+wire zi3.then zi4.in
+wire zi4.then zi5.in
+wire zi4.result zi5.value
+wire zd8.result zi6.data
+wire zi5.then zi6.in
+wire zi6.then zi7.in
+wire zi6.result zi7.value
+wire zb6.result zi8.count
+wire zi7.then zi8.in
+wire zi8.then zi9.in
+wire zi8.object zi9.value
+wire zi9.then zj4.in
+wire ze8.object zj4.receiver
+wire zj1.value zj5.a
+wire zj2.value zj5.b
+wire zj3.value zj5.c
+wire zb6.result zj5.count
+wire zj4.then zj5.in
+wire za8.value zj5.n
+wire zj5.then zj6.in
+wire zj6.then zj7.in
+wire ze8.object zj7.receiver
+wire zj7.then zj8.in
+wire zj7.result zj8.value
+wire zj8.then zj9.in
+wire ze3.result zj9.into
+wire zj3.value zj9.receiver
+wire zj9.then zk1.in
+wire ze8.object zk1.receiver
+wire zd6.result zk2.a
+wire zd8.result zk2.b
+wire ze5.result zk2.c
+wire zb6.result zk2.count
+wire zk1.then zk2.in
+wire za8.value zk2.n
+wire zk2.then zk3.in
+wire ze8.object zk3.receiver
+wire zk3.then zk4.in
+wire zk3.result zk4.value
+wire zk6.value zk8.g
+wire zk7.value zk8.k
+wire zk5.value zk8.r
+wire zk4.then zk9.in
+wire zk9.then zl1.in
+wire zk8.result zl1.value
+wire ze3.result zl2.got
+wire zl1.then zl2.in
+wire ze1.result zl2.want
+wire ze5.result zl3.got
+wire zl2.then zl3.in
+wire ze1.result zl3.want
+wire zl2.result zl4.g
+wire zl3.result zl4.k
+wire zl3.then zl5.in
+wire zl5.then zl6.in
+wire zl4.result zl6.value
+wire zl6.then zl7.in
+wire za7.value zl8.arg0
+wire zm1.value zl8.arg1
+wire zm2.value zl8.arg2
+wire zm3.value zl8.arg3
+wire zm4.value zl8.arg4
+wire zl7.then zl8.in
+wire zl7.object zl8.receiver
+wire za8.value zl9.arg0
+wire zm5.value zl9.arg1
+wire zm6.value zl9.arg2
+wire zm7.value zl9.arg3
+wire zl8.then zl9.in
+wire zl7.object zl9.receiver
+wire zl9.then zm8.in
+wire zl7.object zm8.text
+wire zm8.then zm9.in
+wire zf9.value zm9.object
+wire zm9.then zn1.in
+wire zg1.value zn1.object
+wire zn1.then zn2.in
+wire zj1.value zn2.object
+wire zn2.then zn3.in
+wire zj2.value zn3.object
+wire zn3.then zn4.in
+wire zj3.value zn4.object
+wire zn4.then zn5.in
+wire zc8.value zn5.object
+wire zn5.then zn6.in
+wire zd1.value zn6.object
+wire zn6.then zn7.in
+wire zd3.value zn7.object
+wire zn7.then zn8.in
+wire zd5.value zn8.object
+wire zn8.then zn9.in
+wire zd7.value zn9.object
+wire zn9.then zo1.in
+wire zd9.value zo1.object
+wire zo1.then zo2.in
+wire ze2.value zo2.object
+wire zo2.then zo3.in
+wire ze4.value zo3.object
+wire zo3.then zo4.in

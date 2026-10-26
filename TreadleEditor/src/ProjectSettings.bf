@@ -70,6 +70,28 @@ namespace Treadle.Editor
 				outId.Insert(0, '_');
 		}
 
+		/// The comment box over Program.Main's Entry node in a new project.
+		public const String StartHint = "Your program starts here. Run it with Ctrl+F5 (it builds first); F7 only builds.";
+
+		/// The New Project template's type: a static class Program in `ns` with a static Main (Program
+		/// Start) and, over Main's Entry node, the comment box `StartHint`.
+		public static void ProgramTemplate(TypeDocument doc, StringView projectName, StringView ns)
+		{
+			doc.InitType("Program", .Class, ns);
+			doc.Header.Static = true;
+			doc.Header.Doc = new String(scope $"Program Start of {projectName}: Main runs when the program starts.");
+			let main = doc.AddFunction("Main");
+			main.Member.Static = true;
+			GraphComment hint = new .();
+			hint.MethodKey.Set(main.Key);
+			hint.Text.Set(StartHint);
+			hint.X = -16;
+			hint.Y = -88;
+			hint.W = 528;
+			hint.H = 64;
+			doc.Comments.Add(hint);
+		}
+
 		/// New Project's files in `folder` (which exists and is empty): `<name>.tproj` and
 		/// `Source/Program.treadle` (a static class with an empty static Main: Program Start).
 		/// `outTypePath` is the type file to open first.
@@ -86,6 +108,11 @@ namespace Treadle.Editor
 			if (FileSafety.AtomicWrite(projPath, text, false, outError) case .Err)
 				return false;
 			String src = scope .();
+			// Backups are old copies; layouts stay committed (positions are worth sharing: Graph-Format.md 4).
+			String ignorePath = scope .();
+			JoinPath(folder, ".gitignore", ignorePath);
+			if (!File.Exists(ignorePath))
+				FileSafety.AtomicWrite(ignorePath, "backup/\n", false, scope String()).IgnoreError();
 			JoinPath(folder, "Source", src);
 			if (Directory.CreateDirectory(src) case .Err)
 			{
@@ -94,11 +121,7 @@ namespace Treadle.Editor
 			}
 			let doc = scope TypeDocument(Language);
 			JoinPath(src, scope $"Program{GraphExtension}", doc.FilePath);
-			doc.InitType("Program", .Class, ns);
-			doc.Header.Static = true;
-			doc.Header.Doc = new String(scope $"Program Start of {name}: Main runs when the program starts.");
-			let main = doc.AddFunction("Main");
-			main.Member.Static = true;
+			ProgramTemplate(doc, name, ns);
 			if (!doc.TrySave(outError))
 				return false;
 			outTypePath.Set(doc.FilePath);
@@ -180,7 +203,7 @@ namespace Treadle.Editor
 					changed = true;
 				}
 				v.Clear();
-				if (TsText("Namespace", "##pjns", p.Namespace, v, "The root namespace New Type proposes (a type in a sub-folder of a source folder adds the folder's path); each type can change its own in Type Settings", "the project name"))
+				if (TsText("Namespace", "##pjns", p.Namespace, v, "The root namespace New Class, New Struct... propose (a type in a sub-folder of a source folder adds the folder's path); each type can change its own in Type Settings", "the project name"))
 				{
 					v.Trim();
 					p.Namespace.Set(v);

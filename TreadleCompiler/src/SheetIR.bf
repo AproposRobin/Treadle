@@ -477,6 +477,11 @@ namespace Treadle.Compiler
 				o.Append(" export ");
 				Quote(f.Export, o);
 			}
+			if (f.Kernel != null)
+			{
+				o.Append(" kernel "); // KernelLower.bf: the PTX entry of its GPU form
+				Quote(f.Kernel, o);
+			}
 			if (!f.Sheet.IsEmpty)
 			{
 				o.Append(" sheet ");

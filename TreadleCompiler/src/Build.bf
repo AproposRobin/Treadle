@@ -207,7 +207,7 @@ namespace Treadle.Compiler
 			if (entry.IsEmpty && !library)
 			{
 				CDiag d = scope .();
-				d.Message.Set("the project names no entry type (`entry` in the project file): there is no Program Start");
+				d.Message.Set("there is no entry point: the project names no entry type (`entry` in the project file), so there is no Program Start; Build > Create Main makes Program.Main");
 				outMessages.Add(ToDiagnostic(d, .Build));
 				return false;
 			}
@@ -342,6 +342,8 @@ namespace Treadle.Compiler
 			o.MethodKey.Set(d.Sheet);
 			o.NodeKey.Set(d.Node);
 			o.PinName.Set(d.Pin);
+			o.MemberKey.Set(d.Member);
+			o.Variable.Set(d.Variable);
 			o.Where.Set(d.Type);
 			if (!d.Sheet.IsEmpty)
 				o.Where.AppendF(" {}", d.Sheet);

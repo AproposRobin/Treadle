@@ -28,6 +28,30 @@ Windows 10 or 11 (64-bit) is needed. The programs Treadle builds use only DLLs t
 run on any Windows 10 or 11 computer. To remove Treadle, delete its folder and `%LOCALAPPDATA%\Treadle`
 (settings, logs and the build cache).
 
+## Your first program
+
+Five steps from nothing to a line printed by your own program:
+
+1. **File > New Project...** (or **New project...** on the start page): type a name, choose a Location,
+   **Create**.
+2. **Main is your start.** The project opens on `Program.Main`, with a comment *Your program starts here*
+   above its Entry node. The status bar says **Entry: Program.Main** (click it to come back here) and the
+   Outline marks Main with a play glyph.
+3. **Place a WriteLine.** Drag a wire from the Entry node's white arrow into empty space, type `writeline
+   string`, press **Enter**, and type `Hello` into the new node's box.
+4. **Run** (Ctrl+F5, the green play button on the toolbar). Run does the build for you; Build alone (F7) is for
+   checking errors or shipping.
+5. **The output** shows in the Output Log at the bottom, under Run: `Hello`.
+
+To call a function of another type, say `Run` of a class `Engine`, type `engine run` in the Node menu. A function
+that works on an Engine needs one: pick **Construct Engine + Run**, which places a Construct Engine, a Defer
+Delete and the Run call wired together, or place **Run** and drag from its **Receiver** to a **Local Engine**
+(the simple choice: the Engine lives until Main ends) or a variable. Construct with a Delete is for an object that
+must outlive the region it is made in. A **static** function needs no object and places with no Receiver.
+
+Another static `Main` can be the start: right-click it in the Outline, **Set as entry point** (Ctrl+Z undoes it).
+A project with no entry point fails to build with **Create Main** offered in Problems (also in the Build menu).
+
 ## Make a project
 
 **File > New Project...** (or **New project...** on the start page). Type the name `Zoo`, choose a Location
@@ -37,22 +61,29 @@ that exists, and click **Create**.
 
 Treadle makes the folder `Zoo` with the project file `Zoo.tproj` and a `Source` folder holding one type,
 `Program`, whose function `Main` runs when the program starts. The project opens with `Main` in front.
+As you work, Treadle may add two more folders: `layout`, which holds each type's node positions (so the type files stay clean and a graph runs without them), and `backup`, which holds the previous version of each file you save over. New Project also writes a `.gitignore` that ignores `backup/`; keep `layout/` in version control if you want to share positions.
 
 ## The window
 
 ![The editor with the new project open](images/tutorial-02-window.png)
 
 1. **Menu bar**: File, Edit, Graph, Build, Debug, Window, Help. The project's name is at the right.
-2. **Toolbar**: Validate, Build, Save, Browse, Find, **Arrange** (tidies the Sheet in front), Align.
-3. **Outline**: the open type. **Type Settings** (name, kind, namespace, base type, generic parameters), then
+2. **Toolbar**: Validate, **Run** (builds when needed, then starts the program), Build, Save, Browse, Find,
+   **Arrange** (tidies the Sheet in front), Align.
+3. **Outline**: the type in front. **Type Settings** (name, kind, namespace, base type, generic parameters), then
    **FUNCTIONS**, **VARIABLES** (the type's fields) and **LOCAL VARIABLES** (of the function in front). The
    **+** at the end of a section adds one.
-4. **Sheet**: the graph of one function. Every function, constructor and destructor has its own Sheet in its
-   own tab. Right-click on the canvas, or drag a wire from a pin into empty space, to open the **Node menu**.
+4. **Sheet**: the graph of one function. The top row has a tab for each open type (its kind icon and name; the
+   type in front is lit in its kind's colour), and under it the tabs of that type's Sheets: every function,
+   constructor and destructor has its own Sheet in its own tab. Click another type's tab and its Sheets, the
+   Outline and Properties come with it. The strip over the canvas names the type and its base (`Dog : Animal`),
+   its namespace and file, has **Type Settings** and **Validate**, and shows the signature of the Sheet in front
+   on the right. Right-click on the canvas, or drag a wire from a pin into empty space, to open the **Node menu**.
 5. **Properties**: whatever is selected: a node, a function's page, Type Settings, a variable.
 6. **Project Browser**, **Output Log** and **Problems**, docked together. The Project Browser shows the
    project's folders and types; double-click a type to open it.
-7. **Status bar**: the last message, whether the project is built, and whether everything is saved.
+7. **Status bar**: the last message, the entry point (**Entry: Program.Main**; a click opens it), whether the
+   project is built, and whether everything is saved.
 
 ## Bring in a C function
 
@@ -80,8 +111,10 @@ few letters of the node's name in the Node menu and press **Enter**, or click th
 comes wired to the pin you dragged from. The white arrow pins are flow pins; "from Entry" means from the
 Entry node's flow output.
 
-1. **File > New Type...**, name `Animal`, Kind **class**, **OK**. The type is written to the folder selected in
-   the Project Browser (`Source`), in the project's namespace `Zoo` (Type Settings > **Namespace** changes it).
+1. In the Project Browser click **+ Add > New Class...** (the same menu opens on a right-click on the `Source`
+   folder). The Create Type dialog proposes `NewClass`: type `Animal` and press **Enter**. The dialog shows what
+   it makes: `Animal.treadle` in the selected folder (`Source`), in the project's namespace `Zoo` (Type Settings >
+   **Namespace** changes it). A new class starts with a constructor, and its Sheet opens.
 2. **VARIABLES +** adds a variable. In Properties name it `mLegs`; its Type is already `int`.
 3. **FUNCTIONS +** > **Function**. Name it `Speak` in Properties and set **Inheritance** to **Virtual**, so
    Dog and Bird can replace it.
@@ -101,31 +134,36 @@ Entry node's flow output.
 A pure function has no side effects, so its calls are value nodes: no flow pins, and they run when a flow node
 needs their value. **Ctrl+Shift+S** saves everything; do it after each type.
 
-8. **FUNCTIONS +** > **Constructor**: it runs when an Animal is made. Under **Inputs** click **Add Input**, name
-   it `legs`; its type is already `int`, and the Entry node gets a `legs` output. From Entry: `set mlegs`, then
-   drag a wire from Entry's `legs` to the Set node's **Value**.
+8. The constructor New Class made runs when an Animal is made: click its row in **FUNCTIONS**. Under **Inputs**
+   click **Add Input**, name it `legs`; its type is already `int`, and the Entry node gets a `legs` output. From
+   Entry: `set mlegs`, then drag a wire from Entry's `legs` to the Set node's **Value**.
 
 ## Dog and Bird: a base constructor and an override
 
-1. **File > New Type...**, `Dog`, class. In Type Settings set **Base Type** to `Animal`.
-2. **FUNCTIONS +** > **Constructor**. A constructor runs a constructor of its base class first: right-click on
-   the canvas, type `base constructor`, Enter. **Base Constructor (int)** is Animal's constructor; type `4`
-   into its **legs**. In Properties, **Constructor** says which one it runs (a base class with several
-   constructors lists them all there).
+1. Right-click the `Animal` tile in the Project Browser > **Make Child Class...**. The dialog proposes
+   `AnimalChild` with the Base Class `Animal`: name it `Dog`, **Enter**. (+ Add > New Class does the same when
+   you pick `Animal` in its **Base Class** dropdown.)
+2. Dog's constructor Sheet opens. A constructor runs a constructor of its base class first, so Make Child Class
+   put **Base Constructor (int)**, Animal's constructor, after Entry: type `4` into its **legs**. In Properties,
+   **Constructor** says which one it runs (a base class with several constructors lists them all there).
 
 ![Dog's constructor runs Animal's with legs 4](images/tutorial-06-dog-constructor.png)
 
-3. **FUNCTIONS +** > **Function** `Speak`, **Inheritance: Override**. From Entry place `puts` with `Woof`.
-   The Outline marks an override with a red icon.
+3. Animal's Speak is virtual, so the **Override...** button on the FUNCTIONS header lists it: **Override... >
+   Speak** makes Dog's Speak with the same signature, **Inheritance: Override**, and opens it. From Entry place
+   `puts` with `Woof`. The Outline marks an override with a red icon.
 
 ![Dog's Speak overrides Animal's](images/tutorial-06-dog-speak.png)
 
-4. Make `Bird` the same way: Base Type `Animal`, a constructor whose Base Constructor gets `2`, and a Speak
-   override that prints `Tweet`.
+4. Make `Bird` the same way: **Make Child Class...** on Animal, `2` into the Base Constructor's legs, and
+   **Override... > Speak** printing `Tweet`.
+
+An abstract function of a base class (Inheritance: Abstract, no Sheet) has to be overridden: the child's Outline
+then lists it under **REQUIRED OVERRIDES**, where **Implement** makes it.
 
 ## Point: a struct
 
-1. **File > New Type...**, `Point`, Kind **struct**.
+1. **+ Add > New Struct...**, `Point`, **Enter**. A new struct has no members; Type Settings opens.
 2. **VARIABLES +** twice: `X` and `Y`, both `int`.
 3. **FUNCTIONS +** > **Function** `Sum`: **Pure**, Return Type `int`. From Entry: `return`. From the Return's
    **Value**: `+`. From the + node's **A**: `get x`; from its **B**: `get y`.
@@ -136,11 +174,11 @@ A struct is a value: copying it copies its fields, and nothing has to free it.
 
 ## Box: a generic class
 
-1. **File > New Type...**, `Box`, class. In Type Settings open **Generic Parameters** and click **Add Generic
-   Parameter**: `T` appears.
+1. **+ Add > New Class...**, `Box`, **Enter**. In Type Settings open **Generic Parameters** and click **Add
+   Generic Parameter**: `T` appears.
 2. **VARIABLES +**: name `mValue`, Type `T`.
-3. **FUNCTIONS +** > **Constructor**. Under **Inputs** click **Add Input**, name it `value` and give it the
-   type `T`. From Entry place `set mvalue`, then drag a wire from Entry's `value` to the Set node's **Value**.
+3. Click the constructor's row in **FUNCTIONS**. Under **Inputs** click **Add Input**, name it `value` and
+   pick the type `T` (under **Generic parameters** in the type picker). From Entry place `set mvalue`, then drag a wire from Entry's `value` to the Set node's **Value**.
 4. **FUNCTIONS +** > **Function** `Get`: **Pure**, Return Type `T`. From Entry `return`; from its Value
    `get mvalue`.
 
@@ -195,14 +233,17 @@ place **Local Variable**: the value is stored once, and Get nodes read it.
     `box get`. Wire Local Box's **Object** into that Get's Receiver too.
 16. From WriteLine's flow output: `puts` with `done`.
 17. **Arrange**, then **Validate** (Shift+F7). Problems stays empty. A problem would show as a red strip on its
-    node, with the whole text in Properties and in Problems.
+    node, with the whole text in Properties and in Problems. Problems are shown when you Validate, Build or Run;
+    after an edit the ones shown dim until the next Validate (**Editor Preferences > Build > Validate automatically
+    after edits** shows them as you edit).
 
 ![Then 1: a Box of a Point made with its constructor, read back and summed](images/tutorial-11-main-box.png)
 
 ## Build and run
 
-**Build** (F7) saves every file and compiles the project. **Run Without Debugging** (Ctrl+F5, Build menu)
-builds when needed and runs the program; its output goes to the Output Log:
+**Run** (Ctrl+F5, the toolbar's play button, first in the Build menu) saves every file, builds when needed and
+runs the program; its output goes to the Output Log. **Build** (F7) only compiles, for checking errors or
+making the exe to ship:
 
 ```
 Woof
@@ -239,6 +280,13 @@ The Output Log folds the two equal last lines into one marked `(x2)`.
    stops the program.
 
 ![Step Into opened Dog's Speak](images/tutorial-14-step-into.png)
+
+To see what is under the graph: **Type Settings > Layout** (click the type at the top of the Outline) shows
+where each field of Dog or Point sits in memory, padding included, without a build; the Construct and Local
+nodes say where their objects live (`lives in heap`, `lives in region`). After a build, right-click Main in
+the Outline > **Disassembly** for its machine code grouped by node, with its Sheet IR and LLVM IR beside it;
+while stopped, right-click `pet` in Locals > **Show in Memory** for the bytes of the Dog it references
+([Debugging.md](Debugging.md), "Under the hood").
 
 ## What is different
 
@@ -313,11 +361,12 @@ Treadle.exe <project folder>                         open a project
 Treadle.exe --build-run <project folder> [-- args]  build and run, print the output, exit
 Treadle.exe --import-c <file.cimport> [--out <dir>] import C headers without a window
 Treadle.exe --version                                print the version
+Treadle.exe --update [--check-only]                 look for a new version and install it
 ```
 
 `--build-run` exits with the program's result: 0 when the program ran, 3 when the build failed (each problem is
 printed with the node it is on). The program runs in the project folder, as from a terminal there: a relative
-argument or file name (`-- data.json`) is read from the project folder. Run Without Debugging (Ctrl+F5) in the
+argument or file name (`-- data.json`) is read from the project folder. Run (Ctrl+F5) in the
 editor runs it in its build folder (`build\Debug` or `build\Release`).
 
 ## What is in the folder
@@ -329,10 +378,36 @@ editor runs it in its build folder (`build\Debug` or `build\Release`).
 | `tools\llvm\` | the compiler back end, linker and debugger |
 | `tools\libclang\` | used only by the C header import |
 | `tools\runtime\` | the small C runtime compiled into every program |
-| `samples\` | the m1 and m3-core sample projects |
+| `tools\SDL2\` | SDL2 2.32.10 (headers, import library, `SDL2.dll`) for the SDL samples |
+| `samples\` | the sample projects; `samples\README.md` lists them |
 | `docs\` | these pages and their pictures |
 | `LICENSE`, `NOTICE`, `THIRD_PARTY.md`, `THIRD_PARTY\` | Treadle's licence and those of the bundled components |
 | `VERSION.txt` | the version of this package |
+| `files.txt` | the list of the package's files (the updater replaces files by it) |
+| `update\` | made by the updater: downloads, its log `update.log`, the copy it can roll back to |
 
-This version has no update channel and makes no update requests: install a new version by unzipping it into a
-new folder. **Editor Preferences > Updates** shows the version.
+## Updating
+
+Treadle updates itself from its GitHub Releases (https://github.com/AproposRobin/Treadle/releases). Once a day, a
+few seconds after it starts, it looks for a newer version; **Help > Check for Updates** looks at any time. When
+one is found, a line under the toolbar says so: **Update now** downloads it (the progress is in the status bar)
+and checks it against the release's SHA256SUMS, **What changed** shows the release notes, **Later** hides the line
+until the next start, **Skip this version** never offers that version again. When the download is checked,
+**Restart to finish** saves your files, closes Treadle, replaces the program's files and starts the new version with
+the same project. Your projects, settings and anything you added to the Treadle folder stay as they are; if the
+new version does not start, the old one is put back. `update\update.log` in the Treadle folder says what happened.
+
+**Editor Preferences > Updates** has the settings: **Check for Updates** (on), **Channel** (Alpha, the default,
+also gets pre-releases; Stable only full releases) and **Work Offline**, which stops every network request.
+Without a network nothing changes: a failed check is only logged. If the Treadle folder cannot be written to (for
+example under Program Files), the line says so and gives the release link: download and unzip the new version by
+hand. **Help > About Treadle** shows the version you have.
+
+## Samples
+
+The `samples` folder of the Treadle folder holds sample projects, from the zoo of this page (`m1`) to a Breakout game
+(`m4-breakout`), a JSON reader and writer (`m5-json`) and a small virtual machine (`m6-vm`). `samples\README.md`
+lists them with one line each and says how to open and run them: **Open a sample...** on the start page, File >
+Open Project Folder..., or `Treadle.exe --build-run samples\<name>` from a terminal. Each sample has its own
+README with what it shows and the command that runs it. `m2-sdl`, `m4-breakout` and `m7-particles` draw with SDL2, which the
+Windows package carries in `tools\SDL2`; on Linux see `samples/README.md`, "SDL2".

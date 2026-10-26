@@ -12,7 +12,7 @@
 #   tools/runtime/                                   the C runtime sources every program is built with
 #   tools/llvm/                                      trimmed LLVM 22 (packaging/llvm-files-linux.txt): clang, lld,
 #                                                    lldb-dap, libclang.so, builtin headers, compiler-rt
-#   samples/m1, samples/m3-core                      two small projects to open and build
+#   samples/                                         the sample projects of packaging/samples.txt and their index
 #   docs/                                            the user-facing pages (and docs/images when present)
 #   LICENSE, NOTICE, THIRD_PARTY.md, THIRD_PARTY/, VERSION.txt
 #
@@ -139,6 +139,30 @@ NAME="Treadle-$FULL-linux-x64"
 
 for f in LICENSE NOTICE THIRD_PARTY.md; do [ -f "$ROOT/$f" ] || die "missing required file: $f"; done
 for f in LLVM-LICENSE.txt Python-LICENSE.txt SDL2-LICENSE.txt; do [ -f "$ROOT/THIRD_PARTY/$f" ] || die "missing THIRD_PARTY/$f"; done
+# The samples that ship (packaging/samples.txt): each needs a project file and a README.md. A folder with both that
+# the list does not name ships too, with a warning; "!name" lines keep folders out.
+SAMPLES=(); NOT_SHIPPED=" "
+while IFS= read -r line || [ -n "$line" ]; do
+  line="${line%$'\r'}"
+  name="$(echo "${line%%|*}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  [ -z "$name" ] || [ "${name:0:1}" = "#" ] && continue
+  if [ "${name:0:1}" = "!" ]; then NOT_SHIPPED+="${name:1} "; continue; fi
+  sdir="$ROOT/TreadleCore/samples/$name"
+  [ -d "$sdir" ] || die "packaging/samples.txt names $name, which is not in TreadleCore/samples"
+  ls "$sdir"/*.tproj >/dev/null 2>&1 || die "sample $name has no .tproj"
+  [ -f "$sdir/README.md" ] || die "sample $name has no README.md"
+  SAMPLES+=("$name")
+done < "$ROOT/packaging/samples.txt"
+for d in "$ROOT"/TreadleCore/samples/*/; do
+  n="$(basename "$d")"
+  [[ " ${SAMPLES[*]} " == *" $n "* ]] && continue
+  [[ "$NOT_SHIPPED" == *" $n "* ]] && continue
+  if ls "$d"*.tproj >/dev/null 2>&1 && [ -f "$d/README.md" ]; then
+    echo "warning: sample $n is not in packaging/samples.txt: it ships; add its line (or a !$n line)"
+    SAMPLES+=("$n")
+  fi
+done
+[ -f "$ROOT/TreadleCore/samples/README.md" ] || die "TreadleCore/samples/README.md (the samples index) is missing"
 DOCS="Getting-Started.md Language-Guide.md Core-Library.md C-Import.md Debugging.md Keyboard.md Linux.md Performance.md Known-Issues.md"
 
 # ------------------------------------------------------------------------------------------- build
@@ -193,9 +217,29 @@ cp "$ROOT/tools/runtime/treadle_rt.c" "$ROOT/tools/runtime/treadle_rt.h" "$OUT/t
 echo "== Toolchain subset from $LLVM_SRC"
 copy_toolchain "$OUT/tools/llvm"
 
+# The samples (packaging/samples.txt) and their index. A sample built or run in this checkout has a build folder and
+# may have written files next to its input: they do not ship. Paths that lead out of the source tree's sample are
+# rewritten for the package's layout: the SDL samples' Linux sets link the package's own libSDL2-2.0.so.0
+# (../../libSDL2-2.0.so.0 from samples/<name>; the program runs with the system's SDL2, or LD_LIBRARY_PATH set to
+# the package folder), their Windows sets take ../../tools/SDL2 as the Windows package does, and m2-frontend's probe
+# header is copied beside its set.
 mkdir -p "$OUT/samples"
-# A sample built or run in this checkout has a build folder: it does not ship.
-for s in m1 m3-core; do cp -r "$ROOT/TreadleCore/samples/$s" "$OUT/samples/$s"; rm -rf "$OUT/samples/$s/build"; done
+cp "$ROOT/TreadleCore/samples/README.md" "$OUT/samples/README.md"
+for s in "${SAMPLES[@]}"; do
+  cp -r "$ROOT/TreadleCore/samples/$s" "$OUT/samples/$s"
+  rm -rf "$OUT/samples/$s/build" "$OUT/samples/$s/m3-files-out"
+  find "$OUT/samples/$s" -name '*.pretty.json' -delete
+  while IFS= read -r ci; do
+    if grep -q '\.\./\.\./\.\./\.\./tools/probe/headers/small\.h' "$ci"; then
+      sed -i 's#\.\./\.\./\.\./\.\./tools/probe/headers/small\.h#small.h#' "$ci"
+      cp "$ROOT/tools/probe/headers/small.h" "$(dirname "$ci")/small.h"
+    fi
+    sed -i 's#\${TREADLE_SDL2:-\.\./\.\./\.\./tools/SDL2-2\.32\.10}#${TREADLE_SDL2:-../../tools/SDL2}#g' "$ci"
+    case "$ci" in *.linux.cimport) sed -i 's#^\(\s*\)lib SDL2$#\1lib ../../libSDL2-2.0.so.0#' "$ci" ;; esac
+    if grep -q '\.\./\.\./\.\./' "$ci"; then die "$ci still names a path outside the package"; fi
+  done < <(find "$OUT/samples/$s" -name '*.cimport')
+done
+grep -q 'lib \.\./\.\./libSDL2-2\.0\.so\.0' "$OUT/samples/m2-sdl/sdl2.linux.cimport" || die "samples/m2-sdl/sdl2.linux.cimport was not rewritten to the package's libSDL2"
 mkdir -p "$OUT/docs"
 for d in $DOCS; do
   if [ -f "$ROOT/docs/$d" ]; then cp "$ROOT/docs/$d" "$OUT/docs/$d"
@@ -229,6 +273,10 @@ bad="$(find "$OUT" -path "$OUT/tools" -prune -o -type f \( -name '*.o' -o -name 
 reported="$(timeout 30 "$OUT/treadle" --version 2>/dev/null | head -1 | tr -d '\r')" || true
 [[ "$reported" == "Treadle $FULL (host contract "* ]] || die "Treadle --version printed '$reported', expected 'Treadle $FULL (host contract n)'"
 
+# The file list the updater installs by (docs/Releasing.md, "The update path"): every file and link of the package,
+# relative; files.txt itself is not listed.
+(cd "$OUT" && find . \( -type f -o -type l \) ! -path ./files.txt -printf '%P\n' | LC_ALL=C sort) > "$OUT/files.txt"
+
 # ------------------------------------------------------------------------------------------- tarball
 
 mkdir -p "$DIST"
@@ -241,7 +289,10 @@ tar -C "$(dirname "$OUT")" --sort=name --owner=0 --group=0 --numeric-owner --mti
 SHA="$(cut -d' ' -f1 "$TGZ.sha256")"
 echo "Packaged $OUT"
 echo "  folder $(mb "$OUT") (tools/llvm $(mb "$OUT/tools/llvm"))"
-echo "  tar.gz $TGZ ($(du -b "$TGZ" | awk '{ printf "%.1f MB", $1 / 1048576 }'))"
+TGZ_BYTES=$(stat -c %s "$TGZ")
+echo "  tar.gz $TGZ ($(du -b "$TGZ" | awk '{ printf "%.1f MB", $1 / 1048576 }'); samples $(mb "$OUT/samples") unpacked)"
+echo "  samples ${SAMPLES[*]}"
+[ "$TGZ_BYTES" -lt $((150 * 1048576)) ] || die "the tarball is over the 150 MB limit (docs/Releasing.md)"
 echo "  sha256 $SHA"
 echo "  exe    $reported"
 
@@ -291,7 +342,7 @@ run_pkg() { # run_pkg <timeout s> <extra env...> -- <args...>
   while [ "$1" != "--" ]; do envs+=("$1"); shift; done
   shift
   local -a cmd=(env -u TREADLE_LLVM -u TREADLE_CORE -u TREADLE_LIBCLANG -u TREADLE_RUNTIME -u TREADLE_SAMPLES
-    -u TREADLE_LLDB_DAP -u TREADLE_SELFTEST -u TREADLE_UPDATE_REPOSITORY -u LD_LIBRARY_PATH
+    -u TREADLE_LLDB_DAP -u TREADLE_SELFTEST -u TREADLE_UPDATE_INDEX -u LD_LIBRARY_PATH
     TREADLE_NO_FALLBACK=1 TREADLE_HOME="$VERIFY_DIR/home" XDG_CACHE_HOME="$VERIFY_DIR/cache" "${envs[@]+"${envs[@]}"}"
     timeout "$t" nice -n "$NICE" "$RUN_EXE" "$@")
   if [ $ISOLATE = 1 ]; then
@@ -367,6 +418,65 @@ if [ -n "$LOG" ]; then
 fi
 { echo "$DONE"; echo "$DAP"; } > "$OUTF"
 check "TREADLE_SELFTEST=smoke,debug,quit (the Release build in the package layout)" $([ $code = 0 ] && [ "$DONE" = "[SELFTEST] done failures=0" ] && [[ "$DAP" == "lldb-dap: $TL/tools/llvm/bin/"* ]] && echo 1 || echo 0) $ms $code
+
+# Shipped samples, built and run in place in the unpacked folder (their build folders land there). The SDL samples
+# link the package's libSDL2-2.0.so.0; with the system's SDL2 hidden they run with LD_LIBRARY_PATH set to the package
+# folder (what a system without libsdl2-2.0-0 needs). m2-sdl opens a window, so it runs only where a display is.
+PS="$UNP/samples"
+timed 300 -- --build-run "$PS/m3-core"
+check "--build-run samples/m3-core (shipped, in place)" $([ $code = 0 ] && grep -q "counted in" "$OUTF" && echo 1 || echo 0) $ms $code
+timed 300 LD_LIBRARY_PATH="$UNP" -- --build-run "$PS/m4-breakout" -- --headless
+check "--build-run samples/m4-breakout -- --headless (the package's libSDL2)" $([ $code = 0 ] && grep -q "frames 600 score" "$OUTF" && echo 1 || echo 0) $ms $code
+if [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+  timed 300 LD_LIBRARY_PATH="$UNP" -- --build-run "$PS/m2-sdl" -- --frames 60
+  check "--build-run samples/m2-sdl -- --frames 60 (the package's libSDL2)" $([ $code = 0 ] && grep -q "frames 60" "$OUTF" && echo 1 || echo 0) $ms $code
+else
+  echo "[skip] --build-run samples/m2-sdl -- --frames 60: no display (DISPLAY and WAYLAND_DISPLAY are unset)"
+fi
+
+# The update rehearsal (docs/Releasing.md, "The update path"): package A is this package with an older VERSION.txt, one
+# extra listed file (docs/rehearsal-old-page.md, which B no longer has) and user files the update must keep; a local
+# release index (TREADLE_UPDATE_INDEX, the same override every build honours) holds this tarball as release B with its
+# SHA256SUMS. A's `treadle --update` checks, downloads, verifies and starts the helper; the helper replaces A's files by
+# B's files.txt and restarts with --update-health. Not isolated: the helper outlives the command that started it.
+REH="$VERIFY_DIR/update-rehearsal"
+RA="$REH/$NAME"
+RIDX="$REH/index"
+mkdir -p "$RIDX" "$REH/home"
+cp -a "$UNP" "$RA"
+echo "0.0.1-rehearsal" > "$RA/VERSION.txt"
+mkdir -p "$RA/projects/MyGame" "$RA/samples/m1"
+echo "user project" > "$RA/projects/MyGame/MyGame.tproj"
+echo "user notes inside a package folder" > "$RA/samples/m1/my-notes.txt"
+echo "only in A" > "$RA/docs/rehearsal-old-page.md"
+echo "docs/rehearsal-old-page.md" >> "$RA/files.txt"
+cp "$TGZ" "$RIDX/"
+echo "$SHA  $NAME.tar.gz" > "$RIDX/SHA256SUMS"
+printf '[{"tag_name": "v%s", "draft": false, "prerelease": false, "body": "Rehearsal release", "assets": [{"name": "%s", "size": %s}, {"name": "SHA256SUMS", "size": 100}]}]' \
+  "$FULL" "$NAME.tar.gz" "$TGZ_BYTES" > "$RIDX/releases.json"
+reh_run() { (cd "$RA" && env -u TREADLE_SELFTEST -u LD_LIBRARY_PATH TREADLE_HOME="$REH/home" TREADLE_UPDATE_INDEX="$RIDX" XDG_CACHE_HOME="$VERIFY_DIR/cache" timeout "$1" "$RA/treadle" "${@:2}"); }
+t0=$(now_ms); set +e; reh_run 600 --update >"$OUTF" 2>&1; code=$?; set -e; ms=$(( $(now_ms) - t0 ))
+HPID="$(grep -o 'Update helper started (process [0-9]*' "$OUTF" | grep -o '[0-9]*$' || true)"
+check "update rehearsal: 0.0.1-rehearsal --update finds $FULL in the local index, verifies it and starts the helper" $([ $code = 0 ] && [ -n "$HPID" ] && echo 1 || echo 0) $ms $code
+ULOG="$RA/update/update.log"
+if [ -n "$HPID" ]; then
+  for _ in $(seq 1 2400); do kill -0 "$HPID" 2>/dev/null || break; sleep 0.25; done
+  kill -0 "$HPID" 2>/dev/null && { kill "$HPID" 2>/dev/null || true; echo "    ! the helper did not finish in 600 s (stopped)"; }
+  for _ in $(seq 1 240); do grep -qE "update complete|restoring|update failed|did not close" "$ULOG" 2>/dev/null && break; sleep 0.25; done
+fi
+VA="$(head -1 "$RA/VERSION.txt" | tr -d '\r')"
+KEPT=0; [ -f "$RA/projects/MyGame/MyGame.tproj" ] && [ -f "$RA/samples/m1/my-notes.txt" ] && KEPT=1
+GONE=0; [ ! -e "$RA/docs/rehearsal-old-page.md" ] && GONE=1
+SAME=0; cmp -s "$RA/files.txt" "$UNP/files.txt" && SAME=1
+NOPREV=0; [ ! -e "$RA/update/old" ] && NOPREV=1
+EXEC=0; [ -x "$RA/treadle" ] && [ -x "$RA/tools/llvm/bin/clang" ] && [ -L "$RA/tools/llvm/bin/ld.lld" ] && EXEC=1
+t0=$(now_ms); set +e; reh_run 30 --version >"$OUTF" 2>&1; code=$?; set -e; ms=$(( $(now_ms) - t0 ))
+VLINE="$(head -1 "$OUTF")"
+cat "$ULOG" >> "$OUTF" 2>/dev/null || true
+check "update rehearsal: VERSION.txt $VA, user files kept $KEPT, A-only file removed $GONE, files.txt is B's $SAME, rollback copy cleared $NOPREV, exec bits and links kept $EXEC" \
+  $([ $code = 0 ] && [ "$VA" = "$FULL" ] && [[ "$VLINE" == "Treadle $FULL (host contract "* ]] && [ $KEPT = 1 ] && [ $GONE = 1 ] && [ $SAME = 1 ] && [ $NOPREV = 1 ] && [ $EXEC = 1 ] && grep -q "update complete" "$ULOG" && echo 1 || echo 0) $ms $code
+t0=$(now_ms); set +e; reh_run 120 --update >"$OUTF" 2>&1; code=$?; set -e; ms=$(( $(now_ms) - t0 ))
+check "update rehearsal: --update again says up to date" $([ $code = 0 ] && grep -q "is up to date" "$OUTF" && echo 1 || echo 0) $ms $code
 
 [ $FAILS = 0 ] || die "verify: $FAILS check(s) failed (work files in $VERIFY_DIR)"
 echo "Verified from $UNP with only the package's contents (fresh m1 build $FRESH_MS ms). Work files: $VERIFY_DIR"

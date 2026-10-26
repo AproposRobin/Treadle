@@ -22,6 +22,10 @@ namespace Treadle.Compiler
 		public bool IsInterface;
 		public bool IsDelete;
 		public bool IsNew;
+		/// `T : vector` (SIMD-and-Vectors.md 2): T is a vector type; `T : vector float` also names its
+		/// lane type (VectorElement).
+		public bool IsVector;
+		public KType VectorElement;
 		/// `operator==`, `operator+`: the operator symbols the parameter supports.
 		public List<String> Operators = new .() ~ DeleteContainerAndItems!(_);
 		/// `generic const N int`.

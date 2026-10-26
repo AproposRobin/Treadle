@@ -43,6 +43,11 @@ namespace Treadle.Document
 		public String NodeKey = new .() ~ delete _;
 		/// The pin of that node the message is about (its format name; "" = the whole node).
 		public String PinName = new .() ~ delete _;
+		/// The member's record id when the message is about one of its variables (with Variable).
+		public String MemberKey = new .() ~ delete _;
+		/// The variable the message is about: `local:<name>`, `param:<name>`, `out:<name>`, `field:<name>`,
+		/// `generic:<name>` (a missing type: Problems selects it in the Outline); "" otherwise.
+		public String Variable = new .() ~ delete _;
 		/// "Player.Tick" / "Player" for display.
 		public String Where = new .() ~ delete _;
 		/// Node id in the graph the diagnostic was last resolved against.

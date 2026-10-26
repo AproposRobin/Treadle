@@ -1,0 +1,384 @@
+# treadle 1
+type EmitterB class
+	namespace Particles
+	doc "Emitter B: structure of arrays of the math library's Vec3 (12 bytes each, as C lays them out). Each step widens a Vec3 to a float4 (Vec4.FromVec3, ToVector), runs the same SIMD Kin.Step and narrows the result back (Vec4.FromVector, XYZ) into the arrays with Arrays.Set."
+
+field mPos Vec3[]
+	owner owned
+
+field mVel Vec3[]
+	owner owned
+
+field mCount int
+
+ctor f0001
+	doc "count particles spread over the box from the seeded Random, each with a small random velocity."
+param count int
+param rng Random
+sheet body
+node a1 Entry
+node a2 Set this.mCount
+node a4 Construct Vec3
+	set count
+node a5 Set this.mPos
+node a6 Construct Vec3
+	set count
+node a7 Set this.mVel
+node a8 For
+	in start 0
+node b1 Call Random.Range
+	in min -45.0f
+	in max 45.0f
+node b2 Call Random.Range
+	in min -45.0f
+	in max 45.0f
+node b3 Call Random.Range
+	in min -45.0f
+	in max 45.0f
+node b4 Make Vec3
+node b5 Get this.mPos
+node b6 Call Arrays.Set
+node b7 Call Random.Range
+	in min -6.0f
+	in max 6.0f
+node b8 Call Random.Range
+	in min 0.0f
+	in max 20.0f
+node b9 Call Random.Range
+	in min -6.0f
+	in max 6.0f
+node c1 Make Vec3
+node c2 Get this.mVel
+node c3 Call Arrays.Set
+node c4 Return
+wire a1.then a2.in
+wire a1.count a2.value
+wire a1.count a4.count
+wire a2.then a4.in
+wire a4.then a5.in
+wire a4.object a5.value
+wire a1.count a6.count
+wire a5.then a6.in
+wire a6.then a7.in
+wire a6.object a7.value
+wire a1.count a8.count
+wire a7.then a8.in
+wire a8.body b1.in
+wire a1.rng b1.receiver
+wire b1.then b2.in
+wire a1.rng b2.receiver
+wire b2.then b3.in
+wire a1.rng b3.receiver
+wire b1.result b4.X
+wire b2.result b4.Y
+wire b3.result b4.Z
+wire b5.value b6.array
+wire b3.then b6.in
+wire a8.index b6.index
+wire b4.value b6.value
+wire b6.then b7.in
+wire a1.rng b7.receiver
+wire b7.then b8.in
+wire a1.rng b8.receiver
+wire b8.then b9.in
+wire a1.rng b9.receiver
+wire b7.result c1.X
+wire b8.result c1.Y
+wire b9.result c1.Z
+wire c2.value c3.array
+wire b9.then c3.in
+wire a8.index c3.index
+wire c1.value c3.value
+wire a8.done c4.in
+
+function f0002 StepRange
+	doc "Steps the particles lo up to (not including) hi: each Vec3 is widened to a float4, stepped by Kin.Step and narrowed back; the chunk's speed numbers go into stats once, under its Mutex."
+param lo int
+param hi int
+param center float4
+param wlo float4
+param whi float4
+param stats Stats
+local mn float
+	init 1000000000.0f
+local mx float
+local sum int
+local s float
+local k Kin
+sheet body
+node d1 Entry
+node d2 Operator -
+node d3 For
+node d5 Get this.mPos
+node d6 Index
+node d7 Call Core.Vec4.FromVec3
+	in w 0
+node d8 Call Core.Vec4.ToVector
+node d9 Get this.mVel
+node e0 Index
+node e1 Call Core.Vec4.FromVec3
+	in w 0
+node e2 Call Core.Vec4.ToVector
+node e3 Call Particles.Kin.Step
+node e4 Set local:k
+node e5 Get local:k
+node e6 Break Particles.Kin
+node e7 Call Core.Vec4.FromVector
+node e8 Call Core.Vec4.XYZ
+node e9 Get this.mPos
+node f0 Call Arrays.Set
+node f1 Call Core.Vec4.FromVector
+node f2 Call Core.Vec4.XYZ
+node f3 Get this.mVel
+node f4 Call Arrays.Set
+node f5 Call Core.Vector.Length
+node f6 Set local:s
+node f7 Get local:mn
+node f8 Get local:s
+node f9 Call Core.Math.Min
+node g0 Set local:mn
+node g1 Get local:mx
+node g2 Call Core.Math.Max
+node g3 Set local:mx
+node g4 Math
+	set expr "s * 1000"
+node g5 Cast int
+node g6 Set local:sum
+	set op +=
+node g7 Get local:mn
+node g8 Get local:mx
+node g9 Get local:sum
+node h0 Call Particles.Stats.Merge
+node h1 Return
+wire d1.hi d2.a
+wire d1.lo d2.b
+wire d2.result d3.count
+wire d1.then d3.in
+wire d1.lo d3.start
+wire d5.value d6.collection
+wire d3.index d6.index
+wire d6.value d7.v
+wire d7.result d8.receiver
+wire d9.value e0.collection
+wire d3.index e0.index
+wire e0.value e1.v
+wire e1.result e2.receiver
+wire d1.center e3.center
+wire d1.whi e3.hi
+wire d1.wlo e3.lo
+wire d8.result e3.p
+wire e2.result e3.v
+wire d3.body e4.in
+wire e3.result e4.value
+wire e5.value e6.value
+wire e6.P e7.value
+wire e7.result e8.receiver
+wire e9.value f0.array
+wire e4.then f0.in
+wire d3.index f0.index
+wire e8.result f0.value
+wire e6.V f1.value
+wire f1.result f2.receiver
+wire f3.value f4.array
+wire f0.then f4.in
+wire d3.index f4.index
+wire f2.result f4.value
+wire e6.V f5.v
+wire f4.then f6.in
+wire f5.result f6.value
+wire f7.value f9.a
+wire f8.value f9.b
+wire f6.then g0.in
+wire f9.result g0.value
+wire g1.value g2.a
+wire f8.value g2.b
+wire g0.then g3.in
+wire g2.result g3.value
+wire f8.value g4.s
+wire g4.result g5.value
+wire g3.then g6.in
+wire g5.result g6.value
+wire d2.result h0.count
+wire d3.done h0.in
+wire g7.value h0.mn
+wire g8.value h0.mx
+wire d1.stats h0.receiver
+wire g9.value h0.sum
+wire h0.then h1.in
+
+function f0003 Reseed
+	returns int
+	doc "Gives every particle inside region a new upward velocity from rng, in index order; returns how many."
+param region AABB
+param rng Random
+local n int
+sheet body
+node i1 Entry
+node i2 Get this.mCount
+node i3 For
+	in start 0
+node i4 Get this.mPos
+node i5 Index
+node i6 Call Core.AABB.Contains
+node i7 Branch
+node i8 Call Random.Range
+	in min -8.0f
+	in max 8.0f
+node i9 Call Random.Range
+	in min 25.0f
+	in max 50.0f
+node j0 Call Random.Range
+	in min -8.0f
+	in max 8.0f
+node j1 Make Vec3
+node j2 Get this.mVel
+node j3 Call Arrays.Set
+node j4 Set local:n
+	set op +=
+	in value 1
+node j5 Get local:n
+node j6 Return
+wire i2.value i3.count
+wire i1.then i3.in
+wire i4.value i5.collection
+wire i3.index i5.index
+wire i5.value i6.point
+wire i1.region i6.receiver
+wire i6.result i7.condition
+wire i3.body i7.in
+wire i7.true i8.in
+wire i1.rng i8.receiver
+wire i8.then i9.in
+wire i1.rng i9.receiver
+wire i9.then j0.in
+wire i1.rng j0.receiver
+wire i8.result j1.X
+wire i9.result j1.Y
+wire j0.result j1.Z
+wire j2.value j3.array
+wire j0.then j3.in
+wire i3.index j3.index
+wire j1.value j3.value
+wire j3.then j4.in
+wire i3.done j6.in
+wire j5.value j6.value
+
+function f0004 Checksum
+	returns int
+	doc "Folds every position into h (h * 31 + Kin.Quantize(p), wrapping) in index order."
+param h int
+local acc int
+sheet body
+node k1 Entry
+node k2 Set local:acc
+node k3 Get this.mCount
+node k4 For
+	in start 0
+node k5 Get this.mPos
+node k6 Index
+node k7 Call Core.Vec4.FromVec3
+	in w 0
+node k8 Call Core.Vec4.ToVector
+node k9 Call Particles.Kin.Quantize
+node l0 Get local:acc
+node l1 Math
+	set expr "acc * 31 + q"
+node l2 Set local:acc
+node l3 Get local:acc
+node l4 Return
+wire k1.then k2.in
+wire k1.h k2.value
+wire k3.value k4.count
+wire k2.then k4.in
+wire k5.value k6.collection
+wire k4.index k6.index
+wire k6.value k7.v
+wire k7.result k8.receiver
+wire k8.result k9.p
+wire l0.value l1.acc
+wire k9.result l1.q
+wire k4.body l2.in
+wire l1.result l2.value
+wire k4.done l4.in
+wire l3.value l4.value
+
+function f0005 AnyNaN
+	returns bool
+	doc "True when a component of any position or velocity is not finite (Vec3.IsFinite)."
+sheet body
+node m1 Entry
+node m2 Get this.mCount
+node m3 For
+	in start 0
+node m4 Get this.mPos
+node m5 Index
+node m6 Call Core.Vec3.IsFinite
+node m7 Get this.mVel
+node m8 Index
+node m9 Call Core.Vec3.IsFinite
+node n0 Operator &&
+node n1 Branch
+node n2 Return
+	in value true
+node n3 Return
+	in value false
+wire m2.value m3.count
+wire m1.then m3.in
+wire m4.value m5.collection
+wire m3.index m5.index
+wire m5.value m6.receiver
+wire m7.value m8.collection
+wire m3.index m8.index
+wire m8.value m9.receiver
+wire m6.result n0.a
+wire m9.result n0.b
+wire n0.result n1.condition
+wire m3.body n1.in
+wire n1.false n2.in
+wire m3.done n3.in
+
+function f0006 CountInside
+	returns int
+	doc "How many positions box contains (AABB.Contains)."
+param box AABB
+local n int
+sheet body
+node o1 Entry
+node o2 Get this.mCount
+node o3 For
+	in start 0
+node o4 Get this.mPos
+node o5 Index
+node o6 Call Core.AABB.Contains
+node o7 Branch
+node o8 Set local:n
+	set op +=
+	in value 1
+node o9 Get local:n
+node p0 Return
+wire o2.value o3.count
+wire o1.then o3.in
+wire o4.value o5.collection
+wire o3.index o5.index
+wire o5.value o6.point
+wire o1.box o6.receiver
+wire o6.result o7.condition
+wire o3.body o7.in
+wire o7.true o8.in
+wire o3.done p0.in
+wire o9.value p0.value
+
+function f0007 PosAt
+	pure
+	returns Vec3
+	doc "Particle i's position."
+param i int
+sheet body
+node q1 Entry
+node q2 Get this.mPos
+node q3 Index
+node q4 Return
+wire q2.value q3.collection
+wire q1.i q3.index
+wire q1.then q4.in
+wire q3.value q4.value

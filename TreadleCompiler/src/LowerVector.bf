@@ -361,10 +361,13 @@ namespace Treadle.Compiler
 				op.Operands.Add(m);
 				return op;
 			case .Equal:
+				// the inputs first: an op may use only values emitted before it
+				let ea = In("a");
+				let eb = In("b");
 				let eq = E.Op(.Cmp, T.MaskOf(vt), key, pin);
 				eq.Sub = new String("eq");
-				eq.Operands.Add(In("a"));
-				eq.Operands.Add(In("b"));
+				eq.Operands.Add(ea);
+				eq.Operands.Add(eb);
 				let op = VecOp("all", T.Bool, key, pin);
 				op.Operands.Add(eq);
 				return op;
@@ -387,8 +390,9 @@ namespace Treadle.Compiler
 				op.Index = LaneAlign(e);
 				return null;
 			case .LoadPtr:
+				let ptr = In("ptr");
 				let op = VecOp("load", vt, key, pin);
-				op.Operands.Add(In("ptr"));
+				op.Operands.Add(ptr);
 				op.Index = LaneAlign(e);
 				return op;
 			case .StorePtr:
@@ -413,9 +417,10 @@ namespace Treadle.Compiler
 				isZero.Sub = new String("eq");
 				isZero.Operands.Add(len);
 				isZero.Operands.Add(zero);
+				let zeros = E.Const("zero", vt, key, pin); // before the select that uses it
 				let sel = E.Op(.Select, vt, key, pin);
 				sel.Operands.Add(isZero);
-				sel.Operands.Add(E.Const("zero", vt, key, pin));
+				sel.Operands.Add(zeros);
 				sel.Operands.Add(q);
 				return sel;
 			case .Cross:

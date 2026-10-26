@@ -68,6 +68,8 @@ Release and Debug speed, what the editor runs and stores, and how to report a pr
 placeholder the owner fills in before release). Each item was checked against master or Follow-ups.md; when an
 item is fixed or a Follow-ups item a user meets is added, this page changes with it.
 
+**[Release-Notes-0.1.1-alpha.md](Release-Notes-0.1.1-alpha.md)** (public, no front matter) is the GitHub Release body for 0.1.1-alpha, written as the 0.1.0-alpha page is.
+
 **[Release-Notes-0.1.0-alpha.md](Release-Notes-0.1.0-alpha.md)** (public, no front matter) is the GitHub Release body for 0.1.0-alpha. It ships in the public repository (no rule in `packaging/public-exclude.txt`) and is linked from the root README, but is not one of the nine pages the packages copy.
 
 **[Language.md](Language.md)** is the semantics of the language: types, values and references, memory and
@@ -101,8 +103,10 @@ spellings, layout and the 16-byte alignment cap, the ops and their LLVM lowering
 win64 and SysV, the `simd` config key, the editor's vector pins and Swizzle/Shuffle nodes, and the core math
 library on top (Vec2/3/4, Mat3/4, Quat, Color, Rect, AABB, Plane, Ray, Transform) with its fixtures, benchmarks
 and implementation plan. **Threads.md** (threads, locks, the pool, parallel-for, the runtime's thread support) is
-written by the threads branch. **[GPU-Compute.md](GPU-Compute.md)** is the feasibility note for kernel Sheets on
-the GPU: the back-end paths, the recommended NVPTX spike with a CPU fallback, and the effort.
+written by the threads branch. **[GPU-Compute.md](GPU-Compute.md)** is GPU compute
+(experimental, NVIDIA only): `[Kernel]` functions, resident buffers, streams, shared memory and barriers, the
+device-side error record, the GPU's math library, the CPU path on the pool, the NVPTX lowering and the CUDA driver
+runtime, the fixtures' numbers, and what is still missing (Vulkan / SPIR-V, the editor UI).
 
 **UX-Audit.md** (private, not in the public tree) checks the editor against what a user of another node editor does in the first hour
 (Works / Partial / Missing, our words, cost, priority) and records what the two passes fixed. Read it before
@@ -145,7 +149,7 @@ Debug and Release, 510 on Linux without `tutorial`).
 |---|---|---|
 | `smoke` | `SelfTest.bf` | The shell is up (dock layout, seams installed), an untitled document with one Sheet, a node added and wired, undo and redo. |
 | `codec` | `SelfTest.bf` | The samples (`TreadleCore/samples` or `TREADLE_SAMPLES`) read and write back byte for byte (type files, layout, project, C import set); the reading-order originals normalise to them; unknown records and keys survive; a malformed file gives a line-numbered error; the newer keys (`category`, `split`, `group`). |
-| `editor` | `SelfTest.bf`, `SelfTestUX.bf`, `SelfTestUX2.bf`, `SelfTestSplit.bf`, `SelfTestGroups.bf`, `SelfTestLambda.bf` | A copy of the Player sample: a node of each kind through the catalogue, wiring and a refused wire with its reason, pin-filtered Node menu rows, Type Settings adds a field and a function, save and read back; the node habits (Make variable, pin hover, Add / Remove pin, Break / Make from fields, Disable Node, F2, Ctrl+Tab, breadcrumbs); the second wave (variadic "+ arg", the Ctrl+Tab list, input reorder, variable categories, Extract to Function); split struct pins (Split / Recombine with undo, Validate, a program built and run); node groups (Collapse, open, Ungroup, the file and layout); Lambda placement, inputs, by-reference captures. |
+| `editor` | `SelfTest.bf`, `SelfTestUX.bf`, `SelfTestUX2.bf`, `SelfTestSplit.bf`, `SelfTestGroups.bf`, `SelfTestLambda.bf`, `SelfTestEntry.bf` | A copy of the Player sample: a node of each kind through the catalogue, wiring and a refused wire with its reason, pin-filtered Node menu rows, Type Settings adds a field and a function, save and read back; the node habits (Make variable, pin hover, Add / Remove pin, Break / Make from fields, Disable Node, F2, Ctrl+Tab, breadcrumbs); the second wave (variadic "+ arg", the Ctrl+Tab list, input reorder, variable categories, Extract to Function); split struct pins (Split / Recombine with undo, Validate, a program built and run); node groups (Collapse, open, Ungroup, the file and layout); Lambda placement, inputs, by-reference captures; then the first program (`entry`): New Project's start comment and entry, another type's function found on the canvas and from an object pin, Construct T + F, Run building a modified project, Create Main, Set as entry point with undo. |
 | `backend` | `SelfTestBackend.bf` | Every IR fixture (`TreadleBackend/fixtures`) built, run and compared in Debug and Release; lldb stopping on a node's listing line; the adapter on `debugtypes` summaries and attached to `attachwait`; CodeView / PDB builds (Windows); process cleanup; Build / Run through the installed toolchain on a `.tir` project. |
 | `frontend` | `SelfTestFrontEnd.bf` | Every sample validates clean; each broken sample (`TreadleCompiler/fixtures/broken`) gives the diagnostic its `# expect` lines name on that node and pin; the Sheet IR dumps match `TreadleCompiler/fixtures/ir/*.tir`; the services (per-Sheet checks, type system, Node menu) and incremental Validate against a full compile. |
 | `cimport` | `ImportHeader.bf` | libclang loads; small.h imports to the checked-in `small.cdecl` byte for byte; `<stdio.h>` and `SDL.h` declarations and layouts; File > Import C Headers; platform `.cdecl` names; a set made for a project with none (Compiler.md 8.3). |

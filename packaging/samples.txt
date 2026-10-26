@@ -1,0 +1,24 @@
+# The samples both packages ship (scripts/package.ps1, scripts/package-linux.sh): TreadleCore/samples/<name> is
+# copied to samples/<name> without its build/ folder. One sample per line: <name> | <why it ships>
+# "!<name> | <why not>" keeps a folder out. A shipped sample has a project file (.tproj) and a README.md that opens
+# with what it shows and how to run it; the scripts refuse a listed one without them. A folder of TreadleCore/samples
+# with a .tproj and a README.md that is on no line ships too, with a warning to add its line here.
+# samples/README.md (TreadleCore/samples/README.md) is the index the users read.
+
+m1           | the Getting-Started program: classes, a struct, a generic type, memory, a loop and a libc call
+m2-frontend  | a tour of the language: one small graph per feature, each printing a line
+m2-lambda-ui | Lambdas: a function pointer handed to C's qsort and a capturing delegate
+m2-sdl       | an SDL2 window through the C header import (needs SDL2: tools\SDL2 on Windows)
+m3-core      | the core library: List, Dictionary, sorting with a Lambda, AppendF, Stopwatch
+m3-files     | files and folders: Queue, HashSet, File.WriteAllText / ReadLines, Directory.GetFiles
+m3-text      | text: number parsing, aligned tables, UTF-8 code points, a child process, the date
+m4-breakout  | a Breakout game in an SDL2 window, with a headless mode (needs SDL2)
+m5-json      | a JSON reader and writer with errors, a pretty printer, path lookups and its own checks
+m6-vm        | a bytecode virtual machine with its scripting language: lexer, parser, compiler, VM
+m7-particles | 200,000 particles on SIMD vectors and every core (Parallel.For), drawn in an SDL2 window (needs SDL2)
+
+!bench          | benchmark kernels and their C twins: measurement material (docs/Performance.md), not a sample
+!format-history | the graph-format migration corpus: test material
+!reading-order  | a graph-layout test project
+!broken         | test input: a project that must fail to build
+!fixtures       | test inputs

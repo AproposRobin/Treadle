@@ -468,7 +468,7 @@ namespace Treadle.Backend.IR
 				case "virtual": f.Virtual = true;
 				case "abstract": f.Abstract = true;
 				case "sctor": f.StaticCtor = true; f.Static = true;
-				case "import", "export", "cconv", "sheet", "display":
+				case "import", "export", "cconv", "sheet", "display", "kernel":
 					if (i + 1 >= tokens.Count)
 					{
 						Error(scope $"'{tok}' needs a value");
@@ -484,6 +484,7 @@ namespace Treadle.Backend.IR
 					{
 					case "import": f.ImportName = new .(text); f.Static = true;
 					case "export": f.ExportName = new .(text);
+					case "kernel": String.NewOrSet!(f.KernelName, text); // EmitKernel.bf (GPU-Compute.md)
 					case "sheet": f.SheetKey.Set(text);
 					case "display": f.Display.Set(text);
 					case "cconv":

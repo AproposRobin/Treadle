@@ -297,15 +297,30 @@ namespace Treadle.Editor
 						Gui.TextDisabled("   graph checks");
 						if (Gui.igIsItemHovered(0))
 						{
-							String tip = scope .("Validate checked the open Sheets (the checks every edit runs).\nNothing was saved.");
+							String tip = scope .("Validate checked the open Sheets: the graph checks and the compiler's.\nNothing was saved.");
 							if (!mValidate.Note.IsEmpty)
 								tip.AppendF("\n\n{}", mValidate.Note);
 							Gui.Tooltip(tip);
 						}
 					}
 				}
+				// An edit since the last Validate: the rows below (and the problems on the nodes) are dimmed.
+				let stale = ProblemsStale && (mValidate != null || mBuild != null);
+				if (stale)
+				{
+					Gui.TextColored(Look.AccentYellow, Icon.CircleHelp);
+					Gui.SameLine();
+					Gui.TextColored(Look.AccentYellow, "Not validated since the last change: press Validate");
+					if (Gui.igIsItemHovered(0))
+						Gui.Tooltip("The problems below are from before your last edit. Validate (Shift+F7), Build or Run checks again.");
+				}
+				else if (mValidate == null && mBuild == null)
+					Gui.TextDisabled("Not validated yet. Press Validate (Shift+F7) to check the open Sheets.");
+				DrawEntryFix(); // no entry point: a Create Main button (EntryPoint.bf)
 
 				Gui.igPushStyleColor_U32(Col.ChildBg, Look.Recessed);
+				if (stale)
+					Gui.igPushStyleVar_Float(0 /* Alpha */, 0.5f);
 				if (Gui.igBeginChild_Str("##results", .(0, 0), ChildFlags.Borders, 0) && (mBuild != null || mValidate != null))
 				{
 					Diagnostic jump = null;
@@ -390,6 +405,8 @@ namespace Treadle.Editor
 						JumpToLine(jumpPath, jumpLine);
 				}
 				Gui.igEndChild();
+				if (stale)
+					Gui.igPopStyleVar(1);
 				Gui.igPopStyleColor(1);
 			}
 			Gui.End();

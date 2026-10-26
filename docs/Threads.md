@@ -62,9 +62,9 @@ shut down at exit: `rt_exit` waits for the queued work to finish, then joins the
 thread, and returns when all of them returned. The range is cut into chunks (`max(1, n / (8 * threads))`
 indices each) that the threads take with an atomic counter, so uneven work balances. `ForRange` hands a chunk
 to the body as `(lo, hi)`, which is what a reduction wants: a local sum over the chunk, one `Atomic.Add` at the
-end. `ForEach<T>(span, body)` is `For` over the span's indices with `body(span[i])` (through the internal class
-`ParallelForEach<T>`, whose `Run(i)` is bound as the `For` body: a Lambda in a generic function of the core is not
-declared yet, Follow-ups).
+end. `ForEach<T>(span, body)` is `For` over the span's indices with `body(span[i])`: a Local Lambda in the generic
+function, lowered with each instance of it (its closure class and function carry the instance's arguments,
+`Core.Parallel.$lambda_c2<int>`; Compiler.md 10.2).
 
 The calling thread runs chunks of its own job too and waits only for the chunks other threads took; a
 `Parallel.For` inside a `Parallel.For` body therefore never deadlocks (with every worker busy, the inner one runs
@@ -93,8 +93,10 @@ plus these:
   deleted one) is fatal error 12, `fatal: Thread.Start: the delegate must be made with Allocation construct (a Local
   one is freed when its region ends while the thread may still run it)` (the runtime has no site for the calling
   node; under the debugger the stop's first project frame is the Start node). Release does not check; the editor
-  makes a Lambda dragged from `Start`'s or `Run`'s input a Construct one. A Check rule (as T2216 for event
-  handlers) is a follow-up: it needs Bind, which another branch owns.
+  makes a Lambda dragged from `Start`'s or `Run`'s input a Construct one. Validate refuses a Bind Function or
+  Lambda node with Allocation local wired into `body` / `work` (T2224, as T2216 for an event's handler; broken
+  sample `47-thread-local-body`); the run-time check stays for a Local delegate that reaches them another way (a
+  variable, a field).
 * **The body's captures** are copied into the closure when the Lambda node runs (by value) or point at the
   variables (by reference, Local Lambdas only, so never on a Thread). A by-value capture of an object reference
   copies the reference, not the object: the object is shared, and the rules above apply to it.
@@ -187,9 +189,46 @@ each runtime), 15 runs each alternating, medians:
 | `strings` | 488 / 490 ms | 490 ms (+0.2%) | 500 ms (+2.4%) |
 
 The two copies of the old runtime differ by 1.6%, so a single-threaded program pays nothing measurable; a Debug
-program that started threads pays the uncontended lock, about 7% on an allocation-only loop (no budget applies to
-that case: the per-thread lists would avoid it at the cost of the cross-thread Delete path, Follow-ups). Release has
-no bookkeeping and no lock (`calloc` / `free` are thread-safe).
+program that started threads paid the uncontended lock, about 7% on an allocation-only loop. Release has no
+bookkeeping and no lock (`calloc` / `free` are thread-safe).
+
+**Since then: per-thread lists** (the second way of the table). Once a second thread ran, each thread links the
+blocks it makes into a list of its own, with its own counters and its own quarantine ring (1,024 blocks / 1 MB for a
+thread the program started, the 4,096 / 4 MB ring for the main thread), and changes them with plain loads and stores:
+no lock, no atomic instruction. The main thread keeps the one-thread path after threads start; it is told from the
+others by one read of the thread block (the thread id in the TEB on Windows, the TCB's self pointer on Linux), so it
+pays no thread-local read either. The cross-thread cases take the spin lock:
+
+* **A Delete of a block another thread made** checks it (double free, not a Construct) and poisons it under the lock,
+  marks it freed and counts it on its maker's list; the block stays linked until the maker sweeps its list (when such
+  blocks reach 64 plus an eighth of its live ones, flagged by the deleting thread) and quarantines them in its own
+  ring. A second Delete of it is still a double free naming both nodes.
+* **A thread that ends** moves its live blocks to the list of ended threads and its quarantined blocks to that list's
+  ring; a later Delete of one of them (a String a worker made and Main deletes after Join) unlinks it there.
+* **The leak report** takes the lock, raises a freeze flag and waits (sleeping 1 ms) until no thread is inside a
+  change of its list (a busy flag each thread sets around a change and that makes it wait while the flag is up), so it
+  walks lists that stand still, running threads' included; it still names the node and the thread. The main thread's
+  list has no busy flag: a report on another thread (a fatal error there) leaves it out and says so
+  (`treadle_rt: the main thread's objects are not listed`). `bytes_peak` with threads is the sum of each list's peak.
+* A thread the runtime did not start (a C host calling a library's exports) gets a list of its own the first time it
+  allocates once threads run.
+
+Measured the same way (Debug, 15 runs each alternating, medians; `alloc-t` and `strings-t` are the kernels with one
+Thread started and joined before the loop, so the allocator runs in its threaded mode; the machine was busier than for
+the table above, so compare within a row):
+
+| Kernel | The lock | Per-thread lists |
+|---|---|---|
+| `alloc`, one thread | 1,218 ms | 1,221 ms |
+| `alloc-t`, a thread started | 1,262 ms (+3.6%) | 1,268 ms (+3.9%; min +3.0%) |
+| `strings`, one thread | 512 ms | 504 ms |
+| `strings-t`, a thread started | 526 ms (+2.8%) | 504 ms (0.0%) |
+
+The 2% target for an allocation-only loop on the main thread is not met at `-O0`: the remaining cost on `alloc-t` is
+the two thread checks (the block's maker, the thread block read) and the sweep flag test per Delete and Construct, and
+it moves by a few percent with code placement (an earlier layout of the same code measured +2.2%); `strings-t`, whose
+allocations are a smaller share of the work, is back at the one-thread time. What the lists remove is the contention:
+threads that allocate at once no longer serialise on one lock.
 
 **Which thread made it.** The `DbgHeader` stays 48 bytes and unchanged in layout: while a block is live its
 `freeSite` (null until the Delete) holds the runtime index of the thread that made it (0 = the main thread, 1.. in
@@ -226,8 +265,9 @@ holds the list, `SelectThread(id)` makes another thread current: the adapter rea
 stop on that thread (the program does not run), so Call Stack, Locals and the canvas follow it.
 
 **Decision: rows at the top of Call Stack, not a panel of its own.** With more than one thread, Call Stack starts with
-a **Threads (n)** header and one row per thread (`Main`, `worker 2`, `Pool 1`, ...), the current one selected; a
-click selects a thread. Reason: a thread is chosen in order to see its stack, so the two belong in one panel; a new
+a **Threads (n)** header and one row per thread, `Main` first, then by name (`Pool 1`, `worker 2`, `worker 10`, numbers
+compared as numbers), then the unnamed `Thread <n>` rows (`DebugSession.SortThreads`; lldb-dap's own order is the
+system's), the current one selected and marked with the stop arrow; a click selects a thread. Reason: a thread is chosen in order to see its stack, so the two belong in one panel; a new
 dockable panel would need its own layout slot and View menu entry for a list that is usually short. Continue
 resumes every thread; the steps step the current thread (lldb lets the others run meanwhile, as native debuggers
 do). A breakpoint hit on any thread stops the whole program on that thread.
@@ -253,13 +293,16 @@ do). A breakpoint hit on any thread stops the whole program on that thread.
   Lambda that threads-basic's workers run stops on a worker thread named `worker <n>` (current in the session's
   thread list), on the Lambda's node; selecting the other threads in turn finds the main one, named `Main`, whose
   stack is `Cx.ThreadsBasicMain.Main` waiting in Join, without the program running on.
+* `threads-crossfree` (the per-thread lists of 5): 20,000 Strings Main made deleted by the thread `freer` while Main
+  allocates, 5,000 a joined thread made deleted by Main, and the leak report made while the thread `spinner` still
+  allocates (Debug: its kept String and its body delegate are the leaks, named; exit non-zero). The compile-time
+  check of 2 is broken sample `47-thread-local-body` (T2224 on Start's `body` and Run's `work`).
 
 ## 8. Not in this wave
 
-* Race detection (ThreadSanitizer builds), a Check rule for a Local delegate handed to `Start` / `Run` (2), a
-  `Lock` region node, reader-writer locks, semaphores, thread priorities and affinity, `Task<T>` results from
+* Race detection (ThreadSanitizer builds), a `Lock` region node, reader-writer locks, semaphores, thread priorities and affinity, `Task<T>` results from
   the pool, cancellation, and a thread-safe allocator interface for `IAllocator` users (a custom allocator must
   lock by itself when threads share it).
-* C code a C import set calls that starts threads of its own and calls back into Treadle: the Debug allocator's
-  lock is taken only once Treadle started a thread, so such a program must start one Treadle thread first (or
-  call `ThreadPool.Size()`, which starts the pool).
+* C code a C import set calls that starts threads of its own and calls back into Treadle: the Debug allocator
+  keeps per-thread lists only once Treadle started a thread (until then every allocation goes to the main list), so
+  such a program must start one Treadle thread first (or call `ThreadPool.Size()`, which starts the pool).

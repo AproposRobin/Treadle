@@ -147,7 +147,9 @@ namespace Treadle.Editor
 			Directory.CreateDirectory(dir).IgnoreError();
 			let path = scope $"{dir}/{name}.treadle";
 			File.WriteAllText(path, t.Text).IgnoreError();
-			File.WriteAllText(scope $"{path}.layout", t.Layout).IgnoreError();
+			let layoutPath = Treadle.Document.Sidecars.LayoutPathOf(path, .. scope String());
+			Treadle.Document.FileSafety.EnsureParent(layoutPath);
+			File.WriteAllText(layoutPath, t.Layout).IgnoreError();
 			outPath?.Set(path);
 			TypesWritten++;
 		}

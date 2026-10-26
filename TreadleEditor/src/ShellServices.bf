@@ -5,6 +5,7 @@ using ImGui;
 using Treadle.Document;
 using Treadle.Graph;
 using Treadle.Language;
+using Treadle.Model;
 
 namespace Treadle.Editor
 {
@@ -123,16 +124,18 @@ namespace Treadle.Editor
 				Validate();
 			if (Gui.igIsItemHovered(0))
 				Gui.Tooltip("Check the open Sheets now: the graph checks and the language's own checks.\nNothing is saved; the results are in Problems, tagged Validate.");
+			DrawRunMenuItems(); // Run first: it builds when needed (RunProgram.bf)
+			Gui.Separator();
 			if (Gui.MenuItem(scope $"{Icon.Compile}  Build", "F7"))
 				Build();
 			if (Gui.igIsItemHovered(0))
-				Gui.Tooltip("Save every file, then build the project with the language's build tool");
+				Gui.Tooltip("Build: produce the exe without starting it (saves every file first)");
 			if (Gui.MenuItem(scope $"{Icon.Compile}  Force Build", "Ctrl+F7"))
 				Build(default, true);
 			if (Gui.MenuItem(scope $"{Icon.CircleX}  Cancel Build", "", false, mBuild != null && mBuild.Running))
 				CancelBuild();
-			DrawRunMenuItems();
 			Gui.Separator();
+			DrawCreateMainItem(); // EntryPoint.bf
 			if (Gui.MenuItem(scope $"{Icon.CircleX}  Problems"))
 			{
 				ShowCompilerResults = true;
@@ -178,6 +181,8 @@ namespace Treadle.Editor
 		{
 			if (d.Path.IsEmpty || !File.Exists(d.Path))
 				return;
+			if (!d.Variable.IsEmpty && JumpToVariable(d))
+				return;
 			if (!d.MethodKey.IsEmpty)
 			{
 				let doc = OpenFile(d.Path, false);
@@ -202,6 +207,42 @@ namespace Treadle.Editor
 				}
 			}
 			JumpToLine(d.Path, d.Line);
+		}
+
+		/// A message about a variable (T1078, a missing type): a Local Variable is selected in the Outline of its
+		/// function's Sheet, a field, property, input or output shows its member's page; Properties then puts
+		/// the keyboard on the Type field.
+		bool JumpToVariable(Diagnostic d)
+		{
+			let colon = d.Variable.IndexOf(':');
+			if (colon < 0)
+				return false;
+			StringView kind = d.Variable.Substring(0, colon);
+			StringView name = d.Variable.Substring(colon + 1);
+			let doc = OpenFile(d.Path, false);
+			if (doc == null)
+				return false;
+			MemberDecl member = null;
+			for (let m in doc.Members)
+				if (m.Id == d.MemberKey)
+					member = m;
+			if (kind == "local")
+			{
+				let sheet = doc.FindSheet(d.MemberKey);
+				if (sheet == null)
+					return false;
+				OpenTab(sheet);
+				mSelLocalActive = true;
+				mSelLocalName.Set(name);
+				SelectOutline(.Local);
+			}
+			else if (member != null)
+				SelectOutline(.Member, member);
+			else
+				return false;
+			mFocusTypeField = kind == "local" || kind == "field"; // the rows that have a Type field of their own
+			SetStatus(d.Text, d.IsError ? .Error : .Warning, false);
+			return true;
 		}
 
 		/// Opens the document a message points into (its first Sheet); the line is the language's

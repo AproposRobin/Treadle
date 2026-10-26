@@ -193,8 +193,25 @@ namespace Treadle.Compiler
 			}
 		}
 
+		/// The operators where an int and a fractional number meet in the wider type (not the bitwise ones, where a
+		/// fractional literal beside an int stays T2214).
+		static bool Widens(StringView op) => op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=";
+
+		/// A number literal with a point, an exponent or a `f` / `d` suffix (`1000.0`, `2e3`, `0.5f`): beside an
+		/// integer it keeps its own type, and the two meet in the wider one (Language.md 5.6: `s / 1000.0` with an
+		/// int `s` divides doubles), instead of being read as an int (T2214).
+		static bool Fractional(MathNode n)
+		{
+			if (n.Kind != .Number)
+				return false;
+			let t = n.Text;
+			if (t.StartsWith("0x") || t.StartsWith("0X") || t.StartsWith("0b") || t.StartsWith("0B"))
+				return false;
+			return t.Contains('.') || t.Contains('e') || t.Contains('E') || t.EndsWith('f') || t.EndsWith('F') || t.EndsWith('d') || t.EndsWith('D');
+		}
+
 		/// Both sides of an operator (or a Select's two arms) typed, a literal side taking the
-		/// other's type; false when one is still free.
+		/// other's type (not a fractional literal beside an integer: Fractional); false when one is still free.
 		bool Sides(MathNode a, MathNode b, out KType ta, out KType tb, StringView op = "")
 		{
 			ta = Type(a);
@@ -212,12 +229,12 @@ namespace Treadle.Compiler
 				Adopt(b, mixed);
 				tb = b.Type;
 			}
-			else if (a.Adopts && !b.Adopts && tb != null)
+			else if (a.Adopts && !b.Adopts && tb != null && !(Widens(op) && Fractional(a) && tb.IsInteger))
 			{
 				Adopt(a, tb);
 				ta = a.Type;
 			}
-			else if (b.Adopts && !a.Adopts && ta != null)
+			else if (b.Adopts && !a.Adopts && ta != null && !(Widens(op) && Fractional(b) && ta.IsInteger))
 			{
 				Adopt(b, ta);
 				tb = b.Type;

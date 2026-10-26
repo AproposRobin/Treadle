@@ -1,0 +1,118 @@
+# treadle 1
+type Stats class
+	namespace Particles
+	doc "Speed statistics of one step, written by the workers: each chunk merges its own minimum, maximum and sum under the Mutex (a Local LockGuard is the critical section). The sum is kept in thousandths as an integer, so the order the chunks merge in does not change it."
+
+field mLock Mutex
+	owner owned
+
+field mMin float
+
+field mMax float
+
+field mSum int
+	doc "The speeds of the step summed in thousandths (each speed times 1000, cast to int)."
+
+field mCount int
+
+field mMerges int
+	doc "How many chunks merged since the last Reset."
+
+ctor s0001
+	doc "Makes the Mutex and clears the numbers."
+sheet body
+node a1 Entry
+node a2 Construct Mutex
+	set ctor ()
+node a3 Set this.mLock
+node a4 Call this.Reset
+node a5 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value
+wire a3.then a4.in
+wire a4.then a5.in
+
+function s0002 Reset
+	doc "Clears the numbers before a step (called on the main thread, between steps)."
+sheet body
+node b1 Entry
+node b2 Set this.mMin
+	in value 1000000000.0f
+node b3 Set this.mMax
+	in value 0.0f
+node b4 Set this.mSum
+	in value 0
+node b5 Set this.mCount
+	in value 0
+node b6 Set this.mMerges
+	in value 0
+node b7 Return
+wire b1.then b2.in
+wire b2.then b3.in
+wire b3.then b4.in
+wire b4.then b5.in
+wire b5.then b6.in
+wire b6.then b7.in
+
+function s0003 Merge
+	doc "Adds one chunk's numbers, holding the Mutex for the whole body (a Local LockGuard in the function's region)."
+param mn float
+param mx float
+param sum int
+param count int
+sheet body
+node c1 Entry
+node c2 Get this.mLock
+node c3 Local LockGuard
+	set ctor (Mutex)
+node c4 Get this.mMin
+node c5 Call Core.Math.Min
+node c6 Set this.mMin
+node c7 Get this.mMax
+node c8 Call Core.Math.Max
+node c9 Set this.mMax
+node d1 Set this.mSum
+	set op +=
+node d2 Set this.mCount
+	set op +=
+node d3 Set this.mMerges
+	set op +=
+	in value 1
+node d4 Return
+wire c1.then c3.in
+wire c2.value c3.mutex
+wire c4.value c5.a
+wire c1.mn c5.b
+wire c3.then c6.in
+wire c5.result c6.value
+wire c7.value c8.a
+wire c1.mx c8.b
+wire c6.then c9.in
+wire c8.result c9.value
+wire c9.then d1.in
+wire c1.sum d1.value
+wire d1.then d2.in
+wire c1.count d2.value
+wire d2.then d3.in
+wire d3.then d4.in
+
+function s0004 Avg
+	pure
+	returns double
+	doc "The mean speed of the last step (0 when nothing merged)."
+sheet body
+node e1 Entry
+node e2 Get this.mSum
+node e3 Get this.mCount
+node e4 Math
+	set expr "c > 0 ? s / 1000.0 / c : 0.0"
+node e5 Return
+node e6 Cast double
+node e7 Cast double
+wire e7.result e4.c
+wire e6.result e4.s
+wire e1.then e5.in
+wire e4.result e5.value
+wire e2.value e6.value
+wire e3.value e7.value

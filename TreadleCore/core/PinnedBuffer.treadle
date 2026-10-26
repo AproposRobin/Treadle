@@ -1,0 +1,89 @@
+# treadle 1
+type PinnedBuffer class
+	namespace Core
+	generic T
+	sealed
+	doc "Experimental (NVIDIA only): host memory the GPU copies from and to directly (page-locked: cuMemHostAlloc), set to zero. Upload and Download from its Span run at the bus's speed, and UploadAsync / DownloadAsync over it run beside the host. Plain host memory without a GPU. Delete frees it. docs: GPU-Compute."
+
+field mSpan Span<T>
+	access internal
+
+ctor p0001
+	doc "A pinned buffer of `count` elements set to zero."
+param count int
+local probe T*
+sheet body
+node a0 Scope
+	unsafe
+node a1 Entry
+node a2 Get local:probe
+node a3 Call Memory.ElementSize
+node a4 Operator *
+node a5 Call PinnedBuffer<T>.rt_gpu_host_alloc
+node a6 Cast T*
+	set kind unchecked
+node a7 Make Span<T>
+node a8 Set this.mSpan
+node a9 Return
+wire a1.then a0.in
+wire a2.value a3.ptr
+wire a1.count a4.a
+wire a3.result a4.b
+wire a4.result a5.bytes
+wire a0.body a5.in
+wire a5.result a6.value
+wire a1.count a7.Length
+wire a6.result a7.Ptr
+wire a5.then a8.in
+wire a7.value a8.value
+wire a0.done a9.in
+
+dtor p0002
+	doc "Frees the pinned memory."
+sheet body
+node b1 Entry
+node b2 Get this.mSpan
+node b3 Break Span<T>
+node b4 Call PinnedBuffer<T>.rt_gpu_host_free
+node b5 Return
+wire b2.value b3.value
+wire b1.then b4.in
+wire b3.Ptr b4.p
+wire b4.then b5.in
+
+function p0003 AsSpan
+	pure
+	returns Span<T>
+	doc "The elements, as a Span (valid until the buffer is deleted)."
+sheet body
+node c1 Entry
+node c2 Get this.mSpan
+node c3 Return
+wire c1.then c3.in
+wire c2.value c3.value
+
+function p0004 Count
+	pure
+	returns int
+	doc "The number of elements."
+sheet body
+node d1 Entry
+node d2 Get this.mSpan
+node d3 Break Span<T>
+node d4 Return
+wire d2.value d3.value
+wire d1.then d4.in
+wire d3.Length d4.value
+
+function p0020 rt_gpu_host_alloc
+	static
+	access private
+	returns void*
+	attr Import treadle_rt rt_gpu_host_alloc
+param bytes int
+
+function p0021 rt_gpu_host_free
+	static
+	access private
+	attr Import treadle_rt rt_gpu_host_free
+param p void*

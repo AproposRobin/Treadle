@@ -1,0 +1,489 @@
+# treadle 1
+type Window class
+	namespace Particles
+	doc "The SDL window: a Local of it opens SDL video, a Width x Height window and a renderer synchronised with the display, and its destructor closes whatever was made. Run is the frame loop: events, a parallel step, the projection on named threads, and the points drawn in batches of Batch through Spans with SDL_RenderDrawPoints."
+
+field mWindow C.SDL_Window*
+
+field mRenderer C.SDL_Renderer*
+
+field mStarted bool
+
+field mFailed StringView
+	doc "The step that failed; empty when all went well."
+
+ctor w0001
+	doc "Starts SDL video, opens the window and the renderer; on a failure it stops and keeps the name of the step in mFailed (SDL_GetError says why)."
+sheet body
+node a01 Entry
+node a02 Call C.sdl2.SDL_SetMainReady
+node a03 Get C.sdl2.SDL_INIT_VIDEO
+node a04 Call C.sdl2.SDL_Init
+node a05 Operator !=
+	in b 0
+node a06 Branch
+node a07 Set this.mFailed
+	in value "SDL_Init"
+node a08 Return
+node a09 Set this.mStarted
+	in value true
+node a0a Get C.sdl2.SDL_WINDOWPOS_CENTERED_MASK
+node a0b Cast int32
+node a0c MakeCase C.SDL_WindowFlags.SDL_WINDOW_SHOWN
+node a0d Cast uint32
+node a0e Call C.sdl2.SDL_CreateWindow
+	in title "Treadle particles"
+node a0f Set this.mWindow
+node a0g Get this.mWindow
+node a0h Operator ==
+	in b null
+node a0i Branch
+node a0j Set this.mFailed
+	in value "SDL_CreateWindow"
+node a0k Return
+node a0l Get this.mWindow
+node a0m MakeCase C.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC
+node a0n Cast uint32
+node a0o Call C.sdl2.SDL_CreateRenderer
+	in index -1
+node a0p Set this.mRenderer
+node a0q Get this.mRenderer
+node a0r Operator ==
+	in b null
+node a0s Branch
+node a0t Set this.mFailed
+	in value "SDL_CreateRenderer"
+node a0u Return
+node a0v Return
+node a0w Get Particles.Tuning.Width
+node a0x Get Particles.Tuning.Height
+node a0y Cast int32
+node a0z Cast int32
+wire a01.then a02.in
+wire a03.value a04.flags
+wire a02.then a04.in
+wire a04.result a05.a
+wire a05.result a06.condition
+wire a04.then a06.in
+wire a06.true a07.in
+wire a07.then a08.in
+wire a06.false a09.in
+wire a0a.value a0b.value
+wire a0c.value a0d.value
+wire a0d.result a0e.flags
+wire a0z.result a0e.h
+wire a09.then a0e.in
+wire a0y.result a0e.w
+wire a0b.result a0e.x
+wire a0b.result a0e.y
+wire a0e.then a0f.in
+wire a0e.result a0f.value
+wire a0g.value a0h.a
+wire a0h.result a0i.condition
+wire a0f.then a0i.in
+wire a0i.true a0j.in
+wire a0j.then a0k.in
+wire a0m.value a0n.value
+wire a0n.result a0o.flags
+wire a0i.false a0o.in
+wire a0l.value a0o.window
+wire a0o.then a0p.in
+wire a0o.result a0p.value
+wire a0q.value a0r.a
+wire a0r.result a0s.condition
+wire a0p.then a0s.in
+wire a0s.true a0t.in
+wire a0t.then a0u.in
+wire a0s.false a0v.in
+wire a0w.value a0y.value
+wire a0x.value a0z.value
+
+dtor w0002
+	doc "Destroys the renderer and the window when they were made, and quits SDL when it started."
+sheet body
+node b01 Entry
+node b02 Get this.mRenderer
+node b03 Operator !=
+	in b null
+node b04 Branch
+node b05 Get this.mRenderer
+node b06 Call C.sdl2.SDL_DestroyRenderer
+node b07 Get this.mWindow
+node b08 Operator !=
+	in b null
+node b09 Branch
+node b0a Get this.mWindow
+node b0b Call C.sdl2.SDL_DestroyWindow
+node b0c Get this.mStarted
+node b0d Branch
+node b0e Call C.sdl2.SDL_Quit
+node b0f Return
+wire b02.value b03.a
+wire b03.result b04.condition
+wire b01.then b04.in
+wire b04.true b06.in
+wire b05.value b06.renderer
+wire b07.value b08.a
+wire b08.result b09.condition
+wire b04.false b09.in
+wire b06.then b09.in
+wire b09.true b0b.in
+wire b0a.value b0b.window
+wire b0c.value b0d.condition
+wire b09.false b0d.in
+wire b0b.then b0d.in
+wire b0d.true b0e.in
+wire b0d.false b0f.in
+wire b0e.then b0f.in
+
+function w0003 IsOpen
+	pure
+	returns bool
+	doc "True when the window and the renderer are open."
+sheet body
+node c01 Entry
+node c02 Get this.mFailed
+node c03 Call StringView.IsEmpty
+node c04 Return
+wire c02.value c03.receiver
+wire c01.then c04.in
+wire c03.result c04.value
+
+function w0004 DrawRange
+	doc "Draws points lo up to (not including) hi in batches of Batch: each batch is a Span.Slice of the points, handed to SDL_RenderDrawPoints through its Ptr."
+param points Span<C.SDL_Point>
+param lo int
+param hi int
+local start int
+local len int
+sheet body
+node d01 Entry
+node d02 Get Particles.Tuning.Batch
+node d03 Math
+	set expr "(hi - lo + k - 1) / k"
+node d04 For
+	in start 0
+node d05 Math
+	set expr "lo + b * k"
+node d06 Set local:start
+node d07 Get local:start
+node d08 Math
+	set expr "Min(k, hi - s)"
+node d09 Set local:len
+node d0a Get local:len
+node d0b Call Span<C.SDL_Point>.Slice
+node d0c Get Span<C.SDL_Point>.Ptr
+node d0d Get this.mRenderer
+node d0e Cast int32
+node d0f Call C.sdl2.SDL_RenderDrawPoints
+node d0g Return
+wire d01.hi d03.hi
+wire d02.value d03.k
+wire d01.lo d03.lo
+wire d03.result d04.count
+wire d01.then d04.in
+wire d04.index d05.b
+wire d02.value d05.k
+wire d01.lo d05.lo
+wire d04.body d06.in
+wire d05.result d06.value
+wire d01.hi d08.hi
+wire d02.value d08.k
+wire d07.value d08.s
+wire d06.then d09.in
+wire d08.result d09.value
+wire d09.then d0b.in
+wire d0a.value d0b.length
+wire d01.points d0b.receiver
+wire d07.value d0b.start
+wire d0b.result d0c.receiver
+wire d0a.value d0e.value
+wire d0e.result d0f.count
+wire d0b.then d0f.in
+wire d0c.value d0f.points
+wire d0d.value d0f.renderer
+wire d04.done d0g.in
+
+function w0005 Shot
+	doc "Writes the renderer's pixels to a BMP file at path: SDL_RenderReadPixels into pixels (Width x Height ARGB8888), wrapped in a surface without a copy and saved with SDL_SaveBMP_RW."
+param pixels Span<uint32>
+param path String
+local surface C.SDL_Surface*
+sheet body
+node e01 Entry
+node e02 Get Particles.Tuning.Width
+node e03 Get Particles.Tuning.Height
+node e04 Get Span<uint32>.Ptr
+node e05 Get this.mRenderer
+node e06 Math
+	set expr "w * 4"
+node e07 Cast int32
+node e08 Call C.sdl2.SDL_RenderReadPixels
+	in rect null
+	in format 372645892
+node e09 Cast int32
+node e0a Cast int32
+node e0b Call C.sdl2.SDL_CreateRGBSurfaceWithFormatFrom
+	in depth 32
+	in format 372645892
+node e0c Set local:surface
+node e0d Call String.CStr()
+node e0e Call C.sdl2.SDL_RWFromFile
+	in mode "wb"
+node e0f Get local:surface
+node e0g Call C.sdl2.SDL_SaveBMP_RW
+	in freedst 1
+node e0h Call C.sdl2.SDL_FreeSurface
+node e0i Return
+wire e01.pixels e04.receiver
+wire e02.value e06.w
+wire e06.result e07.value
+wire e01.then e08.in
+wire e07.result e08.pitch
+wire e04.value e08.pixels
+wire e05.value e08.renderer
+wire e02.value e09.value
+wire e03.value e0a.value
+wire e0a.result e0b.height
+wire e08.then e0b.in
+wire e07.result e0b.pitch
+wire e04.value e0b.pixels
+wire e09.result e0b.width
+wire e0b.then e0c.in
+wire e0b.result e0c.value
+wire e01.path e0d.receiver
+wire e0d.result e0e.file
+wire e0c.then e0e.in
+wire e0e.result e0g.dst
+wire e0e.then e0g.in
+wire e0f.value e0g.surface
+wire e0g.then e0h.in
+wire e0f.value e0h.surface
+wire e0h.then e0i.in
+
+function w0006 Run
+	returns int
+	doc "The frame loop until the window closes, Escape, or frames frames (when above 0): polls events, steps the Sim in parallel, turns the camera, projects on the named threads, clears, draws emitter A orange and emitter B blue, saves a screenshot to shot on frame shotFrame (when shot is not null), presents, and waits out the rest of 16 ms (Time.Ticks) so a frame takes at least that long. Returns the frames drawn."
+param sim Sim
+param proj Projector
+param frames int
+param shot String
+param shotFrame int
+local running bool
+	init true
+local frame int
+local ev C.SDL_Event
+local nA int
+local t0 int
+local freq int
+sheet body
+node r01 Entry
+node r02 Get local:running
+node r03 While
+node r04 While
+	in condition true
+node r05 Get local:ev
+node r06 Call C.sdl2.SDL_PollEvent
+node r07 Operator ==
+	in b 0
+node r08 Branch
+node r09 Break
+node r0a Break C.SDL_Event
+node r0b MakeCase C.SDL_EventType.SDL_QUIT
+node r0c Cast uint32
+node r0d Operator ==
+node r0e Branch
+node r0f Set local:running
+	in value false
+node r0g MakeCase C.SDL_EventType.SDL_KEYDOWN
+node r0h Cast uint32
+node r0i Operator ==
+node r0j Branch
+node r0k Break C.SDL_KeyboardEvent
+node r0l Break C.SDL_Keysym
+node r0m MakeCase C.SDL_KeyCode.SDLK_ESCAPE
+node r0n Cast int
+node r0o Operator ==
+node r0p Branch
+node r0q Set local:running
+	in value false
+node r0r Call Particles.Sim.Step
+	in parallel true
+node r0s Get Particles.Sim.mTime
+node r0t Math
+	set expr "t * 0.25f"
+node r0u Make Particles.Camera
+	in Pitch -0.45f
+	in Distance 210.0f
+node r0v Get Particles.Tuning.Width
+node r0w Get Particles.Tuning.Height
+node r0x Math
+	set expr "w / h"
+node r0y Call Particles.Camera.ViewProj
+node r0z Call Particles.Projector.ProjectAll
+node r10 Get this.mRenderer
+node r11 Call C.sdl2.SDL_SetRenderDrawColor
+	in r 8
+	in g 10
+	in b 18
+	in a 255
+node r12 Call C.sdl2.SDL_RenderClear
+node r13 Call C.sdl2.SDL_SetRenderDrawColor
+	in r 255
+	in g 170
+	in b 60
+	in a 255
+node r14 Get Particles.Projector.mPoints
+node r15 Get Particles.Sim.mA
+node r16 Get Particles.EmitterA.mCount
+node r17 Set local:nA
+node r18 Get local:nA
+node r19 Call this.DrawRange
+	in lo 0
+node r1a Call C.sdl2.SDL_SetRenderDrawColor
+	in r 90
+	in g 170
+	in b 255
+	in a 255
+node r1b Call Particles.Sim.Total
+node r1c Call this.DrawRange
+node r1d Get local:frame
+node r1e Operator &&
+node r1f Branch
+node r1g Get Particles.Tuning.Width
+node r1h Get Particles.Tuning.Height
+node r1i Operator *
+node r1j Construct uint32
+	set count
+node r1k Call this.Shot
+node r1l Delete
+node r1m Call C.sdl2.SDL_RenderPresent
+node r1n Set local:frame
+	set op +=
+	in value 1
+node r1o Get local:frame
+node r1p Math
+	set expr "n > 0 && f >= n"
+node r1q Branch
+node r1r Set local:running
+	in value false
+node r1s Get local:frame
+node r1t Return
+node r1u Operator ==
+node r1v Operator !=
+	in b null
+node r1w Cast float
+node t01 Call Time.Ticks
+node t02 Set local:t0
+node t03 Call Time.Ticks
+node t04 Call Time.Frequency
+node t05 Set local:freq
+node t06 Math
+	set expr "Max(0, 16 - (n - s) * 1000 / f)"
+node t07 Call C.sdl2.SDL_Delay
+node t08 Get local:t0
+node t09 Get local:freq
+node t0a Cast uint32
+wire r02.value r03.condition
+wire t05.then r03.in
+wire t02.then r04.in
+wire r05.value r06.event
+wire r04.body r06.in
+wire r06.result r07.a
+wire r07.result r08.condition
+wire r06.then r08.in
+wire r08.true r09.in
+wire r05.value r0a.value
+wire r0b.value r0c.value
+wire r0a.type r0d.a
+wire r0c.result r0d.b
+wire r0d.result r0e.condition
+wire r08.false r0e.in
+wire r0e.true r0f.in
+wire r0g.value r0h.value
+wire r0a.type r0i.a
+wire r0h.result r0i.b
+wire r0i.result r0j.condition
+wire r0e.false r0j.in
+wire r0a.key r0k.value
+wire r0k.keysym r0l.value
+wire r0m.value r0n.value
+wire r0l.sym r0o.a
+wire r0n.result r0o.b
+wire r0o.result r0p.condition
+wire r0j.true r0p.in
+wire r0p.true r0q.in
+wire r04.done r0r.in
+wire r01.sim r0r.receiver
+wire r01.sim r0s.receiver
+wire r0s.value r0t.t
+wire r0t.result r0u.Yaw
+wire r0w.value r0x.h
+wire r1w.result r0x.w
+wire r0x.result r0y.aspect
+wire r0u.value r0y.receiver
+wire r0r.then r0z.in
+wire r01.proj r0z.receiver
+wire r0y.result r0z.vp
+wire r0z.then r11.in
+wire r10.value r11.renderer
+wire r11.then r12.in
+wire r10.value r12.renderer
+wire r12.then r13.in
+wire r10.value r13.renderer
+wire r01.proj r14.receiver
+wire r01.sim r15.receiver
+wire r15.value r16.receiver
+wire r13.then r17.in
+wire r16.value r17.value
+wire r18.value r19.hi
+wire r17.then r19.in
+wire r14.value r19.points
+wire r19.then r1a.in
+wire r10.value r1a.renderer
+wire r01.sim r1b.receiver
+wire r1b.result r1c.hi
+wire r1a.then r1c.in
+wire r18.value r1c.lo
+wire r14.value r1c.points
+wire r1u.result r1e.a
+wire r1v.result r1e.b
+wire r1e.result r1f.condition
+wire r1c.then r1f.in
+wire r1g.value r1i.a
+wire r1h.value r1i.b
+wire r1i.result r1j.count
+wire r1f.true r1j.in
+wire r1j.then r1k.in
+wire r01.shot r1k.path
+wire r1j.object r1k.pixels
+wire r1k.then r1l.in
+wire r1j.object r1l.object
+wire r1f.false r1m.in
+wire r1l.then r1m.in
+wire r10.value r1m.renderer
+wire r1m.then r1n.in
+wire r1o.value r1p.f
+wire r01.frames r1p.n
+wire r1p.result r1q.condition
+wire t07.then r1q.in
+wire r1q.true r1r.in
+wire r03.done r1t.in
+wire r1s.value r1t.value
+wire r1d.value r1u.a
+wire r01.shotFrame r1u.b
+wire r01.shot r1v.a
+wire r0v.value r1w.value
+wire r03.body t01.in
+wire t01.then t02.in
+wire t01.result t02.value
+wire r1n.then t03.in
+wire r01.then t04.in
+wire t04.then t05.in
+wire t04.result t05.value
+wire t09.value t06.f
+wire t03.result t06.n
+wire t08.value t06.s
+wire t03.then t07.in
+wire t0a.result t07.ms
+wire t06.result t0a.value

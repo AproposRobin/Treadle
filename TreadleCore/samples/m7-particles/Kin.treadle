@@ -1,0 +1,108 @@
+# treadle 1
+type Kin struct
+	namespace Particles
+	doc "One particle's position and velocity as float4 values (the 4th lane is 0), and the step every particle takes: gravity, drag and the repelling point, then a bounce off the world box, all in SIMD lanes."
+
+field P float4
+
+field V float4
+
+function k0001 Step
+	static
+	pure
+	returns Kin
+	doc "One step of dt: the acceleration is gravity - v * Drag + d * Repel / (|d|^2 + Soft) with d = p - center; v and p are integrated (semi-implicit Euler); a lane outside [lo, hi] is mirrored back inside and its velocity reversed and scaled by Restitution, lane by lane with masks; the result is clamped into the box."
+param p float4
+param v float4
+param center float4
+param lo float4
+param hi float4
+sheet body
+node a1 Entry
+node a2 Operator -
+node a3 Get Particles.Tuning.Gravity
+node a4 Get Particles.Tuning.Drag
+node a5 Get Particles.Tuning.Repel
+node a6 Get Particles.Tuning.Soft
+node a7 Math
+	set expr "g - v * drag + d * (k / (Dot(d, d) + soft))"
+node a8 Get Particles.Tuning.Dt
+node a9 Math
+	set expr "v + a * dt"
+node b1 Math
+	set expr "p + v1 * dt"
+node b2 Operator <
+node b3 Operator >
+node b4 Math
+	set expr "below ? lo * 2 - p1 : (above ? hi * 2 - p1 : p1)"
+node b5 Operator |
+node b6 Get Particles.Tuning.Restitution
+node b7 Math
+	set expr "-v1 * r"
+node b8 Select
+node b9 Call Core.Math.Max
+node c1 Call Core.Math.Min
+node c2 Make Particles.Kin
+node c3 Return
+wire a1.p a2.a
+wire a1.center a2.b
+wire a2.result a7.d
+wire a4.value a7.drag
+wire a3.value a7.g
+wire a5.value a7.k
+wire a6.value a7.soft
+wire a1.v a7.v
+wire a7.result a9.a
+wire a8.value a9.dt
+wire a1.v a9.v
+wire a8.value b1.dt
+wire a1.p b1.p
+wire a9.result b1.v1
+wire b1.result b2.a
+wire a1.lo b2.b
+wire b1.result b3.a
+wire a1.hi b3.b
+wire b3.result b4.above
+wire b2.result b4.below
+wire a1.hi b4.hi
+wire a1.lo b4.lo
+wire b1.result b4.p1
+wire b2.result b5.a
+wire b3.result b5.b
+wire b6.value b7.r
+wire a9.result b7.v1
+wire b5.result b8.condition
+wire a9.result b8.false
+wire b7.result b8.true
+wire b4.result b9.a
+wire a1.lo b9.b
+wire b9.result c1.a
+wire a1.hi c1.b
+wire c1.result c2.P
+wire b8.result c2.V
+wire a1.then c3.in
+wire c2.value c3.value
+
+function k0002 Quantize
+	static
+	pure
+	returns int
+	doc "A position as one integer for the checksum: the lanes times 1000 cast to int32x4, weighted 1, 3, 7, 0 and summed (Vector.Sum)."
+param p float4
+sheet body
+node d1 Entry
+node d2 Operator *
+	in b 1000
+node d3 Cast int32x4
+node d4 Operator *
+	in b 1,3,7,0
+node d5 Call Core.Vector.Sum
+node d6 Cast int
+node d7 Return
+wire d1.p d2.a
+wire d2.result d3.value
+wire d3.result d4.a
+wire d4.result d5.v
+wire d5.result d6.value
+wire d1.then d7.in
+wire d6.result d7.value
