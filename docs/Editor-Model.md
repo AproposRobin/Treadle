@@ -376,7 +376,7 @@ file (one undo step). A local's `owner owned` makes the compiler delete it at fu
 |---|---|---|
 | **Validate** (Shift+F7, toolbar) | Compiler Load..Check on the in-memory documents (incremental, Compiler.md 9); no files written | Node problem strips, pin badges, "evaluated Nx", Problems rows (From: Validate), status bar |
 | **Build** (F7; Ctrl+F7 Force Build) | Validates as above, saves, runs the full pipeline for stale units, links | What Validate shows; Output Log streams clang/lld; Problems rows (From: Build) |
-| **Run** (Ctrl+F5) / **Start Debugging** (F5) | Builds when stale, then runs plain or under lldb-dap (Debug) | Debug Output, Locals, Call Stack; a fatal error stops on the node |
+| **Run** (Ctrl+F5) / **Start Debugging** (F5) | Builds when stale, then runs plain or under lldb-dap (Debug). A console project runs in a console window of its own (Preferences > Build > Run console programs in a console window, default on; Windows: the child's new console, Linux: the first terminal emulator found, else captured); otherwise, and for windowed and library projects, the output is captured line by line into Debug Output (the Output Log gets the first 500 lines). The capture keeps the last 20,000 lines and shows one row "... N lines skipped" for the rest; Preferences > Build > Also write program output to build/run.log (default off) writes every line to that file, emptied at each Run | Debug Output, Locals, Call Stack; a fatal error stops on the node |
 
 Because Validate is the same compiler, there is no "Level 1 / Level 2" split and no resident helper process.
 The three commands go through `IToolchain` (`TreadleCore/src/Language/Toolchain.bf`): the editor installs the back

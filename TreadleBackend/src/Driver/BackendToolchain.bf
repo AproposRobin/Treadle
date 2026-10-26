@@ -455,31 +455,80 @@ namespace Treadle.Backend.Driver
 		public bool Finished;
 		public int ExitCode;
 
-		/// Starts the program in `workDir`, or in its own folder. False with `outWhy` when it could not start.
-		public bool Start(StringView exe, String outWhy, Span<String> arguments = default, StringView workDir = default)
+		/// True when the program runs in a console window of its own (no output is captured).
+		public bool InConsole;
+
+		/// Starts the program in `workDir`, or in its own folder. `console`: in a console window of its own
+		/// (Windows: the child's new console; Linux: the first terminal emulator found, else the output is
+		/// captured as usual); the output is then not read here. False with `outWhy` when it could not start.
+		public bool Start(StringView exe, String outWhy, Span<String> arguments = default, StringView workDir = default, bool console = false, StringView teePath = default)
 		{
 			ExePath.Set(exe);
+			mProcess.MaxLines = 20000; // a flood of output drops the oldest unread lines (counted), never stalls the editor
+			mProcess.TeePath.Set(teePath);
 			String dir = scope .(workDir);
 			if (dir.IsEmpty)
 				Path.GetDirectoryPath(exe, dir);
 			List<String> args = scope .();
+			List<String> owned = scope .();
 			for (let a in arguments)
 				args.Add(a);
-			if (!mProcess.Start(exe, args, dir))
+			StringView launch = exe;
+			if (console)
+			{
+#if BF_PLATFORM_WINDOWS
+				InConsole = true;
+#else
+				String display = scope .();
+				bool hasDisplay = (Environment.GetEnvironmentVariable("DISPLAY", display) case .Ok && !display.IsEmpty);
+				if (!hasDisplay)
+					hasDisplay = (Environment.GetEnvironmentVariable("WAYLAND_DISPLAY", display) case .Ok && !display.IsEmpty);
+				StringView[?] terminals = .("/usr/bin/x-terminal-emulator", "/usr/bin/gnome-terminal", "/usr/bin/konsole", "/usr/bin/xterm");
+				if (hasDisplay)
+				{
+					for (let t in terminals)
+					{
+						if (!File.Exists(t))
+							continue;
+						{ let o = new String(exe); owned.Add(o); args.Insert(0, o); }
+						if (t.EndsWith("gnome-terminal"))
+						{
+							{ let o = new String("--"); owned.Add(o); args.Insert(0, o); }
+							{ let o = new String("--wait"); owned.Add(o); args.Insert(0, o); }
+						}
+						else
+						{
+							if (t.EndsWith("konsole"))
+								{ let o = new String("--nofork"); owned.Add(o); args.Insert(0, o); }
+							{ let o = new String("-e"); owned.Add(o); args.Insert(0, o); }
+						}
+						launch = t;
+						InConsole = true;
+						break;
+					}
+				}
+#endif
+			}
+			mProcess.Capture = !InConsole;
+			if (!mProcess.Start(launch, args, dir))
 			{
 				outWhy.Append(mProcess.Error);
+				InConsole = false;
+				ClearAndDeleteItems!(owned);
 				return false;
 			}
+			
+				ClearAndDeleteItems!(owned);
 			return true;
 		}
 
 		/// Call once per frame: new output lines ("!" prefix: stderr). True once when it ended.
 		public bool Update(List<String> outLines)
 		{
-			mProcess.TakeLines(outLines);
-			if (Finished || !mProcess.Done)
+			// at most about a millisecond and 500 lines per call: the editor keeps drawing under a flood
+			mProcess.TakeLines(outLines, 1.0, 500);
+			if (Finished || !mProcess.Done || mProcess.HasPending)
 				return false;
-			mProcess.TakeLines(outLines);
 			ExitCode = mProcess.ExitCode;
 			Finished = true;
 			return true;

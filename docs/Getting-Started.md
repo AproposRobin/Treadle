@@ -41,7 +41,11 @@ Five steps from nothing to a line printed by your own program:
    string`, press **Enter**, and type `Hello` into the new node's box.
 4. **Run** (Ctrl+F5, the green play button on the toolbar). Run does the build for you; Build alone (F7) is for
    checking errors or shipping.
-5. **The output** shows in the Output Log at the bottom, under Run: `Hello`.
+   A console project (the default kind) runs in a console window of its own, and `Hello` appears there. Turn off
+   Editor Preferences > Build > **Run console programs in a console window** to see the output in the editor instead
+   (windowed and library projects always do). Stop Program (Build menu) ends the program either way.
+5. **The output** of a program that runs inside the editor shows in the Debug Output panel at the bottom, line by line
+   while it runs (the Output Log has the first lines and the exit code): `Hello`.
 
 To call a function of another type, say `Run` of a class `Engine`, type `engine run` in the Node menu. A function
 that works on an Engine needs one: pick **Construct Engine + Run**, which places a Construct Engine, a Defer

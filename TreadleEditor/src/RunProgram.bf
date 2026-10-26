@@ -11,8 +11,11 @@ namespace Treadle.Editor
 	{
 		ProgramRun mProgramRun ~ { if (_ != null && !_.Finished) _.Stop(); delete _; };
 		List<String> mRunLines = new .() ~ DeleteContainerAndItems!(_);
+		/// What the program wrote under Run (the Debug Output panel shows it when no debug session has output).
+		public List<String> mRunOutput = new .() ~ DeleteContainerAndItems!(_);
 		/// The Output Log came forward for this run's output already.
 		bool mRunLogShown;
+		int mRunLogLines;
 
 		public bool ProgramRunning => mProgramRun != null && !mProgramRun.Finished;
 
@@ -52,16 +55,27 @@ namespace Treadle.Editor
 			delete mProgramRun;
 			mProgramRun = new .();
 			mRunLogShown = false;
+			mRunLogLines = 0;
+			ClearAndDeleteItems!(mRunOutput);
+			mDebug?.ClearOutput();
+			// a console project runs in a console window of its own (Preferences > Build); a command-line
+			// run and the self tests capture the output
+			bool console = Prefs.RunInConsole && !mBuildRun && !Desktop.QuietWindow && Project != null && (Project.Kind.IsEmpty || Project.Kind == "console");
 			String why = scope .();
+			String tee = scope .();
+			if (Prefs.RunLogFile && !console && !mProjectRoot.IsEmpty)
+				tee.AppendF("{}{}build{}run.log", mProjectRoot, System.IO.Path.DirectorySeparatorChar, System.IO.Path.DirectorySeparatorChar);
 			// --build-run runs the program in the project folder (a relative argument is read from
 			// there, as in a terminal); Run Without Debugging in the exe's folder
-			if (!mProgramRun.Start(job.ExePath, why, mRunArgs, mBuildRun ? (StringView)mProjectRoot : default))
+			if (!mProgramRun.Start(job.ExePath, why, mRunArgs, mBuildRun ? (StringView)mProjectRoot : default, console, tee))
 			{
 				Notify.Log(.Error, "Run", scope $"Could not start {job.ExePath}: {why}");
 				DeleteAndNullify!(mProgramRun);
 				return;
 			}
 			Notify.Log(.Info, "Run", scope $"> {job.ExePath}");
+			if (mProgramRun.InConsole)
+				Notify.Log(.Info, "Run", "The program runs in its own console window (Preferences > Build)");
 			SetStatus(scope $"Running {job.ExePath}", .Info, false);
 		}
 
@@ -73,18 +87,36 @@ namespace Treadle.Editor
 			let ended = mProgramRun.Update(mRunLines);
 			if (!mRunLines.IsEmpty && !mRunLogShown)
 			{
-				// The program's first output brings the Output Log forward (once per run).
+				// The program's first output brings Debug Output forward (once per run).
 				mRunLogShown = true;
-				ShowOutputLog = true;
-				mFocusOutputLog = true;
+				ShowDebugOutput = true;
+				mFocusDebugOutput = true;
 			}
 			for (let l in mRunLines)
 			{
 				mBuildRunOutput?.Add(new String(l));
-				if (l.StartsWith('!'))
-					Notify.Log(.Warning, "Run", StringView(l, 1));
-				else
-					Notify.Log(.Info, "Run", l);
+				bool skipRow = l.StartsWith('\x01'); // "... N lines skipped": the ring dropped lines
+				mRunOutput.Add(new String(l.StartsWith('!') ? StringView(l, 1) : (StringView)l));
+				// the panel keeps the last 20,000 rows; whole blocks go at once so a flood costs little
+				if (mRunOutput.Count > 21000)
+				{
+					for (int i < 1000)
+						delete mRunOutput[i];
+					mRunOutput.RemoveRange(0, 1000);
+				}
+				// the Output Log gets the start of the output only; Debug Output has the rest
+				if (skipRow)
+					continue;
+				if (mRunLogLines < 500)
+				{
+					mRunLogLines++;
+					if (l.StartsWith('!'))
+						Notify.Log(.Warning, "Run", StringView(l, 1));
+					else
+						Notify.Log(.Info, "Run", l);
+					if (mRunLogLines == 500)
+						Notify.Log(.Info, "Run", "The rest of the program's output is in Debug Output");
+				}
 			}
 			ClearAndDeleteItems!(mRunLines);
 			if (ended)

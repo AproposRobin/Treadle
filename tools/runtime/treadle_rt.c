@@ -33,6 +33,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
+#ifdef _WIN32
+#include <io.h>
+#define rt_isatty _isatty
+#define rt_fileno _fileno
+#else
+#define rt_isatty isatty
+#define rt_fileno fileno
+#endif
+/* stdout is not a terminal (a pipe: the editor's Run, a debugger, a redirection) and the program may run for
+   long: each Console write is flushed, so its output arrives while it runs (the C library would buffer it). */
+static int rt_flush_each;
 #ifndef _WIN32
 /* POSIX (Linux, glibc): the arguments are UTF-8 already, the exe's path is /proc/self/exe, the
    linker's __start_ / __stop_ symbols bound the tables (see "start / exit"). */
@@ -955,6 +966,7 @@ void rt_start(int32_t argc, char** argv)
 {
     rt_argc = argc;
     rt_argv = argv;
+    rt_flush_each = !rt_isatty(rt_fileno(stdout));
 #ifdef _WIN32
     utf8_args();
     /* Under a debugger (F5: lldb-dap gives the program a pipe, which the C library would fill 4 KB at a
@@ -1139,6 +1151,7 @@ void rt_console_write(const char* p, int64_t n)
     if (rt_debug_sink) { sink_write(p, (size_t)n); return; }
 #endif
     fwrite(p, 1, (size_t)n, stdout);
+    if (rt_flush_each) fflush(stdout);
 }
 void rt_console_write_line(const char* p, int64_t n)
 {
@@ -1147,6 +1160,7 @@ void rt_console_write_line(const char* p, int64_t n)
     if (rt_debug_sink) { sink_write("\n", 1); return; }
 #endif
     fputc('\n', stdout);
+    if (rt_flush_each) fflush(stdout);
 }
 void rt_console_error_write(const char* p, int64_t n) { fflush(stdout); if (n > 0) err_write(p, (size_t)n); }
 void* rt_memcpy(void* d, const void* s, int64_t n) { return memmove(d, s, (size_t)n); }

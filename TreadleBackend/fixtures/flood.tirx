@@ -1,0 +1,35 @@
+# tir 1
+# Not a numbered fixture (the .tirx extension keeps the fixture scan from running it to the end): a program
+# that prints 1,000,000 Console lines. The backend self test starts it through the editor's Run (ProgramRun),
+# checks that reading it never blocks the caller, that lines are skipped and counted, and that Stop ends it.
+program Flood console
+entry Fl.Program.Main()
+
+unit Fl.Program
+type Fl.Program class
+
+func Fl.Program.Main() int static sheet "m1" display "Fl.Program.Main"
+	slot si int loopvar node a2.index
+	node a1 Entry
+	node a2 For
+	node a3 Call Console.WriteLine(StringView)
+	node a4 Return 0
+	block b0
+		%z = const int 0 @a2.start
+		store.slot si %z @a2
+		br cond @a2
+	block cond
+		%i = load.slot int si @a2
+		%n = const int 1000000 @a2.end
+		%more = cmp bool lt %i %n @a2
+		condbr %more body done @a2
+	block body
+		%sv = const StringView "flood line" @a3.text
+		intrinsic void console.writeline %sv @a3
+		%inc = const int 1 @a2
+		%i2 = binop int add %i %inc @a2
+		store.slot si %i2 @a2
+		br cond @a2
+	block done
+		%zero = const int 0 @a4
+		ret %zero @a4

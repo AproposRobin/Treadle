@@ -146,7 +146,8 @@ namespace Treadle.Editor
 			case "frontend": finished = SelfTestFrontEnd();
 			case "cimport": finished = SelfTestCImport();
 			case "core": finished = SelfTestCore();
-			case "update": finished = SelfTestUpdate(); // SelfTestUpdate.bf
+			case "update": finished = SelfTestUpdate(); if (finished) mSelfTests.Insert(1, new String("updatestart")); // SelfTestUpdate.bf; then the notice on the start page
+			case "updatestart": finished = SelfTestUpdateStart(); // SelfTestUpdate.bf
 			case "fuzzopen": finished = SelfTestFuzzOpen(); // SelfTestSecurity.bf
 			case "debug": finished = SelfTestDebug();
 			case "debugstop": finished = SelfTestDebugStop();

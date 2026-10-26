@@ -35,6 +35,7 @@ namespace Treadle.Editor
 		int mDebugFocusLocals;
 		bool mDebugFirstStop;
 		int mDebugOutputCount;
+		bool mFocusDebugOutput;
 
 		public DebugSession Debug
 		{
@@ -749,37 +750,53 @@ namespace Treadle.Editor
 			}
 			if (ShowDebugOutput)
 			{
+				if (mFocusDebugOutput)
+				{
+					mFocusDebugOutput = false;
+					Gui.igSetNextWindowFocus();
+				}
 				if (Gui.Begin(Panels.DebugOutput, &ShowDebugOutput))
 				{
-					if (mDebug == null || mDebug.Output.IsEmpty)
+					List<String> outSrc = (mDebug != null && !mDebug.Output.IsEmpty) ? mDebug.Output : mRunOutput;
+					if (outSrc.IsEmpty)
 						DebugIdleText();
 					else
 					{
 						if (Gui.SmallButton("Clear"))
-							mDebug.ClearOutput();
+							{ mDebug?.ClearOutput(); ClearAndDeleteItems!(mRunOutput); }
 						Gui.SameLine();
 						if (Gui.SmallButton("Copy"))
 						{
 							String all = scope .();
-							for (let line in mDebug.Output)
+							for (let line in outSrc)
 								all.AppendF("{}\n", line.StartsWith('\x01') ? StringView(line, 1) : line);
 							Gui.igSetClipboardText(all);
 						}
 						Gui.igBeginChild_Str("##dbgout", .(0, 0), 0, 0);
-						Gui.igPushTextWrapPos(0);
-						for (let line in mDebug.Output)
+						// only the rows in view are drawn (a flood of output is bounded by the ring, drawing is bounded here)
+						float spacingY = Gui.igGetStyle().ItemSpacing.y;
+						float rowH = Gui.igGetTextLineHeight() + spacingY;
+						float viewH = Gui.igGetWindowSize().y;
+						float scrollY = Gui.igGetScrollY();
+						int first = Math.Clamp((int)(scrollY / rowH) - 1, 0, outSrc.Count);
+						int last = Math.Clamp((int)((scrollY + viewH) / rowH) + 2, first, outSrc.Count);
+						if (first > 0)
+							Gui.igDummy(.(1, Math.Max(1, first * rowH - spacingY)));
+						for (int i = first; i < last; i++)
 						{
+							let line = outSrc[i];
 							if (line.StartsWith('\x01'))
 								Gui.TextColored(Look.ForegroundDim, StringView(line, 1));
 							else
 								Gui.Text(line);
 						}
-						if (mDebug.Output.Count != mDebugOutputCount)
+						if (last < outSrc.Count)
+							Gui.igDummy(.(1, Math.Max(1, (outSrc.Count - last) * rowH - spacingY)));
+						if (outSrc.Count != mDebugOutputCount)
 						{
-							mDebugOutputCount = mDebug.Output.Count;
-							Gui.igSetScrollHereY(1.0f);
+							mDebugOutputCount = outSrc.Count;
+							Gui.igSetScrollY_Float(1e9f);
 						}
-						Gui.igPopTextWrapPos();
 						Gui.igEndChild();
 					}
 				}

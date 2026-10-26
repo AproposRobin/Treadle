@@ -63,7 +63,7 @@ namespace Treadle.Editor
 			// menu) must not cover it, so it asks for the front each frame, except while the documentation, the preferences or a
 			// popup is up: those stay over it.
 			bool other = mShowDocs || mShowPrefs || mShowUpdateNotes || mShowAbout || Gui.igIsPopupOpen_Str("", PopupFlags.AnyPopup);
-			if (justShown || !other)
+			if (justShown || (!other && !Gui.igIsMouseDown_Nil(0))) // a click in progress (the update notice above) keeps its window
 				Gui.igSetNextWindowFocus();
 			Gui.igPushStyleVar_Vec2(StyleVar.WindowPadding, .(0, 0));
 			int32 flags = WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoMove | WindowFlags.NoCollapse | WindowFlags.NoDocking |

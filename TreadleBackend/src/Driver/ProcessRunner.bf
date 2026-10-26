@@ -20,6 +20,14 @@ namespace Treadle.Backend.Driver
 			public List<String> Lines = new .() ~ DeleteContainerAndItems!(_);
 			public int Owners = 3;
 			public int Finished;
+			/// Lines before this index were taken (their slots are null). Max > 0: the ring keeps at most that many
+			/// unread lines; the oldest are dropped and counted in Skipped.
+			public int Head;
+			public int Max;
+			public int Skipped;
+			/// Every line is also written here when set (unbounded).
+			public FileStream Tee ~ delete _;
+			public Monitor TeeLock = new .() ~ delete _;
 		}
 
 		SpawnedProcess mProcess ~ delete _;
@@ -39,6 +47,14 @@ namespace Treadle.Backend.Driver
 		/// Set before Start, with OwnGroup. Linux: the child also gets SIGKILL when the thread that
 		/// started it ends (the editor killed), through `setpriv --pdeathsig`.
 		public bool ParentDeath;
+		/// Set before Start. False: the child gets a console window of its own (Windows: the new console of a
+		/// child of a program without one) and its output is not read here; Done is true when it ended.
+		public bool Capture = true;
+		/// Set before Start. > 0: at most that many unread lines are kept (the oldest are dropped and counted), so a
+		/// program that floods its output cannot grow memory or stall the reader of TakeLines.
+		public int MaxLines;
+		/// Set before Start. Every line is also written to this file (truncated at the start), none dropped.
+		public String TeePath = new .() ~ delete _;
 
 		// each reader thread is joined once (ThreadJoin: a second join is undefined on Linux)
 		bool mOutJoined;
@@ -134,9 +150,9 @@ namespace Treadle.Backend.Driver
 			if (!workDir.IsEmpty)
 				psi.SetWorkingDirectory(workDir);
 			psi.UseShellExecute = false;
-			psi.RedirectStandardOutput = true;
-			psi.RedirectStandardError = true;
-			psi.CreateNoWindow = true;
+			psi.RedirectStandardOutput = Capture;
+			psi.RedirectStandardError = Capture;
+			psi.CreateNoWindow = Capture;
 			mProcess = new .();
 			Watch.Start();
 			if (mProcess.Start(psi) case .Err)
@@ -146,6 +162,25 @@ namespace Treadle.Backend.Driver
 			}
 			mJob?.Assign(mProcess);
 			mShared = new .();
+			mShared.Max = MaxLines;
+			if (Capture && !TeePath.IsEmpty)
+			{
+				String dirPart = scope .();
+				if (Path.GetDirectoryPath(TeePath, dirPart) case .Ok)
+					Directory.CreateDirectory(dirPart).IgnoreError();
+				FileStream tee = new .();
+				if (tee.Create(TeePath, .Write, .Read) case .Ok)
+					mShared.Tee = tee;
+				else
+					delete tee;
+			}
+			if (!Capture)
+			{
+				mShared.Owners = 1;
+				mShared.Finished = 2;
+				Started = true;
+				return true;
+			}
 			FileStream outStream = new .();
 			FileStream errStream = new .();
 			if (mProcess.AttachStandardOutput(outStream) case .Err)
@@ -175,16 +210,38 @@ namespace Treadle.Backend.Driver
 					String line = scope .();
 					if (reader.ReadLine(line) case .Err)
 						break;
+					if (shared.Tee != null)
+						using (shared.TeeLock.Enter())
+						{
+							shared.Tee.Write(Span<uint8>((uint8*)line.Ptr, line.Length)).IgnoreError();
+							shared.Tee.Write(Span<uint8>((uint8*)"\n", 1)).IgnoreError();
+						}
 					using (shared.Lock.Enter())
 					{
-						let target = isErr ? shared.Err : shared.Out;
-						target.Append(line);
-						target.Append('\n');
+						// the text kept for GetOutput / GetErrors is bounded too for a program with a ring
+						if (shared.Max == 0 || shared.Out.Length + shared.Err.Length < 1048576)
+						{
+							let target = isErr ? shared.Err : shared.Out;
+							target.Append(line);
+							target.Append('\n');
+						}
 						String l = new .();
 						if (isErr)
 							l.Append('!');
 						l.Append(line);
 						shared.Lines.Add(l);
+						if (shared.Max > 0 && shared.Lines.Count - shared.Head > shared.Max)
+						{
+							delete shared.Lines[shared.Head];
+							shared.Lines[shared.Head] = null;
+							shared.Head++;
+							shared.Skipped++;
+							if (shared.Head >= 4096)
+							{
+								shared.Lines.RemoveRange(0, shared.Head);
+								shared.Head = 0;
+							}
+						}
 					}
 				}
 			}
@@ -267,14 +324,49 @@ namespace Treadle.Backend.Driver
 		}
 
 		/// Moves the lines read so far into `outLines` ("!" prefix: stderr).
-		public void TakeLines(List<String> outLines)
+		/// `maxMs` / `maxLines` > 0: stops after that long / that many lines (the rest stays for the next call).
+		/// Lines the ring dropped come first as one row, "\x01... N lines skipped".
+		public void TakeLines(List<String> outLines, double maxMs = 0, int maxLines = 0)
 		{
 			if (mShared == null)
 				return;
+			Stopwatch sw = scope .(true);
 			using (mShared.Lock.Enter())
 			{
-				outLines.AddRange(mShared.Lines);
-				mShared.Lines.Clear();
+				if (mShared.Skipped > 0)
+				{
+					outLines.Add(new String()..AppendF("\x01... {} lines skipped", mShared.Skipped));
+					mShared.Skipped = 0;
+				}
+				int n = 0;
+				while (mShared.Head < mShared.Lines.Count)
+				{
+					outLines.Add(mShared.Lines[mShared.Head]);
+					mShared.Lines[mShared.Head] = null;
+					mShared.Head++;
+					n++;
+					if (maxLines > 0 && n >= maxLines)
+						break;
+					if (maxMs > 0 && (n & 15) == 0 && sw.Elapsed.TotalMilliseconds > maxMs)
+						break;
+				}
+				if (mShared.Head >= mShared.Lines.Count)
+				{
+					mShared.Lines.Clear();
+					mShared.Head = 0;
+				}
+			}
+		}
+
+		/// True while lines wait to be taken.
+		public bool HasPending
+		{
+			get
+			{
+				if (mShared == null)
+					return false;
+				using (mShared.Lock.Enter())
+					return mShared.Head < mShared.Lines.Count || mShared.Skipped > 0;
 			}
 		}
 

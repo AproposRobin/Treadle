@@ -473,6 +473,13 @@ namespace Treadle.Editor
 						Gui.igPushStyleColor_U32(Col.ButtonActive, Look.PrimaryPress);
 					}
 					bool clicked = Gui.Button(scope $"{b}##upd");
+#if TREADLE_SELFTEST
+					if (b == "Update now")
+					{
+						mUpNowMin = Gui.igGetItemRectMin();
+						mUpNowMax = Gui.igGetItemRectMax();
+					}
+#endif
 					if (primary)
 						Gui.igPopStyleColor(3);
 					if (Gui.igIsItemHovered(0))

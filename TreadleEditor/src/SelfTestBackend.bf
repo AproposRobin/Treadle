@@ -119,6 +119,34 @@ namespace Treadle.Editor
 		{
 			String dir = scope .();
 			Path.GetDirectoryPath(r.ExePath, dir);
+			if (r.Name == "livepipe")
+			{
+				// the editor's Run: the program's line is read while the program still runs (about two
+				// seconds), not when it ends
+				ProgramRun run = scope .();
+				List<String> lines = scope .();
+				defer { ClearAndDeleteItems!(lines); }
+				String why = scope .();
+				bool ended = false;
+				bool seenRunning = false;
+				if (run.Start(r.ExePath, why))
+				{
+					let watch = scope System.Diagnostics.Stopwatch(true);
+					while (!ended && watch.ElapsedMilliseconds < 20000)
+					{
+						ended = run.Update(lines);
+						for (let l in lines)
+							if (l.Contains("live line") && !ended)
+								seenRunning = true;
+						if (!ended)
+							Thread.Sleep(5);
+					}
+					if (!ended)
+						run.Stop();
+				}
+				st.Check(ended && seenRunning && run.ExitCode == 0, scope $"backend: Run of livepipe ({cfg}) shows the program's line while it is still running (ended {ended}, seen before the end {seenRunning}, exit {run.ExitCode}{why})");
+				return;
+			}
 			if (r.Name == "vdispatch" || r.Name == "windowed")
 			{
 #if BF_PLATFORM_WINDOWS
@@ -367,7 +395,7 @@ namespace Treadle.Editor
 						atomicsExe.Set(r.ExePath);
 					if (r.Passed && r.Name == "attachwait" && cfg == "Debug")
 						attachExe.Set(r.ExePath);
-					if (r.Passed && (r.Name == "windowed" || r.Name == "library" || r.Name == "vdispatch"))
+					if (r.Passed && (r.Name == "windowed" || r.Name == "library" || r.Name == "vdispatch" || r.Name == "livepipe"))
 						KindChecks(st, r, cfg);
 					if (r.Passed)
 						CodegenIRCheck(st, r);
@@ -412,8 +440,62 @@ namespace Treadle.Editor
 				st.Check(false, "backend: the atomics steps skipped (the atomics Debug build failed)");
 			else
 				AtomicsSteps(st, atomicsExe);
+			// the editor's Run under a flood: reading is bounded, lines are skipped and counted, Stop ends the program
+			{
+				FixtureResult fr = scope .();
+				FixtureRunner.Run(scope $"{st.Fixtures}/flood.tirx", "Release", scope $"{st.Work}/fixtures", fr);
+				if (fr.ExePath.IsEmpty || !File.Exists(fr.ExePath))
+					st.Check(false, scope $"backend: the flood program did not build ({fr.Detail})");
+				else
+					FloodCheck(st, fr.ExePath);
+			}
 			using (st.Lock.Enter())
 				st.Done = true;
+		}
+
+		static void FloodCheck(BackendTestState st, StringView exe)
+		{
+			ProgramRun run = scope .();
+			List<String> lines = scope .();
+			defer { ClearAndDeleteItems!(lines); }
+			String why = scope .();
+			if (!run.Start(exe, why))
+			{
+				st.Check(false, scope $"backend: the flood program did not start ({why})");
+				return;
+			}
+			double worst = 0;
+			bool skippedRow = false;
+			int total = 0;
+			let watch = scope System.Diagnostics.Stopwatch(true);
+			let one = scope System.Diagnostics.Stopwatch();
+			// about a second of frames at 60 per second while the program floods the pipe
+			while (watch.ElapsedMilliseconds < 1000)
+			{
+				one.Restart();
+				run.Update(lines);
+				worst = Math.Max(worst, one.Elapsed.TotalMilliseconds);
+				for (let l in lines)
+				{
+					total++;
+					if (l.Contains("lines skipped"))
+						skippedRow = true;
+				}
+				ClearAndDeleteItems!(lines);
+				Thread.Sleep(16);
+			}
+			let stopWatch = scope System.Diagnostics.Stopwatch(true);
+			run.Stop();
+			bool ended = false;
+			while (!ended && stopWatch.ElapsedMilliseconds < 5000)
+			{
+				ended = run.Update(lines);
+				ClearAndDeleteItems!(lines);
+				if (!ended)
+					Thread.Sleep(5);
+			}
+			st.Check(worst < 50 && skippedRow && total > 0, scope $"backend: a flooding program never blocks the editor's reader (slowest frame {worst:0.0} ms, {total} lines handed over, skipped row {skippedRow})");
+			st.Check(ended && stopWatch.ElapsedMilliseconds < 2000, scope $"backend: Stop ends the flooding program within 2 s (ended {ended} after {stopWatch.ElapsedMilliseconds} ms)");
 		}
 
 		/// lldb on the debugtypes fixture (Debug), stopped on the Call of puts: each kind of type by

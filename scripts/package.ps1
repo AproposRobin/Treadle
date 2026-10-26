@@ -407,6 +407,10 @@ if ($reported -notlike "Treadle $FullVersion (host contract *") { throw "Treadle
 # with / separators; files.txt itself is not listed.
 $manifest = @(Get-ChildItem -Recurse -Force -File $Out | ForEach-Object { $_.FullName.Substring($Out.Length + 1).Replace('\', '/') } | Where-Object { $_ -ne "files.txt" } | Sort-Object)
 [IO.File]::WriteAllText((Join-Path $Out "files.txt"), (($manifest -join "`n") + "`n"), (New-Object Text.UTF8Encoding $false))
+# files.sha256: "<sha256>  <path>" for every listed file, so the update helper copies only the files that differ
+# (the file is not listed, so it is not installed).
+$hashLines = foreach ($rel in $manifest) { (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $Out $rel.Replace('/', '\'))).Hash.ToLowerInvariant() + "  " + $rel }
+[IO.File]::WriteAllText((Join-Path $Out "files.sha256"), (($hashLines -join "`n") + "`n"), (New-Object Text.UTF8Encoding $false))
 
 # ---------------------------------------------------------------------------------------------- zip
 
@@ -589,7 +593,7 @@ $zipLen = (Get-Item $zip).Length
 Set-Content -Path (Join-Path $rIndex "SHA256SUMS") -Value "$sha  $(Split-Path -Leaf $zip)" -Encoding ascii
 $relJson = '[{"tag_name": "v' + $FullVersion + '", "draft": false, "prerelease": false, "body": "Rehearsal release", "assets": [{"name": "' + (Split-Path -Leaf $zip) + '", "size": ' + $zipLen + '}, {"name": "SHA256SUMS", "size": 100}]}]'
 [IO.File]::WriteAllText((Join-Path $rIndex "releases.json"), $relJson)
-$rEnv = @{ LOCALAPPDATA = $lad; TREADLE_HOME = (Join-Path $reh "home"); TREADLE_UPDATE_INDEX = $rIndex }
+$rEnv = @{ LOCALAPPDATA = $lad; TREADLE_HOME = (Join-Path $reh "home"); TREADLE_UPDATE_INDEX = $rIndex; TREADLE_UPDATE_NO_WINDOW = "1" }
 $r = Invoke-Packaged (Join-Path $rA "Treadle.exe") @("--update") $rEnv 600
 $helperOk = $r.Out -match 'Update helper started \(process (\d+)\)'
 Report "update rehearsal: 0.0.1-rehearsal --update finds $FullVersion in the local index, verifies it and starts the helper" $r ($r.Code -eq 0 -and $helperOk)
@@ -612,7 +616,7 @@ $gone = -not (Test-Path (Join-Path $rA "docs\rehearsal-old-page.md"))
 $sameList = (Get-FileHash (Join-Path $rA "files.txt")).Hash -eq (Get-FileHash (Join-Path $unz "files.txt")).Hash
 $noPrev = -not (Test-Path (Join-Path $rA "update\old"))
 $r2.Out = ($r2.Out.Trim() + "`n" + (($logText -split "`r?`n" | Where-Object { $_ }) -join "`n")).Trim()
-Report "update rehearsal: VERSION.txt $vA, user files kept $kept, A-only file removed $gone, files.txt is B's $sameList, rollback copy cleared $noPrev" $r2 ($r2.Code -eq 0 -and $vA -eq $FullVersion -and $r2.Out -like "Treadle $FullVersion (host contract *" -and $kept -and $gone -and $sameList -and $noPrev -and $logText -match "update complete")
+Report "update rehearsal: VERSION.txt $vA, user files kept $kept, A-only file removed $gone, files.txt is B's $sameList, rollback copy cleared $noPrev" $r2 ($r2.Code -eq 0 -and $vA -eq $FullVersion -and $r2.Out -like "Treadle $FullVersion (host contract *" -and $kept -and $gone -and $sameList -and $noPrev -and $logText -match "update complete" -and $logText -match "copied \d+ of \d+ files, \d+ unchanged")
 # A second --update on the updated copy: up to date, nothing started.
 $r3 = Invoke-Packaged (Join-Path $rA "Treadle.exe") @("--update") $rEnv 120
 Report "update rehearsal: --update again says up to date" $r3 ($r3.Code -eq 0 -and $r3.Out -match "is up to date")

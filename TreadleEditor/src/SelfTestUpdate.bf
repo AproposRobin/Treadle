@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
+using ImGui;
 using Treadle.Update;
 
 namespace Treadle.Editor
@@ -232,6 +233,29 @@ namespace Treadle.Editor
 			bool back = UpExists(install, "samples/a/old-only.txt") && !UpExists(install, "core/New.treadle") && UpExists(install, "samples/a/my-notes.txt") && UpExists(install, "projects/Game/Game.tproj");
 			t.Clear(); UpRead(install, "files.txt", t);
 			SelfTestCheck(restored && oldExe && back && !t.Contains("New.treadle"), scope $"update: the rollback puts the old files back and removes the added ones ({why})");
+			// With files.sha256 only the files that differ are copied; the counts are logged.
+			UpWrite(staged, "Treadle.exe", "old exe");
+			String sha = scope .();
+			String shaFile = scope .();
+			UpdateApply.Below(shaFile, staged, "Treadle.exe");
+			UpdateService.Sha256OfFile(shaFile, sha);
+			String sums = scope $"{sha}  Treadle.exe\n";
+			sha.Clear();
+			shaFile.Clear();
+			UpdateApply.Below(shaFile, staged, "core/List.treadle");
+			UpdateService.Sha256OfFile(shaFile, sha);
+			sums.AppendF("{}  core/List.treadle\n", sha);
+			UpWrite(staged, "files.sha256", sums);
+			ClearAndDeleteItems!(lines);
+			why.Clear();
+			bool okHash = UpdateApply.Swap(install, staged, previous, why, log);
+			bool counted = false;
+			for (let l in lines)
+				if (l.Contains("copied 3 of 4 files, 1 unchanged"))
+					counted = true;
+			t.Clear(); UpRead(install, "core/List.treadle", t);
+			SelfTestCheck(okHash && counted && t == "new list", scope $"update: a file whose SHA-256 matches files.sha256 is not copied again, the counts are logged ({why}, counted {counted})");
+			UpdateApply.Restore(install, previous, why, log);
 			// A new version whose list names a file it does not contain is refused before anything changes.
 			UpWrite(staged, "files.txt", "Treadle.exe\nmissing.dll\n");
 			why.Clear();
@@ -428,6 +452,136 @@ namespace Treadle.Editor
 			if (t != "old list")
 				Notify.Log(.Info, "SelfTest", log);
 			SelfTestCheck(log.Contains("installed 0.9.0-alpha over 0.1.0-alpha") && log.Contains("restoring 0.1.0-alpha") && log.Contains("1 editor arguments") && result.Contains("\"ok\": false"), "update: update.log and last-result.json tell what happened");
+		}
+
+		// ------------------------------------------------------------------ the notice on the start page
+
+		int mUsPhase;
+		int mUsWait;
+		String mUsRoot = new .() ~ delete _;
+		String mUsProject = new .() ~ delete _;
+		/// The "Update now" button of the notice line, in screen coordinates (DrawUpdateBar).
+		ImVec2 mUpNowMin;
+		ImVec2 mUpNowMax;
+
+		void UsMouse(float x, float y, int down)
+		{
+			let io = DragNative.igGetIO_Nil();
+			DragNative.ImGuiIO_AddMousePosEvent(io, x, y);
+			if (down >= 0)
+				DragNative.ImGuiIO_AddMouseButtonEvent(io, 0, down == 1);
+		}
+
+		/// `updatestart`: no project open (the start page), an update offered through a local index (the same as
+		/// TREADLE_UPDATE_INDEX), and a mouse click on "Update now" through the harness starts the download. One step per frame.
+		bool SelfTestUpdateStart()
+		{
+			switch (mUsPhase)
+			{
+			case 0:
+				mUsProject.Set(mProjectRoot);
+				for (let d in mDocs)
+					d.Modified = false;
+				RequestCloseProject();
+				mUsPhase++;
+				mUsWait = 10;
+			case 1:
+				if (--mUsWait > 0)
+					return false;
+				SelfTestCheck(StartPageVisible, "update: the start page is shown for the notice test");
+				AppPaths.Root(mUsRoot);
+				mUsRoot.AppendF("{}selftest-update-start", Path.DirectorySeparatorChar);
+				UpdateApply.DeletePath(mUsRoot);
+				UpdateApply.EnsureDir(mUsRoot);
+				let version = "0.9.0-alpha";
+				String index = scope .();
+				UpdateApply.Join(index, mUsRoot, "index");
+				UpdateApply.EnsureDir(index);
+				String pkgName = scope .();
+				ReleaseChannel.PackageName(version, pkgName);
+				String pkgDir = scope .();
+				UpdateApply.Join(pkgDir, mUsRoot, "pkg");
+				String archive = scope .();
+				UpdateApply.Join(archive, index, pkgName);
+				if (!UpPack(pkgDir, version, archive))
+				{
+					SelfTestCheck(false, "update: the test package could not be packed with the system's tar");
+					mUsPhase = 9;
+					return false;
+				}
+				String hex = scope .();
+				UpdateService.Sha256OfFile(archive, hex);
+				String sumsPath = scope .();
+				UpdateApply.Join(sumsPath, index, "SHA256SUMS");
+				File.WriteAllText(sumsPath, scope $"{hex}  {pkgName}\n").IgnoreError();
+				FileStream afs = scope .();
+				int64 asize = (afs.Open(archive, .Read, .Read) case .Ok) ? afs.Length : 0;
+				afs.Close();
+				String rel = scope .();
+				UpReleaseJson(rel, scope $"v{version}", true, false, true, true, asize);
+				String relPath = scope .();
+				UpdateApply.Join(relPath, index, "releases.json");
+				File.WriteAllText(relPath, scope $"[{rel}]").IgnoreError();
+				String install = scope .();
+				UpdateApply.Join(install, mUsRoot, "install");
+				mUpdates.Install.Kind = .Folder;
+				mUpdates.Install.Dir.Set(install);
+				mUpdates.Install.Version.Set("0.1.0-alpha");
+				UpdateApply.Join(mUpdates.UpdateDir, install, "update");
+				UpdateApply.EnsureDir(mUpdates.UpdateDir);
+				mUpdates.IndexDir.Set(index);
+				mUpdateHidden = false;
+				mUpdates.StartCheck(true);
+				mUsPhase++;
+				mUsWait = 600;
+			case 2:
+				// the notice line shows with the button
+				if (mUpdateView.State != .Available || mUpNowMax.x <= mUpNowMin.x)
+				{
+					if (--mUsWait <= 0)
+					{
+						SelfTestCheck(false, scope $"update: the notice line offers the update on the start page (state {mUpdateView.State})");
+						mUsPhase = 9;
+					}
+					return false;
+				}
+				UsMouse((mUpNowMin.x + mUpNowMax.x) * 0.5f, (mUpNowMin.y + mUpNowMax.y) * 0.5f, -1);
+				mUsPhase++;
+				mUsWait = 4;
+			case 3:
+				if (--mUsWait > 0)
+					return false;
+				UsMouse((mUpNowMin.x + mUpNowMax.x) * 0.5f, (mUpNowMin.y + mUpNowMax.y) * 0.5f, 1);
+				mUsPhase++;
+				mUsWait = 3;
+			case 4:
+				if (--mUsWait > 0)
+					return false;
+				UsMouse((mUpNowMin.x + mUpNowMax.x) * 0.5f, (mUpNowMin.y + mUpNowMax.y) * 0.5f, 0);
+				mUsPhase++;
+				mUsWait = 900;
+			case 5:
+				// Update now reached the service: it downloads, verifies and unpacks
+				if (mUpdateView.State != .Ready)
+				{
+					if (--mUsWait <= 0)
+					{
+						SelfTestCheck(false, scope $"update: a click on Update now on the start page starts the download (state {mUpdateView.State})");
+						mUsPhase = 9;
+					}
+					return false;
+				}
+				SelfTestCheck(true, "update: a click on Update now on the start page downloads and verifies the update");
+				mUsPhase = 9;
+			default:
+				mUpdateHidden = true;
+				UpdateApply.DeletePath(mUsRoot);
+				if (!mUsProject.IsEmpty)
+					RequestOpenProject(mUsProject);
+				mUsPhase = 0;
+				return true;
+			}
+			return false;
 		}
 	}
 }

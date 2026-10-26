@@ -35,6 +35,11 @@ namespace Treadle.Editor
 		/// ones shown as stale. On: every edit checks the edited Sheet and shows its problems at once
 		/// (Editor-Model.md 7.1).
 		public static bool ValidateAfterEdits = false;
+		/// On (default): a console project runs in a console window of its own; off: its output is captured
+		/// into the editor (Debug Output). Windowed and library projects always capture.
+		public static bool RunInConsole = true;
+		/// Off (default). On: the program's output of a captured Run is also written to <project>/build/run.log (truncated at each Run, nothing dropped).
+		public static bool RunLogFile = false;
 
 		public static void GetPath(String outPath)
 		{
@@ -62,6 +67,8 @@ namespace Treadle.Editor
 			RecoverySeconds = (int32)Math.Clamp(p.GetNumber("recoverySeconds", RecoverySeconds), 0, 3600);
 			DefaultConfig = (int32)Math.Clamp(p.GetNumber("defaultConfig", DefaultConfig), 0, 2);
 			ValidateAfterEdits = p.GetBool("validateAfterEdits", ValidateAfterEdits);
+			RunInConsole = p.GetBool("runInConsole", RunInConsole);
+			RunLogFile = p.GetBool("runLogFile", RunLogFile);
 		}
 
 		public static void Save()
@@ -78,6 +85,8 @@ namespace Treadle.Editor
 			p.Set("idlePacing", Json.NewBool(IdlePacing));
 			p.Set("recoverySeconds", Json.NewNumber(RecoverySeconds));
 			p.Set("validateAfterEdits", Json.NewBool(ValidateAfterEdits));
+			p.Set("runInConsole", Json.NewBool(RunInConsole));
+			p.Set("runLogFile", Json.NewBool(RunLogFile));
 			p.Set("defaultConfig", Json.NewNumber(DefaultConfig));
 			Settings.Save();
 		}
@@ -256,6 +265,10 @@ namespace Treadle.Editor
 								PropertyGrid.InfoRow("Toolchain", ok ? scope $"{Icon.Ok}  installed" : scope $"{Icon.Error}  none in this build", "The compiler Validate (Shift+F7), Build (F7) and Run (F5) use", ok ? Look.Success : Look.Error);
 								StringView[3] cfgs = .("Automatic", "Debug", "Release");
 								if (PropertyGrid.ComboRow("Default Configuration", "##defcfg", ref Prefs.DefaultConfig, cfgs, "Build configuration for projects you have not chosen one for. Automatic: the configuration the project names, else Debug. The toolbar's configuration menu overrides it per project."))
+									changed = true;
+								if (PropertyGrid.CheckRow("Also write program output to build/run.log", "##runlogfile", ref Prefs.RunLogFile, "On: a Run that shows its output in the editor also writes every line to build/run.log in the project folder (emptied at each Run). The Debug Output panel keeps only the last 20,000 lines; the file loses none."))
+									changed = true;
+								if (PropertyGrid.CheckRow("Run console programs in a console window", "##runconsole", ref Prefs.RunInConsole, "On (default): Run starts a console project in a console window of its own; its output stays there.\nOff: the output comes into the editor (Debug Output). Windowed and library projects, and Run from the command line, always capture."))
 									changed = true;
 								if (PropertyGrid.CheckRow("Validate automatically after edits", "##autovalidate", ref Prefs.ValidateAfterEdits, "Off (default): errors and warnings appear when you press Validate (Shift+F7), Build or Run; after an edit the ones shown are dimmed until the next Validate.\nOn: every edit checks the edited Sheet and shows its problems at once."))
 								{

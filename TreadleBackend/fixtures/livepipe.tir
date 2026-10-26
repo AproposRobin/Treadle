@@ -1,0 +1,34 @@
+# tir 1
+# Output while the program runs: it writes a Console line, then waits about two seconds, then ends. Started
+# with a pipe for stdout (the editor's Run), the line must arrive before the program ends (the C library
+# would hold it back in a full buffer until the exit). The backend self test reads the pipe while the
+# program is still running.
+program LivePipe console
+entry Lp.Program.Main()
+
+func C.libc.time(void*) int import "time"
+
+unit Lp.Program
+type Lp.Program class
+
+func Lp.Program.Main() int static sheet "m1" display "Lp.Program.Main"
+	node a1 Entry
+	node a2 Call Console.WriteLine(StringView)
+	node a3 While
+	node a4 Return 0
+	block b0
+		%sv = const StringView "live line" @a2.text
+		intrinsic void console.writeline %sv @a2
+		%z = const void* null @a3
+		%t0 = ccall int C.libc.time(void*) %z @a3
+		%two = const int 2 @a3
+		%dl = binop int add %t0 %two @a3
+		br head @a3
+	block head
+		%z2 = const void* null @a3
+		%n = ccall int C.libc.time(void*) %z2 @a3
+		%c = cmp bool lt %n %dl @a3
+		condbr %c head go @a3
+	block go
+		%zero = const int 0 @a4
+		ret %zero @a4

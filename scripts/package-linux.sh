@@ -276,6 +276,9 @@ reported="$(timeout 30 "$OUT/treadle" --version 2>/dev/null | head -1 | tr -d '\
 # The file list the updater installs by (docs/Releasing.md, "The update path"): every file and link of the package,
 # relative; files.txt itself is not listed.
 (cd "$OUT" && find . \( -type f -o -type l \) ! -path ./files.txt -printf '%P\n' | LC_ALL=C sort) > "$OUT/files.txt"
+# files.sha256: the SHA-256 of every listed file (links excluded, they are copied as links); the update helper copies
+# only the files that differ. Not listed, so not installed.
+(cd "$OUT" && find . -type f ! -path ./files.txt -printf '%P\n' | LC_ALL=C sort | xargs -d '\n' sha256sum) > "$OUT/files.sha256"
 
 # ------------------------------------------------------------------------------------------- tarball
 

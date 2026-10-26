@@ -298,7 +298,7 @@ namespace Treadle.Update
 		/// Replaces the install's files by `staged`'s file list (see the class comment). `previous` receives a copy of
 		/// every file overwritten or removed, and `previous/.added` the files that did not exist. On a failure
 		/// everything is put back (Restore) and false is returned with `outReason`.
-		public static bool Swap(StringView install, StringView staged, StringView previous, String outReason, delegate void(StringView) log)
+		public static bool Swap(StringView install, StringView staged, StringView previous, String outReason, delegate void(StringView) log, delegate void(StringView, int, int) progress = null)
 		{
 			List<String> next = scope .();
 			defer { ClearAndDeleteItems!(next); }
@@ -334,6 +334,32 @@ namespace Treadle.Update
 				if (!ListHas(next, rel))
 					removed.Add(new String(rel));
 
+			// Only the files that differ are copied: when the package carries files.sha256 ("<sha256>  <path>" lines), an
+			// installed file with the listed SHA-256 stays as it is. No such list (or no entry): copied.
+			Dictionary<String, String> hashes = scope .();
+			defer { for (let kv in hashes) { delete kv.key; delete kv.value; } }
+			ReadHashes(staged, hashes);
+			List<String> todo = scope .(); // borrows from next
+			int unchanged = 0;
+			int checkedFiles = 0;
+			for (let rel in next)
+			{
+				checkedFiles++;
+				if (progress != null && (checkedFiles % 16 == 0 || checkedFiles == next.Count))
+					progress("Checking files", checkedFiles, next.Count);
+				if (rel != ManifestName && hashes.TryGetAlt(rel, let hashKey, let want))
+				{
+					String cur = scope .();
+					Below(cur, install, rel);
+					String have = scope .();
+					if (File.Exists(cur) && UpdateService.Sha256OfFile(cur, have) && have.Equals(want, .OrdinalIgnoreCase))
+					{
+						unchanged++;
+						continue;
+					}
+				}
+				todo.Add(rel);
+			}
 			if (!DeletePath(previous))
 			{
 				outReason.Set(scope $"could not clear the previous copy at {previous}");
@@ -344,7 +370,7 @@ namespace Treadle.Update
 			int kept = 0;
 			for (int pass < 2)
 			{
-				let list = (pass == 0) ? next : removed;
+				let list = (pass == 0) ? todo : removed;
 				for (let rel in list)
 				{
 					String cur = scope .();
@@ -371,9 +397,13 @@ namespace Treadle.Update
 				outReason.Set("could not write the rollback list");
 				return false;
 			}
-			if (log != null) log(scope $"previous copy kept in {previous} ({kept} files); {next.Count} files to install, {removed.Count} to remove");
-			for (let rel in next)
+			if (log != null) log(scope $"previous copy kept in {previous} ({kept} files); {todo.Count} files to install, {unchanged} unchanged, {removed.Count} to remove");
+			int copied = 0;
+			for (let rel in todo)
 			{
+				if (progress != null)
+					progress("Installing", copied, todo.Count);
+				copied++;
 				String src = scope .();
 				Below(src, staged, rel);
 				String dst = scope .();
@@ -401,7 +431,35 @@ namespace Treadle.Update
 				}
 				RemoveEmptyParents(install, rel);
 			}
+			if (progress != null)
+				progress("Installing", todo.Count, todo.Count);
+			if (log != null) log(scope $"copied {todo.Count} of {next.Count} files, {unchanged} unchanged");
 			return true;
+		}
+
+		/// Reads `<dir>/files.sha256` ("<sha256>  <path>" lines, as sha256sum writes them) into `outHashes` (path to
+		/// hex; owned). Missing or malformed lines are skipped: those files are simply copied.
+		static void ReadHashes(StringView dir, Dictionary<String, String> outHashes)
+		{
+			String p = scope .();
+			Join(p, dir, "files.sha256");
+			String text = scope .();
+			if (File.ReadAllText(p, text) case .Err)
+				return;
+			for (var line in text.Split('\n'))
+			{
+				line.Trim();
+				if (line.Length < 67 || line[64] != ' ')
+					continue;
+				StringView hex = line.Substring(0, 64);
+				StringView path = line.Substring(65);
+				path.Trim();
+				if (path.StartsWith('*'))
+					path.RemoveFromStart(1);
+				if (!IsSafeRelative(path) || outHashes.ContainsKeyAlt(path))
+					continue;
+				outHashes[new String(path)] = new String(hex);
+			}
 		}
 
 		/// Removes the folders of `rel` below `root` that the removal left empty (best effort).
@@ -657,7 +715,11 @@ namespace Treadle.Update
 			String previous = scope .();
 			Join(previous, updateDir, "old");
 			String reason = scope .();
-			if (!Swap(install, staged, previous, reason, log))
+			InstallProgress window = InstallProgress.Start(to.IsEmpty ? "update" : to);
+			delegate void(StringView, int, int) show = scope (phase, done, total) => window?.Set(phase, done, total);
+			bool swapped = Swap(install, staged, previous, reason, log, show);
+			delete window; // closes it
+			if (!swapped)
 			{
 				log(scope $"update failed: {reason}");
 				WriteResult(updateDir, false, from, to, scope $"The update to {to} could not be installed: {reason}. {from} was kept.");
