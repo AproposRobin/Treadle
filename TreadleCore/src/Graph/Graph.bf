@@ -559,9 +559,22 @@ namespace Treadle.Graph
 			case .Fatal: outTitle.Append("Fatal");
 			case .Return: outTitle.Append("Return");
 			case .ChainCtor: outTitle.Append((Text == "this") ? "This Constructor" : "Base Constructor");
-			case .Operator: outTitle.Append(Text);
+			case .Operator: outTitle.Append((Text == "valid") ? "Is Valid" : (StringView)Text);
 			case .Select: outTitle.Append("Select");
-			case .Cast: outTitle.Append("Cast To "); ShortTypeName(Text, outTitle);
+			case .Cast:
+				if (HasSetting("test"))
+				{
+					outTitle.Append("Is ");
+					if (Text.IsEmpty)
+						outTitle.Append("Type");
+					else
+						ShortTypeName(Text, outTitle);
+				}
+				else
+				{
+					outTitle.Append("Cast To ");
+					ShortTypeName(Text, outTitle);
+				}
 			case .Make: outTitle.Append("Make "); ShortTypeName(Text, outTitle);
 			case .BreakStruct: outTitle.Append("Break "); ShortTypeName(Text, outTitle);
 			case .MakeCase: outTitle.Append("Make "); ShortCaseName(Text, outTitle);

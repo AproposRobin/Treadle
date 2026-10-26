@@ -2331,6 +2331,37 @@ namespace Treadle.Backend.Emit
 			let suffix = (op.Type.IsFloat && op.Type.Bits == 32) ? "f32" : "f64";
 			switch (op.Sub)
 			{
+			case "obj.valid":
+				// Is Valid: not null; in Debug also not deleted (a Delete leaves the poison vtable and keeps
+				// the memory in quarantine, treadle_rt.c).
+				String o = scope .();
+				V(op.Args[0], o);
+				if (!mDbg || !op.Args[0].Type.IsObjectRef)
+				{
+					I(scope $"{r} = icmp ne ptr {o}, null");
+					Def(op.Result, r);
+					return;
+				}
+				String pre = scope .();
+				Label(pre);
+				String chk = scope .();
+				Label(chk);
+				String done = scope .();
+				Label(done);
+				I(scope $"br label %{pre}");
+				LabelLine(pre);
+				let nn = T();
+				I(scope $"%t{nn} = icmp ne ptr {o}, null");
+				I(scope $"br i1 %t{nn}, label %{chk}, label %{done}");
+				LabelLine(chk);
+				let vt = T();
+				I(scope $"%t{vt} = load ptr, ptr {o}, align 8");
+				let live = T();
+				I(scope $"%t{live} = icmp ne ptr %t{vt}, @rt_poison_vtable");
+				I(scope $"br label %{done}");
+				LabelLine(done);
+				I(scope $"{r} = phi i1 [ false, %{pre} ], [ %t{live}, %{chk} ]");
+				Def(op.Result, r);
 			case "sqrt", "fabs", "floor", "ceil", "sin", "cos", "exp", "log", "trunc", "round", "tan", "asin", "acos", "atan":
 				U.NeedIntrinsic(scope $"declare {ll} @llvm.{op.Sub}.{suffix}({ll})");
 				I(scope $"{r} = call {ll} @llvm.{op.Sub}.{suffix}({args})");

@@ -687,9 +687,47 @@ static void SetInitialFolder(IFileOpenDialog* dlg, const char* initialDir)
 }
 
 // The dialog's file system path, as UTF-8 in outPath. False when there is none or it does not fit.
-static bool ReadDialogResult(IFileOpenDialog* dlg, char* outPath, int outCap)
+static bool ReadDialogResult(IFileOpenDialog* dlg, char* outPath, int outCap, bool multi)
 {
 	bool ok = false;
+	if (multi)
+	{
+		IShellItemArray* items = nullptr;
+		DWORD count = 0;
+		if (FAILED(dlg->GetResults(&items)) || items == nullptr)
+			return false;
+		items->GetCount(&count);
+		int len = 0;
+		for (DWORD i = 0; i < count; i++)
+		{
+			IShellItem* item = nullptr;
+			if (SUCCEEDED(items->GetItemAt(i, &item)) && item != nullptr)
+			{
+				PWSTR wpath = nullptr;
+				if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &wpath)) && wpath != nullptr)
+				{
+					char tmp[2048];
+					if (WideCharToMultiByte(CP_UTF8, 0, wpath, -1, tmp, sizeof(tmp), nullptr, nullptr) > 0)
+					{
+						int n = (int)strlen(tmp);
+						if (len + n + 2 <= outCap)
+						{
+							if (len > 0)
+								outPath[len++] = '\n';
+							memcpy(outPath + len, tmp, (size_t)n);
+							len += n;
+							outPath[len] = 0;
+							ok = true;
+						}
+					}
+					CoTaskMemFree(wpath);
+				}
+				item->Release();
+			}
+		}
+		items->Release();
+		return ok;
+	}
 	IShellItem* item = nullptr;
 	if (SUCCEEDED(dlg->GetResult(&item)) && item != nullptr)
 	{
@@ -714,20 +752,35 @@ static HWND OwnerWindow()
 	return SDL_GetWindowWMInfo(gWindow, &info) ? info.info.win.window : nullptr;
 }
 
-static void ConfigureDialog(IFileOpenDialog* dlg, int pickFolder)
+// mode: 0 a Treadle file, 1 a folder, 2 C headers (several), 3 any file.
+static void ConfigureDialog(IFileOpenDialog* dlg, int mode)
 {
 	DWORD opts = 0;
 	dlg->GetOptions(&opts);
 	opts |= FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST;
-	opts |= pickFolder ? FOS_PICKFOLDERS : FOS_FILEMUSTEXIST;
+	opts |= (mode == 1) ? FOS_PICKFOLDERS : FOS_FILEMUSTEXIST;
+	if (mode == 2)
+		opts |= FOS_ALLOWMULTISELECT;
 	dlg->SetOptions(opts);
-	if (pickFolder)
-		dlg->SetTitle(L"Open Beef Project Folder");
+	if (mode == 1)
+		dlg->SetTitle(L"Open Treadle Project Folder");
+	else if (mode == 2)
+	{
+		COMDLG_FILTERSPEC filters[] = { { L"C headers (*.h;*.hpp;*.hh)", L"*.h;*.hpp;*.hh" }, { L"C import sets (*.cimport)", L"*.cimport" }, { L"All files (*.*)", L"*.*" } };
+		dlg->SetFileTypes(3, filters);
+		dlg->SetTitle(L"Import C headers");
+	}
+	else if (mode == 3)
+	{
+		COMDLG_FILTERSPEC filters[] = { { L"All files (*.*)", L"*.*" } };
+		dlg->SetFileTypes(1, filters);
+		dlg->SetTitle(L"Choose a file");
+	}
 	else
 	{
-		COMDLG_FILTERSPEC filters[] = { { L"Beef Source (*.bf)", L"*.bf" }, { L"All Files", L"*.*" } };
-		dlg->SetFileTypes(2, filters);
-		dlg->SetTitle(L"Open Beef File");
+		COMDLG_FILTERSPEC filters[] = { { L"Treadle types (*.treadle)", L"*.treadle" }, { L"Treadle projects (*.tproj)", L"*.tproj" }, { L"All files (*.*)", L"*.*" } };
+		dlg->SetFileTypes(3, filters);
+		dlg->SetTitle(L"Open Treadle file");
 	}
 }
 
@@ -741,7 +794,7 @@ static int NativeDialogWin32(int pickFolder, const char* initialDir, char* outPa
 	{
 		ConfigureDialog(dlg, pickFolder);
 		SetInitialFolder(dlg, initialDir);
-		result = (SUCCEEDED(dlg->Show(OwnerWindow())) && ReadDialogResult(dlg, outPath, outCap)) ? 1 : 0;
+		result = (SUCCEEDED(dlg->Show(OwnerWindow())) && ReadDialogResult(dlg, outPath, outCap, pickFolder == 2)) ? 1 : 0;
 		dlg->Release();
 	}
 	if (SUCCEEDED(initHr))
@@ -774,18 +827,29 @@ static int NativeDialogZenity(int pickFolder, const char* initialDir, char* outP
 	filenameArg[0] = 0;
 	if (initialDir != nullptr && initialDir[0] != 0)
 		snprintf(filenameArg, sizeof(filenameArg), "--filename=%s/", initialDir);
-	const char* argv[8];
+	const char* argv[12];
 	int argc = 0;
 	argv[argc++] = "zenity";
 	argv[argc++] = "--file-selection";
-	if (pickFolder)
+	if (pickFolder == 1)
 		argv[argc++] = "--directory";
-	else
+	else if (pickFolder == 2)
 	{
-		argv[argc++] = "--file-filter=Beef source | *.bf";
+		argv[argc++] = "--multiple";
+		argv[argc++] = "--separator=\n";
+		argv[argc++] = "--title=Import C headers";
+		argv[argc++] = "--file-filter=C headers | *.h *.hpp *.hh";
+		argv[argc++] = "--file-filter=C import sets | *.cimport";
 		argv[argc++] = "--file-filter=All files | *";
 	}
-	if (filenameArg[0] != 0)
+	else if (pickFolder == 3)
+		argv[argc++] = "--file-filter=All files | *";
+	else
+	{
+		argv[argc++] = "--file-filter=Treadle types | *.treadle";
+		argv[argc++] = "--file-filter=Treadle projects | *.tproj";
+		argv[argc++] = "--file-filter=All files | *";
+	}
 		argv[argc++] = filenameArg;
 	argv[argc] = nullptr;
 	int fds[2];

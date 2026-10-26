@@ -2037,6 +2037,19 @@ namespace Treadle.Compiler
 			let n = b.Node;
 			b.Flow = false;
 			StringView op = n.Text;
+			if (op == "valid")
+			{
+				// Is Valid: an object (a class, an interface, a delegate, a String), a pointer or a `T?` in; true
+				// when it holds something, and in Debug for an object that was not deleted (Lower: obj.valid).
+				b.OpImpl = .Builtin;
+				let ta = InType(b, "a");
+				b.OperandType = ta ?? T.Error;
+				if (ta != null && !ta.IsError && !(ta.IsReference || ta.IsPointer || ta.Kind == .Nullable))
+					Err(b, "a", "T2133", scope $"Is Valid takes an object, a pointer or a T?, not a {S!(ta)}: a {S!(ta)} always holds a value");
+				b.AddIn("a", ta ?? T.Error, false, "Object");
+				b.AddOut("result", T.Bool);
+				return;
+			}
 			let unary = op == "!" || op == "~" || op == "neg";
 			let logical = op == "&&" || op == "||" || op == "!";
 			let compare = op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">=";
@@ -2298,6 +2311,15 @@ namespace Treadle.Compiler
 				}
 			}
 			b.AddIn("value", inType, false, "Value");
+			if (n.HasSetting("test"))
+			{
+				// Is Type: a Class Cast that only tests; a value node whose result is true when the object
+				// is a T (false for null).
+				if (b.Cast != .Class && from != null && !from.IsError && !to.IsError)
+					Err(b, "value", "T2157", scope $"Is Type tests an object against a class or an interface, not a {S!(from)} against {S!(to)}");
+				b.AddOut("result", T.Bool);
+				return;
+			}
 			if (b.Checked)
 			{
 				// Succeeded (`then`) runs with Result, Failed when the object is not a T (or null), or

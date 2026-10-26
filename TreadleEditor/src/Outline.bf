@@ -120,12 +120,22 @@ namespace Treadle.Editor
 					else
 						InheritanceLine(h, docName);
 					String header = scope .();
-					header.AppendF("{}  {}  ", KindIcon(h.Kind), docName);
+					// The kind's glyph is drawn over the blank start of the label in the kind's colour (TypeStyle).
+					let kindGlyph = KindIcon(h.Kind);
+					int pad = (int)Math.Ceiling(Gui.CalcTextSize(kindGlyph).x / Math.Max(1.0f, Gui.CalcTextSize(" ").x));
+					header.Append(' ', pad);
+					header.AppendF("  {}  ###outlinetype", docName);
 					Gui.igPushStyleColor_U32(Col.Header, Theme.Mix(Look.Header, Look.AccentBlue, 0.35f));
 					Gui.igPushStyleColor_U32(Col.HeaderHovered, Theme.Mix(Look.Dropdown, Look.AccentBlue, 0.35f));
 					Gui.igPushStyleColor_U32(Col.Text, Look.ForegroundHover);
 					bool open = Gui.CollapsingHeader(header, TreeNodeFlags.DefaultOpen);
 					Gui.igPopStyleColor(3);
+					{
+						let gmin = Gui.igGetItemRectMin();
+						let gmax = Gui.igGetItemRectMax();
+						float gfs = Gui.igGetFontSize();
+						Gui.DrawText(Gui.igGetWindowDrawList(), .(gmin.x + gfs * 1.9f, gmin.y + (gmax.y - gmin.y - gfs) * 0.5f), TypeStyle.KindColor(h.Kind), kindGlyph);
+					}
 					List<InheritedFn> required = scope .();
 					List<InheritedFn> overridable = scope .();
 					defer { ClearAndDeleteItems!(required); ClearAndDeleteItems!(overridable); }
@@ -239,7 +249,7 @@ namespace Treadle.Editor
 			bool member = OutlineSel == .Member && SelectedMember != null;
 			bool local = OutlineSel == .Local && mSelLocalActive;
 			if (Gui.IsKeyPressed(573 /* F2 */, false) && (member || local))
-				FocusNameField();
+				StartOutlineRename();
 			if (Gui.IsKeyPressed(Key.Delete, false) && (member || local))
 				DeleteOutlineSelection();
 			if (Gui.IsKeyPressed(Key.Enter, false) && member)
@@ -382,7 +392,7 @@ namespace Treadle.Editor
 			if (IconItem(Icon.Pencil, "Rename...", "F2"))
 			{
 				SelectOutline(.Member, m);
-				FocusNameField();
+				StartOutlineRename();
 			}
 			if (m.Kind == .Function && Doc.Header.Kind == .Class && !m.Static)
 			{
@@ -490,13 +500,19 @@ namespace Treadle.Editor
 					if (m != null)
 						SelectOutline(.Member, m);
 				}
+				bool renamable = m != null && m.Kind == .Function && mg.Role == .Body;
+				if (renamable && Gui.igIsItemHovered(0) && Gui.igIsMouseDoubleClicked_Nil(0))
+					StartInlineRename(m);
+				bool renaming = renamable && InlineRenaming(m);
 				{
-					// The row: an icon (red for an override) and the name.
+					// The row: an icon (red for an override) and the name (what is typed for it while it is renamed).
 					let dl = Gui.igGetWindowDrawList();
 					let max = Gui.igGetItemRectMax();
 					float ty = rowPos.y + (max.y - rowPos.y - fs) * 0.5f;
 					Gui.DrawText(dl, .(rowPos.x + 14 * Look.Scale, ty), overrides ? Theme.HeaderOverride : Look.ForegroundDim, Icon.Function);
-					Gui.DrawText(dl, .(rowPos.x + 14 * Look.Scale + fs * 1.5f, ty), selected ? Look.ForegroundHover : Look.Foreground, mg.Name);
+					if (!renaming)
+						Gui.DrawText(dl, .(rowPos.x + 14 * Look.Scale + fs * 1.5f, ty), selected ? Look.ForegroundHover : Look.Foreground,
+							renamable ? LiveName(scope $"##mname{m.Serial}", mg.Name) : (StringView)mg.Name);
 					if (m != null && m.Static)
 					{
 						float tw = Gui.CalcTextSize("static").x;
@@ -560,6 +576,8 @@ namespace Treadle.Editor
 					}
 					Gui.EndPopup();
 				}
+				if (renaming)
+					InlineRenameMemberRow(m, .(rowPos.x + 14 * Look.Scale + fs * 1.5f, rowPos.y), Gui.igGetContentRegionAvail().x - 20 * Look.Scale - fs * 1.5f);
 				Gui.PopID();
 				if (mg.Role != .Lambda)
 					DrawLambdaRows(mg, currentKey, 0);
@@ -654,6 +672,7 @@ namespace Treadle.Editor
 						return;
 				}
 			}
+			DrawInheritedFields(); // InheritedVariables.bf: the base classes' variables this class can use
 		}
 
 		/// How many Category headers the VARIABLES section drew last frame (the self test).
@@ -697,13 +716,17 @@ namespace Treadle.Editor
 			Gui.PushID((int32)(20000 + Doc.Members.IndexOf(m)));
 			let cur = Gui.igGetCursorScreenPos() + ImVec2(indent, 0);
 			bool selected = OutlineSel == .Member && mSelMemberSerial == m.Serial;
-			if (Gui.Selectable("##field", selected))
+			if (Gui.Selectable("##field", selected, SelectableFlags.AllowDoubleClick))
 				SelectOutline(.Member, m);
+			if (Gui.igIsItemHovered(0) && Gui.igIsMouseDoubleClicked_Nil(0))
+				StartInlineRename(m);
+			bool renaming = InlineRenaming(m);
 			String type = scope .();
 			m.Type?.ToString(type);
 			let dl = Gui.igGetWindowDrawList();
 			Gui.ImDrawList_AddRectFilled(dl, .(cur.x + 14 * Look.Scale, cur.y + h * 0.22f), .(cur.x + 34 * Look.Scale, cur.y + h * 0.78f), Theme.TypeColor(type), h * 0.3f, 0);
-			Gui.DrawText(dl, .(cur.x + 42 * Look.Scale, cur.y), selected ? Look.ForegroundHover : Look.Foreground, m.Name);
+			if (!renaming)
+				Gui.DrawText(dl, .(cur.x + 42 * Look.Scale, cur.y), selected ? Look.ForegroundHover : Look.Foreground, LiveName(scope $"##mname{m.Serial}", m.Name));
 			{
 				let max = Gui.igGetItemRectMax();
 				String fit = scope .();
@@ -733,6 +756,8 @@ namespace Treadle.Editor
 				Gui.PopID();
 				return true;
 			}
+			if (renaming)
+				InlineRenameMemberRow(m, .(cur.x + 42 * Look.Scale, cur.y), Gui.igGetContentRegionAvail().x - 46 * Look.Scale - (cur.x - Gui.igGetCursorScreenPos().x));
 			Gui.PopID();
 			return false;
 		}
@@ -821,16 +846,20 @@ namespace Treadle.Editor
 				Gui.PushID((int32)(10000 + @local.Index));
 				let cur = Gui.igGetCursorScreenPos();
 				bool selected = mSelLocalActive && OutlineSel == .Local && mSelLocalName == local.Name;
-				if (Gui.Selectable(scope $"##local{@local.Index}", selected))
+				if (Gui.Selectable(scope $"##local{@local.Index}", selected, SelectableFlags.AllowDoubleClick))
 				{
 					mSelLocalActive = true;
 					mSelLocalName.Set(local.Name);
 					SelectOutline(.Local);
 				}
+				if (Gui.igIsItemHovered(0) && Gui.igIsMouseDoubleClicked_Nil(0))
+					StartInlineRenameLocal(local.Name);
+				bool renaming = InlineRenamingLocal(local.Name);
 				let dl = Gui.igGetWindowDrawList();
 				let col = Theme.TypeColor(local.GetTypeText(.. scope String()));
 				Gui.ImDrawList_AddRectFilled(dl, .(cur.x + 14 * Look.Scale, cur.y + h * 0.22f), .(cur.x + 34 * Look.Scale, cur.y + h * 0.78f), col, h * 0.3f, 0);
-				Gui.DrawText(dl, .(cur.x + 42 * Look.Scale, cur.y), selected ? Look.ForegroundHover : Look.Foreground, local.Name);
+				if (!renaming)
+					Gui.DrawText(dl, .(cur.x + 42 * Look.Scale, cur.y), selected ? Look.ForegroundHover : Look.Foreground, selected ? LiveName("##lname", local.Name) : (StringView)local.Name);
 				{
 					let max = Gui.igGetItemRectMax();
 					String fit = scope .();
@@ -866,6 +895,15 @@ namespace Treadle.Editor
 						return;
 					}
 					Gui.EndPopup();
+				}
+				if (renaming)
+				{
+					InlineRenameLocalRow(mg, local, .(cur.x + 42 * Look.Scale, cur.y), Gui.igGetContentRegionAvail().x - 46 * Look.Scale);
+					if (mIrId.IsEmpty)
+					{
+						Gui.PopID();
+						break; // committed: the next frame draws the renamed list
+					}
 				}
 				Gui.PopID();
 			}

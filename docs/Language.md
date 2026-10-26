@@ -92,7 +92,7 @@ aliases for `uint`/`int` in the C import layer.
 * **Nullability.** Class, interface, delegate and array references may hold `null` (Beef's rule). Reading a
   member through `null` is a **fatal error** with the node id in debug builds and undefined in release.
   **Decision:** no non-null reference types in the first version; a null test is an `==` / `!=` Operator
-  against `null` feeding a Branch (an **Is Valid** node that does both is planned, not built), and `T?` covers
+  against `null` feeding a Branch, or the **Is Valid** Operator (`valid`: not null, and in Debug not deleted), and `T?` covers
   value types. Reason: non-null tracking across graphs is a large feature; it is listed as an open question in
   `Roadmap.md` (private).
 * **Nullable values** `T?` (a struct, an enum or a primitive `T` and a has-value flag): `==` / `!=` against the
@@ -846,11 +846,12 @@ New or changed for Treadle:
 | **Split Struct Pin** / **Recombine Struct Pin** | Show a struct pin as one pin per field on the same node (the Make / Break it stands for), and back |
 | **Make Case** / **Is Case** | Build a payload enum case; test for one |
 | **Result: match**, **Try**, **Fatal** | Error handling nodes |
-| **Is Valid** | Branch on `null` (planned; [2.2](#22-values-vs-references)) |
+| **Is Valid** | An object, a `T?` or a pointer holds something: not null, and in Debug not deleted ([2.2](#22-values-vs-references)) |
+| **Is Type** | An object is of a class or implements an interface (a class Cast that only tests, `set test`) |
 | **Extract to Function** | Move the selected nodes into a new function and leave a Call in their place ("collapse to function" elsewhere) |
 | **Collapse Nodes** / **node group** | Fold a selection into one group node with a pin per wire crossing its edge; a view only, the compiler ignores it |
 | **Hide Unwired Pins** | Draw one node compact (its unwired pins hidden) |
-| **Make variable** / **Make local variable** | From a pin: a new field / local of the pin's type with its Get or Set wired in (the way to evaluate a value once, [5.2](#52-value-nodes-and-evaluation-order)) |
+| **Create variable** / **Create local variable** | From a pin: a new field / local of the pin's type with its Get or Set wired in (an output's readers move onto a Get) (the way to evaluate a value once, [5.2](#52-value-nodes-and-evaluation-order)) |
 | **Pure** | A function with no side effects; its calls are value nodes |
 | **Mutating** | A struct function that writes its own fields |
 | **Unsafe** | A Sheet or block where pointer nodes are allowed |

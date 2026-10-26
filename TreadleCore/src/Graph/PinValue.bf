@@ -281,6 +281,34 @@ namespace Treadle.Graph
 				why?.Set(scope $"'{t}' is not a number.");
 				return false;
 			}
+			if (kind == .Number && IntegerBounds(typeName, let lo, let hi))
+			{
+				// An integer type takes a whole number in its range.
+				var digits = t;
+				if (digits.StartsWith('+'))
+					digits = digits.Substring(1);
+				bool neg = digits.StartsWith('-');
+				bool whole = !digits.IsEmpty;
+				for (int i = neg ? 1 : 0; i < digits.Length; i++)
+					whole &= digits[i].IsDigit;
+				if (!whole || (neg && digits.Length == 1))
+				{
+					why?.Set(scope $"'{t}' is not a whole number: a {typeName} holds whole numbers from {lo} to {hi}.");
+					return false;
+				}
+				bool fits;
+				if (neg)
+					fits = (int64.Parse(digits) case .Ok(let v)) && lo != "0" && v >= int64.Parse(lo).GetValueOrDefault();
+				else
+					fits = (uint64.Parse(digits) case .Ok(let v)) && v <= uint64.Parse(hi).GetValueOrDefault();
+				if (!fits)
+				{
+					why?.Set(scope $"'{t}' is out of range: a {typeName} holds {lo} to {hi}.");
+					return false;
+				}
+				outLiteral.Append(digits);
+				return true;
+			}
 			if (kind == .Bool && t != "true" && t != "false")
 			{
 				why?.Set("A bool is true or false.");
@@ -319,6 +347,27 @@ namespace Treadle.Graph
 				return true;
 			}
 			outLiteral.Append(t);
+			return true;
+		}
+
+		/// The range of an integer type as text (`int8`: -128 to 127); false for any other type.
+		public static bool IntegerBounds(StringView typeName, out StringView lo, out StringView hi)
+		{
+			switch (typeName)
+			{
+			case "int8": lo = "-128"; hi = "127";
+			case "int16": lo = "-32768"; hi = "32767";
+			case "int32": lo = "-2147483648"; hi = "2147483647";
+			case "int", "int64": lo = "-9223372036854775808"; hi = "9223372036854775807";
+			case "uint8": lo = "0"; hi = "255";
+			case "uint16": lo = "0"; hi = "65535";
+			case "uint32": lo = "0"; hi = "4294967295";
+			case "uint", "uint64": lo = "0"; hi = "18446744073709551615";
+			default:
+				lo = default;
+				hi = default;
+				return false;
+			}
 			return true;
 		}
 

@@ -1336,6 +1336,33 @@ namespace Treadle.Compiler
 			StringView op = n.Node.Text;
 			let key = n.Key;
 			let result = Sub(n.FindOut("result").Type, n);
+			if (op == "valid")
+			{
+				// Is Valid: a `T?`'s has-value flag; an object not null (and in Debug not deleted: the back
+				// end's obj.valid reads the poisoned vtable a Delete leaves); anything else not null.
+				let a = EvalIn(n, "a");
+				let at = Sub(n.OperandType ?? T.Error, n);
+				if (at.Kind == .Nullable)
+				{
+					let has = E.Op(.Extract, T.Bool, key, "result");
+					has.Operands.Add(a);
+					has.Index = 1;
+					return has;
+				}
+				if (at.IsClass || at.IsInterface)
+				{
+					let valid = E.Op(.Intrinsic, T.Bool, key, "result");
+					valid.Sub = new String("obj.valid");
+					valid.Operands.Add(a);
+					return valid;
+				}
+				let nul = E.Const("null", a.Type, key, "result");
+				let ne = E.Op(.Cmp, T.Bool, key, "result");
+				ne.Sub = new String("ne");
+				ne.Operands.Add(a);
+				ne.Operands.Add(nul);
+				return ne;
+			}
 			if (op == "&&" || op == "||")
 			{
 				// Rule 4: B only when A does not decide.
@@ -1453,6 +1480,16 @@ namespace Treadle.Compiler
 			let op = E.Op(kind, to, key, "result");
 			op.Operands.Add(v);
 			M.Need(to);
+			if (n.Node.HasSetting("test"))
+			{
+				// Is Type: whether the class cast gives an object.
+				let nul = E.Const("null", to, key, "result");
+				let ok = E.Op(.Cmp, T.Bool, key, "result");
+				ok.Sub = new String("ne");
+				ok.Operands.Add(op);
+				ok.Operands.Add(nul);
+				return ok;
+			}
 			return op;
 		}
 

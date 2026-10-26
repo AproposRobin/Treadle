@@ -194,6 +194,12 @@ namespace Treadle.Editor
 					mE3Phase--;
 				mSelfTestWait = Math.Max(mSelfTestWait, 2);
 				return false;
+			case 5:
+				// The first-use findings (SelfTestSheet1.bf): one phase per frame on this project.
+				if (!SelfTestSheet1())
+					mE3Phase--;
+				mSelfTestWait = Math.Max(mSelfTestWait, 2);
+				return false;
 			default:
 				// File > Close Project, then the folder goes.
 				for (let d in mDocs)

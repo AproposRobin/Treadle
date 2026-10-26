@@ -65,6 +65,7 @@ destination node id, then destination pin, then source node id, then source pin;
 |---|---|---|
 | `type` | `type <Name> <class\|struct\|interface\|enum\|delegate\|extension>` | `namespace A.B`, `uses A.C` (repeatable), `base Type`, `implements Iface` (repeatable), `generic T [constraints...]` (repeatable: `generic T IFoo class`, `generic const N int`), `access`, `abstract`, `sealed`, `static`, `underlying int32` (enum), `extends Type` (extension), `signature ret(params)` (delegate), `attr Name arg...`, `doc "text"` |
 | `field` | `field <name> <Type>` | `static`, `const` (a constant, [Language.md 4.6](Language.md#46-constants): static whether `static` is written or not), `readonly`, `access`, `init <token>` (literal, `.Case`, `default`, `null`; a `const` field's init is a constant expression, the rest of the line: `init Cols * 60 + Gap * 2`; a vector constant: `init float4(0, 1, 0, 0)`, `init Up * 2 + 1`), `elements <expr>, <expr>, ...` (a `const` field of type `T[]`: its values, constant expressions separated by commas, the rest of the line: `elements 1, 2, Rows`), `owner <owned\|ref\|appended\|pointer\|custom>`, `category "text"` (the group the Outline and the Node menu list it under; free text, section 2), `attr`, `doc` |
+| `basedefault` | `basedefault <name> <token>` | Reserved (not written or read yet; a reader keeps it as an unknown record): a class's own starting value for a variable it inherits, applied after the base constructor runs |
 | `case` | `case <Name> [= value]` (enum) | `payload <name> <Type>` (repeatable, for payload enums), `doc` |
 | `property` | `property <id> <name> <Type>` | `static`, `auto` (hidden field, no Sheets), `access`, `attr`, `doc`; `get` / `set` presence is given by the Sheet records that follow (`sheet get`, `sheet set`) |
 | `function` | `function <id> <name>` | `static`, `virtual`, `abstract`, `override`, `sealed`, `pure`, `unsafe`, `mutating`, `inline`, `access`, `returns <Type>` (default `void`), `generic T ...`, `cconv cdecl\|stdcall`, `attr`, `doc` |
@@ -103,9 +104,9 @@ destination node id, then destination pin, then source node id, then source pin;
 | `ResultMatch` | - | `in`, `result` -> `ok`, `value`, `err`, `error`, `done` | - |
 | `Try` | - | `in`, `result` -> `then`, `value` | - |
 | `Fatal` | - | `in`, `message` | - |
-| `Operator` | `+ - * / % == != < > <= >= && \|\| ! & \| ^ << >> ~ neg` | `a`, `b` -> `result` | - |
+| `Operator` | `+ - * / % == != < > <= >= && \|\| ! & \| ^ << >> ~ neg valid` | `a`, `b` -> `result`; `valid` (Is Valid): `a` -> `result` (bool) | - |
 | `Select` | - | `condition`, `true`, `false` -> `result` | - |
-| `Cast` | Type | `value` -> `result`; with `set checked` a flow node: `in`, `value` -> `then` (Succeeded), `failed`, `result`; with `set kind box` a flow node: `in`, `value` -> `then`, `result` | `set kind numeric\|class\|unchecked\|box\|unbox`, `set checked` |
+| `Cast` | Type | `value` -> `result`; with `set checked` a flow node: `in`, `value` -> `then` (Succeeded), `failed`, `result`; with `set kind box` a flow node: `in`, `value` -> `then`, `result`; with `set test` (Is Type) a value node: `value` -> `result` (bool) | `set kind numeric\|class\|unchecked\|box\|unbox`, `set checked`, `set test` |
 | `Make` / `Break` | struct or tuple Type | Make: fields -> `value`; Break: `value` -> fields | - |
 | `MakeCase` / `IsCase` | `Enum.Case` | MakeCase: payload fields -> `value`; IsCase: `value` -> `result`, payload fields | - |
 | `Index` | - | `collection`, `index` -> `value` | `set checked` (kept; not honoured yet, [Language.md 3.1](Language.md#31-debug-checks)) |

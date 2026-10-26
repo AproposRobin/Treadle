@@ -67,6 +67,8 @@ namespace Treadle.Editor
 		{
 			switch (kind)
 			{
+			case .Bool:
+				return 24;
 			case .Char:
 				return 44;
 			case .Vector:
@@ -119,9 +121,34 @@ namespace Treadle.Editor
 			switch (kind)
 			{
 			case .Bool:
+				// A checkbox that reads on any node colour and zoom: at least 15 px, framed in the pin's
+				// colour, a light tick on a mid-grey box.
 				bool v = value == "true";
-				if (Gui.Checkbox("##b", &v))
+				float sz = Math.Max(Gui.igGetFrameHeight(), 15 * Look.Scale);
+				let p0 = Gui.igGetCursorScreenPos();
+				bool clicked = Gui.igInvisibleButton("##b", .(sz, sz), ButtonFlags.MouseButtonLeft);
+				bool hov = Gui.igIsItemHovered(0);
 				{
+					let dl = Gui.igGetWindowDrawList();
+					let pc = Theme.TypeColor(typeName.IsEmpty ? "bool" : typeName);
+					let p1 = ImVec2(p0.x + sz, p0.y + sz);
+					Gui.ImDrawList_AddRectFilled(dl, p0, p1, hov ? Gui.Color(84, 84, 84) : Gui.Color(58, 58, 58), 3 * Look.Scale, 0);
+					Gui.ImDrawList_AddRect(dl, p0, p1, pc, 3 * Look.Scale, Math.Max(1.5f, sz * 0.09f), 0);
+					if (v)
+					{
+						float t = Math.Max(2, sz * 0.13f);
+						let a = ImVec2(p0.x + sz * 0.22f, p0.y + sz * 0.52f);
+						let b = ImVec2(p0.x + sz * 0.42f, p0.y + sz * 0.72f);
+						let c = ImVec2(p0.x + sz * 0.78f, p0.y + sz * 0.28f);
+						Gui.ImDrawList_AddLine(dl, a, b, Gui.Color(245, 245, 245), t);
+						Gui.ImDrawList_AddLine(dl, b, c, Gui.Color(245, 245, 245), t);
+					}
+					if (hov)
+						Gui.Tooltip(v ? "true (click for false)" : "false (click for true)");
+				}
+				if (clicked)
+				{
+					v = !v;
 					app.BeginEdit();
 					value.Set(v ? "true" : "false");
 					changedValue = true;
@@ -454,7 +481,14 @@ namespace Treadle.Editor
 				PinValue.Display(kind, typeName, value, shown);
 			mBuf.Set(shown);
 			Gui.igSetNextItemWidth(width);
-			bool typed = Gui.igInputTextWithHint("##t", scope String(Hint(kind)), mBuf.Ptr, (.)mBuf.Capacity, 0, null, null);
+			// A number field takes what its type holds as it is typed: an integer whole numbers (no point), a float a decimal.
+			bool isInt = kind == .Number && PinValue.IntegerBounds(typeName, ?, ?);
+			int32 flags = (kind == .Number) ? (isInt ? (1 << 0) /* CharsDecimal */ : (1 << 2) /* CharsScientific */) : 0;
+			StringView hint = (kind == .Number) ? (isInt ? "0" : "0.0") : Hint(kind);
+			bool typed = Gui.igInputTextWithHint("##t", scope String(hint), mBuf.Ptr, (.)mBuf.Capacity, flags, null, null);
+			// Framed in the pin's colour: the field reads as this pin's value on a dark or light node.
+			if (!typeName.IsEmpty)
+				Gui.ImDrawList_AddRect(Gui.igGetWindowDrawList(), Gui.igGetItemRectMin(), Gui.igGetItemRectMax(), Theme.WithAlpha(Theme.TypeColor(typeName), 170), 3 * Look.Scale, 1, 0);
 			if (typed)
 			{
 				mEditPin = id;

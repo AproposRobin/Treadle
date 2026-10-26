@@ -266,27 +266,69 @@ namespace Treadle.Editor
 				if (!CheckWritable())
 					return;
 				String header = scope .(pickedHeader);
+				List<String> more = scope .();
+				defer { ClearAndDeleteItems!(more); }
 				if (header.IsEmpty)
 				{
-					char8[4096] buf = default;
-					let picked = ImGui.Host.th_native_dialog(0, scope String(mProjectRoot), &buf, 4096);
+					char8[8192] buf = default;
+					let picked = ImGui.Host.th_native_dialog(2, scope String(mProjectRoot), &buf, 8192);
 					if (picked == -1)
 						SetStatus("The project has no .cimport file, and there is no file dialog here to pick a header: write the set by hand (docs/C-Import.md).", .Warning);
 					if (picked != 1)
 						return;
-					header.Set(StringView(&buf));
+					// Several files come back one per line: a .cimport set is listed, a header gets a set of its own.
+					for (let line in StringView(&buf).Split('\n'))
+					{
+						if (line.IsEmpty)
+							continue;
+						if (line.EndsWith(".cimport", .OrdinalIgnoreCase))
+						{
+							if (AddProjectCImport(line))
+							{
+								String full = scope .();
+								Path.GetFullPath(line, full);
+								more.Add(new String(full));
+							}
+						}
+						else if (header.IsEmpty)
+							header.Set(line);
+						else
+							more.Add(new String(line));
+					}
+					if (header.IsEmpty && more.IsEmpty)
+						return;
 				}
-				String setPath = scope .();
-				String why = scope .();
-				if (!ImportHeader.CreateSet(mProjectRoot, Project, header, setPath, why))
+				if (!header.IsEmpty)
 				{
-					SetStatus(why, .Warning);
-					return;
+					String setPath = scope .();
+					String why = scope .();
+					if (!ImportHeader.CreateSet(mProjectRoot, Project, header, setPath, why))
+					{
+						SetStatus(why, .Warning);
+						return;
+					}
+					Notify.Log(.Info, "C import", scope $"made the C import set {setPath}");
+					files.Add(new String(setPath));
+				}
+				for (let m in more)
+				{
+					if (m.EndsWith(".cimport", .OrdinalIgnoreCase))
+						files.Add(new String(m));
+					else
+					{
+						String setPath = scope .();
+						String why = scope .();
+						if (!ImportHeader.CreateSet(mProjectRoot, Project, m, setPath, why))
+						{
+							SetStatus(why, .Warning);
+							continue;
+						}
+						Notify.Log(.Info, "C import", scope $"made the C import set {setPath}");
+						files.Add(new String(setPath));
+					}
 				}
 				if (Project != null && !ProjectPath.IsEmpty)
 					SaveProjectFile();
-				Notify.Log(.Info, "C import", scope $"made the C import set {setPath}");
-				files.Add(new String(setPath));
 			}
 			String outDir = scope $"{mProjectRoot}/build/cimport";
 			LogToolSourcesOnce();
@@ -568,10 +610,14 @@ namespace Treadle.Editor
 				PropertyGrid.InfoRow("Sets", "none: Add Set imports a C header");
 			if (PropertyGrid.ButtonRow("", scope $"{Icon.Plus} Add Set...", "A .cimport file, or a C header (it gets a set of its own)"))
 			{
-				char8[4096] buf = default;
-				let picked = ImGui.Host.th_native_dialog(0, scope String(mProjectRoot), &buf, 4096);
+				char8[8192] pbuf = default;
+				let picked = ImGui.Host.th_native_dialog(2, scope String(mProjectRoot), &pbuf, 8192);
 				if (picked == 1)
-					AddProjectCImport(StringView(&buf));
+				{
+					for (let line in StringView(&pbuf).Split('\n'))
+						if (!line.IsEmpty)
+							AddProjectCImport(line);
+				}
 				else if (picked == -1)
 					SetStatus("There is no file dialog here: File > Import C Headers makes a set for a header", .Warning);
 			}

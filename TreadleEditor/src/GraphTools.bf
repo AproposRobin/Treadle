@@ -376,6 +376,11 @@ namespace Treadle.Editor
 			if (items.IsEmpty)
 				return;
 
+			if (items.Count >= 3)
+			{
+				AlignToAnchor(tab, g, items);
+				return;
+			}
 			bool moves = false;
 			float newY = 0;
 			let first = items[0];
@@ -407,6 +412,60 @@ namespace Treadle.Editor
 			}
 			mApp.LayoutChanged();
 			mApp.SetStatus(items.Count >= 2 ? "Aligned the first selected to the second." : "Straightened.");
+		}
+
+		/// Q with three or more selected: the LAST selected is the anchor and stays; every other selected node or
+		/// reroute node wired to it lines its wire up with the anchor's pin (each to its own pin, so they never
+		/// land on one another), and a node feeding the anchor's inputs that is not left of it moves left of it.
+		/// The ones not wired to the anchor keep their place. One undo step.
+		void AlignToAnchor(GraphTab tab, Graph g, List<AlignItem> items)
+		{
+			let anchor = items.Back;
+			List<(int index, float y, float x)> moves = scope .();
+			for (int i < items.Count - 1)
+			{
+				let it = items[i];
+				float x = it.IsKnot ? 0 : it.Node.X;
+				if (!it.IsKnot && !anchor.IsKnot)
+				{
+					if (!WireBetween(g, it.Node, anchor.Node, let pa, let pb))
+						continue;
+					float y = it.Node.Y + (PinGridY(pb) - PinGridY(pa));
+					// A node feeding the anchor sits left of it.
+					if (pb.IsInput && pb.Owner == anchor.Node)
+					{
+						GetNodeSize(it.Node.Id, let w, ?);
+						if (it.Node.X + w > anchor.Node.X - 40)
+							x = Canvas.Snap(anchor.Node.X - w - 80);
+					}
+					moves.Add((i, y, x));
+				}
+				else if (AlignTarget(g, it, anchor, let y))
+					moves.Add((i, y, x));
+			}
+			if (moves.IsEmpty)
+			{
+				mApp.SetStatus("Nothing to align: none of the selected is wired to the last selected.");
+				return;
+			}
+			mApp.BeginEdit();
+			for (let mv in moves)
+			{
+				let it = items[mv.index];
+				if (it.IsKnot)
+				{
+					var pt = ref it.Route.Points[it.Knot.Index];
+					pt.Y = mv.y;
+				}
+				else
+				{
+					it.Node.Y = mv.y;
+					it.Node.X = mv.x;
+					it.Node.HasPos = true;
+				}
+			}
+			mApp.LayoutChanged();
+			mApp.SetStatus(scope $"Aligned {moves.Count} to the last selected.");
 		}
 
 		void AddKnotItems(GraphTab tab, List<AlignItem> items)

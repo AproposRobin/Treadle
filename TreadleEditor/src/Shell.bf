@@ -339,7 +339,8 @@ namespace Treadle.Editor
 			for (let d in mDocs)
 				if (d.Modified)
 					unsaved = true;
-			if (unsaved)
+			// Saving does not build: an edit since the build started leaves it "Needs build" (yellow).
+			if (unsaved || BuildStale)
 				return .Unknown;
 			if (!mBuild.Succeeded)
 				return .Error;

@@ -1070,9 +1070,10 @@ namespace Treadle.Editor
 		}
 
 		/// A `TREADLE_MEMBER` payload dropped on the Sheet at `pos` (grid), over pin `pinId` (0: none).
-		/// A variable on a pin is wired to it; elsewhere Ctrl places a Get, Alt a Set, and a plain
-		/// drop asks (a Node menu row places what it says).
-		public void DropMember(GraphTab tab, int32 index, ImVec2 pos, int32 pinId = 0)
+		/// A variable dropped on an input pin it fits places a Get wired into it, on an output pin a Set
+		/// fed by it, with no key held (Ctrl still works); a pin it does not fit refuses with the reason.
+		/// Elsewhere Ctrl places a Get, Alt a Set, and a plain drop asks (a Node menu row places what it says).
+		public void DropMember(GraphTab tab, int32 index, ImVec2 pos, int32 pinId = 0, bool testPlain = false)
 		{
 			let m = DraggedRef(index);
 			if (m == null)
@@ -1080,9 +1081,27 @@ namespace Treadle.Editor
 			let mg = CurrentMethod;
 			if (mg == null)
 				return;
-			bool asSet = Gui.IsAltDown;
+			bool asSet = Gui.IsAltDown && !testPlain;
+			Pin onPin = (pinId != 0) ? mg.Graph.FindPin(pinId) : null;
+			if (onPin != null && onPin.Kind != .Value)
+				onPin = null;
+			if (m.MemberKind == .Variable && onPin != null && !(Gui.IsAltDown && !testPlain))
+			{
+				// Onto a pin: what fits it, without asking.
+				asSet = !onPin.IsInput;
+				Node probe = asSet ? NodeFactory.Set(mg.Graph, m.Name, m.Type) : NodeFactory.Get(mg.Graph, m.Name, m.Type);
+				Pin end = asSet ? probe.FindInput("value") : probe.Result;
+				String why = scope .();
+				bool fits = end != null && (asSet ? Graph.CanConnectTyped(Language, onPin, end, why) : Graph.CanConnectTyped(Language, end, onPin, why));
+				mg.Graph.RemoveNode(probe);
+				if (!fits)
+				{
+					SetStatus(scope $"{m.Name} does not fit this pin{(why.IsEmpty ? "" : ": ")}{why}", .Warning);
+					return;
+				}
+			}
 			// UX: Ctrl+drop = Get, Alt+drop = Set, a plain drop asks (Get / Set menu).
-			if (m.MemberKind == .Variable && !Gui.IsCtrlDown && !Gui.IsAltDown)
+			else if (m.MemberKind == .Variable && (testPlain || (!Gui.IsCtrlDown && !Gui.IsAltDown)))
 			{
 				if (index != cMenuDragIndex)
 				{
@@ -1116,6 +1135,8 @@ namespace Treadle.Editor
 				let pin = mg.Graph.FindPin(pinId);
 				if (pin != null && n.Result != null && pin.IsInput && pin.Kind == .Value)
 					mg.Graph.Connect(n.Result, pin);
+				else if (pin != null && !pin.IsInput && pin.Kind == .Value && n.Kind == .Set && n.FindInput("value") != null)
+					mg.Graph.Connect(pin, n.FindInput("value"));
 			}
 			tab.SelectOnly(n.Id);
 			CommitCurrent();
@@ -1522,6 +1543,7 @@ namespace Treadle.Editor
 			}
 			delete mBuild;
 			mBuild = started.Get();
+			MarkBuilt(); // ValidationState.bf: the build state turns "Needs build" after the next edit
 			// The bottom dock stays as it is: Problems comes forward when the build fails, the Output
 			// Log when the program prints something.
 			mBuildLogged = 0;
@@ -1739,16 +1761,16 @@ namespace Treadle.Editor
 					if (Gui.IsShiftDown)
 					{
 						if (!RedoEntryChange()) // Set as entry point first (EntryPoint.bf)
-							EditDoc.Redo();
+							UndoDoc(true);
 					}
 					else if (!UndoEntryChange())
-						EditDoc.Undo();
+						UndoDoc(false);
 					UpdateTitle();
 				}
 				if (ctrl && Gui.IsKeyPressed(Key.Y, true))
 				{
 					if (!RedoEntryChange())
-						EditDoc.Redo();
+						UndoDoc(true);
 					UpdateTitle();
 				}
 			}
@@ -1883,9 +1905,9 @@ namespace Treadle.Editor
 			if (Gui.BeginMenu("Edit"))
 			{
 				if (IconItem(Icon.Undo2, "Undo", "Ctrl+Z", false, EditDoc.CanUndo || mEntryChange != null) && !UndoEntryChange())
-					EditDoc.Undo();
+					UndoDoc(false);
 				if (IconItem(Icon.Redo2, "Redo", "Ctrl+Y", false, EditDoc.CanRedo || mEntryChange != null) && !RedoEntryChange())
-					EditDoc.Redo();
+					UndoDoc(true);
 				Gui.Separator();
 				let tab = CurrentTab;
 				if (IconItem(Icon.Copy, "Copy", "Ctrl+C", false, tab != null))

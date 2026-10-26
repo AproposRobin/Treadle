@@ -2262,6 +2262,28 @@ namespace Treadle.Editor
 				Gui.ImDrawList_AddRectFilled(dl, b0, b1, ProblemColor(Gui.Color(60, 48, 10, 230)), 4 * z, 0);
 				Gui.ImDrawList_AddRect(dl, b0, b1, ProblemColor(Theme.WithAlpha(Theme.Warning, 180)), 4 * z, 1, 0);
 				Text(dl, .(b0.x + 5 * z, b0.y + 2 * z), bs, mProblemsDim ? Gui.Color(250, 220, 130, 150) : Gui.Color(250, 220, 130), badge);
+				// What the badge means, and its fix: a local variable set once in the flow.
+				Gui.PushID(node.Id);
+				if (Gui.igIsMouseHoveringRect(b0, b1, true) && !Gui.igIsAnyItemActive())
+				{
+					Gui.Tooltip(EvaluatedBadgeTip(L.Evaluated, .. scope String()));
+					if (Gui.igIsMouseClicked_Bool(1, false))
+						Gui.OpenPopup("##evalbadge");
+				}
+				if (Gui.BeginPopup("##evalbadge"))
+				{
+					Pin outPin = null;
+					for (let p in node.Outputs)
+						if (p.Kind == .Value && outPin == null)
+							outPin = p;
+					let sheet = tab.Doc?.FindSheet(tab.MethodKey);
+					if (Gui.MenuItem("Create local variable", "", false, outPin != null && sheet != null) && outPin != null && sheet != null)
+						MakeVariableFromPin(tab, sheet, outPin, false);
+					if (Gui.igIsItemHovered(0))
+						Gui.Tooltip("A Local set once from this value in the flow; the nodes that read it read the Local");
+					Gui.EndPopup();
+				}
+				Gui.PopID();
 			}
 			// A Lambda that captures: "captures N" (the list is in Properties).
 			if (node.Kind == .Lambda && L.Shape == .Normal && L.Evaluated < 2)
@@ -4226,13 +4248,27 @@ namespace Treadle.Editor
 		/// A variable name made from a pin's label (`Return Value` -> `returnValue`), or `value`.
 		public static void PinVariableBase(Pin pin, String outName) => VariableActions.VariableBase(pin, outName);
 
-		/// The pin context menu's Make variable / Make local variable for a data output: a Set of
+		/// The pin context menu's Create variable / Create local variable for a data output: a Set of
 		/// `name` fed by the pin, inserted in the flow after the pin's node (or before the first
-		/// statement that uses the value). The caller has taken the undo step and made the variable.
+		/// statement that uses the value), and the pin's readers moved onto one Get of the variable, so
+		/// the value is computed once. The caller has taken the undo step and made the variable.
 		void PlaceSetFromPin(GraphTab tab, Sheet mg, Pin pin, StringView name, StringView type, bool noReceiver = false)
 		{
 			let graph = mg.Graph;
 			let owner = pin.Owner;
+			List<int32> readers = scope .();
+			{
+				List<Link> links = scope .();
+				graph.FindLinksFrom(pin, links);
+				for (let l in links)
+					if (l.To != null)
+						readers.Add(l.To.Id);
+			}
+			defer
+			{
+				if (!readers.IsEmpty)
+					RewireReaders(graph, pin, readers, name, type, noReceiver);
+			}
 			let n = NodeFactory.Set(graph, name, type);
 			if (noReceiver && n.FindInput("receiver") != null)
 				graph.RemovePin(n.FindInput("receiver"));
@@ -4253,6 +4289,45 @@ namespace Treadle.Editor
 			tab.SelectOnly(n.Id);
 			mApp.CommitCurrent();
 			mCommitted = true;
+		}
+
+		/// Moves the readers of `pin` (input pins by id) onto one Get of the variable `name`, placed under the
+		/// first reader (Create variable / Create local variable on an output).
+		void RewireReaders(Graph graph, Pin pin, List<int32> readers, StringView name, StringView type, bool noReceiver)
+		{
+			let get = NodeFactory.Get(graph, name, type);
+			if (noReceiver && get.FindInput("receiver") != null)
+				graph.RemovePin(get.FindInput("receiver"));
+			Node first = null;
+			for (let id in readers)
+			{
+				let to = graph.FindPin(id);
+				if (to == null)
+					continue;
+				let link = graph.FindLinkTo(to);
+				if (link != null && link.From == pin)
+					graph.Disconnect(link);
+				graph.Connect(get.Result, to);
+				if (first == null)
+					first = to.Owner;
+			}
+			if (first != null)
+			{
+				get.X = Canvas.Snap(first.X - 200);
+				get.Y = Canvas.Snap(first.Y + 60);
+			}
+			else
+			{
+				get.X = Canvas.Snap(pin.Owner.X + 40);
+				get.Y = Canvas.Snap(pin.Owner.Y + 120);
+			}
+			get.HasPos = true;
+		}
+
+		/// The "evaluated Nx" badge's tooltip (Language-Guide.md, "Evaluation order").
+		public static void EvaluatedBadgeTip(int n, String outText)
+		{
+			outText.AppendF("This value node runs once for each flow node that reads it ({} here). Store it in a local variable to compute it once.\nRight-click the pin (or this badge): Create local variable", n);
 		}
 
 		/// The value an input pin goes back to with "Reset to Default".
@@ -4974,24 +5049,32 @@ namespace Treadle.Editor
 						bool memberOk = mApp.PinVariableType(mg, pin, true, type, why);
 						if (!pin.IsInput)
 						{
-							if (Gui.MenuItem("Make variable", "", false, memberOk))
+							if (Gui.MenuItem("Create variable", "", false, memberOk))
 								MakeVariableFromPin(tab, mg, pin, true);
 							if (Gui.igIsItemHovered(1 << 10 /* AllowWhenDisabled */))
-								Gui.Tooltip(memberOk ? scope $"A new {type} variable of this type (Outline > VARIABLES), set from this pin" : why);
+								Gui.Tooltip(memberOk ? scope $"A new {type} variable of this type (Outline > VARIABLES), set from this pin in the flow; what read the pin reads a Get of it" : why);
 							why.Clear();
 							type.Clear();
 							bool localOk = mApp.PinVariableType(mg, pin, false, type, why);
-							if (Gui.MenuItem("Make local variable", "", false, localOk))
+							if (Gui.MenuItem("Create local variable", "", false, localOk))
 								MakeVariableFromPin(tab, mg, pin, false);
 							if (Gui.igIsItemHovered(1 << 10 /* AllowWhenDisabled */))
-								Gui.Tooltip(localOk ? scope $"A new {type} Local of {mg.Name} (Properties > Locals), set from this pin" : why);
+								Gui.Tooltip(localOk ? scope $"A new {type} Local of {mg.Name}, set from this pin in the flow; what read the pin reads a Get of it, so the value is computed once" : why);
 						}
 						else
 						{
-							if (Gui.MenuItem("Make variable (Get)", "", false, memberOk && !graph.IsLinked(pin)))
+							bool free = !graph.IsLinked(pin);
+							if (Gui.MenuItem("Create variable", "", false, memberOk && free))
 								MakeVariableFromPin(tab, mg, pin, true);
 							if (Gui.igIsItemHovered(1 << 10 /* AllowWhenDisabled */))
-								Gui.Tooltip(!memberOk ? why : (graph.IsLinked(pin) ? "This pin is already wired" : scope $"A new {type} variable of this type (Outline > VARIABLES), read into this pin (it starts at its default)"));
+								Gui.Tooltip(!memberOk ? why : (!free ? "This pin is already wired" : scope $"A new {type} variable of this type (Outline > VARIABLES), read into this pin (it starts at its default)"));
+							why.Clear();
+							type.Clear();
+							bool localOk = mApp.PinVariableType(mg, pin, false, type, why);
+							if (Gui.MenuItem("Create local variable", "", false, localOk && free))
+								MakeVariableFromPin(tab, mg, pin, false);
+							if (Gui.igIsItemHovered(1 << 10 /* AllowWhenDisabled */))
+								Gui.Tooltip(!localOk ? why : (!free ? "This pin is already wired" : scope $"A new {type} Local of {mg.Name}, read into this pin (it starts at its default)"));
 						}
 					}
 					if (pin.Kind == .Value && pin.IsInput)
@@ -5229,6 +5312,51 @@ namespace Treadle.Editor
 			}
 			if (!Gui.IsCtrlDown && Gui.IsKeyPressed(Key.F, false))
 				FrameNodes(tab, mg.Graph, !tab.SelectedNodes.IsEmpty);
+			NudgeSelection(tab, mg.Graph);
+		}
+
+		/// A run of arrow presses being one undo step (until every arrow key is up).
+		bool mNudging;
+		/// How many nudges ran (the self test).
+		public int NudgeCount;
+
+		/// The arrow keys move the selected nodes one grid step (Shift+arrow: ten), repeating while held; a run
+		/// of presses is one undo step. Not while a text field has the keyboard.
+		public void NudgeSelection(GraphTab tab, Graph g, int testDx = 0, int testDy = 0, bool testShift = false)
+		{
+			bool anyArrow = Gui.IsKeyDown(Key.LeftArrow) || Gui.IsKeyDown(Key.RightArrow) || Gui.IsKeyDown(Key.UpArrow) || Gui.IsKeyDown(Key.DownArrow);
+			if (!anyArrow && testDx == 0 && testDy == 0)
+			{
+				mNudging = false;
+				return;
+			}
+			if (tab.SelectedNodes.IsEmpty || Gui.IsCtrlDown || Gui.IsAltDown || (Gui.igIsAnyItemActive() && testDx == 0 && testDy == 0))
+				return;
+			int dx = testDx;
+			int dy = testDy;
+			if (Gui.IsKeyPressed(Key.LeftArrow, true)) dx--;
+			if (Gui.IsKeyPressed(Key.RightArrow, true)) dx++;
+			if (Gui.IsKeyPressed(Key.UpArrow, true)) dy--;
+			if (Gui.IsKeyPressed(Key.DownArrow, true)) dy++;
+			if (dx == 0 && dy == 0)
+				return;
+			float step = Canvas.SnapGrid * ((Gui.IsShiftDown || testShift) ? 10 : 1);
+			if (!mNudging)
+			{
+				mApp.BeginEdit();
+				mNudging = anyArrow;
+			}
+			for (let id in tab.SelectedNodes)
+			{
+				let n = g.FindNode(id);
+				if (n == null)
+					continue;
+				n.X += dx * step;
+				n.Y += dy * step;
+				n.HasPos = true;
+			}
+			NudgeCount++;
+			mApp.LayoutChanged();
 		}
 
 		/// Zooms (up to 1:1) and pans so the selection, or the whole graph, fits the canvas.

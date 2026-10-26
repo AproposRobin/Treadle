@@ -30,8 +30,8 @@ debugger: no compiler or SDL2 package is needed on your system. This page is als
 ## Install and run
 
 ```
-tar xzf Treadle-0.1.1-alpha-linux-x64.tar.gz
-cd Treadle-0.1.1-alpha-linux-x64
+tar xzf Treadle-0.1.2-alpha-linux-x64.tar.gz
+cd Treadle-0.1.2-alpha-linux-x64
 ./treadle                                   # the editor
 ./treadle samples/m1                        # open a sample
 ./treadle --build-run samples/m3-core -- a b c

@@ -34,18 +34,7 @@ namespace Treadle.Editor
 		String mNtNsFolder = new .() ~ delete _;
 		String mNtNs = new .() ~ delete _;
 
-		public static StringView KindIcon(TypeKind kind)
-		{
-			switch (kind)
-			{
-			case .Class: return Icon.Class;
-			case .Struct: return Icon.Struct;
-			case .Enum: return Icon.Enum;
-			case .Interface: return Icon.Interface;
-			case .Delegate: return Icon.Link;
-			case .Extension: return Icon.Plug;
-			}
-		}
+		public static StringView KindIcon(TypeKind kind) => TypeStyle.KindIcon(kind);
 
 		public static StringView KindTitle(TypeKind kind)
 		{
@@ -60,18 +49,7 @@ namespace Treadle.Editor
 			}
 		}
 
-		public static uint32 KindColor(TypeKind kind)
-		{
-			switch (kind)
-			{
-			case .Class: return Gui.Color(45, 115, 225);
-			case .Struct: return Gui.Color(40, 150, 200);
-			case .Enum: return Gui.Color(30, 170, 150);
-			case .Interface: return Gui.Color(150, 110, 220);
-			case .Delegate: return Gui.Color(220, 140, 60);
-			case .Extension: return Gui.Color(120, 160, 90);
-			}
-		}
+		public static uint32 KindColor(TypeKind kind) => TypeStyle.KindColor(kind);
 
 		/// The project type whose file is `path`, else null.
 		public ProjectType ProjectTypeAt(StringView path)

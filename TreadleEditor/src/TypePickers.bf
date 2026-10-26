@@ -28,7 +28,9 @@ namespace Treadle.Editor
 		/// What a Switch switches on: an integer, a char, a String or an enum.
 		SwitchOn,
 		/// What an extension extends: a class, a struct or an enum.
-		Extendable
+		Extendable,
+		/// What an Is Type node tests against: a class (abstract ones too) or an interface.
+		TypeTest
 	}
 
 	/// One row of the type picker: the type as it is written, its group and its kind's glyph.
@@ -37,6 +39,14 @@ namespace Treadle.Editor
 		public String Name = new .() ~ delete _;
 		public StringView Group;
 		public StringView Glyph;
+		/// The kind's colour for the glyph (TypeStyle); 0: the pin's colour dimmed.
+		public uint32 GlyphColor;
+		/// The pin colour, worked out the first time the row is drawn (0: not yet).
+		public uint32 PinColor;
+		/// Listed dim and not choosable (an abstract or static class in a Construct's picker), with why.
+		public bool Disabled;
+		public String Hint ~ delete _;
+		public String HintShort ~ delete _;
 	}
 
 	/// The Blueprint-style type picker of Type Settings, Properties and the New Class dialog: the closed
@@ -128,8 +138,9 @@ namespace Treadle.Editor
 			}
 		}
 
-		/// A pin in `col` and the kind's glyph at `pos` (the row's text starts after them).
-		static float DrawLead(ImDrawList* dl, ImVec2 pos, float h, uint32 col, StringView glyph)
+		/// A pin in `col` and the kind's glyph at `pos` (the row's text starts after them); the glyph in
+		/// `glyphCol` (the kind's colour, TypeStyle), else the pin's colour dimmed.
+		static float DrawLead(ImDrawList* dl, ImVec2 pos, float h, uint32 col, StringView glyph, uint32 glyphCol = 0)
 		{
 			float r = h * 0.22f;
 			Gui.ImDrawList_AddCircleFilled(dl, .(pos.x + r + 2 * Look.Scale, pos.y + h * 0.5f), r, col, 12);
@@ -137,31 +148,180 @@ namespace Treadle.Editor
 			if (!glyph.IsEmpty)
 			{
 				let gs = Gui.CalcTextSize(glyph);
-				Gui.DrawText(dl, .(x, pos.y + (h - gs.y) * 0.5f), Theme.Mix(col, Look.Foreground, 0.5f), glyph);
+				Gui.DrawText(dl, .(x, pos.y + (h - gs.y) * 0.5f), (glyphCol != 0) ? glyphCol : Theme.Mix(col, Look.Foreground, 0.5f), glyph);
 			}
 			return x + Gui.igGetFontSize() * 1.4f;
 		}
 
+		/// The glyph of a container: Plain (a dot), Array (a grid), List (rows), Span (a ruler), Nullable (?).
+		public static StringView ContainerGlyph(int container)
+		{
+			switch (container)
+			{
+			case 1: return Icon.Grid3x3;
+			case 2: return Icon.List;
+			case 3: return Icon.Ruler;
+			case 4: return Icon.CircleHelp;
+			default: return Icon.Circle;
+			}
+		}
+
+		/// Self tests: a container to choose on the container button of the picker `TestContainerId` (its
+		/// next frame).
+		public static String TestContainerId = new .() ~ delete _;
+		public static int TestContainerPick = -1;
+
+		/// The container button left of a type field: the container's glyph in the type's colour; a click
+		/// opens Plain / Array / List / Span / Nullable. True (with the type in `outValue`, the element
+		/// kept) when another container was chosen.
+		public static bool ContainerButton(StringView id, StringView current, String outValue, float size)
+		{
+			String elem = scope .();
+			int cur = SplitContainer(current, elem);
+			let p = Gui.igGetCursorScreenPos();
+			bool clicked = Gui.igInvisibleButton("##ctbtn", .(size, size), ButtonFlags.MouseButtonLeft);
+			bool hovered = Gui.igIsItemHovered(0);
+			let dl = Gui.igGetWindowDrawList();
+			Gui.ImDrawList_AddRectFilled(dl, p, .(p.x + size, p.y + size), hovered ? Gui.Color(30, 30, 30) : Look.Input, 3 * Look.Scale, 0);
+			let g = ContainerGlyph(cur);
+			let gs = Gui.CalcTextSize(g);
+			uint32 col = current.IsEmpty ? Look.ForegroundDim : Theme.TypeColor(current);
+			Gui.DrawText(dl, .(p.x + (size - gs.x) * 0.5f, p.y + (size - gs.y) * 0.5f), col, g);
+			if (hovered)
+				Gui.Tooltip(scope $"Container: {sContainers[cur]}\nClick to make it Plain, an Array, a List, a Span or Nullable (the element type stays)");
+			if (clicked)
+				Gui.OpenPopup("##ctmenu");
+			int want = -1;
+			if (TestContainerId == id && TestContainerPick >= 0)
+			{
+				want = TestContainerPick;
+				TestContainerPick = -1;
+				TestContainerId.Clear();
+			}
+			if (Gui.BeginPopup("##ctmenu"))
+			{
+				for (int i < 5)
+					if (Gui.Selectable(scope $"{ContainerGlyph(i)}  {sContainers[i]}##ct{i}", i == cur))
+						want = i;
+				Gui.EndPopup();
+			}
+			if (want < 0 || want == cur || elem.IsEmpty)
+				return false;
+			outValue.Clear();
+			WithContainer(elem, want, outValue);
+			return outValue != current;
+		}
+
+		/// One row of the open list: its group and entry (null: the none row).
+		struct Row
+		{
+			public StringView Group;
+			public TypeEntry Entry;
+		}
+		/// The rows of the open list, kept while the search text and the entries stay the same: filtering
+		/// a catalogue of thousands of types runs once per keystroke, not once per frame.
+		static List<Row> sRows = new .() ~ delete _;
+		static String sRowsKey = new .() ~ delete _;
+		/// Bumped whenever a cached entry list is rebuilt (its entries are deleted): the rows follow.
+		public static int EntriesGeneration;
+		/// The most rows the open list draws; the search narrows the rest ("N more").
+		public const int MaxRows = 250;
+		/// Self tests: how long the last rebuild of the rows took (ms) and how many rows it gave.
+		public static double LastRowsMs;
+		public static int LastRowsCount;
+		/// Self tests: characters typed into the open list's search field, one a frame.
+		public static String TestType = new .() ~ delete _;
+
+		public static void BuildRows(StringView id, StringView s, List<TypeEntry> entries, StringView noneLabel, out bool exact)
+		{
+			exact = false;
+			String key = scope .();
+			key.AppendF("{}|{}|{}|{}|{}|{}", id, s, (int)Internal.UnsafeCastToPtr(entries), entries.Count, EntriesGeneration, noneLabel);
+			for (let r in sRecent)
+				key.AppendF("|{}", r);
+			if (key == sRowsKey)
+			{
+				for (let r in sRows)
+					if (r.Entry != null && r.Entry.Name == s)
+						exact = true;
+				return;
+			}
+			let sw = scope System.Diagnostics.Stopwatch(true);
+			sRowsKey.Set(key);
+			sRows.Clear();
+			if (!noneLabel.IsEmpty && (s.IsEmpty || Matches(noneLabel, s)))
+				sRows.Add(.() { Group = "", Entry = null });
+			if (s.IsEmpty)
+			{
+				for (let r in sRecent)
+					for (let e in entries)
+						if (e.Name == r && !e.Disabled)
+						{
+							sRows.Add(.() { Group = "Recently used", Entry = e });
+							break;
+						}
+				for (let e in entries)
+					sRows.Add(.() { Group = e.Group, Entry = e });
+			}
+			else
+			{
+				// The rows whose short name starts with the text come first ("ani" finds Animal).
+				List<Row> rest = scope .();
+				for (let e in entries)
+				{
+					exact |= e.Name == s;
+					if (!Matches(e.Name, s))
+						continue;
+					let dot = e.Name.LastIndexOf('.');
+					let shortName = (dot >= 0) ? e.Name.Substring(dot + 1) : (StringView)e.Name;
+					if (shortName.StartsWith(s, .OrdinalIgnoreCase))
+						sRows.Add(.() { Group = e.Group, Entry = e });
+					else
+						rest.Add(.() { Group = e.Group, Entry = e });
+				}
+				sRows.AddRange(rest);
+			}
+			ClearAndDeleteItems!(TestRows);
+			for (let r in sRows)
+				TestRows.Add(new String(scope $"{r.Group}|{(r.Entry != null) ? (StringView)r.Entry.Name : noneLabel}"));
+			LastRowsMs = sw.Elapsed.TotalMilliseconds;
+			LastRowsCount = sRows.Count;
+		}
+
 		/// True (with the choice in `outValue`, empty for `noneLabel`) when a row was picked that differs
-		/// from `current`. `containers`: the slot takes T[], List<T>, Span<T> and T?; `spelled`: a typed
-		/// text may be used as it is; `spellPrefixes`: only a typed `Name<...>` whose `Name` is one of these.
+		/// from `current`. `containers`: the slot takes T[], List<T>, Span<T> and T? (a container button
+		/// sits left of the field); `spelled`: a typed text may be used as it is; `spellPrefixes`: only a
+		/// typed `Name<...>` whose `Name` is one of these.
 		public static bool Draw(StringView id, StringView current, List<TypeEntry> entries, String outValue, StringView noneLabel = default,
 			float width = -1, StringView tip = default, bool spelled = false, List<String> spellPrefixes = null, bool containers = false, StringView placeholder = default)
 		{
 			bool picked = false;
 			Gui.PushID(id);
 			float h = Gui.igGetFrameHeight();
-			let start = Gui.igGetCursorScreenPos();
 			float w = (width < 0) ? Gui.igGetContentRegionAvail().x : width;
+			if (containers)
+			{
+				// The container button (Plain / Array / List / Span / Nullable), then the field.
+				if (ContainerButton(id, current, outValue, h))
+					picked = true;
+				Gui.SameLine(0, 3 * Look.Scale);
+				w = Math.Max(40 * Look.Scale, w - h - 3 * Look.Scale);
+			}
+			let start = Gui.igGetCursorScreenPos();
 			// The closed control: pin + glyph + name (namespace dimmed), chevron.
 			String elem = scope .();
 			int curContainer = containers ? SplitContainer(current, elem) : 0;
 			if (!containers)
 				elem.Set(current);
 			StringView glyph = default;
+			uint32 glyphCol = 0;
 			for (let e in entries)
 				if (e.Name == elem)
+				{
 					glyph = e.Glyph;
+					glyphCol = e.GlyphColor;
+					break;
+				}
 			bool clicked = Gui.igInvisibleButton("##box", .(w, h), ButtonFlags.MouseButtonLeft);
 			bool hovered = Gui.igIsItemHovered(0);
 			{
@@ -174,7 +334,7 @@ namespace Treadle.Editor
 				else
 				{
 					// Pin, glyph, the short name, then its namespace dimmed while there is room.
-					float x = DrawLead(dl, .(start.x + 6 * Look.Scale, start.y), h, Theme.TypeColor(current), glyph);
+					float x = DrawLead(dl, .(start.x + 6 * Look.Scale, start.y), h, Theme.TypeColor(current), glyph, glyphCol);
 					float room = Math.Max(8, start.x + w - x - fs * 1.6f);
 					let dot = current.LastIndexOf('.');
 					bool hasNs = dot > 0 && !current.Contains('<');
@@ -205,6 +365,7 @@ namespace Treadle.Editor
 				TestSearch.Clear();
 				sCursor = 0;
 				sContainer = curContainer;
+				sRowsKey.Clear();
 				Gui.OpenPopup("##typelist");
 			}
 			let display = Gui.igGetIO_Nil().DisplaySize;
@@ -231,50 +392,23 @@ namespace Treadle.Editor
 				if (Gui.igIsWindowAppearing() || !Gui.igIsAnyItemActive())
 					Gui.igSetKeyboardFocusHere(0);
 				Gui.igSetNextItemWidth(-1);
+				if (!TestType.IsEmpty)
+				{
+					// Self tests: one character a frame, as typed.
+					String typed = scope .(sSearch.View);
+					typed.Append(TestType[0]);
+					sSearch.Set(typed);
+					TestType.Remove(0, 1);
+				}
 				bool enter = Gui.igInputTextWithHint("##search", scope $"{Icon.Search}  Search types", sSearch.Ptr, (.)sSearch.Capacity, InputTextFlags.EnterReturnsTrue, null, null);
 				var s = sSearch.View;
 				s.Trim();
-				// The rows, in the order they are drawn: none, recent, then the groups.
-				List<(StringView group, StringView name, StringView glyph)> rows = scope .();
-				if (!noneLabel.IsEmpty && (s.IsEmpty || Matches(noneLabel, s)))
-					rows.Add(("", noneLabel, ""));
-				if (s.IsEmpty)
-					for (let r in sRecent)
-						for (let e in entries)
-							if (e.Name == r)
-								rows.Add(("Recently used", e.Name, e.Glyph));
-				bool exact = false;
-				for (let e in entries)
-				{
-					exact |= e.Name == s;
-					if (s.IsEmpty || Matches(e.Name, s))
-						rows.Add((e.Group, e.Name, e.Glyph));
-				}
-				// Searching: the rows whose short name starts with the text come first ("ani" finds Animal).
-				if (!s.IsEmpty)
-				{
-					List<(StringView group, StringView name, StringView glyph)> first = scope .();
-					List<(StringView group, StringView name, StringView glyph)> rest = scope .();
-					for (let r in rows)
-					{
-						let dot = r.name.LastIndexOf('.');
-						let shortName = (dot >= 0) ? r.name.Substring(dot + 1) : r.name;
-						if (shortName.StartsWith(s, .OrdinalIgnoreCase))
-							first.Add(r);
-						else
-							rest.Add(r);
-					}
-					rows.Clear();
-					rows.AddRange(first);
-					rows.AddRange(rest);
-				}
+				BuildRows(id, s, entries, noneLabel, let exact);
 				String use = scope .();
 				if (!s.IsEmpty && !exact && SpellAllowed(s, spelled, spellPrefixes))
 					use.AppendF("Use {}", s);
-				ClearAndDeleteItems!(TestRows);
-				for (let r in rows)
-					TestRows.Add(new String(scope $"{r.group}|{r.name}"));
-				int total = rows.Count + (use.IsEmpty ? 0 : 1);
+				int shownRows = Math.Min(sRows.Count, MaxRows);
+				int total = shownRows + (use.IsEmpty ? 0 : 1);
 				if (Gui.IsKeyPressed(Key.DownArrow, true))
 					sCursor = Math.Min(sCursor + 1, Math.Max(0, total - 1));
 				if (Gui.IsKeyPressed(Key.UpArrow, true))
@@ -283,13 +417,13 @@ namespace Treadle.Editor
 				float rowH = Gui.igGetFontSize() + 8 * Look.Scale;
 				int groups = 0;
 				StringView lastGroup = "\u{1}";
-				for (let r in rows)
-					if (r.group != lastGroup)
+				for (int i < shownRows)
+					if (sRows[i].Group != lastGroup)
 					{
-						lastGroup = r.group;
+						lastGroup = sRows[i].Group;
 						groups++;
 					}
-				float listH = Math.Clamp((total + groups) * rowH + 6 * Look.Scale, rowH * 2, maxH - h * 3);
+				float listH = Math.Clamp((total + groups + ((sRows.Count > shownRows) ? 1 : 0)) * rowH + 6 * Look.Scale, rowH * 2, maxH - h * 3);
 				StringView chosen = default;
 				bool chose = false;
 				if (Gui.igBeginChild_Str("##rows", .(0, listH), 0, 0))
@@ -312,11 +446,12 @@ namespace Treadle.Editor
 						}
 						idx++;
 					}
-					for (let r in rows)
+					for (int ri < shownRows)
 					{
-						if (r.group != group)
+						let r = sRows[ri];
+						if (r.Group != group)
 						{
-							group = r.group;
+							group = r.Group;
 							if (group.IsEmpty)
 								groupOpen = true;
 							else
@@ -331,34 +466,51 @@ namespace Treadle.Editor
 						let mine = idx++;
 						if (!groupOpen)
 							continue;
+						bool isNone = r.Entry == null;
+						StringView name = isNone ? noneLabel : (StringView)r.Entry.Name;
+						bool disabled = !isNone && r.Entry.Disabled;
 						Gui.PushID((int32)mine);
 						let p = Gui.igGetCursorScreenPos();
 						bool sel = mine == sCursor;
-						bool hit = Gui.Selectable("##row", sel, 0, .(0, rowH - 4 * Look.Scale));
+						bool hit = Gui.Selectable("##row", sel && !disabled, disabled ? SelectableFlags.Disabled : 0, .(0, rowH - 4 * Look.Scale));
+						if (disabled && Gui.igIsItemHovered(HoveredFlags.AllowWhenDisabled) && r.Entry.Hint != null)
+							Gui.Tooltip(scope $"{name}\n{r.Entry.Hint}");
 						if (sel && (Gui.IsKeyPressed(Key.DownArrow, true) || Gui.IsKeyPressed(Key.UpArrow, true)))
 							Gui.igSetScrollHereY(0.5f);
-						bool isNone = !noneLabel.IsEmpty && r.group.IsEmpty && r.name == noneLabel;
-						float x = isNone ? p.x + 8 * Look.Scale : DrawLead(dl, .(p.x + 4 * Look.Scale, p.y), rowH - 4 * Look.Scale, Theme.TypeColor(r.name), r.glyph);
+						float x = p.x + 8 * Look.Scale;
+						if (!isNone)
+						{
+							// The pin colour is worked out once per entry (the type system's answer).
+							if (r.Entry.PinColor == 0)
+								r.Entry.PinColor = Theme.TypeColor(name) | 0xFF000000;
+							let pin = disabled ? Theme.WithAlpha(r.Entry.PinColor, 90) : r.Entry.PinColor;
+							x = DrawLead(dl, .(p.x + 4 * Look.Scale, p.y), rowH - 4 * Look.Scale, pin, r.Entry.Glyph, disabled ? Look.ForegroundDim : r.Entry.GlyphColor);
+						}
 						float ty = p.y + (rowH - 4 * Look.Scale - Gui.igGetFontSize()) * 0.5f;
-						let dot = r.name.LastIndexOf('.');
-						let lt = r.name.IndexOf('<');
+						let dot = name.LastIndexOf('.');
+						let lt = name.IndexOf('<');
 						bool hasNs = dot > 0 && (lt < 0 || dot < lt);
-						StringView shortName = hasNs ? r.name.Substring(dot + 1) : r.name;
-						Gui.DrawText(dl, .(x, ty), (r.name == elem) ? Look.ForegroundHover : Look.Foreground, shortName);
+						StringView shortName = hasNs ? name.Substring(dot + 1) : name;
+						Gui.DrawText(dl, .(x, ty), disabled ? Look.ForegroundDim : ((name == elem) ? Look.ForegroundHover : Look.Foreground), shortName);
+						float tw = Gui.CalcTextSize(shortName).x;
 						if (hasNs)
 						{
-							float sw = Gui.CalcTextSize(shortName).x;
-							Gui.DrawText(dl, .(x + sw + 8 * Look.Scale, ty), Gui.Color(120, 120, 120), r.name.Substring(0, dot));
+							Gui.DrawText(dl, .(x + tw + 8 * Look.Scale, ty), Gui.Color(120, 120, 120), name.Substring(0, dot));
+							tw += Gui.CalcTextSize(name.Substring(0, dot)).x + 8 * Look.Scale;
 						}
-						if (r.name == elem && !isNone)
+						if (disabled && r.Entry.HintShort != null)
+							Gui.DrawText(dl, .(x + tw + 10 * Look.Scale, ty), Gui.Color(110, 110, 110), r.Entry.HintShort);
+						if (name == elem && !isNone)
 							Gui.DrawText(dl, .(p.x + Gui.igGetContentRegionAvail().x - 16 * Look.Scale, ty), Look.ForegroundDim, Icon.CircleCheck);
 						Gui.PopID();
-						if (hit || (enter && sel))
+						if (!disabled && (hit || (enter && sel)))
 						{
-							chosen = r.name;
+							chosen = name;
 							chose = true;
 						}
 					}
+					if (sRows.Count > shownRows)
+						Gui.TextDisabled(scope $"{sRows.Count - shownRows} more: type to narrow the list");
 					if (total == 0)
 						Gui.TextDisabled("No type of that name fits here");
 				}
@@ -448,18 +600,7 @@ namespace Treadle.Editor
 			return false;
 		}
 
-		static StringView GlyphOf(TypeKind kind)
-		{
-			switch (kind)
-			{
-			case .Class: return Icon.Class;
-			case .Struct: return Icon.Struct;
-			case .Enum: return Icon.Enum;
-			case .Interface: return Icon.Interface;
-			case .Delegate: return Icon.Link;
-			case .Extension: return Icon.Plug;
-			}
-		}
+		static StringView GlyphOf(TypeKind kind) => TypeStyle.KindIcon(kind);
 
 		/// The types a picker of `slot` offers, grouped (Primitives, Vectors, Generic parameters, Project
 		/// types, Core, Libraries, C imports), each group sorted. `self`: the type being edited (left out
@@ -506,6 +647,8 @@ namespace Treadle.Editor
 					return kind == .Enum;
 				case .Extendable:
 					return (kind == .Class || kind == .Struct || kind == .Enum) && fullName != self;
+				case .TypeTest:
+					return (kind == .Class && !isStatic) || kind == .Interface;
 				}
 			}
 			switch (slot)
@@ -532,20 +675,42 @@ namespace Treadle.Editor
 			}
 			List<TypeEntry> project = scope .();
 			defer { ClearAndDeleteItems!(project); }
+			List<TypeEntry> dim = scope .();
+			defer { ClearAndDeleteItems!(dim); }
 			for (let t in ProjectTypes.Types)
-				if (Fits(t.Kind, t.Static, t.Abstract, t.Sealed, !t.Generics.IsEmpty, t.FullName) && !seen.ContainsAlt(t.FullName))
+			{
+				if (seen.ContainsAlt(t.FullName))
+					continue;
+				bool fits = Fits(t.Kind, t.Static, t.Abstract, t.Sealed, !t.Generics.IsEmpty, t.FullName);
+				// A Construct / Local lists the classes it cannot make too, dim, with the reason.
+				bool dimmed = !fits && slot == .Allocatable && (t.Kind == .Class || t.Kind == .Struct);
+				if (!fits && !dimmed)
+					continue;
+				seen.Add(new String(t.FullName));
+				TypeEntry e = new .();
+				e.Group = "Project types";
+				e.Name.Set(t.FullName);
+				e.Glyph = GlyphOf(t.Kind);
+				e.GlyphColor = TypeStyle.KindColor(t.Kind);
+				if (dimmed)
 				{
-					seen.Add(new String(t.FullName));
-					TypeEntry e = new .();
-					e.Group = "Project types";
-					e.Name.Set(t.FullName);
-					e.Glyph = GlyphOf(t.Kind);
-					project.Add(e);
+					e.Disabled = true;
+					e.HintShort = new String(t.Static ? "static" : "abstract");
+					e.Hint = new String(t.Static ? "A static class has only static members: there is nothing to construct. Call its functions directly." :
+						"An abstract class cannot be constructed: construct a class that derives from it.");
+					dim.Add(e);
 				}
+				else
+					project.Add(e);
+			}
 			project.Sort(scope (a, b) => a.Name.CompareTo(b.Name, true));
+			dim.Sort(scope (a, b) => a.Name.CompareTo(b.Name, true));
 			for (let e in project)
 				outEntries.Add(e);
+			for (let e in dim)
+				outEntries.Add(e);
 			project.Clear();
+			dim.Clear();
 			List<TypeEntry> core = scope .();
 			List<TypeEntry> libs = scope .();
 			List<TypeEntry> cimports = scope .();
@@ -564,19 +729,22 @@ namespace Treadle.Editor
 					if (s.IsCImport || s.IsCRecord)
 					{
 						e.Group = "C imports";
-						e.Glyph = Icon.FileCode;
+						e.Glyph = TypeStyle.CImportIcon;
+						e.GlyphColor = TypeStyle.CImportColor;
 						cimports.Add(e);
 					}
 					else if (s.IsCore)
 					{
 						e.Group = "Core";
 						e.Glyph = GlyphOf(s.Kind);
+						e.GlyphColor = TypeStyle.KindColor(s.Kind);
 						core.Add(e);
 					}
 					else
 					{
 						e.Group = "Libraries";
 						e.Glyph = GlyphOf(s.Kind);
+						e.GlyphColor = TypeStyle.KindColor(s.Kind);
 						libs.Add(e);
 					}
 				}
@@ -596,7 +764,55 @@ namespace Treadle.Editor
 			defer { ClearAndDeleteItems!(entries); }
 			TypeEntries(slot, self, entries, outGenericBases);
 			for (let e in entries)
-				outTypes.Add(new String(e.Name));
+				if (!e.Disabled)
+					outTypes.Add(new String(e.Name));
+		}
+
+		/// The entry lists of the pickers drawn lately, by slot and self, kept until the project's types,
+		/// the front end's table or the open type change: a picker no longer reads the whole catalogue on
+		/// every frame it is drawn.
+		Dictionary<String, (List<TypeEntry> entries, List<String> generic)> mTypeEntryCache = new .() ~ { ClearTypeEntryCache(); delete _; };
+		uint64 mTypeEntryStamp;
+
+		void ClearTypeEntryCache()
+		{
+			for (let kv in mTypeEntryCache)
+			{
+				delete kv.key;
+				DeleteContainerAndItems!(kv.value.entries);
+				DeleteContainerAndItems!(kv.value.generic);
+			}
+			mTypeEntryCache.Clear();
+			TypeCombo.EntriesGeneration++;
+		}
+
+		/// The cached entries of `slot` for `self` (TypeEntries).
+		List<TypeEntry> CachedTypeEntries(TypeSlot slot, StringView self, out List<String> generic)
+		{
+			RefreshProjectTypes();
+			uint64 stamp = mProjectTypesStamp * 31 + (uint64)(int)Internal.UnsafeCastToPtr(FrontEnd?.Last);
+			if (Doc != null)
+			{
+				stamp = stamp * 31 + (uint64)(int)Internal.UnsafeCastToPtr(Doc);
+				for (let g in Doc.Header.Generics)
+					stamp = stamp * 31 + (uint64)g.Name.GetHashCode();
+			}
+			if (stamp != mTypeEntryStamp)
+			{
+				ClearTypeEntryCache();
+				mTypeEntryStamp = stamp;
+			}
+			String key = scope $"{(int)slot}|{self}";
+			if (mTypeEntryCache.TryGetValueAlt(key, let found))
+			{
+				generic = found.generic;
+				return found.entries;
+			}
+			let entries = new List<TypeEntry>();
+			generic = new List<String>();
+			TypeEntries(slot, self, entries, generic);
+			mTypeEntryCache[new String(key)] = (entries, generic);
+			return entries;
 		}
 
 		/// A Type Settings / Properties row with the type picker of `slot`. True (with the type in
@@ -610,13 +826,10 @@ namespace Treadle.Editor
 		/// The picker alone (the caller placed the cursor).
 		bool TypeComboFor(StringView id, StringView current, String outValue, TypeSlot slot, StringView noneLabel = default, float width = -1, StringView self = default, StringView placeholder = default)
 		{
-			List<TypeEntry> entries = scope .();
-			List<String> generic = scope .();
-			defer { ClearAndDeleteItems!(entries); ClearAndDeleteItems!(generic); }
 			String me = scope .(self);
 			if (me.IsEmpty && Doc != null && Doc != mEmptyDoc)
 				Doc.Header.GetFullName(me);
-			TypeEntries(slot, me, entries, generic);
+			let entries = CachedTypeEntries(slot, me, let generic);
 			bool spelled = slot == .Value || slot == .Result || slot == .Allocatable;
 			return TypeCombo.Draw(id, current, entries, outValue, noneLabel, width, default, spelled, (slot == .BaseClass) ? generic : null, slot == .Value, placeholder);
 		}

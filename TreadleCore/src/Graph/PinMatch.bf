@@ -87,6 +87,8 @@ namespace Treadle.Graph
 		public static bool OperatorTakes(StringView op, StringView t, LanguageContext lang)
 		{
 			let fam = Family(lang, t);
+			if (op == "valid")
+				return fam == .Object || fam == .Interface || fam == .Delegate || fam == .Pointer || fam == .String || t.EndsWith('?');
 			if (op == "==" || op == "!=")
 				return true;
 			if (op == "&&" || op == "||" || op == "!")

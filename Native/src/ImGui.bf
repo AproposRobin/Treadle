@@ -188,6 +188,7 @@ namespace ImGui
 		public const int32 None = 0;
 		public const int32 NoAutoClosePopups = 1 << 0;
 		public const int32 AllowDoubleClick = 1 << 2;
+		public const int32 Disabled = 1 << 3;
 	}
 
 	static class ColorEditFlags
@@ -216,6 +217,7 @@ namespace ImGui
 		public const int32 RootWindow = 1 << 1;
 		public const int32 AllowWhenBlockedByPopup = 1 << 5;
 		public const int32 AllowWhenBlockedByActiveItem = 1 << 7;
+		public const int32 AllowWhenDisabled = 1 << 10;
 		public const int32 RootAndChildWindows = RootWindow | ChildWindows;
 	}
 

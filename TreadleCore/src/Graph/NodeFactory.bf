@@ -205,10 +205,11 @@ namespace Treadle.Graph
 			case .Fatal:
 				In(g, n, "message", "Message", "StringView");
 			case .Operator:
-				In(g, n, "a", "");
+				// Is Valid (`valid`): an object, a nullable or a pointer in, true when it holds something.
+				In(g, n, "a", (n.Text == "valid") ? "Object" : "");
 				if (!IsUnary(n.Text))
 					In(g, n, "b", "");
-				Out(g, n, "result", "", IsComparison(n.Text) ? "bool" : "");
+				Out(g, n, "result", (n.Text == "valid") ? "Is Valid" : "", IsComparison(n.Text) ? "bool" : "");
 			case .Select:
 				In(g, n, "condition", "Condition", "bool");
 				In(g, n, "true", "True");
@@ -218,11 +219,16 @@ namespace Treadle.Graph
 				// A checked Cast is a flow node: `then` runs when the value is a T, `failed` when not.
 				In(g, n, "value", "Value");
 				bool isChecked = n.HasSetting("checked");
-				if (!n.IsPure)
+				// Is Type (`set test`): a value node, true when the object is a T (a class or an interface).
+				bool isTest = n.HasSetting("test");
+				if (!n.IsPure && !isTest)
 					Next(g, n, "then", isChecked ? "Succeeded" : "");
-				if (isChecked)
+				if (isChecked && !isTest)
 					Next(g, n, "failed", "Failed");
-				Out(g, n, "result", n.Text.IsEmpty ? "" : scope $"As {Node.ShortTypeName(n.Text, .. scope String())}", n.Text);
+				if (isTest)
+					Out(g, n, "result", "", "bool");
+				else
+					Out(g, n, "result", n.Text.IsEmpty ? "" : scope $"As {Node.ShortTypeName(n.Text, .. scope String())}", n.Text);
 			case .Make:
 				// A vector type's lanes are fixed by its type (`x y z w`, `lane0 ...`); a struct's fields
 				// come from the type or the file.
@@ -296,8 +302,8 @@ namespace Treadle.Graph
 			outType.Append(owner);
 		}
 
-		public static bool IsUnary(StringView op) => op == "!" || op == "~" || op == "neg";
-		public static bool IsComparison(StringView op) => op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">=" || op == "&&" || op == "||" || op == "!";
+		public static bool IsUnary(StringView op) => op == "!" || op == "~" || op == "neg" || op == "valid";
+		public static bool IsComparison(StringView op) => op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">=" || op == "&&" || op == "||" || op == "!" || op == "valid";
 
 		/// A label for a pin the format names (`condition` -> `Condition`, `case:Red` -> `Red`).
 		public static void LabelFor(StringView name, String outLabel)
@@ -1403,6 +1409,18 @@ namespace Treadle.Graph
 			return n;
 		}
 
+		/// Is Type: a class Cast that only tests (`set test`), true when the object is a `type` (a class or an
+		/// interface; false for null). Its type is chosen on the node or in Properties.
+		public static Node IsType(Graph g, StringView type)
+		{
+			Node n = g.AddNode(.Cast);
+			n.SetSubjectTypeText(type);
+			n.SetSetting("kind", "class");
+			n.SetSetting("test", "");
+			Shape(g, n);
+			return n;
+		}
+
 		/// Makes a Cast cast to `type`: the subject and the Result pin change together.
 		public static void SetCastType(Graph g, Node n, StringView type)
 		{
@@ -1410,6 +1428,12 @@ namespace Treadle.Graph
 				return;
 			n.SetSubjectTypeText(type);
 			let r = n.Result;
+			if (r != null && n.HasSetting("test"))
+			{
+				// Is Type keeps its bool result.
+				g.Version++;
+				return;
+			}
 			if (r != null)
 			{
 				DeleteAndNullify!(r.WildcardType);

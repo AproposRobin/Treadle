@@ -496,8 +496,45 @@ namespace Treadle.Editor
 				m.Outs.Add(p);
 			else
 				m.Params.Add(p);
+			if (isOut)
+				EnsureReturnNode(m);
 			SyncSheets(m);
 			EndTypeEdit();
+		}
+
+		/// A function that returns something (a Return Type or an output) gets one Return node, right of its
+		/// Entry and wired from it when the Entry's flow is free, in a Sheet that has none; part of the
+		/// caller's undo step. A Sheet with a Return keeps its own; going back to nothing leaves them alone.
+		public void EnsureReturnNode(MemberDecl m)
+		{
+			if (m == null || (m.Kind != .Function && m.Kind != .Operator) || (m.Returns == null && m.Outs.IsEmpty))
+				return;
+			for (let s in Doc.Sheets)
+			{
+				if (s.Member != m || s.Role != .Body)
+					continue;
+				let g = s.Graph;
+				if (g == null)
+					continue;
+				bool has = false;
+				for (let n in g.Nodes)
+					has |= n.Kind == .Return;
+				if (has)
+					continue;
+				let r = NodeFactory.Return(g, m.Returns?.ToString(.. scope String()) ?? "");
+				let entry = g.Entry;
+				if (entry != null)
+				{
+					r.X = Canvas.Snap(entry.X + 420);
+					r.Y = Canvas.Snap(entry.Y);
+					let then = entry.FindOutput("then");
+					let rin = r.FindInput("in");
+					if (then != null && rin != null && !g.IsLinked(then))
+						g.Connect(then, rin);
+				}
+				r.HasPos = true;
+				g.Version++;
+			}
 		}
 
 		static ParamDecl FindOut(MemberDecl m, StringView name)
@@ -649,7 +686,14 @@ namespace Treadle.Editor
 				NameRowsFocused++;
 			}
 			bool done = PropertyGrid.TextRow(label, id, buf, ?, tip, hint);
-			if (!done && !Gui.igIsItemActive() && buf != current)
+			bool active = Gui.igIsItemActive();
+			// The Outline row shows what is typed here; while the row is renamed in place, this field
+			// shows what is typed there (one buffer).
+			if (active)
+				mTsActiveId.Set(id);
+			else if (mTsActiveId == id)
+				mTsActiveId.Clear();
+			if (!done && !active && buf != current && mIrId != id)
 				buf.Set(current);
 			if (done && buf != current)
 			{
@@ -657,6 +701,32 @@ namespace Treadle.Editor
 				return true;
 			}
 			return false;
+		}
+
+		/// A value row in the widget of its type, the same one an unwired pin of that type has on the canvas
+		/// (PinValueEditor): a checkbox for a bool, a whole-number field for an integer (its range checked), a
+		/// decimal field for a float, the enum's dropdown, a text field for a String, one character for a
+		/// char; any other type a text row. True (with the literal in `outValue`) when a value was committed;
+		/// the caller makes the undo step.
+		bool TsValueRow(StringView label, StringView id, StringView typeName, StringView current, String outValue, StringView tip = default)
+		{
+			let vk = PinValue.KindOf(typeName, current, "", Language.Types);
+			if (typeName.IsEmpty || !PinValueEditor.Handles(vk) || mGraphPanel == null)
+				return TsText(label, id, current, outValue, tip);
+			PropertyGrid.Row(label, tip, Theme.TypeColor(typeName));
+			String value = scope .(current);
+			mGraphPanel.mPinEditor.ButtonColor = 0;
+			int32 pinId = (int32)((uint32)id.GetHashCode() | 0x40000000);
+			let undoBefore = EditDoc?.UndoStamp ?? 0;
+			if (!mGraphPanel.mPinEditor.Draw(this, null, pinId, typeName, value, false, vk, Gui.igGetContentRegionAvail().x))
+				return false;
+			// The editor began an edit of the document in front; the caller's BeginTypeEdit makes the step.
+			if (EditDoc != null && EditDoc.UndoStamp != undoBefore)
+				EditDoc.DropLastUndo();
+			if (value == current)
+				return false;
+			outValue.Set(value);
+			return true;
 		}
 
 		/// The types the type picker offers: the primitives, the common vector primitives (`float4`,
@@ -836,11 +906,8 @@ namespace Treadle.Editor
 			}
 			if (PropertyGrid.Section("Type", true))
 			{
-				if (TsText("Name", "##tsname", h.Name, v, "The type's name (the file keeps its own name)") && BeginTypeEdit())
-				{
-					h.Name.Set(v);
-					EndTypeEdit();
-				}
+				if (TsText("Name", "##tsname", h.Name, v, "The type's name, also its file's name: renaming it renames the file and the references in the project's other types"))
+					RenameType(Doc, v);
 				int32 kind = (int32)h.Kind;
 				if (PropertyGrid.ComboRow("Kind", "##tskind", ref kind, sKindNames, "Class: a reference type with inheritance. Struct: a value type. Enum: named cases. Interface: members a class promises.") && BeginTypeEdit())
 				{
@@ -1300,7 +1367,27 @@ namespace Treadle.Editor
 			}
 		}
 
-		/// Attribute rows (`Name arg arg`, one per row; empty removes it) and an Add button.
+		/// The attributes the compiler reads (Language-Guide.md, "Attributes"): on a type, then on a member.
+		static StringView[?] sTypeAttrs = .("CRepr", "Packed", "Align", "Flags", "Copyable", "Obsolete");
+		static StringView[?] sMemberAttrs = .("Export", "Import", "Kernel", "NoDiscard", "Obsolete", "ExpandEnumAsFlow", "Event");
+		static StringView[?] sAttrTips = .(
+			"CRepr: lay the struct out as C does (C imports, Export)",
+			"Packed: no padding between the struct's fields",
+			"Align(n): align the struct to n bytes (16 at most)",
+			"Flags: an enum of bit flags (Has Flag node)",
+			"Copyable: copies of this struct with a destructor are meant (no warning)",
+			"Obsolete(\"why\"): a warning wherever it is used");
+		static StringView[?] sMemberAttrTips = .(
+			"Export(\"name\"): a C symbol of a static function (a library project exports it)",
+			"Import(\"lib\", \"name\"): a static function without a Sheet that calls a C symbol",
+			"Kernel: a GPU compute kernel (GPU-Compute.md)",
+			"NoDiscard: the result is meant to be read",
+			"Obsolete(\"why\"): a warning wherever it is used",
+			"ExpandEnumAsFlow: one flow output per case of the returned enum at each call",
+			"Event: a delegate field with Add / Remove / Invoke nodes");
+
+		/// Attribute rows (`Name arg arg`, one per row, an X removes it) and Add Attribute, a list of the
+		/// attributes the compiler reads.
 		void DrawAttrRows(List<AttrDecl> attrs, StringView idBase)
 		{
 			String v = scope .();
@@ -1311,12 +1398,28 @@ namespace Treadle.Editor
 				for (let arg in a.Args)
 					text.AppendF(" {}", arg);
 				v.Clear();
-				if (TsText("Attribute", scope $"##{idBase}attr{@a.Index}", text, v, "Name and arguments: Export \"name\"") && BeginTypeEdit())
+				PropertyGrid.Row("Attribute", "Name and arguments: Export \"name\"");
+				String id = scope $"##{idBase}attr{@a.Index}";
+				let buf = TsBuf(id, text);
+				float bw = Gui.igGetFrameHeight() + 4 * Look.Scale;
+				Gui.igSetNextItemWidth(Math.Max(40 * Look.Scale, Gui.igGetContentRegionAvail().x - bw - 4 * Look.Scale));
+				bool done = PropertyGrid.Text(id, buf, ?);
+				if (!done && !Gui.igIsItemActive() && buf != text)
+					buf.Set(text);
+				Gui.SameLine(0, 4 * Look.Scale);
+				bool remove = Gui.Button(scope $"{Icon.X}##rmattr", .(bw - 4 * Look.Scale, 0));
+				if (Gui.igIsItemHovered(0))
+					Gui.Tooltip(scope $"Remove [{a.Name}]");
+				if (done && buf != text)
+					v.Set(buf);
+				if ((remove || (done && buf != text)) && BeginTypeEdit())
 				{
-					if (v.IsEmpty)
+					if (remove || v.IsEmpty)
 					{
 						attrs.RemoveAt(@a.Index);
 						delete a;
+						mTsBufs.TryGetValueAlt(id, let b2);
+						b2?.Clear();
 					}
 					else
 					{
@@ -1338,10 +1441,21 @@ namespace Treadle.Editor
 				}
 				Gui.PopID();
 			}
-			if (PropertyGrid.ButtonRow("", scope $"{Icon.Plus} Add Attribute") && BeginTypeEdit())
+			// Add Attribute: the ones the compiler reads for a type or a member (another can be typed in the row).
+			bool onType = idBase == "type";
+			List<DropItem> items = scope .();
+			if (onType)
+				for (int i < sTypeAttrs.Count)
+					items.Add(.(sTypeAttrs[i], sAttrTips[i]));
+			else
+				for (int i < sMemberAttrs.Count)
+					items.Add(.(sMemberAttrs[i], sMemberAttrTips[i]));
+			PropertyGrid.Row("", "Add an attribute the compiler reads");
+			let picked = PropertyGrid.Dropdown("##addattr", scope $"{Icon.Plus} Add Attribute", items, -1);
+			if (picked >= 0 && BeginTypeEdit())
 			{
 				AttrDecl a = new .();
-				a.Name.Set("Attribute");
+				a.Name.Set(items[picked].Label);
 				attrs.Add(a);
 				EndTypeEdit();
 			}
@@ -1394,7 +1508,7 @@ namespace Treadle.Editor
 				if (m.Kind == .Field)
 				{
 					v.Clear();
-					if (TsText("Default Value", scope $"##minit{id}", m.Init ?? "", v, "The value it starts with: a literal (0, \"text\", true), an enum case (.Red), default or null") && BeginTypeEdit())
+					if (TsValueRow("Default Value", scope $"##minit{id}", m.Type?.ToString(.. scope String()) ?? "", m.Init ?? "", v, "The value it starts with: a literal (0, \"text\", true), an enum case (.Red), default or null") && BeginTypeEdit())
 					{
 						if (v.IsEmpty)
 							DeleteAndNullify!(m.Init);
@@ -1497,6 +1611,7 @@ namespace Treadle.Editor
 					{
 						delete m.Returns;
 						m.Returns = (v.IsEmpty || v == "void") ? null : TypeRef.Parse(v);
+						EnsureReturnNode(m);
 						SyncSheets(m);
 						EndTypeEdit();
 					}
@@ -1647,21 +1762,7 @@ namespace Treadle.Editor
 			if (PropertyGrid.Section("Local Variable", true))
 			{
 				if (TsText("Name", "##lname", l.Name, v) && v != l.Name)
-				{
-					if (mg.Graph.FindLocal(v) != null)
-						SetStatus(scope $"Can't rename to '{v}': the function has a local of that name", .Warning);
-					else if (BeginTypeEdit())
-					{
-						String old = scope $"local:{l.Name}";
-						l.Name.Set(v);
-						mSelLocalName.Set(v);
-						for (let n in mg.Graph.Nodes)
-							if ((n.Kind == .Get || n.Kind == .Set) && n.Text == old)
-								n.Text.Set(scope $"local:{v}");
-						mg.Graph.Version++;
-						EndTypeEdit();
-					}
-				}
+					RenameLocal(mg, l, v);
 				v.Clear();
 				if (mFocusTypeField)
 				{

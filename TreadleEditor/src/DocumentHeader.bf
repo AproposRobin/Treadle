@@ -8,9 +8,10 @@ using Treadle.Model;
 
 namespace Treadle.Editor
 {
-	/// The kinds of types as the editor shows them: the icon and the accent colour of the type strip, the header
-	/// strip and the canvas watermark (class blue as the Project Browser's type tiles, struct teal, enum amber,
-	/// interface violet, delegate rose, extension steel).
+	/// The kinds of types as the editor shows them: the glyph and the accent colour of every place a kind is drawn
+	/// (the type strip, the header strip, the canvas watermark, the Outline header, the Project Browser's tiles, the
+	/// type pickers and the Create Type dialog): class blue, struct teal, enum amber, interface violet, delegate
+	/// rose, extension steel, C import grey-green.
 	static class TypeStyle
 	{
 		public static uint32 KindColor(TypeKind k)
@@ -34,10 +35,14 @@ namespace Treadle.Editor
 			case .Struct: return Icon.Struct;
 			case .Enum: return Icon.Enum;
 			case .Interface: return Icon.Interface;
-			case .Delegate: return Icon.Function;
-			case .Extension: return Icon.Plus;
+			case .Delegate: return Icon.Link;
+			case .Extension: return Icon.Plug;
 			}
 		}
+
+		/// A type of a C import set (its records, enums and function sets).
+		public static StringView CImportIcon => Icon.FileCode;
+		public static uint32 CImportColor => Gui.Color(132, 160, 120);
 
 		public static StringView KindWord(TypeKind k)
 		{

@@ -337,7 +337,7 @@ in front decided the file. Treadle keeps that "one document in front" idea but g
 * **Construct / Local**: the Node menu offers "Construct `<Type>`" and "Local `<Type>`" per class/struct; the node
   menu's Change to Construct / Local switches between them (same node id, wires stay).
 * **Value node fan-out**: a value node consumed by more than one flow node says "evaluated Nx"; the pin menu's
-  **Make local variable** stores a value once.
+  **Create local variable** (on the pin or the badge) stores a value once; the badge's tooltip says why.
 * **Switch**: **Add pin +** adds the next enum member or number, **Remove Case** on a case pin.
 * **Sequence / Multi Gate**: **Add pin +**, **Remove Pin**.
 * **Lambda**: double-click opens its nested Sheet as a tab; the breadcrumbs show `Type > Function > Lambda <id>`.

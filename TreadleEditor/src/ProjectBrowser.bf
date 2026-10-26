@@ -1056,7 +1056,11 @@ namespace Treadle.Editor
 		void DrawTile(ImDrawList* dl, CBItem item, ImVec2 p0, float tile, float labelH, bool hovered, bool selected)
 		{
 			ImVec2 p1 = .(p0.x + tile, p0.y + tile + labelH);
-			let kc = AssetStyle.KindColor(item.Kind);
+			var kc = AssetStyle.KindColor(item.Kind);
+			// A type file: its kind's glyph and colour (TypeStyle), as the type strip and the pickers.
+			let typeAt = (item.Kind == .Document) ? ProjectTypeAt(item.Path) : null;
+			if (typeAt != null)
+				kc = TypeStyle.KindColor(typeAt.Kind);
 			float fontH = Gui.igGetFontSize();
 			String name = scope .(item.Name);
 			if (item.Modified)
@@ -1092,7 +1096,15 @@ namespace Treadle.Editor
 			Gui.ImDrawList_AddRectFilledMultiColor(dl, .(t0.x, t0.y + 6), t1, top, top, bottom, bottom);
 			// The project tile leaves room for its config pill above the icon.
 			bool pill = item.Kind == .Project;
-			AssetStyle.DrawIcon(dl, item.Kind, .(p0.x + tile / 2, p0.y + (tile - 3) / 2 + (pill ? tile * 0.08f : 0)), tile * (pill ? 0.58f : 0.7f), kc);
+			if (typeAt != null)
+			{
+				let glyph = TypeStyle.KindIcon(typeAt.Kind);
+				float gsz = tile * 0.42f;
+				let gs = AssetStyle.TextSize(glyph, gsz);
+				AssetStyle.Text(dl, glyph, .(p0.x + (tile - gs.x) / 2, p0.y + (tile - 3 - gs.y) / 2), gsz, kc);
+			}
+			else
+				AssetStyle.DrawIcon(dl, item.Kind, .(p0.x + tile / 2, p0.y + (tile - 3) / 2 + (pill ? tile * 0.08f : 0)), tile * (pill ? 0.58f : 0.7f), kc);
 			// Kind strip.
 			Gui.ImDrawList_AddRectFilled(dl, .(p0.x, p0.y + tile - 3), .(p1.x, p0.y + tile), kc, 0, 0);
 			// Name (up to two lines) and kind at the bottom.
@@ -1132,7 +1144,11 @@ namespace Treadle.Editor
 			if (!Gui.igBeginTooltip())
 				return;
 			Gui.Text(item.Name);
-			Gui.TextColored(AssetStyle.KindColor(item.Kind), AssetStyle.KindLabel(item.Kind));
+			let typeAt = (item.Kind == .Document) ? ProjectTypeAt(item.Path) : null;
+			if (typeAt != null)
+				Gui.TextColored(TypeStyle.KindColor(typeAt.Kind), scope $"{TypeStyle.KindIcon(typeAt.Kind)}  {KindTitle(typeAt.Kind)}");
+			else
+				Gui.TextColored(AssetStyle.KindColor(item.Kind), AssetStyle.KindLabel(item.Kind));
 			String rel = scope .();
 			RelativeToRoot(item.Path, rel);
 			Gui.TextDisabled(rel);
@@ -1404,6 +1420,31 @@ namespace Treadle.Editor
 			{
 				ReportError(err);
 				return;
+			}
+			if (item.Kind == .Document)
+			{
+				// A type file named after its type: the type is renamed with it (its references follow).
+				var doc = FindDoc(item.Path);
+				if (doc == null)
+				{
+					let t = ProjectTypeAt(item.Path);
+					if (t != null && t.Name == item.Name)
+						doc = OpenFile(item.Path, false);
+				}
+				String typeName = scope .(newName);
+				if (typeName.EndsWith(GraphExtension, .OrdinalIgnoreCase))
+					typeName.RemoveFromEnd(GraphExtension.Length);
+				if (doc != null && doc.Header.Name == item.Name)
+				{
+					if (RenameType(doc, typeName))
+					{
+						String key = scope .();
+						CBItem.MakeKey(item.Kind, doc.FilePath, typeName, key);
+						CBSelectOnly(key);
+						mCBScrollTo.Set(key);
+					}
+					return;
+				}
 			}
 			String parent = scope .();
 			Path.GetDirectoryPath(item.Path, parent).IgnoreError();

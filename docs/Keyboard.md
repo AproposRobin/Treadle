@@ -66,7 +66,8 @@ keyboard (its tab in front, no text field in edit).
 | **Ctrl+F** | Find in this Sheet |
 | **1..9** / **Ctrl+1..9** | Go to / save view n of this Sheet |
 | **M** | Minimap on / off |
-| **Q** | Straighten: one node or Knot made level with its wire; several: the first selected lined up with the second |
+| **Q** | Straighten: one node or Knot made level with its wire; two: the first selected lined up with the second; three or more: each one wired to the last selected lines up with its own pin on it (a node feeding its inputs moves left of it) |
+| **Arrow keys** / **Shift+Arrow** | Move the selected nodes one grid step / ten (held: repeats; one undo step per run) |
 | **Shift+W** / **Shift+S** / **Shift+A** / **Shift+D** | Align top / bottom / left / right |
 | **Alt+Shift+W** / **Alt+Shift+S** | Align middle / center |
 | **Alt+Shift+H** / **Alt+Shift+V** | Distribute horizontally / vertically |
@@ -76,7 +77,8 @@ keyboard (its tab in front, no text field in edit).
 
 | On | Entries |
 |---|---|
-| A pin | Break Link(s) (Alt+Click); **Remove Pin** (a Sequence / Multi Gate arm) or **Remove Case** (a Switch case); **Split Struct Pin** (one pin per field on the node) on a struct pin, **Recombine Struct Pin** on a split one or one of its field pins; **Break into Fields (Break T)** on a struct output, **Make from Fields (Make T)** on a struct input; **Make variable** / **Make local variable** on a value output, **Make variable (Get)** on a value input; Reset to Default |
+| A pin | Break Link(s) (Alt+Click); **Remove Pin** (a Sequence / Multi Gate arm) or **Remove Case** (a Switch case); **Split Struct Pin** (one pin per field on the node) on a struct pin, **Recombine Struct Pin** on a split one or one of its field pins; **Break into Fields (Break T)** on a struct output, **Make from Fields (Make T)** on a struct input; **Create variable** / **Create local variable** on a value output (a Set of it in the flow; the pin's readers read a Get of it) and on an unwired value input (a Get of it wired in); Reset to Default |
+| An "evaluated Nx" badge | **Create local variable** (the value is computed once; hover the badge for what it means) |
 | A node | Delete, Break All Links, Copy, Duplicate, Create Comment from Selection, **Extract to Function** (Ctrl+Shift+E), **Collapse Nodes** (Ctrl+G), Add / Edit Comment, Go To Sheet (a Call), **Add Argument Pin** (a Call of a C variadic function), **Add Pin** / **Add Case** (Sequence, Multi Gate, Switch), **Rename...** (F2), **Hide Unwired Pins** / Show All Pins, **Disable Node** / Enable Node, Change to Construct / Local |
 | A node group (folded, or an open one's title bar) | **Open Group** / **Fold Group** (Double-Click), its title (Enter applies it), Select Nodes, **Ungroup** (the nodes stay), Delete Group and Nodes (Del) |
 | A wire | Break This Link (Alt+Click), Add Reroute Knot (Double-Click) |
@@ -94,12 +96,12 @@ output (with two or more): the Entry, the Return and every Call follow the order
 
 | Where | Keys | Does |
 |---|---|---|
-| Outline | **F2** | Rename the selected member or local (its Name in Properties) |
+| Outline | **F2** or **double-click** a function, variable or local | Rename it in its row (Enter commits, Esc cancels; Properties > Name shows the same text); a case or another member: its Name in Properties |
 | Outline | **Delete** | Delete the selected variable, function, case or local (one undo step; only when the Outline has the focus: the Sheet's selection stays) |
 | Outline | **Enter** | Open the selected member: its Sheet, else its page in Properties |
 | Outline | **Override...** on FUNCTIONS (a class); **Implement** on a REQUIRED OVERRIDES row, its **+** | Override a base function; implement a required one; implement them all |
 | Outline | Right-click the type's header | Make Child Class (a class), Duplicate, Type Settings |
-| Outline | Drag a variable onto the Sheet: **Ctrl** = Get, **Alt** = Set, plain = asks; onto a pin: wired to it | Get / Set |
+| Outline | Drag a variable (an Inherited one too) onto a pin it fits: a Get wired into an input, a Set fed by an output, no key needed (a pin it does not fit says why); onto the Sheet: **Ctrl** = Get, **Alt** = Set, plain = asks | Get / Set |
 | Outline | **+** of FUNCTIONS, VARIABLES, CASES, LOCAL VARIABLES | Add one, its Name in edit |
 | Outline | Click a Category header under VARIABLES | Fold / open that Category's variables (a variable's Category is set in its Properties) |
 | Project Browser | **F2**, **Del**, **Enter**, **F5**, **Ctrl+A** | Rename, delete (to the Recycle Bin), open, refresh, select all |

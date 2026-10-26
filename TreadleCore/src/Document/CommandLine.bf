@@ -7,15 +7,15 @@ namespace Treadle.Document
 	/// Treadle's own version. Bump `HostContract` when the command line changes shape.
 	static class TreadleInfo
 	{
-		public const String Version = "0.1.1";
+		public const String Version = "0.1.2";
 		/// Release channel of this build; shown by --version and the window title.
 		public const String Channel = "alpha";
-		/// The whole version string, "0.1.1-alpha": the one the title bar, Help > About, the updater and --version show.
+		/// The whole version string, "0.1.2-alpha": the one the title bar, Help > About, the updater and --version show.
 		public const String FullVersion = Version + "-" + Channel;
 		public const int HostContract = 1;
 		public const String Name = "Treadle";
 
-		/// The `--version` line: "Treadle 0.1.1-alpha (host contract 1)". Version and Channel match VERSION.txt
+		/// The `--version` line: "Treadle 0.1.2-alpha (host contract 1)". Version and Channel match VERSION.txt
 		/// and the [Platform.Windows] versions of TreadleEditor/BeefProj.toml (scripts/package.ps1 checks all three).
 		public static void VersionLine(String outText)
 		{

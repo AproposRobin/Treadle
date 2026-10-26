@@ -376,7 +376,7 @@ namespace Treadle.Editor
 				if (!folder)
 					System.IO.Path.GetDirectoryPath(value, start).IgnoreError();
 				char8[4096] buf = default;
-				if (Host.th_native_dialog(folder ? 1 : 0, start, &buf, 4096) == 1)
+				if (Host.th_native_dialog(folder ? 1 : 3, start, &buf, 4096) == 1)
 				{
 					value.Set(StringView(&buf));
 					changed = true;

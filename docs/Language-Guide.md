@@ -60,9 +60,11 @@ Three rules decide what runs when:
    node has certainly run. Elsewhere the reader shows the error "may not have run".
 
 In the picture, `Show(4)` prints `16`, then `160`. **Square** feeds both WriteLines, so it runs twice; after
-**Validate** (Shift+F7) the node says **evaluated 2x**. Here that costs nothing. When a value is expensive, or
-must not change between two uses, right-click its output pin and choose **Make local variable**: the value is
-stored once by a Set in the flow, and Get nodes read the stored value.
+**Validate** (Shift+F7) the node says **evaluated 2x** (hover the badge: "This value node runs once for each
+flow node that reads it"). Here that costs nothing. When a value is expensive, or must not change between two
+uses, right-click its output pin (or the badge) and choose **Create local variable**: the value is stored once
+by a Set in the flow, and what read the pin reads a Get of the Local. **Create variable** does the same with a
+variable of the type. On an unwired input pin both make the variable and wire its Get into the pin.
 
 `And` and `Or` compute their second input only when needed, and **Select** computes only the input it picks.
 
@@ -165,6 +167,13 @@ null is a fatal error naming the node, and a checked Cast (Properties > Checked)
 instead. `Option<T>` (section 5) does the same job for any type, with Switch and Is Case. The whole API is in
 
 [Core-Library.md](Core-Library.md).
+
+**Checking objects.** **Is Valid** (Node menu > Utilities > Objects) takes an object, a `T?` or a pointer and gives
+`true` when it holds something: not `null`, and in a Debug build an object that was not deleted (a deleted
+object's memory is kept marked until the program ends). `==` / `!=` against `null` still work and compare
+identity. **Is Type** gives `true` when an object is of a class (or a class derived from it) or implements an
+interface, `false` for `null`; choose the class in Properties, or drag from an object pin and pick **Is Dog** from
+the Node menu. To use the object as that class, **Cast To** (`null` when it is not one) or the checked Cast.
 
 **Math types.** The core has the vectors, matrices and shapes a game or a tool needs: `Vec2`, `Vec3`, `Vec4` (and
 `Vec2d` ... `Vec4d` in double), `Mat3` and `Mat4` (column-major, as shaders read them), `Quat` (rotations), `Color`
@@ -370,6 +379,16 @@ Return a Construct Lambda when the delegate must outlive the function.
 menu): they move into a new function of the type, a Call of it takes their place, and the wires that crossed
 the selection become its inputs and outputs.
 
+**Attributes.** Type Settings and a function's or variable's page in Properties have an **Attributes** section:
+**Add Attribute** lists the ones the compiler reads, the **X** on a row removes one, and the row's text holds the
+arguments (`Export "add_numbers"`). On a type: `CRepr` (laid out as C lays it out), `Packed` (no padding),
+`Align n` (16 at most), `Flags` (an enum of bit flags), `Copyable` (a struct with a destructor that is meant to be
+copied), `Obsolete "why"`. On a function or variable: `Export "name"` (a C symbol of a static function, exported
+by a library project), `Import "lib" "name"` (a static function without a Sheet that calls C), `Kernel` (GPU
+compute, [GPU-Compute.md](GPU-Compute.md)), `NoDiscard`, `Obsolete "why"`, `ExpandEnumAsFlow` (one flow output per
+case of the returned enum at each call), `Event` (a delegate field with Add / Remove / Invoke nodes). Another
+name is kept in the file and has no effect.
+
 ## 7. Calling C
 
 A **C import set** (a `.cimport` file naming C headers) turns a C library into nodes in the Node menu's **C**
@@ -449,7 +468,7 @@ Habits from other node editors and the Treadle names for them:
 | Right-click palette | **Node menu** | |
 | Function entry / result node | **Entry** / **Return** | |
 | Local variable | **local variable** (Outline) | A **Local** node is something else: an allocation |
-| Promote to local variable | **Make local variable** | On a value output pin |
+| Promote to Variable / Local Variable | **Create variable** / **Create local variable** | On a value pin (output or unwired input) |
 | Collapse to Function | **Extract to Function** | Ctrl+Shift+E |
 | Collapse Nodes | **Collapse Nodes** | A view only; the program does not change |
 | Make / Break Struct, Split Struct Pin | **Make** / **Break**, **Split Struct Pin** | |
@@ -458,7 +477,7 @@ Habits from other node editors and the Treadle names for them:
 | Create Event, bind | **Bind Function** | Or a **Lambda** |
 | Parent call | **Base** node as Receiver | |
 | Parent constructor | **Base Constructor** | **This Constructor** for another of the same type |
-| Is Valid | `!=` `null` into a Branch | |
+| Is Valid, Is A (class check) | **Is Valid**, **Is Type** | Utilities > Objects; `==` / `!=` against `null` still work |
 | Print to screen | `Console.WriteLine` | Its output goes to the Output Log on Run |
 | Exceptions, try / catch | **Result** / **Option**, **Result: match**, **Try** | No exceptions (section 5) |
 | `scope` / `using` / RAII | **Local**, **Defer**, **Defer Delete** | |

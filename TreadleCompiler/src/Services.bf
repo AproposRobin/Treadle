@@ -90,6 +90,9 @@ namespace Treadle.Compiler
 		/// again and binds only the Sheets that can see it (Compilation.Redeclare); a change to the
 		/// project file or the C import sets, or a type file that went away, compiles everything.
 		public bool Incremental = true;
+		/// The next compile reads everything again (a document's Sheets were replaced, e.g. a type renamed: the
+		/// last compilation's results name Sheet objects that are gone).
+		public bool ForceFull;
 		/// The last refresh: milliseconds, whether it was incremental, how many Sheets it bound and
 		/// how many types it declared.
 		public double LastMs;
@@ -331,12 +334,14 @@ namespace Treadle.Compiler
 		{
 			{
 				let fp = Fingerprint();
-				if (mLast != null && fp == mFingerprint)
+				if (mLast != null && fp == mFingerprint && !ForceFull)
 					return mLast;
 				let sw = scope System.Diagnostics.Stopwatch(true);
 				let root = (mCtx.Index != null) ? (StringView)mCtx.Index.Root : "";
 				mSheetsOnly = false;
-				if (Incremental && Refresh(root))
+				bool full = ForceFull;
+				ForceFull = false;
+				if (Incremental && !full && Refresh(root))
 				{
 					if (!mSheetsOnly)
 						mDeclGeneration++;

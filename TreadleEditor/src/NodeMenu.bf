@@ -777,6 +777,17 @@ namespace Treadle.Editor
 				Add(.Cast, "Utilities | Casting", scope $"Cast To {mContextType}", mContextType).Tooltip.AppendF("Converts the value to {}", mContextType);
 			Add(.Cast, "Utilities | Casting", "Cast To...").Tooltip.Set("Converts the value to the type set in Properties");
 			Add(.Cast, "Utilities | Casting", "Cast To... (checked)", "", "", "checked").Tooltip.Set("Runs Succeeded when the object is of the type set in Properties, Failed when not");
+			// Object checks: Is Valid (not null; in Debug not deleted) and Is Type (of a class or interface).
+			Add(.Operator, "Utilities | Objects", "Is Valid", "valid", "1").Tooltip.Set("True when the object (or a T?, or a pointer) holds something: not null, and in Debug an object that was not deleted");
+			Add(.Cast, "Utilities | Objects", "Is Type...", "", "", "test").Tooltip.Set("True when the object is of the class or interface chosen in Properties (false for null)");
+			if (mContext == .DataOut && !IsWild(mContextType))
+			{
+				let fam = TypeRules.Family(mContextType, mApp.Language.Hierarchy);
+				if (fam == .Object || fam == .Interface)
+					for (let t in mApp.ProjectTypes.Types)
+						if ((t.Kind == .Class || t.Kind == .Interface) && t.FullName != mContextType)
+							Add(.Cast, "Utilities | Objects", scope $"Is {t.Name}", t.FullName, "", "test").Tooltip.AppendF("True when the object is a {} (false for null)", t.Name);
+			}
 			Add(.Bind, "Utilities | Functions as values", "Bind Function").Tooltip.Set("A delegate of a function (choose it in Properties)");
 			Add(.Lambda, "Utilities | Functions as values", "Lambda").Tooltip.Set("A delegate whose body is a nested Sheet");
 			Add(.Invoke, "Utilities | Functions as values", "Invoke").Tooltip.Set("Calls a delegate");
@@ -2044,7 +2055,7 @@ namespace Treadle.Editor
 			case .Index:
 				return NodeFactory.Index(g);
 			case .Cast:
-				return NodeFactory.Cast(g, item.A, item.C == "checked");
+				return (item.C == "test") ? NodeFactory.IsType(g, item.A) : NodeFactory.Cast(g, item.A, item.C == "checked");
 			case .Construct:
 				SplitParamText(item.C, names, types);
 				return NodeFactory.Construct(g, item.A, item.B == "local", false, names, types);

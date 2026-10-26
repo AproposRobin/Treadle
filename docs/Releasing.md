@@ -131,9 +131,9 @@ and Beef 0.43.6 (`C:\Program Files\BeefLang\bin\BeefBuild.exe`, or `TREADLE_BEEF
 toolchain from `TREADLE_LLVM` or `tools\llvm-mingw` of the repository, and libclang from `TREADLE_LIBCLANG` or the main
 checkout when run in a git worktree (`-Llvm` / `-LibClang` name them explicitly).
 
-1. **Version.** One version in three places, which `package.ps1` checks agree: `VERSION.txt` (`0.1.1-alpha`),
-   `TreadleInfo.Version` + `Channel` in `TreadleCore/src/Document/CommandLine.bf` (`0.1.1`, `alpha`), and
-   `FileVersion = "0.1.1.0"` / `ProductVersion = "0.1.1"` under `[Platform.Windows]` in `TreadleEditor/BeefProj.toml`.
+1. **Version.** One version in three places, which `package.ps1` checks agree: `VERSION.txt` (`0.1.2-alpha`),
+   `TreadleInfo.Version` + `Channel` in `TreadleCore/src/Document/CommandLine.bf` (`0.1.2`, `alpha`), and
+   `FileVersion = "0.1.2.0"` / `ProductVersion = "0.1.2"` under `[Platform.Windows]` in `TreadleEditor/BeefProj.toml`.
 2. **Package and prove it:**
    ```
    powershell -File scripts\package.ps1 -Verify [-VerifyDir <empty folder>]
@@ -381,7 +381,7 @@ Every installed copy looks for these names. **They must never change.**
 | `Treadle-<version>-linux-x64.tar.gz` | the Linux package, one top folder `Treadle-<version>-linux-x64/` |
 | `SHA256SUMS` | one `<64 hex>  <asset name>` line per package, as `sha256sum` writes it |
 
-The tag is `v<version>` where `<version>` is the `VERSION.txt` line (`v0.1.1-alpha`). A package carries `files.txt`
+The tag is `v<version>` where `<version>` is the `VERSION.txt` line (`v0.1.2-alpha`). A package carries `files.txt`
 at its root: every other file (and, on Linux, link) of the package, relative, `/` separators. `package.ps1` and
 `package-linux.sh` write it; the updater installs and removes files by it.
 

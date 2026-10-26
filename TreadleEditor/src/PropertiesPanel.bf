@@ -187,6 +187,17 @@ namespace Treadle.Editor
 					StorageRowNode(node); // LivesIn.bf
 					DrawOverloadRow(mg, node, readOnly);
 				case .Cast:
+					if (node.HasSetting("test"))
+					{
+						// Is Type: the class or interface the object is tested against (the legal ones only).
+						if (TsType("Is Type", scope $"##ncast{id}", node.Text, v, "True when the object is of this class (or a class derived from it) or implements this interface; false for null", .TypeTest) && !readOnly)
+						{
+							BeginEdit();
+							NodeFactory.SetCastType(g, node, v);
+							CommitCurrent();
+						}
+						break;
+					}
 					if (TsType("Cast To", scope $"##ncast{id}", node.Text, v) && !readOnly)
 					{
 						BeginEdit();

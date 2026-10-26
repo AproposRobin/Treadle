@@ -20,7 +20,10 @@ Each line says what does not work and what to do today.
   one stops the build. Use an array (`int[]`) made by Construct or Local with a length.
 * **Generic parameters that are numbers** (`generic const N int`, `Buf<4>`): not built; `4` is read as a type
   name. Pass the number to a constructor and keep it in a field.
-* **Is Valid** is not a node yet. Wire the object and `null` into an `!=` Operator and that into a Branch.
+* **A class's own default for an inherited variable** is not built: the Outline lists the base's variables under
+  Inherited (they start at the base's default), but a child cannot override that default yet (designed: a value
+  changed in the child is written as a `basedefault` record, shown as overridden with a reset to the base's, and
+  applied after the base constructor runs). Set it with a Set in the child's constructor.
 * **Very deep recursion** can run out of stack with no message: the program ends with exit code 3221225725
   (0xC00000FD) on Windows. A Debug program has an 8 MB main stack (a recursive JSON parser reaches about 5,000
   levels), a Release one the 1 MB default (about 2,400). Limit the depth your program accepts, or keep your own
@@ -51,6 +54,13 @@ Each line says what does not work and what to do today.
 
 ## Editor limits
 
+* **Is Type** takes its class from Properties or from the Node menu's **Is <Class>** rows (dragged from an object
+  pin); there is no class picker on the node itself.
+* **Renaming a type** renames it in the project's own types only: a project that uses this one as a dependency
+  keeps the old name until you change it there. Short names are renamed only in types of the same namespace or
+  that use it.
+* The Outline's **Inherited** variables come from the project's own base classes; a core-library or dependency base
+  class's variables are not listed (its Get / Set nodes are in the Node menu).
 * **Expand Function** (the reverse of Extract to Function: put a function's nodes back in place of its Call) is
   not built. **Extract to Function** does not work in a Lambda Sheet.
 * **Node groups do not nest**: a node is in one group at most. Ctrl+A selects a folded group's nodes, not the

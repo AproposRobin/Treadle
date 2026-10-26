@@ -176,11 +176,20 @@ namespace Treadle.Editor
 				Validate(true);
 		}
 
-		/// "Validated" / "Not validated" for the status bar, its colour and icon.
+		/// "Validated" / "Not validated" for the status bar, its colour and icon: yellow from any edit (or the
+		/// start) until Validate runs; then red when it found errors, green when it found none (a warnings
+		/// icon when there are warnings). The build state keeps its own text next to it.
 		void ValidateStateText(String outText, out uint32 color, out StringView icon)
 		{
 			if (Validated)
 			{
+				if (mValidate != null && mValidate.Running)
+				{
+					outText.Append("Validating...");
+					color = Look.AccentBlue;
+					icon = Icon.LoaderCircle;
+					return;
+				}
 				int errors = 0;
 				int warnings = 0;
 				if (mValidate != null)
@@ -188,14 +197,42 @@ namespace Treadle.Editor
 					errors = mValidate.ErrorCount;
 					warnings = mValidate.WarningCount;
 				}
-				outText.Append(Prefs.ValidateAfterEdits ? "Validated (after each edit)" : "Validated");
-				color = (errors > 0) ? Look.Error : ((warnings > 0) ? Look.Warning : Look.Success);
+				if (errors > 0)
+					outText.AppendF("Validate: {} error{}", errors, (errors == 1) ? "" : "s");
+				else
+					outText.Append(Prefs.ValidateAfterEdits ? "Validated (after each edit)" : "Validated");
+				color = (errors > 0) ? Look.Error : Look.Success;
 				icon = (errors > 0) ? Icon.CircleX : ((warnings > 0) ? Icon.TriangleAlert : Icon.CircleCheck);
 				return;
 			}
 			outText.Append("Not validated");
-			color = mEverValidated ? Look.AccentYellow : Look.ForegroundDim;
+			color = Look.AccentYellow;
 			icon = Icon.CircleHelp;
+		}
+
+		/// The edit serial of each document when the last build started.
+		Dictionary<int, int32> mBuiltAt = new .() ~ delete _;
+
+		/// A build started: what it builds is the workspace as it is now.
+		void MarkBuilt()
+		{
+			UpdateEditSerials();
+			mBuiltAt.Clear();
+			for (let kv in mEditSerials)
+				mBuiltAt[kv.key] = kv.value.serial;
+		}
+
+		/// True when a document changed since the last build started (a save does not make it built).
+		public bool BuildStale
+		{
+			get
+			{
+				UpdateEditSerials();
+				for (let kv in mEditSerials)
+					if (kv.value.serial != (mBuiltAt.TryGetValue(kv.key, let at) ? at : 0))
+						return true;
+				return false;
+			}
 		}
 	}
 }
