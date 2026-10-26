@@ -158,6 +158,7 @@ namespace Treadle.Editor
 			case "focus": finished = SelfTestFocus(); // SelfTestFocus.bf
 			case "glreset": finished = SelfTestGlReset(); // SelfTestGraphics.bf
 			case "soak": finished = SelfTestSoak(); // SelfTestGraphics.bf (TREADLE_SOAK_MINUTES, TREADLE_SOAK_FOCUSED)
+			case "genericparam": finished = SelfTestGenericParam(); // SelfTestGenericParam.bf (needs an open project; the editor suite runs it on its own, SelfTestEditor3.bf)
 			case "enumunder": finished = SelfTestEnumUnder(); // SelfTestLayout.bf
 			case "scale": finished = SelfTestScale(false); // SelfTestScale.bf
 			case "scalemeasure": finished = SelfTestScale(true);

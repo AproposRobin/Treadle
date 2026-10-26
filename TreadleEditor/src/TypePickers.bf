@@ -232,6 +232,13 @@ namespace Treadle.Editor
 		/// Self tests: characters typed into the open list's search field, one a frame.
 		public static String TestType = new .() ~ delete _;
 
+		/// Drops the built rows: for a picker whose entries live only for one call (NameComboFor).
+		public static void ForgetRows()
+		{
+			sRows.Clear();
+			sRowsKey.Clear();
+		}
+
 		public static void BuildRows(StringView id, StringView s, List<TypeEntry> entries, StringView noneLabel, out bool exact)
 		{
 			exact = false;
@@ -865,7 +872,11 @@ namespace Treadle.Editor
 				e.Glyph = (pt != null) ? GlyphOf(pt.Kind) : "";
 				entries.Add(e);
 			}
-			return TypeCombo.Draw(id, current, entries, outValue, default, width, default, false, null, false, placeholder);
+			let picked = TypeCombo.Draw(id, current, entries, outValue, default, width, default, false, null, false, placeholder);
+			// The entries are freed when this call returns; the open list's rows (and the key that makes the
+			// next frame reuse them, which a new list at the same address matched) must not outlive them.
+			TypeCombo.ForgetRows();
+			return picked;
 		}
 	}
 }

@@ -200,6 +200,11 @@ namespace Treadle.Editor
 					mE3Phase--;
 				mSelfTestWait = Math.Max(mSelfTestWait, 2);
 				return false;
+			case 6:
+				// Generic parameters and their pickers (SelfTestGenericParam.bf): one phase per frame on this project.
+				if (!SelfTestGenericParam())
+					mE3Phase--;
+				return false;
 			default:
 				// File > Close Project, then the folder goes.
 				for (let d in mDocs)
