@@ -31,15 +31,40 @@ namespace Treadle.Editor
 		[CLink] static extern void ImDrawList_AddImage(ImDrawList* self, TextureRef tex_ref, ImVec2 p_min, ImVec2 p_max, ImVec2 uv_min, ImVec2 uv_max, uint32 col);
 
 		static Dictionary<String, DocImage> sCache = new .() ~ { for (let kv in _) { delete kv.key; delete kv.value; } delete _; };
+		static int32 sGeneration;
+
+		/// Pictures loaded so far (one texture each at most).
+		public static int CachedCount => sCache.Count;
 
 		/// The picture at `fullPath` (loaded on first use; a failure is remembered). Never null.
 		public static DocImage Get(StringView fullPath)
 		{
+			// The drawing context was rebuilt (a lost graphics device, Window > Restore Graphics): the textures went
+			// with the old one, so each picture is uploaded again the next time it is shown.
+			let generation = Host.th_gl_generation();
+			if (generation != sGeneration)
+			{
+				if (sGeneration != 0)
+				{
+					for (let img in sCache.Values)
+						img.Tex = 0;
+#if BF_PLATFORM_WINDOWS
+					Win.RefreshEntryPoints();
+#endif
+				}
+				sGeneration = generation;
+			}
 			String key = scope .(fullPath);
 			key.ToLower();
 			key.Replace('/', '\\');
 			if (sCache.TryGetValue(key, let found))
+			{
+#if BF_PLATFORM_WINDOWS
+				if (found.Tex == 0 && !found.Failed && !Win.Load(fullPath, found))
+					found.Failed = true;
+#endif
 				return found;
+			}
 			let img = new DocImage();
 			sCache[new String(key)] = img;
 #if BF_PLATFORM_WINDOWS
@@ -149,6 +174,16 @@ namespace Treadle.Editor
 					return false;
 				sOk = true;
 				return true;
+			}
+
+			/// A new drawing context: its GL 3 entry point is looked up again.
+			public static void RefreshEntryPoints()
+			{
+				if (!sOk)
+					return;
+				let gl = LoadLibraryA("opengl32.dll");
+				let wglGet = (gl != null) ? (function void*(char8*))GetProcAddress(gl, "wglGetProcAddress") : null;
+				sGenerateMipmap = (wglGet != null) ? (.)wglGet("glGenerateMipmap") : null;
 			}
 
 			public static bool Load(StringView path, DocImage img)

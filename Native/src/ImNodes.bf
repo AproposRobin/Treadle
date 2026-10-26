@@ -138,5 +138,57 @@ namespace ImGui
 		/// Handler for host asserts (IM_ASSERT, SDL's). Pass a `function void(char8* expr, char8* file, int32 line)`
 		/// cast to void*; it must not block (no dialog). NULL restores the stderr line. Export count +1 (treadlehost.dll).
 		[CLink] public static extern void th_set_assert_handler(void* handler);
+
+		// The graphics device (host 1.2.0.0): a lost or no longer current context is found every frame and rebuilt.
+		/// Handler for the host's "[gl] ..." lines (a `function void(char8* line)` cast to void*). Before th_init.
+		[CLink] public static extern void th_set_log_handler(void* handler);
+		/// The last device check: 0 ok, 1 context not current, 2 reset, 3 GL_CONTEXT_LOST, 4 swaps failing, 5 no renderer,
+		/// 6 device reset event, 7 could not be restored, 8 not started. Safe from any thread.
+		[CLink] public static extern int32 th_gl_check();
+		[CLink] public static extern char8* th_gl_check_name(int32 check);
+		/// The last and the longest buffer swap (ms). Safe from any thread.
+		[CLink] public static extern int32 th_gl_last_swap_ms();
+		[CLink] public static extern int32 th_gl_max_swap_ms();
+		/// 1 after three failed rebuilds: nothing is drawn until a restore works.
+		[CLink] public static extern int32 th_gl_failed();
+		/// +1 per rebuild: textures made under an older generation are gone.
+		[CLink] public static extern int32 th_gl_generation();
+		[CLink] public static extern int32 th_gl_rebuilds();
+		[CLink] public static extern int32 th_gl_window_recreates();
+		/// Rebuilds the drawing side at the start of the next frame (Window > Restore Graphics).
+		[CLink] public static extern void th_gl_request_restore(char8* why);
+		/// Self tests: 1 delete the context behind the host, 2 report a reset, 3 = 1 + three failed creations, 4 = 1 + six.
+		[CLink] public static extern void th_gl_simulate(int32 mode);
+		[CLink] public static extern void th_gl_probe_request();
+		/// 0 not read yet, 1 read (rgba: R in the low byte), 2 failed.
+		[CLink] public static extern int32 th_gl_probe_result(uint32* rgba);
+		[CLink] public static extern void th_push_window_event(int32 windowEvent);
+		[CLink] public static extern void th_soak_stats(SoakStats* stats);
+		[CLink] public static extern int32 th_last_vtx_count();
+		[CLink] public static extern int32 th_gl_present_armed();
+		[CLink] public static extern int64 th_gl_swaps();
+		[CLink] public static extern int64 th_gl_present_hits();
+		[CLink] public static extern int64 th_gl_present_misses();
+		[CLink] public static extern char8* th_gl_last_sdl_error();
+	}
+
+	/// th_soak_stats (-1 = not available).
+	[CRepr]
+	struct SoakStats
+	{
+		public int64 PrivateBytes;
+		public int64 GpuProcessBytes;
+		public int64 GpuAvailableKb;
+		public int32 LiveTextures;
+		public int32 LiveBuffers;
+		public int32 LiveVertexArrays;
+		public int32 LivePrograms;
+		public int32 LiveShaders;
+		public int32 HighestName;
+		public int32 ImGuiTextures;
+		public int32 AtlasWidth;
+		public int32 AtlasHeight;
+		public int32 BakedFonts;
+		public int32 Frames;
 	}
 }

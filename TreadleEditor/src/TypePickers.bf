@@ -280,6 +280,23 @@ namespace Treadle.Editor
 						rest.Add(.() { Group = e.Group, Entry = e });
 				}
 				sRows.AddRange(rest);
+				// A type typed out in full comes first, so Enter takes it ("uint8" is uint8, not uint; "int32" is
+				// not the "int (default)" row).
+				for (int i < sRows.Count)
+				{
+					let e = sRows[i].Entry;
+					if (e == null)
+						continue;
+					let dot = e.Name.LastIndexOf('.');
+					let shortName = (dot >= 0) ? e.Name.Substring(dot + 1) : (StringView)e.Name;
+					if (e.Name == s || StringView.Compare(shortName, s, true) == 0)
+					{
+						let row = sRows[i];
+						sRows.RemoveAt(i);
+						sRows.Insert(0, row);
+						break;
+					}
+				}
 			}
 			ClearAndDeleteItems!(TestRows);
 			for (let r in sRows)

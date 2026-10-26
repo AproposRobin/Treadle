@@ -18,6 +18,13 @@ namespace Treadle.Editor
 		public static void Register()
 		{
 			Host.th_set_assert_handler((void*)(function void(char8*, char8*, int32))=> OnAssert);
+			Host.th_set_log_handler((void*)(function void(char8*))=> OnHostLog);
+		}
+
+		/// The host's "[gl] ..." lines (the graphics device: start, checks on window and display events, rebuilds).
+		static void OnHostLog(char8* line)
+		{
+			Notify.Log(.Info, "Graphics", StringView(line));
 		}
 
 		static void OnAssert(char8* expr, char8* file, int32 line)

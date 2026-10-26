@@ -32,6 +32,7 @@ keyboard (its tab in front, no text field in edit).
 | **F9** | Breakpoint on the selected node(s) (or click the circle on a node's corner) |
 | **F10** / **F11** / **Shift+F11** | Step Over / Into / Out while stopped |
 | **F1** | Documentation |
+| **Ctrl+Alt+R** | Restore Graphics (Window menu): rebuilds the drawing of the window when it stays black or frozen; files and undo are not touched |
 
 ## On the Sheet
 

@@ -1686,15 +1686,37 @@ EXPORTS
     th_end_frame @1685
     th_get_mono_font @1686
     th_get_window_scale @1687
-    th_init @1688
-    th_last_error @1689
-    th_native_dialog @1690
-    th_poll_drop @1691
-    th_raise_window @1692
-    th_set_assert_handler @1693
-    th_set_log_path @1694
-    th_set_title @1695
-    th_set_window_quiet @1696
-    th_shutdown @1697
-    th_window_flags @1698
-    th_window_quiet @1699
+    th_gl_check @1688
+    th_gl_check_name @1689
+    th_gl_diag @1690 DATA
+    th_gl_failed @1691
+    th_gl_generation @1692
+    th_gl_last_sdl_error @1693
+    th_gl_last_swap_ms @1694
+    th_gl_max_swap_ms @1695
+    th_gl_present_armed @1696
+    th_gl_present_hits @1697
+    th_gl_present_misses @1698
+    th_gl_probe_request @1699
+    th_gl_probe_result @1700
+    th_gl_rebuilds @1701
+    th_gl_request_restore @1702
+    th_gl_simulate @1703
+    th_gl_swaps @1704
+    th_gl_window_recreates @1705
+    th_init @1706
+    th_last_error @1707
+    th_last_vtx_count @1708
+    th_native_dialog @1709
+    th_poll_drop @1710
+    th_push_window_event @1711
+    th_raise_window @1712
+    th_set_assert_handler @1713
+    th_set_log_handler @1714
+    th_set_log_path @1715
+    th_set_title @1716
+    th_set_window_quiet @1717
+    th_shutdown @1718
+    th_soak_stats @1719
+    th_window_flags @1720
+    th_window_quiet @1721

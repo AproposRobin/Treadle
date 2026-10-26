@@ -96,6 +96,23 @@ Each line says what does not work and what to do today.
   `LD_LIBRARY_PATH` set to the Treadle folder. Opening a sample in place writes its `build` folder into
   `samples\`. `samples\README.md` in the Treadle folder has the list.
 * **No macOS** build.
+* **A black or frozen editor window** after the computer slept or was locked, after a display or graphics driver
+  reset, or when a laptop switched graphics chips: Treadle finds a lost drawing context by itself and rebuilds it (the
+  session log gets "[gl] context lost after ...: recreating" and "[gl] restored"). If the window stays black, use
+  **Window > Restore Graphics** or **Ctrl+Alt+R**; your open files and undo history are not touched. If even that
+  fails, the window says "The graphics device was lost and could not be restored. Save All and restart." The editor
+  keeps running underneath and the autosave goes on, so no work is lost. On Linux the same rebuild runs; there the
+  message is in the window title.
+* **Overlays that hook into the window's drawing** can stop an OpenGL window from showing new frames: the Nahimic
+  audio overlay of Alienware, Dell and MSI sound software (`NahimicOSD.dll`) is one seen with a frozen Treadle window;
+  RivaTuner, the Discord, Steam and NVIDIA overlays hook in the same way. Treadle watches whether its frames reach the
+  screen and rebuilds the drawing when they stop (session log: "frames drawn but not presented"); the session log
+  names any such overlay at start-up. If the window still freezes, turn the overlay off for `Treadle.exe` (in
+  Alienware Command Center: Audio, the Nahimic or sound overlay setting), and keep Treadle on the faster graphics chip
+  as described below.
+* **Laptops with two graphics chips** (NVIDIA Optimus, AMD switchable graphics): Treadle asks the driver to run it on
+  the faster chip for the whole session, so the driver does not move it between chips while it runs. To choose the
+  other chip, set it for `Treadle.exe` in Windows Settings > System > Display > Graphics; that choice wins.
 * **Updates** come from GitHub Releases and install into the Treadle folder itself, so that folder must be
   writable (not Program Files) and its path short enough for the package's deepest files (about 150 characters
   on Windows). Releases are not code-signed: the download is checked against the release's SHA256SUMS, which

@@ -106,7 +106,7 @@ namespace Treadle.Editor
 			{
 			case "smoke": finished = SelfTestSmoke();
 			case "codec": finished = SelfTestCodec();
-			case "editor": finished = SelfTestEditor(); if (finished) { mSelfTests.Insert(1, new String("entry")); mSelfTests.Insert(2, new String("focus")); } // the first-program case (SelfTestEntry.bf), then focus loss and return (SelfTestFocus.bf)
+			case "editor": finished = SelfTestEditor(); if (finished) { mSelfTests.Insert(1, new String("entry")); mSelfTests.Insert(2, new String("focus")); mSelfTests.Insert(3, new String("glreset")); } // the first-program case (SelfTestEntry.bf), focus loss and return (SelfTestFocus.bf), a lost drawing context (SelfTestGraphics.bf)
 			case "menu": finished = SelfTestMenu();
 			case "startsamples": SelfTestStartSamples(ref finished); // captures: StartPage.bf
 			case "reportdialog":
@@ -156,6 +156,9 @@ namespace Treadle.Editor
 			case "tutorial": finished = SelfTestTutorial(); // captures: SelfTestTutorial.bf
 			case "entry": finished = SelfTestEntry(); // SelfTestEntry.bf
 			case "focus": finished = SelfTestFocus(); // SelfTestFocus.bf
+			case "glreset": finished = SelfTestGlReset(); // SelfTestGraphics.bf
+			case "soak": finished = SelfTestSoak(); // SelfTestGraphics.bf (TREADLE_SOAK_MINUTES, TREADLE_SOAK_FOCUSED)
+			case "enumunder": finished = SelfTestEnumUnder(); // SelfTestLayout.bf
 			case "scale": finished = SelfTestScale(false); // SelfTestScale.bf
 			case "scalemeasure": finished = SelfTestScale(true);
 			case "scalegen": finished = SelfTestScaleGen();

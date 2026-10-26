@@ -2,13 +2,14 @@
 // 1.0.0.0 was the first Treadle host build; 1.1.0.0 adds the quiet window (th_set_window_quiet, th_window_quiet)
 // and, before any release, the Treadle names (th_ prefix, treadlehost) and the window icon (SDL_SetWindowIcon; the DLL's
 // icon resource below).
+// 1.2.0.0 adds the graphics-device watch and rebuild (th_gl_*), the log handler and the soak statistics (th_soak_stats).
 // The C interface is host contract 1 (FORK-NOTES.md,
 // "Native host"). Bump the version here when the host changes. The company and copyright come from
 // the generated treadleversion.h (Native\build_windows.ps1 writes it from NOTICE).
 #include "treadleversion.h"
 
-#define TH_HOST_VERSION      1,1,0,0
-#define TH_HOST_VERSION_STR  "1.1.0.0"
+#define TH_HOST_VERSION      1,2,0,0
+#define TH_HOST_VERSION_STR  "1.2.0.0"
 
 // The Treadle icon (packaging/treadle-icon/Treadle.ico; build_windows.ps1 passes that folder with -I).
 1 ICON "Treadle.ico"

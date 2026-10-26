@@ -9,16 +9,19 @@ DefaultNamespace = "Treadle.Editor"
 
 [Configs.Debug.Win64]
 TargetName = "Treadle"
+LibPaths = ["$(WorkspaceDir)/Native/bin/win64/gpu_preference.obj"]
 PreprocessorMacros = ["DEBUG", "TREADLE_SELFTEST"]
 PostBuildCmds = ["CopyFilesIfNewer(\"$(ProjectDir)/assets\", \"$(TargetDir)\")"]
 
 [Configs.Release.Win64]
 TargetName = "Treadle"
+LibPaths = ["$(WorkspaceDir)/Native/bin/win64/gpu_preference.obj"]
 PreprocessorMacros = ["RELEASE", "TREADLE_SELFTEST"]
 PostBuildCmds = ["CopyFilesIfNewer(\"$(ProjectDir)/assets\", \"$(TargetDir)\")"]
 
 [Configs.ReleasePackage.Win64]
 TargetName = "Treadle"
+LibPaths = ["$(WorkspaceDir)/Native/bin/win64/gpu_preference.obj"]
 PostBuildCmds = ["CopyFilesIfNewer(\"$(ProjectDir)/assets\", \"$(TargetDir)\")"]
 
 [Configs.Debug.Linux64]
@@ -41,5 +44,5 @@ Description = "Treadle visual programming editor"
 Company = "AproposRobin"
 Product = "Treadle"
 Copyright = "Copyright 2026 AproposRobin"
-FileVersion = "0.1.4.0"
-ProductVersion = "0.1.4"
+FileVersion = "0.1.5.0"
+ProductVersion = "0.1.5"

@@ -4,7 +4,7 @@ using Treadle.Language;
 
 namespace Treadle.Update
 {
-	/// The small plain window the update helper shows while it installs ("Installing Treadle 0.1.4-alpha: 120 of
+	/// The small plain window the update helper shows while it installs ("Installing Treadle 0.1.5-alpha: 120 of
 	/// 4100 files" and a progress bar), so a long swap does not look dead. Windows only (the Linux helper has no
 	/// window); never in a self test, a quiet run or when TREADLE_UPDATE_NO_WINDOW is set.
 	class InstallProgress

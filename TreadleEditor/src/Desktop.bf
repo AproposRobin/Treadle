@@ -37,6 +37,7 @@ namespace Treadle.Editor
 #if BF_PLATFORM_WINDOWS
 		[CLink, CallingConvention(.Stdcall)] static extern uint32 GetCurrentThreadId();
 		[CLink, CallingConvention(.Stdcall)] static extern int32 EnumThreadWindows(uint32 threadId, function [CallingConvention(.Stdcall)] int32(void* hwnd, int lParam) cb, int lParam);
+		[CLink, CallingConvention(.Stdcall)] static extern int32 IsWindow(void* hwnd);
 		[CLink, CallingConvention(.Stdcall)] static extern int32 IsWindowVisible(void* hwnd);
 		[CLink, CallingConvention(.Stdcall)] static extern int32 GetClassNameA(void* hwnd, char8* buf, int32 max);
 		[CLink, CallingConvention(.Stdcall)] static extern uint32 GetDpiForWindow(void* hwnd);
@@ -72,7 +73,7 @@ namespace Treadle.Editor
 			get
 			{
 #if BF_PLATFORM_WINDOWS
-				if (sHwnd == null)
+				if (sHwnd == null || IsWindow(sHwnd) == 0) // a new window after a lost graphics device (GraphicsDevice.bf)
 					EnumThreadWindows(GetCurrentThreadId(), => FindProc, 0);
 				return sHwnd;
 #else

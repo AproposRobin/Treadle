@@ -81,6 +81,10 @@ $libs = @('-lopengl32','-lsetupapi','-lwinmm','-limm32','-lversion','-lole32','-
 # --no-insert-timestamp: no link time in the PE header, so a rebuild gives the same bytes.
 & $cxx -shared -o "$out\treadlehost.dll" @objs "-Wl,--output-def,$out\treadlehost.def" '-Wl,--no-insert-timestamp' -s -static "$sdl\lib\libSDL2.a" @libs
 if ($LASTEXITCODE) { throw 'link failed' }
+# The editor's GPU-preference exports (host\gpu_preference.c): an MSVC-target object file the editor links
+# (TreadleEditor\BeefProj.toml), because the drivers need the values as initialised data in Treadle.exe.
+& (Join-Path $bin 'clang.exe') --target=x86_64-pc-windows-msvc -O2 -mno-incremental-linker-compatible -c (Join-Path $here 'host\gpu_preference.c') -o "$out\gpu_preference.obj"
+if ($LASTEXITCODE) { throw 'compile failed: host\gpu_preference.c' }
 # MSVC-compatible import library so Beef (lld-link) can link against the DLL.
 & (Join-Path $bin 'llvm-dlltool.exe') -m i386:x86-64 -d "$out\treadlehost.def" -D treadlehost.dll -l "$out\treadlehost.lib"
 if ($LASTEXITCODE) { throw 'dlltool failed' }

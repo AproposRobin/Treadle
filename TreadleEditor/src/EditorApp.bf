@@ -1987,6 +1987,9 @@ namespace Treadle.Editor
 					mLayoutVersion = 0;
 					mDockBuilt = false;
 				}
+				// A black or frozen window after sleep, a lock or a display change: a new drawing context (GraphicsDevice.bf).
+				if (IconItem(Icon.RefreshCw, "Restore Graphics", "Ctrl+Alt+R"))
+					RestoreGraphics("Window > Restore Graphics");
 				Gui.EndMenu();
 			}
 			if (Gui.BeginMenu("Help"))

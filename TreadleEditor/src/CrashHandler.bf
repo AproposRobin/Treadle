@@ -600,6 +600,22 @@ namespace Treadle.Editor
 			let stage = sLoopStage;
 			t.Add("[watch] frame loop stalled "); t.Dec((int)(ms / 1000)); t.Add(" s (stage: "); t.Add(StringView(stage)); t.Add("); main thread:\r\n");
 			Win32Raw.Write(log, t.GetView());
+			// The graphics device as the host last saw it (plain reads of ints and a static name: no lock, no allocation).
+			let glCheck = ImGui.Host.th_gl_check();
+			t.Clear();
+			t.Add("[watch] graphics: last check "); t.Add(StringView(ImGui.Host.th_gl_check_name(glCheck)));
+			t.Add(", last present "); t.Dec(ImGui.Host.th_gl_last_swap_ms()); t.Add(" ms, longest "); t.Dec(ImGui.Host.th_gl_max_swap_ms());
+			t.Add(" ms, rebuilds "); t.Dec(ImGui.Host.th_gl_rebuilds());
+			t.Add(", swaps "); t.Dec(ImGui.Host.th_gl_swaps());
+			t.Add(", presented "); t.Dec(ImGui.Host.th_gl_present_hits()); t.Add(" of "); t.Dec(ImGui.Host.th_gl_present_hits() + ImGui.Host.th_gl_present_misses());
+			t.Add(" checks (watch "); t.Add(ImGui.Host.th_gl_present_armed() != 0 ? "on" : "off"); t.Add(")");
+			let sdlErr = ImGui.Host.th_gl_last_sdl_error();
+			if (sdlErr != null && sdlErr[0] != 0)
+			{
+				t.Add(", last swap error: "); t.Add(StringView(sdlErr));
+			}
+			t.Add("\r\n");
+			Win32Raw.Write(log, t.GetView());
 			EnsureSymbols();
 			for (int i < count)
 			{

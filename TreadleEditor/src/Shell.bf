@@ -241,6 +241,7 @@ namespace Treadle.Editor
 				UiFont = Gui.igGetFont();
 			let now = Desktop.Now;
 			TrackWindowFocus(now);
+			GraphicsTick(); // Ctrl+Alt+R, a failed restore (GraphicsDevice.bf)
 			// Per-monitor DPI: follow the monitor the window is on.
 			if (now - mDpiCheckTime > 0.5)
 			{

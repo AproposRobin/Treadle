@@ -92,6 +92,12 @@ namespace Treadle.Editor
 		{
 			if (fe == null)
 				return null;
+			// The compilation first: it takes the latest edits (an Underlying Type changed in Type Settings) and moves
+			// the generation on. Read before it, the generation could be one the edits have not reached yet, and the
+			// cached layout would stay the old one until something else asked the front end.
+			let current = fe.Current;
+			if (current == null)
+				return null;
 			let gen = fe.DeclGeneration;
 			if (gen != sGeneration)
 			{
