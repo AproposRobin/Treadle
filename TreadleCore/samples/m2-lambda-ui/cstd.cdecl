@@ -1,0 +1,31 @@
+# treadle 1
+type cstd class
+	namespace C
+	static
+	doc "C declarations of the import set cstd (cstd.cimport), written by the C header import. Do not edit: the import rewrites this file."
+
+function tmjdt div
+	static
+	returns div_t
+param numerator int32
+param denominator int32
+
+function esy4a printf
+	static
+	returns int32
+	attr Variadic
+param format char8*
+
+function mx04c qsort
+	static
+param base void*
+param numOfElements uint
+param sizeOfElements uint
+param ptFuncCompare function:int32(void*,void*)
+cconst RAND_MAX int32 32767
+cstruct _div_t
+	size 8
+	align 4
+	field quot int32 0
+	field rem int32 4
+ctypedef div_t _div_t

@@ -1,0 +1,8 @@
+# (1, 2, 3) * 2.5 * 2; MakeBig(7); C's c_make_big(4); C's check through the exports (42); Half of
+# (3, 5) in registers; the virtual Get(10); MakeBig(3) through a delegate (its last field)
+== exit
+0
+== stdout
+scaled 5.0 10.0 15.0
+big 7 14 21 c 4 8 12 check 42
+half 1.5 2.5 virtual 10 12 delegate 9

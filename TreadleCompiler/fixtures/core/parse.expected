@@ -1,0 +1,49 @@
+== exit
+0
+== stdout
+[123] -> 123
+[-42] -> -42
+[+7] -> 7
+[0x1F] -> 31
+[-0X1f] -> -31
+[0b1010] -> 10
+[1'000'000] -> 1000000
+[9223372036854775807] -> 9223372036854775807
+[-9223372036854775808] -> -9223372036854775808
+[9223372036854775808] -> Overflow
+[0xFFFFFFFFFFFFFFFF] -> Overflow
+[] -> NoValue
+[-] -> NoValue
+[0x] -> NoValue
+[ 5] -> InvalidChar at 0
+[12a] -> InvalidChar at 2
+[1.5] -> InvalidChar at 1
+[3.25] -> 3.25
+[-1e3] -> -1000
+[.5] -> 0.5
+[5.] -> 5
+[1e300] -> 1e+300
+[1e400] -> inf
+[-Infinity] -> -inf
+[inf] -> inf
+[NaN] -> nan
+[] -> NoValue
+[1e] -> InvalidChar at 2
+[1.2.3] -> InvalidChar at 3
+[abc] -> InvalidChar at 0
+[2,5] -> InvalidChar at 1
+[0.1] -> 0.1
+[3.4e39] -> inf
+[-2.5] -> -2.5
+[true] -> true
+[FALSE] -> false
+[True] -> true
+[] -> NoValue
+[yes] -> InvalidChar at 0
+[ true] -> InvalidChar at 0
+true
+77
+false
+2.75
+-0.5
+true

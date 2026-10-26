@@ -1,0 +1,37 @@
+# treadle 1
+# expect b2 - T2198
+type NestedLambdaByRef class
+	namespace Broken
+	static
+	doc "A Lambda inside a Lambda Sheet capturing a local of the function by reference while the Lambda around it holds it by value: the inner one would write the outer closure's copy, not the function's variable."
+
+function f1 Run
+	static
+local count int
+sheet body
+node a1 Entry
+node a2 Lambda
+	set type delegate:void(int)
+	set alloc construct
+	set inputs x
+node a3 Delete
+node a4 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.value a3.object
+wire a3.then a4.in
+sheet lambda:a2
+node b1 Entry
+node b2 Lambda
+	set type delegate:int()
+	set alloc local
+	capture count by-ref
+node b3 Return
+wire b1.then b2.in
+wire b2.then b3.in
+sheet lambda:b2
+node c1 Entry
+node c2 Get local:count
+node c3 Return
+wire c1.then c3.in
+wire c2.value c3.value

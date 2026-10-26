@@ -1,0 +1,128 @@
+# treadle 1
+type FormatMain class
+	namespace Cx
+	static
+	doc "Core String.AppendF ({0} to {3}, braces doubled) and Split (with and without empty pieces) into a List<StringView>."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Local String
+node a3 Call String.AppendF
+	in format "{0} + {1} = {2}"
+	in arg0 "2"
+	in arg1 "3"
+	in arg2 "5"
+node a4 Call Console.WriteLine(String)
+node a5 Call String.Clear
+node a6 Call String.AppendF
+	in format "{{literal}} {1}{0}"
+	in arg0 "a"
+	in arg1 "z"
+node a7 Call Console.WriteLine(String)
+node a8 Call String.Clear
+node a9 Call String.AppendF
+	in format "{1}{1}{9}"
+	in arg0 "x"
+	in arg1 "y"
+node b1 Call Console.WriteLine(String)
+node b2 Local String
+node b3 Call String.Append(int)
+	in value 42
+node b4 Call String.Clear
+node b5 Call String.AppendF
+	in format "answer={0}!"
+node b6 Call Console.WriteLine(String)
+node b7 Local List<StringView>
+node b8 Local String
+	set ctor (StringView)
+	in text "a,b,,c"
+node b9 Call String.Split
+	in separator 44
+node c1 Get List<StringView>.Count
+node c2 Call Console.WriteLine(int)
+node c3 ForEach
+node c4 Call Console.Write(StringView)
+node c5 Call Console.Write(StringView)
+	in text "|"
+node c6 Call Console.WriteLine()
+node c7 Call List<StringView>.Clear
+node c8 Call String.Split
+	in separator 44
+	in skipEmpty true
+node c9 Call Console.WriteLine(int)
+node d1 Local List<StringView>
+node d2 Literal
+	set type StringView
+	set value "  the quick  brown fox "
+node d3 Call StringView.Split
+	in separator 32
+	in skipEmpty true
+node d4 Get List<StringView>.Count
+node d5 Call Console.WriteLine(int)
+node d6 Index
+	in index 3
+node d7 Call Console.WriteLine(StringView)
+node d8 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.receiver
+wire a3.then a4.in
+wire a2.object a4.value
+wire a4.then a5.in
+wire a2.object a5.receiver
+wire a5.then a6.in
+wire a2.object a6.receiver
+wire a6.then a7.in
+wire a2.object a7.value
+wire a7.then a8.in
+wire a2.object a8.receiver
+wire a8.then a9.in
+wire a2.object a9.receiver
+wire a9.then b1.in
+wire a2.object b1.value
+wire b1.then b2.in
+wire b2.then b3.in
+wire b2.object b3.receiver
+wire b3.then b4.in
+wire a2.object b4.receiver
+wire b2.object b5.arg0
+wire b4.then b5.in
+wire a2.object b5.receiver
+wire b5.then b6.in
+wire a2.object b6.value
+wire b6.then b7.in
+wire b7.then b8.in
+wire b8.then b9.in
+wire b7.object b9.into
+wire b8.object b9.receiver
+wire b7.object c1.receiver
+wire b9.then c2.in
+wire c1.value c2.value
+wire b7.object c3.collection
+wire c2.then c3.in
+wire c3.body c4.in
+wire c3.element c4.text
+wire c4.then c5.in
+wire c3.done c6.in
+wire c6.then c7.in
+wire b7.object c7.receiver
+wire c7.then c8.in
+wire b7.object c8.into
+wire b8.object c8.receiver
+wire c8.then c9.in
+wire c1.value c9.value
+wire c9.then d1.in
+wire d1.then d3.in
+wire d1.object d3.into
+wire d2.value d3.receiver
+wire d1.object d4.receiver
+wire d3.then d5.in
+wire d4.value d5.value
+wire d1.object d6.collection
+wire d5.then d7.in
+wire d6.value d7.text
+wire d7.then d8.in

@@ -1,0 +1,301 @@
+# treadle 1
+type Queue class
+	namespace Core
+	generic T
+	doc "First in, first out: Enqueue adds a value at the back, Dequeue takes the front one (the caller then owns it), Peek reads it. A ring of storage that grows when full. The queue owns its storage, not what the values refer to."
+
+field mItems T[]
+	access internal
+
+field mHead int
+	access internal
+
+field mCount int
+	access internal
+
+ctor u0001
+	doc "An empty queue (no storage until something is added)."
+sheet body
+node a1 Entry
+node a2 Return
+wire a1.then a2.in
+
+dtor u0002
+	doc "Destroys the values (a struct that has a destructor) and frees the storage."
+sheet body
+node b1 Entry
+node b2 Call this.DestroyValues
+node b3 Get this.mItems
+node b4 Call Arrays.Free
+node b5 Return
+wire b1.then b2.in
+wire b3.value b4.array
+wire b2.then b4.in
+wire b4.then b5.in
+
+property u0003 Count int
+	doc "The number of values."
+sheet get
+node c1 Entry
+node c2 Get this.mCount
+node c3 Return
+wire c1.then c3.in
+wire c2.value c3.value
+
+function u0004 Enqueue
+	doc "Adds the value at the back."
+param value T
+sheet body
+node d1 Entry
+node d2 Get this.mItems
+node d3 Operator !=
+	in b null
+node d4 Get T[].Length
+node d5 Select
+	in false 0
+node d6 Get this.mCount
+node d7 Operator ==
+node d8 Branch
+node d9 Call this.Grow
+node e1 Get this.mItems
+node e2 Get this.mHead
+node e3 Operator +
+node e4 Get T[].Length
+node e5 Operator %
+node e6 Call Arrays.Set
+node e7 Set this.mCount
+	set op +=
+	in value 1
+node e8 Return
+wire d2.value d3.a
+wire d2.value d4.receiver
+wire d3.result d5.condition
+wire d4.value d5.true
+wire d5.result d7.a
+wire d6.value d7.b
+wire d7.result d8.condition
+wire d1.then d8.in
+wire d8.true d9.in
+wire e2.value e3.a
+wire d6.value e3.b
+wire e1.value e4.receiver
+wire e3.result e5.a
+wire e4.value e5.b
+wire e1.value e6.array
+wire d8.false e6.in
+wire d9.then e6.in
+wire e5.result e6.index
+wire d1.value e6.value
+wire e6.then e7.in
+wire e7.then e8.in
+
+function u0005 Grow
+	access private
+	doc "Twice the storage (at least 4): the values moved to the front of a new array in queue order, the old array freed without destroying them."
+local cap int
+local fresh T[]
+sheet body
+node f1 Entry
+node f2 Get this.mItems
+node f3 Operator !=
+	in b null
+node f4 Get T[].Length
+node f5 Select
+	in false 0
+node f6 Set local:cap
+node f7 Get local:cap
+node f8 Operator *
+	in b 2
+node f9 Call Math.Max
+	in b 4
+node g1 Construct T
+	set count
+node g2 Set local:fresh
+node g3 Get this.mCount
+node g4 For
+	in start 0
+node g5 Get this.mHead
+node g6 Operator +
+node g7 Operator %
+node g8 Index
+node g9 Get local:fresh
+node h1 Call Arrays.Set
+node h2 Call Arrays.Free
+node h3 Set this.mItems
+node h4 Set this.mHead
+	in value 0
+node h5 Return
+wire f2.value f3.a
+wire f2.value f4.receiver
+wire f3.result f5.condition
+wire f4.value f5.true
+wire f1.then f6.in
+wire f5.result f6.value
+wire f7.value f8.a
+wire f8.result f9.a
+wire f9.result g1.count
+wire f6.then g1.in
+wire g1.then g2.in
+wire g1.object g2.value
+wire g3.value g4.count
+wire g2.then g4.in
+wire g5.value g6.a
+wire g4.index g6.b
+wire g6.result g7.a
+wire f7.value g7.b
+wire f2.value g8.collection
+wire g7.result g8.index
+wire g9.value h1.array
+wire g4.body h1.in
+wire g4.index h1.index
+wire g8.value h1.value
+wire f2.value h2.array
+wire g4.done h2.in
+wire h2.then h3.in
+wire g9.value h3.value
+wire h3.then h4.in
+wire h4.then h5.in
+
+function u0006 Dequeue
+	returns T
+	doc "Takes the front value and gives it to the caller. An empty queue is a fatal error."
+local value T
+sheet body
+node j1 Entry
+node j2 Get this.mCount
+node j3 Operator ==
+	in b 0
+node j4 Branch
+node j5 Fatal
+	in message "Queue.Dequeue: the queue is empty"
+node j6 Get this.mItems
+node j7 Get this.mHead
+node j8 Index
+node j9 Set local:value
+node k1 Call Arrays.Set
+	in value default
+node k2 Operator +
+	in b 1
+node k3 Get T[].Length
+node k4 Operator %
+node k5 Set this.mHead
+node k6 Set this.mCount
+	set op -=
+	in value 1
+node k7 Get local:value
+node k8 Return
+wire j2.value j3.a
+wire j3.result j4.condition
+wire j1.then j4.in
+wire j4.true j5.in
+wire j6.value j8.collection
+wire j7.value j8.index
+wire j4.false j9.in
+wire j8.value j9.value
+wire j6.value k1.array
+wire j9.then k1.in
+wire j7.value k1.index
+wire j7.value k2.a
+wire j6.value k3.receiver
+wire k2.result k4.a
+wire k3.value k4.b
+wire k1.then k5.in
+wire k4.result k5.value
+wire k5.then k6.in
+wire k6.then k8.in
+wire k7.value k8.value
+
+function u0007 Peek
+	pure
+	returns T
+	doc "The front value (a copy the queue still owns). An empty queue is a fatal error."
+sheet body
+node m1 Entry
+node m2 Get this.mCount
+node m3 Operator ==
+	in b 0
+node m4 Branch
+node m5 Fatal
+	in message "Queue.Peek: the queue is empty"
+node m6 Get this.mItems
+node m7 Get this.mHead
+node m8 Index
+node m9 Return
+wire m2.value m3.a
+wire m3.result m4.condition
+wire m1.then m4.in
+wire m4.true m5.in
+wire m6.value m8.collection
+wire m7.value m8.index
+wire m4.false m9.in
+wire m8.value m9.value
+
+function u0008 Clear
+	doc "Removes every value (structs that have a destructor are destroyed; objects are not deleted). The storage is kept."
+sheet body
+node n1 Entry
+node n2 Call this.DestroyValues
+node n3 Set this.mHead
+	in value 0
+node n4 Set this.mCount
+	in value 0
+node n5 Return
+wire n1.then n2.in
+wire n2.then n3.in
+wire n3.then n4.in
+wire n4.then n5.in
+
+function u0009 DestroyValues
+	access private
+	doc "Arrays.DestroyAt for every value in the queue."
+sheet body
+node p1 Entry
+node p2 Get this.mCount
+node p3 For
+	in start 0
+node p4 Get this.mItems
+node p5 Get this.mHead
+node p6 Operator +
+node p7 Get T[].Length
+node p8 Operator %
+node p9 Call Arrays.DestroyAt
+node q1 Return
+wire p2.value p3.count
+wire p1.then p3.in
+wire p5.value p6.a
+wire p3.index p6.b
+wire p4.value p7.receiver
+wire p6.result p8.a
+wire p7.value p8.b
+wire p4.value p9.array
+wire p3.body p9.in
+wire p8.result p9.index
+wire p3.done q1.in
+
+function u000a TryPeek
+	pure
+	returns bool
+	doc "True and the front value in `item` (a copy the queue still owns); false when the queue is empty."
+out item T
+sheet body
+node p01 Entry
+node p02 Get this.mCount
+node p03 Operator ==
+	in b 0
+node p04 Branch
+node p05 Return
+	in value false
+	in item default
+node p06 Get this.mItems
+node p07 Get this.mHead
+node p08 Index
+node p09 Return
+	in value true
+wire p02.value p03.a
+wire p03.result p04.condition
+wire p01.then p04.in
+wire p04.true p05.in
+wire p06.value p08.collection
+wire p07.value p08.index
+wire p04.false p09.in
+wire p08.value p09.item

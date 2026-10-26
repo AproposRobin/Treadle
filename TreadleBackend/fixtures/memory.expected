@@ -1,0 +1,51 @@
+# Debug: the double free is fatal (exit code 3) and the fatal report lists the live objects (the
+# deliberate leak of node b1). Release has no checks: the second Delete runs the destructor again
+# through the freed object, then the C heap or the processor catches it (Windows: the heap's double
+# free report; Linux: the freed vtable faults), which the runtime turns into a fatal error, exit code 3;
+# only the output before the second Delete is compared.
+== exit Debug
+3
+== exit Release
+3
+== stdout Debug
+Node 1 made
+Node 5 made
+Node 10 made
+pass 0
+~Node 10
+Node 11 made
+pass 1
+~Node 11
+Node 12 made
+pass 2
+~Node 12
+Node 99 made
+~Node 1
+~Node 5
+deferred 1
+Node 7 made
+~Node 7
+== stdout-prefix Release
+Node 1 made
+Node 5 made
+Node 10 made
+pass 0
+~Node 10
+Node 11 made
+pass 1
+~Node 11
+Node 12 made
+pass 2
+~Node 12
+Node 99 made
+~Node 1
+~Node 5
+deferred 1
+Node 7 made
+~Node 7
+== stderr Debug
+fatal: double free of an object made at Mem.Program.DoubleFree node c1 (first deleted at Mem.Program.DoubleFree node d1) at Mem.Program.DoubleFree node d2
+leak: Mem.Node (24 bytes) made at Mem.Program.Main node b1
+== stderr Release
+fatal: 
+a Release build has no checks

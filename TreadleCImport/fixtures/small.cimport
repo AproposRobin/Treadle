@@ -1,0 +1,3 @@
+# cimport 1
+import small
+	header ../../tools/probe/headers/small.h

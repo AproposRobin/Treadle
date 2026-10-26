@@ -1,0 +1,19 @@
+# treadle 1
+type Keyed struct
+	namespace Cx
+	doc "A key, a tag and a destructor that counts: sorting moves Keyed values bit for bit, so after the list is deleted each one has been destroyed exactly once."
+
+field Key int
+
+field Tag int
+
+dtor r0001
+	doc "Counts the destruction in SortMain."
+sheet body
+node a1 Entry
+node a2 Set SortMain.sDestroyed
+	set op +=
+	in value 1
+node a3 Return
+wire a1.then a2.in
+wire a2.then a3.in

@@ -1,0 +1,10 @@
+# cimport 1
+# The crt set on Linux (the platform variant of crt.cimport: the same names, so the same crt.cdecl). glibc gives
+# the C functions; the runtime (treadle_rt) gives QueryPerformanceCounter / QueryPerformanceFrequency over the
+# monotonic clock and the rt_dir_* functions over opendir / readdir.
+import crt
+	header stdio.h
+	header stdlib.h
+	header string.h
+	only realloc free memcmp strlen snprintf getchar exit fopen fclose fread fwrite remove QueryPerformanceCounter QueryPerformanceFrequency rt_arg_count rt_arg rt_file_exists rt_dir_exists rt_dir_create rt_dir_delete rt_dir_open rt_dir_next rt_dir_close rt_parse_int rt_parse_double rt_ascii_ieq rt_format_scan rt_format_number rt_format_int rt_format_align rt_utf8_decode rt_utf8_encode rt_utf8_check rt_utf8_count rt_env_get rt_env_set rt_cwd_get rt_cwd_set rt_exe_path rt_machine_name rt_is_windows rt_fopen rt_remove rt_proc_start rt_proc_start_list rt_proc_wait rt_proc_exited rt_proc_kill rt_proc_output rt_proc_close rt_time_now rt_sleep
+	category "C / crt"

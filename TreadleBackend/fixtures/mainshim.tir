@@ -1,0 +1,134 @@
+# tir 1
+# The front end's Program Start shim (a parameterless Main() calling Main(Core.String[]) with null):
+# the back end's `main` calls Main(Core.String[]) of the same type directly, with the arguments.
+program MainShim console
+entry Ms.Program.Main()
+
+func C.crt.free(void*) void import "free"
+func C.crt.realloc(void*,uint) void* import "realloc"
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Core.String
+type Core.String class
+	field mPtr char8*
+	field mLength int
+	field mCapacity int
+	dtor Core.String.~this()
+
+func Core.String.this(StringView) void display "Core.String.this"
+	param text StringView
+	block b0
+		call void Core.String.Append(StringView) %this %text
+		ret
+
+func Core.String.~this() void display "Core.String.~this"
+	block b0
+		%pp = field.addr char8** %this mPtr
+		%p = load char8* %pp
+		%vp = cast void* %p
+		ccall void C.crt.free(void*) %vp
+		ret
+
+func Core.String.Reserve(int) void display "Core.String.Reserve"
+	param need int
+	block b0
+		%cp = field.addr int* %this mCapacity
+		%cap = load int %cp
+		%enough = cmp bool le %need %cap
+		condbr %enough done grow
+	block grow
+		%two = const int 2
+		%dbl = binop int mul %cap %two
+		%big = cmp bool gt %dbl %need
+		%n = select int %big %dbl %need
+		%pp = field.addr char8** %this mPtr
+		%p = load char8* %pp
+		%vp = cast void* %p
+		%nu = cast uint %n
+		%q = ccall void* C.crt.realloc(void*,uint) %vp %nu
+		%qc = cast char8* %q
+		store %pp %qc
+		store %cp %n
+		br done
+	block done
+		ret
+
+func Core.String.Append(StringView) void display "Core.String.Append"
+	param text StringView
+	block b0
+		%lp = field.addr int* %this mLength
+		%len = load int %lp
+		%tl = extract int %text 1
+		%one = const int 1
+		%sum = binop int add %len %tl
+		%need = binop int add %sum %one
+		call void Core.String.Reserve(int) %this %need
+		%pp = field.addr char8** %this mPtr
+		%p = load char8* %pp
+		%dst = elem.addr char8* %p %len
+		%src = extract char8* %text 0
+		intrinsic void memcpy %dst %src %tl
+		store %lp %sum
+		%end = elem.addr char8* %p %sum
+		%zero = const char8 0
+		store %end %zero
+		ret
+
+func Core.String.CStr() char8* display "Core.String.CStr"
+	block b0
+		%pp = field.addr char8** %this mPtr
+		%p = load char8* %pp
+		ret %p
+
+func Core.String.Length() int display "Core.String.Length"
+	block b0
+		%lp = field.addr int* %this mLength
+		%len = load int %lp
+		ret %len
+
+unit Ms.Program
+type Ms.Program class
+
+func Ms.Program.Main(Core.String[]) int static sheet "m1" display "Ms.Program.Main"
+	param args Core.String[]
+	slot si int loopvar node a3.index
+	node a1 Entry
+	node a2 Call C.libc.printf
+	node a3 For Each
+	node a4 Call C.libc.printf
+	node a5 Return 0
+	block b0
+		nullcheck %args @a2
+		%n = array.len int %args @a2
+		%f = const char8* "%lld args\n" @a2.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %n @a2
+		%z = const int 0 @a3
+		store.slot si %z @a3
+		br cond
+	block cond
+		%i = load.slot int si @a3
+		%n2 = array.len int %args @a3
+		%more = cmp bool lt %i %n2 @a3
+		condbr %more body done @a3
+	block body
+		boundscheck %args %i @a4
+		%ep = elem.addr Core.String* %args %i @a4
+		%s = load Core.String %ep @a4
+		nullcheck %s @a4
+		%cs = call char8* Core.String.CStr() %s @a4
+		%ln = call int Core.String.Length() %s @a4
+		%f2 = const char8* "[%s] %lld bytes\n" @a4.format
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %cs %ln @a4
+		%one = const int 1 @a3
+		%i2 = binop int add %i %one @a3
+		store.slot si %i2 @a3
+		br cond @a3
+	block done
+		%ret = const int 0 @a5.value
+		ret %ret @a5
+
+func Ms.Program.Main() int static display "Ms.Program.Main"
+	block b0
+		%args = const Core.String[] null
+		%code = call int Ms.Program.Main(Core.String[]) %args
+		ret %code

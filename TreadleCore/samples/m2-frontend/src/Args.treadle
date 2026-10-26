@@ -1,0 +1,24 @@
+# treadle 1
+type Args class
+	namespace M2
+	static
+	doc "The command line (Language.md 6): Show prints how many arguments Main got, then each one."
+
+function r0001 Show
+	static
+param args String[]
+sheet body
+node a1 Entry
+node a2 Get String[].Length
+node a3 Call Console.WriteLine(int)
+node a4 ForEach
+node a5 Call Console.WriteLine(StringView)
+node a6 Return
+wire a1.args a2.receiver
+wire a1.then a3.in
+wire a2.value a3.value
+wire a1.args a4.collection
+wire a3.then a4.in
+wire a4.body a5.in
+wire a4.element a5.text
+wire a4.done a6.in

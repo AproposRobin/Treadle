@@ -1,0 +1,37 @@
+# treadle 1
+type libc class
+	namespace C
+	static
+	doc "Declarations of the libc import set, written by hand until the header import makes them."
+
+function c1 puts
+	static
+	returns int32
+param s char8*
+
+function c2 malloc
+	static
+	returns void*
+param size uint
+
+function c3 free
+	static
+param ptr void*
+
+function c4 strlen
+	static
+	returns uint
+param s char8*
+
+function c5 strcmp
+	static
+	returns int32
+param a char8*
+param b char8*
+
+function c6 memcmp
+	static
+	returns int32
+param a void*
+param b void*
+param n uint

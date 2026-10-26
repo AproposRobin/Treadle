@@ -1,0 +1,889 @@
+# treadle 1
+type MathColorMain class
+	namespace Cx
+	static
+	doc "The core math library, color: every check compares the result with a reference computed in double precision by a separate C implementation (Gauss-Jordan inverse, Rodrigues rotations, the GLM conventions), within 1e-5 of the larger of 1 and the reference's size; each line is the check's name and true."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node n00000 Entry
+node n00001 Local String
+	set ctor ()
+node n00002 Get Core.Color.White
+node n00003 Make Core.Color
+	in R 1.0f
+	in G 1.0f
+	in B 1.0f
+	in A 1.0f
+node n00004 Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n00005 Call String.Clear
+node n00006 Call String.Append(StringView)
+	in text "color.White "
+node n00007 Call String.Append(bool)
+node n00008 Call Console.WriteLine(StringView)
+node n00009 Get Core.Color.Black
+node n0000a Make Core.Color
+	in R 0.0f
+	in G 0.0f
+	in B 0.0f
+	in A 1.0f
+node n0000b Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0000c Call String.Clear
+node n0000d Call String.Append(StringView)
+	in text "color.Black "
+node n0000e Call String.Append(bool)
+node n0000f Call Console.WriteLine(StringView)
+node n0000g Get Core.Color.Transparent
+node n0000h Make Core.Color
+	in R 0.0f
+	in G 0.0f
+	in B 0.0f
+	in A 0.0f
+node n0000i Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0000j Call String.Clear
+node n0000k Call String.Append(StringView)
+	in text "color.Transparent "
+node n0000l Call String.Append(bool)
+node n0000m Call Console.WriteLine(StringView)
+node n0000n Get Core.Color.Red
+node n0000o Make Core.Color
+	in R 1.0f
+	in G 0.0f
+	in B 0.0f
+	in A 1.0f
+node n0000p Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0000q Call String.Clear
+node n0000r Call String.Append(StringView)
+	in text "color.Red "
+node n0000s Call String.Append(bool)
+node n0000t Call Console.WriteLine(StringView)
+node n0000u Get Core.Color.Green
+node n0000v Make Core.Color
+	in R 0.0f
+	in G 1.0f
+	in B 0.0f
+	in A 1.0f
+node n0000w Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0000x Call String.Clear
+node n0000y Call String.Append(StringView)
+	in text "color.Green "
+node n0000z Call String.Append(bool)
+node n00010 Call Console.WriteLine(StringView)
+node n00011 Get Core.Color.Blue
+node n00012 Make Core.Color
+	in R 0.0f
+	in G 0.0f
+	in B 1.0f
+	in A 1.0f
+node n00013 Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n00014 Call String.Clear
+node n00015 Call String.Append(StringView)
+	in text "color.Blue "
+node n00016 Call String.Append(bool)
+node n00017 Call Console.WriteLine(StringView)
+node n00018 Get Core.Color.Yellow
+node n00019 Make Core.Color
+	in R 1.0f
+	in G 1.0f
+	in B 0.0f
+	in A 1.0f
+node n0001a Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0001b Call String.Clear
+node n0001c Call String.Append(StringView)
+	in text "color.Yellow "
+node n0001d Call String.Append(bool)
+node n0001e Call Console.WriteLine(StringView)
+node n0001f Get Core.Color.Cyan
+node n0001g Make Core.Color
+	in R 0.0f
+	in G 1.0f
+	in B 1.0f
+	in A 1.0f
+node n0001h Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0001i Call String.Clear
+node n0001j Call String.Append(StringView)
+	in text "color.Cyan "
+node n0001k Call String.Append(bool)
+node n0001l Call Console.WriteLine(StringView)
+node n0001m Get Core.Color.Magenta
+node n0001n Make Core.Color
+	in R 1.0f
+	in G 0.0f
+	in B 1.0f
+	in A 1.0f
+node n0001o Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0001p Call String.Clear
+node n0001q Call String.Append(StringView)
+	in text "color.Magenta "
+node n0001r Call String.Append(bool)
+node n0001s Call Console.WriteLine(StringView)
+node n0001t Get Core.Color.Gray
+node n0001u Make Core.Color
+	in R 0.5f
+	in G 0.5f
+	in B 0.5f
+	in A 1.0f
+node n0001v Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0001w Call String.Clear
+node n0001x Call String.Append(StringView)
+	in text "color.Gray "
+node n0001y Call String.Append(bool)
+node n0001z Call Console.WriteLine(StringView)
+node n00020 Call Core.Color.FromRGBA8
+	in r 255
+	in g 128
+	in b 0
+	in a 51
+node n00021 Make Core.Color
+	in R 1.0f
+	in G 0.501960813999176f
+	in B 0.0f
+	in A 0.20000000298023224f
+node n00022 Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n00023 Call String.Clear
+node n00024 Call String.Append(StringView)
+	in text "color.FromRGBA8 "
+node n00025 Call String.Append(bool)
+node n00026 Call Console.WriteLine(StringView)
+node n00027 Call Core.Color.FromRGBA8
+	in r 10
+	in g 20
+	in b 30
+node n00028 Make Core.Color
+	in R 0.03921568766236305f
+	in G 0.0784313753247261f
+	in B 0.11764705926179886f
+	in A 1.0f
+node n00029 Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0002a Call String.Clear
+node n0002b Call String.Append(StringView)
+	in text "color.FromRGBA8.alpha "
+node n0002c Call String.Append(bool)
+node n0002d Call Console.WriteLine(StringView)
+node n0002e Call Core.Color.FromHex
+	in rrggbbaa 862375167
+node n0002f Make Core.Color
+	in R 0.20000000298023224f
+	in G 0.4000000059604645f
+	in B 0.800000011920929f
+	in A 1.0f
+node n0002g Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0002h Call String.Clear
+node n0002i Call String.Append(StringView)
+	in text "color.FromHex "
+node n0002j Call String.Append(bool)
+node n0002k Call Console.WriteLine(StringView)
+node n0002l Make Core.Color
+	in R 0.5f
+	in G 0.03999999910593033f
+	in B 0.8999999761581421f
+	in A 0.699999988079071f
+node n0002m Call Core.Color.FromSrgb
+node n0002n Make Core.Color
+	in R 0.21404114365577698f
+	in G 0.0030959751456975937f
+	in B 0.7874122858047485f
+	in A 0.699999988079071f
+node n0002o Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0002p Call String.Clear
+node n0002q Call String.Append(StringView)
+	in text "color.FromSrgb "
+node n0002r Call String.Append(bool)
+node n0002s Call Console.WriteLine(StringView)
+node n0002t Call Core.Color.ToSrgb
+node n0002u Make Core.Color
+	in R 0.7353569865226746f
+	in G 0.22091636061668396f
+	in B 0.9546871781349182f
+	in A 0.699999988079071f
+node n0002v Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0002w Call String.Clear
+node n0002x Call String.Append(StringView)
+	in text "color.ToSrgb "
+node n0002y Call String.Append(bool)
+node n0002z Call Console.WriteLine(StringView)
+node n00030 Call Core.Color.FromSrgb
+node n00031 Call Core.Color.ToSrgb
+node n00032 Make Core.Color
+	in R 0.5f
+	in G 0.03999999910593033f
+	in B 0.8999999761581421f
+	in A 0.699999988079071f
+node n00033 Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n00034 Call String.Clear
+node n00035 Call String.Append(StringView)
+	in text "color.Srgb.round "
+node n00036 Call String.Append(bool)
+node n00037 Call Console.WriteLine(StringView)
+node n00038 Make Core.Color
+	in R 0.5f
+	in G 0.0020000000949949026f
+	in B 1.5f
+	in A 0.25f
+node n00039 Call Core.Color.ToColor32
+node n0003a Make Core.Color32
+	in R 188
+	in G 7
+	in B 255
+	in A 64
+node n0003b Operator ==
+node n0003c Call String.Clear
+node n0003d Call String.Append(StringView)
+	in text "color.ToColor32 "
+node n0003e Call String.Append(bool)
+node n0003f Call Console.WriteLine(StringView)
+node n0003g Call Core.Color.WithAlpha
+	in alpha 0.10000000149011612f
+node n0003h Make Core.Color
+	in R 0.5f
+	in G 0.03999999910593033f
+	in B 0.8999999761581421f
+	in A 0.10000000149011612f
+node n0003i Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0003j Call String.Clear
+node n0003k Call String.Append(StringView)
+	in text "color.WithAlpha "
+node n0003l Call String.Append(bool)
+node n0003m Call Console.WriteLine(StringView)
+node n0003n Call Core.Color.Premultiplied
+node n0003o Make Core.Color
+	in R 0.3499999940395355f
+	in G 0.02800000086426735f
+	in B 0.6299999952316284f
+	in A 0.699999988079071f
+node n0003p Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0003q Call String.Clear
+node n0003r Call String.Append(StringView)
+	in text "color.Premultiplied "
+node n0003s Call String.Append(bool)
+node n0003t Call Console.WriteLine(StringView)
+node n0003u Make Core.Color
+	in R 1.0f
+	in G 0.0f
+	in B 0.0f
+	in A 1.0f
+node n0003v Call Core.Color.Lerp
+	in t 0.25f
+node n0003w Make Core.Color
+	in R 0.625f
+	in G 0.029999999329447746f
+	in B 0.675000011920929f
+	in A 0.7749999761581421f
+node n0003x Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0003y Call String.Clear
+node n0003z Call String.Append(StringView)
+	in text "color.Lerp "
+node n00040 Call String.Append(bool)
+node n00041 Call Console.WriteLine(StringView)
+node n00042 Call Core.Color.Scaled
+	in k 2.0f
+node n00043 Make Core.Color
+	in R 1.0f
+	in G 0.07999999821186066f
+	in B 1.7999999523162842f
+	in A 1.399999976158142f
+node n00044 Math
+	set expr "Abs(a.R - b.R) <= 0.000018000000636675395f && Abs(a.G - b.G) <= 0.000018000000636675395f && Abs(a.B - b.B) <= 0.000018000000636675395f && Abs(a.A - b.A) <= 0.000018000000636675395f"
+node n00045 Call String.Clear
+node n00046 Call String.Append(StringView)
+	in text "color.Scaled "
+node n00047 Call String.Append(bool)
+node n00048 Call Console.WriteLine(StringView)
+node n00049 Make Core.Color
+	in R 0.25f
+	in G 0.5f
+	in B 0.10000000149011612f
+	in A 0.30000001192092896f
+node n0004a Operator +
+node n0004b Make Core.Color
+	in R 0.75f
+	in G 0.5400000214576721f
+	in B 1.0f
+	in A 1.0f
+node n0004c Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0004d Call String.Clear
+node n0004e Call String.Append(StringView)
+	in text "color.add "
+node n0004f Call String.Append(bool)
+node n0004g Call Console.WriteLine(StringView)
+node n0004h Make Core.Color
+	in R 0.5f
+	in G 2.0f
+	in B 0.5f
+	in A 1.0f
+node n0004i Operator *
+node n0004j Make Core.Color
+	in R 0.25f
+	in G 0.07999999821186066f
+	in B 0.44999998807907104f
+	in A 0.699999988079071f
+node n0004k Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0004l Call String.Clear
+node n0004m Call String.Append(StringView)
+	in text "color.mul "
+node n0004n Call String.Append(bool)
+node n0004o Call Console.WriteLine(StringView)
+node n0004p Operator *
+	in b 2.0f
+node n0004q Make Core.Color
+	in R 1.0f
+	in G 0.07999999821186066f
+	in B 1.7999999523162842f
+	in A 1.399999976158142f
+node n0004r Math
+	set expr "Abs(a.R - b.R) <= 0.000018000000636675395f && Abs(a.G - b.G) <= 0.000018000000636675395f && Abs(a.B - b.B) <= 0.000018000000636675395f && Abs(a.A - b.A) <= 0.000018000000636675395f"
+node n0004s Call String.Clear
+node n0004t Call String.Append(StringView)
+	in text "color.mul.scalar "
+node n0004u Call String.Append(bool)
+node n0004v Call Console.WriteLine(StringView)
+node n0004w Make Core.Color
+	in R 0.5f
+	in G 0.03999999910593033f
+	in B 0.8999999761581421f
+	in A 0.699999988079071f
+node n0004x Operator ==
+node n0004y Operator ==
+	in b true
+node n0004z Call String.Clear
+node n00050 Call String.Append(StringView)
+	in text "color.eq "
+node n00051 Call String.Append(bool)
+node n00052 Call Console.WriteLine(StringView)
+node n00053 Make Core.Color
+	in R 0.5f
+	in G 0.03999999910593033f
+	in B 0.8999999761581421f
+	in A 0.7099999785423279f
+node n00054 Operator ==
+node n00055 Operator ==
+	in b false
+node n00056 Call String.Clear
+node n00057 Call String.Append(StringView)
+	in text "color.eq.false "
+node n00058 Call String.Append(bool)
+node n00059 Call Console.WriteLine(StringView)
+node n0005a Make Core.Color
+	in R 0.5000010132789612f
+	in G 0.03999999910593033f
+	in B 0.8999999761581421f
+	in A 0.699999988079071f
+node n0005b Call Core.Color.ApproxEquals
+node n0005c Operator ==
+	in b true
+node n0005d Call String.Clear
+node n0005e Call String.Append(StringView)
+	in text "color.ApproxEquals "
+node n0005f Call String.Append(bool)
+node n0005g Call Console.WriteLine(StringView)
+node n0005h Call Core.Color32.FromHex
+	in rrggbbaa 313229057
+node n0005i Make Core.Color32
+	in R 18
+	in G 171
+	in B 127
+	in A 1
+node n0005j Operator ==
+node n0005k Call String.Clear
+node n0005l Call String.Append(StringView)
+	in text "color32.FromHex "
+node n0005m Call String.Append(bool)
+node n0005n Call Console.WriteLine(StringView)
+node n0005o Make Core.Color32
+	in R 18
+	in G 171
+	in B 127
+	in A 1
+node n0005p Call Core.Color32.ToHex
+node n0005q Operator ==
+	in b 313229057
+node n0005r Call String.Clear
+node n0005s Call String.Append(StringView)
+	in text "color32.ToHex "
+node n0005t Call String.Append(bool)
+node n0005u Call Console.WriteLine(StringView)
+node n0005v Make Core.Color32
+	in R 255
+	in G 128
+	in B 0
+	in A 51
+node n0005w Call Core.Color32.ToColor
+node n0005x Make Core.Color
+	in R 1.0f
+	in G 0.2158605009317398f
+	in B 0.0f
+	in A 0.20000000298023224f
+node n0005y Math
+	set expr "Abs(a.R - b.R) <= 0.000009999999747378752f && Abs(a.G - b.G) <= 0.000009999999747378752f && Abs(a.B - b.B) <= 0.000009999999747378752f && Abs(a.A - b.A) <= 0.000009999999747378752f"
+node n0005z Call String.Clear
+node n00060 Call String.Append(StringView)
+	in text "color32.ToColor "
+node n00061 Call String.Append(bool)
+node n00062 Call Console.WriteLine(StringView)
+node n00063 Make Core.Color32
+	in R 200
+	in G 17
+	in B 99
+	in A 250
+node n00064 Call Core.Color32.ToColor
+node n00065 Call Core.Color.ToColor32
+node n00066 Make Core.Color32
+	in R 200
+	in G 17
+	in B 99
+	in A 250
+node n00067 Operator ==
+node n00068 Call String.Clear
+node n00069 Call String.Append(StringView)
+	in text "color32.round "
+node n0006a Call String.Append(bool)
+node n0006b Call Console.WriteLine(StringView)
+node n0006c Make Core.Color32
+	in R 1
+	in G 2
+	in B 3
+	in A 4
+node n0006d Make Core.Color32
+	in R 1
+	in G 2
+	in B 3
+	in A 4
+node n0006e Operator ==
+node n0006f Operator ==
+	in b true
+node n0006g Call String.Clear
+node n0006h Call String.Append(StringView)
+	in text "color32.eq "
+node n0006i Call String.Append(bool)
+node n0006j Call Console.WriteLine(StringView)
+node n0006k Make Core.Color32
+	in R 1
+	in G 2
+	in B 3
+	in A 4
+node n0006l Make Core.Color32
+	in R 1
+	in G 2
+	in B 3
+	in A 5
+node n0006m Operator ==
+node n0006n Operator ==
+	in b false
+node n0006o Call String.Clear
+node n0006p Call String.Append(StringView)
+	in text "color32.eq.false "
+node n0006q Call String.Append(bool)
+node n0006r Call Console.WriteLine(StringView)
+node n0006s Return
+	in value 0
+wire n00000.then n00001.in
+wire n00002.value n00004.a
+wire n00003.value n00004.b
+wire n00001.then n00005.in
+wire n00001.object n00005.receiver
+wire n00005.then n00006.in
+wire n00001.object n00006.receiver
+wire n00006.then n00007.in
+wire n00001.object n00007.receiver
+wire n00004.result n00007.value
+wire n00007.then n00008.in
+wire n00001.object n00008.text
+wire n00009.value n0000b.a
+wire n0000a.value n0000b.b
+wire n00008.then n0000c.in
+wire n00001.object n0000c.receiver
+wire n0000c.then n0000d.in
+wire n00001.object n0000d.receiver
+wire n0000d.then n0000e.in
+wire n00001.object n0000e.receiver
+wire n0000b.result n0000e.value
+wire n0000e.then n0000f.in
+wire n00001.object n0000f.text
+wire n0000g.value n0000i.a
+wire n0000h.value n0000i.b
+wire n0000f.then n0000j.in
+wire n00001.object n0000j.receiver
+wire n0000j.then n0000k.in
+wire n00001.object n0000k.receiver
+wire n0000k.then n0000l.in
+wire n00001.object n0000l.receiver
+wire n0000i.result n0000l.value
+wire n0000l.then n0000m.in
+wire n00001.object n0000m.text
+wire n0000n.value n0000p.a
+wire n0000o.value n0000p.b
+wire n0000m.then n0000q.in
+wire n00001.object n0000q.receiver
+wire n0000q.then n0000r.in
+wire n00001.object n0000r.receiver
+wire n0000r.then n0000s.in
+wire n00001.object n0000s.receiver
+wire n0000p.result n0000s.value
+wire n0000s.then n0000t.in
+wire n00001.object n0000t.text
+wire n0000u.value n0000w.a
+wire n0000v.value n0000w.b
+wire n0000t.then n0000x.in
+wire n00001.object n0000x.receiver
+wire n0000x.then n0000y.in
+wire n00001.object n0000y.receiver
+wire n0000y.then n0000z.in
+wire n00001.object n0000z.receiver
+wire n0000w.result n0000z.value
+wire n0000z.then n00010.in
+wire n00001.object n00010.text
+wire n00011.value n00013.a
+wire n00012.value n00013.b
+wire n00010.then n00014.in
+wire n00001.object n00014.receiver
+wire n00014.then n00015.in
+wire n00001.object n00015.receiver
+wire n00015.then n00016.in
+wire n00001.object n00016.receiver
+wire n00013.result n00016.value
+wire n00016.then n00017.in
+wire n00001.object n00017.text
+wire n00018.value n0001a.a
+wire n00019.value n0001a.b
+wire n00017.then n0001b.in
+wire n00001.object n0001b.receiver
+wire n0001b.then n0001c.in
+wire n00001.object n0001c.receiver
+wire n0001c.then n0001d.in
+wire n00001.object n0001d.receiver
+wire n0001a.result n0001d.value
+wire n0001d.then n0001e.in
+wire n00001.object n0001e.text
+wire n0001f.value n0001h.a
+wire n0001g.value n0001h.b
+wire n0001e.then n0001i.in
+wire n00001.object n0001i.receiver
+wire n0001i.then n0001j.in
+wire n00001.object n0001j.receiver
+wire n0001j.then n0001k.in
+wire n00001.object n0001k.receiver
+wire n0001h.result n0001k.value
+wire n0001k.then n0001l.in
+wire n00001.object n0001l.text
+wire n0001m.value n0001o.a
+wire n0001n.value n0001o.b
+wire n0001l.then n0001p.in
+wire n00001.object n0001p.receiver
+wire n0001p.then n0001q.in
+wire n00001.object n0001q.receiver
+wire n0001q.then n0001r.in
+wire n00001.object n0001r.receiver
+wire n0001o.result n0001r.value
+wire n0001r.then n0001s.in
+wire n00001.object n0001s.text
+wire n0001t.value n0001v.a
+wire n0001u.value n0001v.b
+wire n0001s.then n0001w.in
+wire n00001.object n0001w.receiver
+wire n0001w.then n0001x.in
+wire n00001.object n0001x.receiver
+wire n0001x.then n0001y.in
+wire n00001.object n0001y.receiver
+wire n0001v.result n0001y.value
+wire n0001y.then n0001z.in
+wire n00001.object n0001z.text
+wire n00020.result n00022.a
+wire n00021.value n00022.b
+wire n0001z.then n00023.in
+wire n00001.object n00023.receiver
+wire n00023.then n00024.in
+wire n00001.object n00024.receiver
+wire n00024.then n00025.in
+wire n00001.object n00025.receiver
+wire n00022.result n00025.value
+wire n00025.then n00026.in
+wire n00001.object n00026.text
+wire n00027.result n00029.a
+wire n00028.value n00029.b
+wire n00026.then n0002a.in
+wire n00001.object n0002a.receiver
+wire n0002a.then n0002b.in
+wire n00001.object n0002b.receiver
+wire n0002b.then n0002c.in
+wire n00001.object n0002c.receiver
+wire n00029.result n0002c.value
+wire n0002c.then n0002d.in
+wire n00001.object n0002d.text
+wire n0002e.result n0002g.a
+wire n0002f.value n0002g.b
+wire n0002d.then n0002h.in
+wire n00001.object n0002h.receiver
+wire n0002h.then n0002i.in
+wire n00001.object n0002i.receiver
+wire n0002i.then n0002j.in
+wire n00001.object n0002j.receiver
+wire n0002g.result n0002j.value
+wire n0002j.then n0002k.in
+wire n00001.object n0002k.text
+wire n0002l.value n0002m.srgb
+wire n0002m.result n0002o.a
+wire n0002n.value n0002o.b
+wire n0002k.then n0002p.in
+wire n00001.object n0002p.receiver
+wire n0002p.then n0002q.in
+wire n00001.object n0002q.receiver
+wire n0002q.then n0002r.in
+wire n00001.object n0002r.receiver
+wire n0002o.result n0002r.value
+wire n0002r.then n0002s.in
+wire n00001.object n0002s.text
+wire n0002l.value n0002t.receiver
+wire n0002t.result n0002v.a
+wire n0002u.value n0002v.b
+wire n0002s.then n0002w.in
+wire n00001.object n0002w.receiver
+wire n0002w.then n0002x.in
+wire n00001.object n0002x.receiver
+wire n0002x.then n0002y.in
+wire n00001.object n0002y.receiver
+wire n0002v.result n0002y.value
+wire n0002y.then n0002z.in
+wire n00001.object n0002z.text
+wire n0002l.value n00030.srgb
+wire n00030.result n00031.receiver
+wire n00031.result n00033.a
+wire n00032.value n00033.b
+wire n0002z.then n00034.in
+wire n00001.object n00034.receiver
+wire n00034.then n00035.in
+wire n00001.object n00035.receiver
+wire n00035.then n00036.in
+wire n00001.object n00036.receiver
+wire n00033.result n00036.value
+wire n00036.then n00037.in
+wire n00001.object n00037.text
+wire n00038.value n00039.receiver
+wire n00039.result n0003b.a
+wire n0003a.value n0003b.b
+wire n00037.then n0003c.in
+wire n00001.object n0003c.receiver
+wire n0003c.then n0003d.in
+wire n00001.object n0003d.receiver
+wire n0003d.then n0003e.in
+wire n00001.object n0003e.receiver
+wire n0003b.result n0003e.value
+wire n0003e.then n0003f.in
+wire n00001.object n0003f.text
+wire n0002l.value n0003g.receiver
+wire n0003g.result n0003i.a
+wire n0003h.value n0003i.b
+wire n0003f.then n0003j.in
+wire n00001.object n0003j.receiver
+wire n0003j.then n0003k.in
+wire n00001.object n0003k.receiver
+wire n0003k.then n0003l.in
+wire n00001.object n0003l.receiver
+wire n0003i.result n0003l.value
+wire n0003l.then n0003m.in
+wire n00001.object n0003m.text
+wire n0002l.value n0003n.receiver
+wire n0003n.result n0003p.a
+wire n0003o.value n0003p.b
+wire n0003m.then n0003q.in
+wire n00001.object n0003q.receiver
+wire n0003q.then n0003r.in
+wire n00001.object n0003r.receiver
+wire n0003r.then n0003s.in
+wire n00001.object n0003s.receiver
+wire n0003p.result n0003s.value
+wire n0003s.then n0003t.in
+wire n00001.object n0003t.text
+wire n0002l.value n0003v.receiver
+wire n0003u.value n0003v.to
+wire n0003v.result n0003x.a
+wire n0003w.value n0003x.b
+wire n0003t.then n0003y.in
+wire n00001.object n0003y.receiver
+wire n0003y.then n0003z.in
+wire n00001.object n0003z.receiver
+wire n0003z.then n00040.in
+wire n00001.object n00040.receiver
+wire n0003x.result n00040.value
+wire n00040.then n00041.in
+wire n00001.object n00041.text
+wire n0002l.value n00042.receiver
+wire n00042.result n00044.a
+wire n00043.value n00044.b
+wire n00041.then n00045.in
+wire n00001.object n00045.receiver
+wire n00045.then n00046.in
+wire n00001.object n00046.receiver
+wire n00046.then n00047.in
+wire n00001.object n00047.receiver
+wire n00044.result n00047.value
+wire n00047.then n00048.in
+wire n00001.object n00048.text
+wire n0002l.value n0004a.a
+wire n00049.value n0004a.b
+wire n0004a.result n0004c.a
+wire n0004b.value n0004c.b
+wire n00048.then n0004d.in
+wire n00001.object n0004d.receiver
+wire n0004d.then n0004e.in
+wire n00001.object n0004e.receiver
+wire n0004e.then n0004f.in
+wire n00001.object n0004f.receiver
+wire n0004c.result n0004f.value
+wire n0004f.then n0004g.in
+wire n00001.object n0004g.text
+wire n0002l.value n0004i.a
+wire n0004h.value n0004i.b
+wire n0004i.result n0004k.a
+wire n0004j.value n0004k.b
+wire n0004g.then n0004l.in
+wire n00001.object n0004l.receiver
+wire n0004l.then n0004m.in
+wire n00001.object n0004m.receiver
+wire n0004m.then n0004n.in
+wire n00001.object n0004n.receiver
+wire n0004k.result n0004n.value
+wire n0004n.then n0004o.in
+wire n00001.object n0004o.text
+wire n0002l.value n0004p.a
+wire n0004p.result n0004r.a
+wire n0004q.value n0004r.b
+wire n0004o.then n0004s.in
+wire n00001.object n0004s.receiver
+wire n0004s.then n0004t.in
+wire n00001.object n0004t.receiver
+wire n0004t.then n0004u.in
+wire n00001.object n0004u.receiver
+wire n0004r.result n0004u.value
+wire n0004u.then n0004v.in
+wire n00001.object n0004v.text
+wire n0002l.value n0004x.a
+wire n0004w.value n0004x.b
+wire n0004x.result n0004y.a
+wire n0004v.then n0004z.in
+wire n00001.object n0004z.receiver
+wire n0004z.then n00050.in
+wire n00001.object n00050.receiver
+wire n00050.then n00051.in
+wire n00001.object n00051.receiver
+wire n0004y.result n00051.value
+wire n00051.then n00052.in
+wire n00001.object n00052.text
+wire n0002l.value n00054.a
+wire n00053.value n00054.b
+wire n00054.result n00055.a
+wire n00052.then n00056.in
+wire n00001.object n00056.receiver
+wire n00056.then n00057.in
+wire n00001.object n00057.receiver
+wire n00057.then n00058.in
+wire n00001.object n00058.receiver
+wire n00055.result n00058.value
+wire n00058.then n00059.in
+wire n00001.object n00059.text
+wire n0005a.value n0005b.other
+wire n0002l.value n0005b.receiver
+wire n0005b.result n0005c.a
+wire n00059.then n0005d.in
+wire n00001.object n0005d.receiver
+wire n0005d.then n0005e.in
+wire n00001.object n0005e.receiver
+wire n0005e.then n0005f.in
+wire n00001.object n0005f.receiver
+wire n0005c.result n0005f.value
+wire n0005f.then n0005g.in
+wire n00001.object n0005g.text
+wire n0005h.result n0005j.a
+wire n0005i.value n0005j.b
+wire n0005g.then n0005k.in
+wire n00001.object n0005k.receiver
+wire n0005k.then n0005l.in
+wire n00001.object n0005l.receiver
+wire n0005l.then n0005m.in
+wire n00001.object n0005m.receiver
+wire n0005j.result n0005m.value
+wire n0005m.then n0005n.in
+wire n00001.object n0005n.text
+wire n0005o.value n0005p.receiver
+wire n0005p.result n0005q.a
+wire n0005n.then n0005r.in
+wire n00001.object n0005r.receiver
+wire n0005r.then n0005s.in
+wire n00001.object n0005s.receiver
+wire n0005s.then n0005t.in
+wire n00001.object n0005t.receiver
+wire n0005q.result n0005t.value
+wire n0005t.then n0005u.in
+wire n00001.object n0005u.text
+wire n0005v.value n0005w.receiver
+wire n0005w.result n0005y.a
+wire n0005x.value n0005y.b
+wire n0005u.then n0005z.in
+wire n00001.object n0005z.receiver
+wire n0005z.then n00060.in
+wire n00001.object n00060.receiver
+wire n00060.then n00061.in
+wire n00001.object n00061.receiver
+wire n0005y.result n00061.value
+wire n00061.then n00062.in
+wire n00001.object n00062.text
+wire n00063.value n00064.receiver
+wire n00064.result n00065.receiver
+wire n00065.result n00067.a
+wire n00066.value n00067.b
+wire n00062.then n00068.in
+wire n00001.object n00068.receiver
+wire n00068.then n00069.in
+wire n00001.object n00069.receiver
+wire n00069.then n0006a.in
+wire n00001.object n0006a.receiver
+wire n00067.result n0006a.value
+wire n0006a.then n0006b.in
+wire n00001.object n0006b.text
+wire n0006c.value n0006e.a
+wire n0006d.value n0006e.b
+wire n0006e.result n0006f.a
+wire n0006b.then n0006g.in
+wire n00001.object n0006g.receiver
+wire n0006g.then n0006h.in
+wire n00001.object n0006h.receiver
+wire n0006h.then n0006i.in
+wire n00001.object n0006i.receiver
+wire n0006f.result n0006i.value
+wire n0006i.then n0006j.in
+wire n00001.object n0006j.text
+wire n0006k.value n0006m.a
+wire n0006l.value n0006m.b
+wire n0006m.result n0006n.a
+wire n0006j.then n0006o.in
+wire n00001.object n0006o.receiver
+wire n0006o.then n0006p.in
+wire n00001.object n0006p.receiver
+wire n0006p.then n0006q.in
+wire n00001.object n0006q.receiver
+wire n0006n.result n0006q.value
+wire n0006q.then n0006r.in
+wire n00001.object n0006r.text
+wire n0006r.then n0006s.in

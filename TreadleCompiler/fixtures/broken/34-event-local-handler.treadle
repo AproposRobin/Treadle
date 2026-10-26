@@ -1,0 +1,23 @@
+# treadle 1
+# expect n3 handler T2216
+# expect n4 - T2215
+type EventLocalHandler class
+	namespace Broken
+	doc "An event deletes its handlers: a Local delegate cannot be one; an event is not read with Get."
+
+field OnTick delegate:void(int)
+	attr Event
+
+function f1 Tick
+param x int
+sheet body
+node n1 Entry
+node n2 Bind this.Tick
+	set alloc local
+node n3 Call this.OnTick.Add
+node n4 Get this.OnTick
+node n5 Return
+wire n1.then n2.in
+wire n2.value n3.handler
+wire n2.then n3.in
+wire n3.then n5.in

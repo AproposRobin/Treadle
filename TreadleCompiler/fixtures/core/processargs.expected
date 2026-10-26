@@ -1,0 +1,12 @@
+== exit
+0
+== stdout
+5
+[a b]
+[say "hi"]
+[back\slash\]
+[C:\dir with space\]
+[; echo injected & echo twice | more]
+[$HOME %PATH% `id`]
+[]
+[é ✓]

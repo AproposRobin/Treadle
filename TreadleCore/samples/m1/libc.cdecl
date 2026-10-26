@@ -1,0 +1,50 @@
+# treadle 1
+type libc class
+	namespace C
+	static
+	doc "C declarations of the import set libc (libc.cimport), written by the C header import. Do not edit: the import rewrites this file."
+
+function kvp2s free
+	static
+param ptr void*
+
+function k6hx6 malloc
+	static
+	returns void*
+param size uint
+
+function m0r7e memcmp
+	static
+	returns int32
+param a void*
+param b void*
+param n uint
+
+function esy4a printf
+	static
+	returns int32
+	attr Variadic
+param format char8*
+
+function nafzq puts
+	static
+	returns int32
+param s char8*
+
+function mx04c qsort
+	static
+param base void*
+param count uint
+param size uint
+param compare function:int32(void*,void*)
+
+function gnhra strcmp
+	static
+	returns int32
+param a char8*
+param b char8*
+
+function v9sxg strlen
+	static
+	returns uint
+param s char8*

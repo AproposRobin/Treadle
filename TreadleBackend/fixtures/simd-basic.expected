@@ -1,0 +1,24 @@
+# float4 (1, 2, 3, 4) against a splat of 2; int32x4 (7, -8, 9, -10) against 2; masks print as
+# bitmask numbers (lane 0 the lowest bit).
+== exit
+0
+== stdout
+(3, 4, 5, 6)
+(-1, 0, 1, 2)
+(2, 4, 6, 8)
+(0.5, 1, 1.5, 2)
+(-1, -2, -3, -4)
+(-1, -2, 3, 4)
+masks 12 12 14 2 any 1 all 0
+(9, -6, 11, -8)
+(3, -4, 4, -5)
+(1, 0, 1, 0)
+(1, -2, 2, -3)
+(28, -32, 36, -40)
+(2, 0, 0, 2)
+unsigned shr lane1 1073741822 signed lt 10
+uint8x16 wraps 4 4
+double2 0.75 -1.125
+float3 11 13
+(6, 8, 10, 12)
+sizes 32 16 4 align 16

@@ -1,0 +1,407 @@
+# treadle 1
+type SystemMain class
+	namespace Cx
+	static
+	doc "Core Environment (variables with Option, the working directory, the executable path, the machine name), Process (this program as its own child: captured output and exit code, NotFound, Kill, output not captured), Time.Now / UtcNow as DateTime with ISO 8601 ToString, Time.Sleep."
+
+function m1 Main
+	static
+	returns int
+local t0 int64
+sheet body
+node a01 Entry
+node a02 Call Environment.ArgCount
+node a03 Operator >
+	in b 0
+node a04 Branch
+node a05 Call Environment.GetArg
+	in index 0
+node a06 Switch
+	case child
+	case sleep
+node a07 Call Console.WriteLine(StringView)
+	in text "hello from the child"
+node a08 Call Console.WriteLine(StringView)
+	in text "é ✓"
+node a09 Return
+	in value 7
+node a10 Call Time.Sleep
+	in milliseconds 10000
+node a100 Operator ==
+	in b false
+node a101 Operator &&
+node a102 Call Console.WriteLine(bool)
+node a103 Operator >=
+	in b 1
+node a104 Operator <=
+	in b 12
+node a105 Operator &&
+node a106 Call Console.WriteLine(bool)
+node a107 Local String
+node a108 Call DateTime.ToString
+node a109 Call String.Length
+node a11 Return
+	in value 0
+node a110 Operator ==
+	in b 19
+node a111 Call Console.WriteLine(bool)
+node a112 Call Time.UtcNow
+node a113 Local String
+node a114 Call DateTime.ToString
+node a115 Call String.Length
+node a116 Operator ==
+	in b 20
+node a117 Call String.EndsWith
+	in text "Z"
+node a118 Operator &&
+node a119 Call Console.WriteLine(bool)
+node a12 Return
+	in value 0
+node a120 Call Time.Ticks
+node a121 Set local:t0
+node a122 Call Time.Sleep
+	in milliseconds 30
+node a123 Call Time.Ticks
+node a124 Call Time.Frequency
+node a125 Get local:t0
+node a126 Operator -
+node a127 Operator *
+	in b 1000
+node a128 Operator /
+node a129 Operator >=
+	in b 25
+node a13 Call Environment.SetVariable
+	in name "TREADLE_CORE3_VAR"
+	in value "valeur é"
+node a130 Call Console.WriteLine(bool)
+node a131 Make DateTime
+	in Year 2026
+	in Month 1
+	in Day 2
+	in Hour 3
+	in Minute 4
+	in Second 5
+	in IsUtc true
+node a132 Local String
+node a133 Call DateTime.ToString
+node a134 Call Console.WriteLine(String)
+node a135 Return
+	in value 0
+node a14 Call Console.WriteLine(bool)
+node a15 Call Environment.GetVariable
+	in name "TREADLE_CORE3_VAR"
+node a16 Call Option<String>.IsSome
+node a17 Call Console.WriteLine(bool)
+node a18 Call Option<String>.Unwrap
+node a19 Call Console.WriteLine(String)
+node a20 Delete
+node a21 Call Environment.RemoveVariable
+	in name "TREADLE_CORE3_VAR"
+node a22 Call Console.WriteLine(bool)
+node a23 Call Environment.GetVariable
+	in name "TREADLE_CORE3_VAR"
+node a24 Call Option<String>.IsNone
+node a25 Call Console.WriteLine(bool)
+node a26 Call Environment.SetVariable
+	in name ""
+	in value "x"
+node a27 Call Console.WriteLine(bool)
+node a28 Local String
+node a29 Call Environment.GetCurrentDirectory
+node a30 Call String.IsEmpty
+node a31 Operator !
+node a32 Call Console.WriteLine(bool)
+node a33 Call Directory.Create
+	in path "kcore3-cwd"
+node a34 Call Console.WriteLine(bool)
+node a35 Call Environment.SetCurrentDirectory
+	in path "kcore3-cwd"
+node a36 Call Console.WriteLine(bool)
+node a37 Local String
+node a38 Call Environment.GetCurrentDirectory
+node a39 Call String.EndsWith
+	in text "kcore3-cwd"
+node a40 Call Console.WriteLine(bool)
+node a41 Call Environment.SetCurrentDirectory
+node a42 Call Console.WriteLine(bool)
+node a43 Call Directory.Delete
+	in path "kcore3-cwd"
+node a44 Call Console.WriteLine(bool)
+node a45 Local String
+node a46 Call Environment.GetExecutablePath
+node a47 Call File.Exists
+node a48 Call Console.WriteLine(bool)
+node a49 Call Environment.IsWindows
+node a50 Call String.EndsWith
+	in text ".exe"
+node a51 Operator ==
+node a52 Call Console.WriteLine(bool)
+node a53 Local String
+node a54 Call Environment.GetMachineName
+node a55 Call String.IsEmpty
+node a56 Operator !
+node a57 Call Console.WriteLine(bool)
+node a58 Call Process.Start
+	in args "child"
+node a59 ResultMatch
+node a60 Call ProcessHandle.Wait
+node a61 Call Console.WriteLine(int)
+node a62 Local String
+node a63 Call ProcessHandle.GetOutput
+node a64 Call String.Replace
+	in from "\r"
+	in to ""
+node a65 Call Console.Write(String)
+node a66 Call ProcessHandle.ExitCode
+node a67 Call Console.WriteLine(int)
+node a68 Delete
+node a69 Call Console.WriteLine(StringView)
+	in text "start failed"
+node a70 Call Process.Start
+	in path "treadle-no-such-program-xyz"
+node a71 ResultMatch
+node a72 Delete
+node a73 Switch
+	case NotFound
+	case Failed
+node a74 Call Console.WriteLine(StringView)
+	in text "NotFound"
+node a75 Call Console.WriteLine(StringView)
+	in text "Failed"
+node a76 Call Process.Start
+	in args "sleep"
+node a77 ResultMatch
+node a78 Call ProcessHandle.HasExited
+node a79 Call Console.WriteLine(bool)
+node a80 Call ProcessHandle.Kill
+node a81 Call Console.WriteLine(bool)
+node a82 Call ProcessHandle.Wait
+node a83 Operator !=
+	in b 0
+node a84 Call Console.WriteLine(bool)
+node a85 Call ProcessHandle.HasExited
+node a86 Call Console.WriteLine(bool)
+node a87 Delete
+node a88 Call Process.Start
+	in args "child"
+	in captureOutput false
+node a89 ResultMatch
+node a90 Call ProcessHandle.Wait
+node a91 Call Console.WriteLine(int)
+node a92 Local String
+node a93 Call ProcessHandle.GetOutput
+node a94 Call String.Length
+node a95 Call Console.WriteLine(int)
+node a96 Delete
+node a97 Call Time.Now
+node a98 Break DateTime
+node a99 Operator >=
+	in b 2026
+wire a01.then a02.in
+wire a02.result a03.a
+wire a03.result a04.condition
+wire a02.then a04.in
+wire a04.true a05.in
+wire a05.then a06.in
+wire a05.result a06.value
+wire a06.case:child a07.in
+wire a07.then a08.in
+wire a08.then a09.in
+wire a06.case:sleep a10.in
+wire a98.IsUtc a100.a
+wire a99.result a101.a
+wire a100.result a101.b
+wire a97.then a102.in
+wire a101.result a102.value
+wire a98.Month a103.a
+wire a98.Month a104.a
+wire a103.result a105.a
+wire a104.result a105.b
+wire a102.then a106.in
+wire a105.result a106.value
+wire a106.then a107.in
+wire a107.then a108.in
+wire a107.object a108.into
+wire a97.result a108.receiver
+wire a107.object a109.receiver
+wire a10.then a11.in
+wire a109.result a110.a
+wire a108.then a111.in
+wire a110.result a111.value
+wire a111.then a112.in
+wire a112.then a113.in
+wire a113.then a114.in
+wire a113.object a114.into
+wire a112.result a114.receiver
+wire a113.object a115.receiver
+wire a115.result a116.a
+wire a113.object a117.receiver
+wire a116.result a118.a
+wire a117.result a118.b
+wire a114.then a119.in
+wire a118.result a119.value
+wire a06.done a12.in
+wire a119.then a120.in
+wire a120.then a121.in
+wire a120.result a121.value
+wire a121.then a122.in
+wire a122.then a123.in
+wire a123.then a124.in
+wire a123.result a126.a
+wire a125.value a126.b
+wire a126.result a127.a
+wire a127.result a128.a
+wire a124.result a128.b
+wire a128.result a129.a
+wire a04.false a13.in
+wire a124.then a130.in
+wire a129.result a130.value
+wire a130.then a132.in
+wire a132.then a133.in
+wire a132.object a133.into
+wire a131.value a133.receiver
+wire a133.then a134.in
+wire a132.object a134.value
+wire a134.then a135.in
+wire a13.then a14.in
+wire a13.result a14.value
+wire a14.then a15.in
+wire a15.result a16.receiver
+wire a15.then a17.in
+wire a16.result a17.value
+wire a17.then a18.in
+wire a15.result a18.receiver
+wire a18.then a19.in
+wire a18.result a19.value
+wire a19.then a20.in
+wire a18.result a20.object
+wire a20.then a21.in
+wire a21.then a22.in
+wire a21.result a22.value
+wire a22.then a23.in
+wire a23.result a24.receiver
+wire a23.then a25.in
+wire a24.result a25.value
+wire a25.then a26.in
+wire a26.then a27.in
+wire a26.result a27.value
+wire a27.then a28.in
+wire a28.then a29.in
+wire a28.object a29.into
+wire a28.object a30.receiver
+wire a30.result a31.a
+wire a29.then a32.in
+wire a31.result a32.value
+wire a32.then a33.in
+wire a33.then a34.in
+wire a33.result a34.value
+wire a34.then a35.in
+wire a35.then a36.in
+wire a35.result a36.value
+wire a36.then a37.in
+wire a37.then a38.in
+wire a37.object a38.into
+wire a37.object a39.receiver
+wire a38.then a40.in
+wire a39.result a40.value
+wire a40.then a41.in
+wire a28.object a41.path
+wire a41.then a42.in
+wire a41.result a42.value
+wire a42.then a43.in
+wire a43.then a44.in
+wire a43.result a44.value
+wire a44.then a45.in
+wire a45.then a46.in
+wire a45.object a46.into
+wire a46.then a47.in
+wire a45.object a47.path
+wire a47.then a48.in
+wire a47.result a48.value
+wire a45.object a50.receiver
+wire a49.result a51.a
+wire a50.result a51.b
+wire a48.then a52.in
+wire a51.result a52.value
+wire a52.then a53.in
+wire a53.then a54.in
+wire a53.object a54.into
+wire a53.object a55.receiver
+wire a55.result a56.a
+wire a54.then a57.in
+wire a56.result a57.value
+wire a57.then a58.in
+wire a45.object a58.path
+wire a58.then a59.in
+wire a58.result a59.result
+wire a59.ok a60.in
+wire a59.value a60.receiver
+wire a60.then a61.in
+wire a60.result a61.value
+wire a61.then a62.in
+wire a62.then a63.in
+wire a62.object a63.into
+wire a59.value a63.receiver
+wire a63.then a64.in
+wire a62.object a64.receiver
+wire a64.then a65.in
+wire a62.object a65.value
+wire a65.then a66.in
+wire a59.value a66.receiver
+wire a66.then a67.in
+wire a66.result a67.value
+wire a67.then a68.in
+wire a59.value a68.object
+wire a59.err a69.in
+wire a59.done a70.in
+wire a70.then a71.in
+wire a70.result a71.result
+wire a71.ok a72.in
+wire a71.value a72.object
+wire a71.err a73.in
+wire a71.error a73.value
+wire a73.case:NotFound a74.in
+wire a73.case:Failed a75.in
+wire a71.done a76.in
+wire a45.object a76.path
+wire a76.then a77.in
+wire a76.result a77.result
+wire a77.ok a78.in
+wire a77.value a78.receiver
+wire a78.then a79.in
+wire a78.result a79.value
+wire a79.then a80.in
+wire a77.value a80.receiver
+wire a80.then a81.in
+wire a80.result a81.value
+wire a81.then a82.in
+wire a77.value a82.receiver
+wire a82.result a83.a
+wire a82.then a84.in
+wire a83.result a84.value
+wire a84.then a85.in
+wire a77.value a85.receiver
+wire a85.then a86.in
+wire a85.result a86.value
+wire a86.then a87.in
+wire a77.value a87.object
+wire a77.done a88.in
+wire a45.object a88.path
+wire a88.then a89.in
+wire a88.result a89.result
+wire a89.ok a90.in
+wire a89.value a90.receiver
+wire a90.then a91.in
+wire a90.result a91.value
+wire a91.then a92.in
+wire a92.then a93.in
+wire a92.object a93.into
+wire a89.value a93.receiver
+wire a92.object a94.receiver
+wire a93.then a95.in
+wire a94.result a95.value
+wire a95.then a96.in
+wire a89.value a96.object
+wire a89.done a97.in
+wire a97.result a98.value
+wire a98.Year a99.a

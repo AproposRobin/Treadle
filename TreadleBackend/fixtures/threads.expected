@@ -1,0 +1,11 @@
+# 8 x 100,000 under the mutex; each thread's own thread-local count; the condition woke the waiter; the range sum
+# 0 + 1 + ... + 999,999; the pool started
+== exit
+0
+== stdout
+counter 800000
+thread-local 8 of 8
+condition 1
+range sum 499999500000
+pool yes
+total 800000

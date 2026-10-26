@@ -1,0 +1,1107 @@
+# treadle 1
+type Mat3 struct
+	namespace Core
+	attr CRepr
+	doc "A 3x3 matrix of floats in columns C0..C2 (column-major, 36 bytes, as GLSL and Vulkan lay it out): M * v transforms a column vector. Every function is Pure."
+
+field C0 Vec3
+	doc "Column 0."
+
+field C1 Vec3
+	doc "Column 1."
+
+field C2 Vec3
+	doc "Column 2."
+
+property m000 Identity Mat3
+	static
+	doc "Ones on the diagonal, zeros elsewhere."
+sheet get
+node n00000 Entry
+node n00001 Make Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n00002 Make Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n00003 Make Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+node n00004 Make Mat3
+node n00005 Return
+wire n00001.value n00004.C0
+wire n00002.value n00004.C1
+wire n00003.value n00004.C2
+wire n00000.then n00005.in
+wire n00004.value n00005.value
+
+property m001 Zero Mat3
+	static
+	doc "All zeros."
+sheet get
+node n00100 Entry
+node n00101 Make Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n00102 Make Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n00103 Make Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n00104 Make Mat3
+node n00105 Return
+wire n00101.value n00104.C0
+wire n00102.value n00104.C1
+wire n00103.value n00104.C2
+wire n00100.then n00105.in
+wire n00104.value n00105.value
+
+function m002 Get
+	pure
+	returns float
+	doc "The element at `row`, `col` (0-based; an index out of range gives the last one)."
+param row int
+param col int
+sheet body
+node n00200 Entry
+node n00201 This
+node n00202 Math
+	set expr "c == 0 ? (r == 0 ? m.C0.X : r == 1 ? m.C0.Y : m.C0.Z) : c == 1 ? (r == 0 ? m.C1.X : r == 1 ? m.C1.Y : m.C1.Z) : (r == 0 ? m.C2.X : r == 1 ? m.C2.Y : m.C2.Z)"
+node n00203 Return
+wire n00200.col n00202.c
+wire n00201.value n00202.m
+wire n00200.row n00202.r
+wire n00200.then n00203.in
+wire n00202.result n00203.value
+
+function m003 Column
+	pure
+	returns Vec3
+	doc "Column `index` (0-based; out of range gives the last one)."
+param index int
+sheet body
+node n00300 Entry
+node n00301 This
+node n00302 Math
+	set expr "i == 0 ? m.C0.X : i == 1 ? m.C1.X : m.C2.X"
+node n00303 Math
+	set expr "i == 0 ? m.C0.Y : i == 1 ? m.C1.Y : m.C2.Y"
+node n00304 Math
+	set expr "i == 0 ? m.C0.Z : i == 1 ? m.C1.Z : m.C2.Z"
+node n00305 Make Vec3
+node n00306 Return
+wire n00300.index n00302.i
+wire n00301.value n00302.m
+wire n00300.index n00303.i
+wire n00301.value n00303.m
+wire n00300.index n00304.i
+wire n00301.value n00304.m
+wire n00302.result n00305.X
+wire n00303.result n00305.Y
+wire n00304.result n00305.Z
+wire n00300.then n00306.in
+wire n00305.value n00306.value
+
+function m004 Row
+	pure
+	returns Vec3
+	doc "Row `index` (0-based; out of range gives the last one)."
+param index int
+sheet body
+node n00400 Entry
+node n00401 This
+node n00402 Math
+	set expr "i == 0 ? m.C0.X : i == 1 ? m.C0.Y : m.C0.Z"
+node n00403 Math
+	set expr "i == 0 ? m.C1.X : i == 1 ? m.C1.Y : m.C1.Z"
+node n00404 Math
+	set expr "i == 0 ? m.C2.X : i == 1 ? m.C2.Y : m.C2.Z"
+node n00405 Make Vec3
+node n00406 Return
+wire n00400.index n00402.i
+wire n00401.value n00402.m
+wire n00400.index n00403.i
+wire n00401.value n00403.m
+wire n00400.index n00404.i
+wire n00401.value n00404.m
+wire n00402.result n00405.X
+wire n00403.result n00405.Y
+wire n00404.result n00405.Z
+wire n00400.then n00406.in
+wire n00405.value n00406.value
+
+operator m005 *
+	static
+	pure
+	returns Mat3
+	doc "The matrix product: (a * b) * v is a * (b * v), b applied first."
+param a Mat3
+param b Mat3
+sheet body
+node n00500 Entry
+node n00501 Math
+	set expr "a.C0.X * b.C0.X + a.C1.X * b.C0.Y + a.C2.X * b.C0.Z"
+node n00502 Math
+	set expr "a.C0.Y * b.C0.X + a.C1.Y * b.C0.Y + a.C2.Y * b.C0.Z"
+node n00503 Math
+	set expr "a.C0.Z * b.C0.X + a.C1.Z * b.C0.Y + a.C2.Z * b.C0.Z"
+node n00504 Make Vec3
+node n00505 Math
+	set expr "a.C0.X * b.C1.X + a.C1.X * b.C1.Y + a.C2.X * b.C1.Z"
+node n00506 Math
+	set expr "a.C0.Y * b.C1.X + a.C1.Y * b.C1.Y + a.C2.Y * b.C1.Z"
+node n00507 Math
+	set expr "a.C0.Z * b.C1.X + a.C1.Z * b.C1.Y + a.C2.Z * b.C1.Z"
+node n00508 Make Vec3
+node n00509 Math
+	set expr "a.C0.X * b.C2.X + a.C1.X * b.C2.Y + a.C2.X * b.C2.Z"
+node n0050a Math
+	set expr "a.C0.Y * b.C2.X + a.C1.Y * b.C2.Y + a.C2.Y * b.C2.Z"
+node n0050b Math
+	set expr "a.C0.Z * b.C2.X + a.C1.Z * b.C2.Y + a.C2.Z * b.C2.Z"
+node n0050c Make Vec3
+node n0050d Make Mat3
+node n0050e Return
+wire n00500.a n00501.a
+wire n00500.b n00501.b
+wire n00500.a n00502.a
+wire n00500.b n00502.b
+wire n00500.a n00503.a
+wire n00500.b n00503.b
+wire n00501.result n00504.X
+wire n00502.result n00504.Y
+wire n00503.result n00504.Z
+wire n00500.a n00505.a
+wire n00500.b n00505.b
+wire n00500.a n00506.a
+wire n00500.b n00506.b
+wire n00500.a n00507.a
+wire n00500.b n00507.b
+wire n00505.result n00508.X
+wire n00506.result n00508.Y
+wire n00507.result n00508.Z
+wire n00500.a n00509.a
+wire n00500.b n00509.b
+wire n00500.a n0050a.a
+wire n00500.b n0050a.b
+wire n00500.a n0050b.a
+wire n00500.b n0050b.b
+wire n00509.result n0050c.X
+wire n0050a.result n0050c.Y
+wire n0050b.result n0050c.Z
+wire n00504.value n0050d.C0
+wire n00508.value n0050d.C1
+wire n0050c.value n0050d.C2
+wire n00500.then n0050e.in
+wire n0050d.value n0050e.value
+
+operator m006 +
+	static
+	pure
+	returns Mat3
+	doc "Element by element: the sum."
+param a Mat3
+param b Mat3
+sheet body
+node n00600 Entry
+node n00601 Math
+	set expr "a.C0.X + b.C0.X"
+node n00602 Math
+	set expr "a.C0.Y + b.C0.Y"
+node n00603 Math
+	set expr "a.C0.Z + b.C0.Z"
+node n00604 Make Vec3
+node n00605 Math
+	set expr "a.C1.X + b.C1.X"
+node n00606 Math
+	set expr "a.C1.Y + b.C1.Y"
+node n00607 Math
+	set expr "a.C1.Z + b.C1.Z"
+node n00608 Make Vec3
+node n00609 Math
+	set expr "a.C2.X + b.C2.X"
+node n0060a Math
+	set expr "a.C2.Y + b.C2.Y"
+node n0060b Math
+	set expr "a.C2.Z + b.C2.Z"
+node n0060c Make Vec3
+node n0060d Make Mat3
+node n0060e Return
+wire n00600.a n00601.a
+wire n00600.b n00601.b
+wire n00600.a n00602.a
+wire n00600.b n00602.b
+wire n00600.a n00603.a
+wire n00600.b n00603.b
+wire n00601.result n00604.X
+wire n00602.result n00604.Y
+wire n00603.result n00604.Z
+wire n00600.a n00605.a
+wire n00600.b n00605.b
+wire n00600.a n00606.a
+wire n00600.b n00606.b
+wire n00600.a n00607.a
+wire n00600.b n00607.b
+wire n00605.result n00608.X
+wire n00606.result n00608.Y
+wire n00607.result n00608.Z
+wire n00600.a n00609.a
+wire n00600.b n00609.b
+wire n00600.a n0060a.a
+wire n00600.b n0060a.b
+wire n00600.a n0060b.a
+wire n00600.b n0060b.b
+wire n00609.result n0060c.X
+wire n0060a.result n0060c.Y
+wire n0060b.result n0060c.Z
+wire n00604.value n0060d.C0
+wire n00608.value n0060d.C1
+wire n0060c.value n0060d.C2
+wire n00600.then n0060e.in
+wire n0060d.value n0060e.value
+
+operator m007 -
+	static
+	pure
+	returns Mat3
+	doc "Element by element: the difference."
+param a Mat3
+param b Mat3
+sheet body
+node n00700 Entry
+node n00701 Math
+	set expr "a.C0.X - b.C0.X"
+node n00702 Math
+	set expr "a.C0.Y - b.C0.Y"
+node n00703 Math
+	set expr "a.C0.Z - b.C0.Z"
+node n00704 Make Vec3
+node n00705 Math
+	set expr "a.C1.X - b.C1.X"
+node n00706 Math
+	set expr "a.C1.Y - b.C1.Y"
+node n00707 Math
+	set expr "a.C1.Z - b.C1.Z"
+node n00708 Make Vec3
+node n00709 Math
+	set expr "a.C2.X - b.C2.X"
+node n0070a Math
+	set expr "a.C2.Y - b.C2.Y"
+node n0070b Math
+	set expr "a.C2.Z - b.C2.Z"
+node n0070c Make Vec3
+node n0070d Make Mat3
+node n0070e Return
+wire n00700.a n00701.a
+wire n00700.b n00701.b
+wire n00700.a n00702.a
+wire n00700.b n00702.b
+wire n00700.a n00703.a
+wire n00700.b n00703.b
+wire n00701.result n00704.X
+wire n00702.result n00704.Y
+wire n00703.result n00704.Z
+wire n00700.a n00705.a
+wire n00700.b n00705.b
+wire n00700.a n00706.a
+wire n00700.b n00706.b
+wire n00700.a n00707.a
+wire n00700.b n00707.b
+wire n00705.result n00708.X
+wire n00706.result n00708.Y
+wire n00707.result n00708.Z
+wire n00700.a n00709.a
+wire n00700.b n00709.b
+wire n00700.a n0070a.a
+wire n00700.b n0070a.b
+wire n00700.a n0070b.a
+wire n00700.b n0070b.b
+wire n00709.result n0070c.X
+wire n0070a.result n0070c.Y
+wire n0070b.result n0070c.Z
+wire n00704.value n0070d.C0
+wire n00708.value n0070d.C1
+wire n0070c.value n0070d.C2
+wire n00700.then n0070e.in
+wire n0070d.value n0070e.value
+
+operator m008 ==
+	static
+	pure
+	returns bool
+	doc "True when every element is equal (exact)."
+param a Mat3
+param b Mat3
+sheet body
+node n00800 Entry
+node n00801 Math
+	set expr "a.C0.X == b.C0.X && a.C0.Y == b.C0.Y && a.C0.Z == b.C0.Z && a.C1.X == b.C1.X && a.C1.Y == b.C1.Y && a.C1.Z == b.C1.Z && a.C2.X == b.C2.X && a.C2.Y == b.C2.Y && a.C2.Z == b.C2.Z"
+node n00802 Return
+wire n00800.a n00801.a
+wire n00800.b n00801.b
+wire n00800.then n00802.in
+wire n00801.result n00802.value
+
+operator m009 *
+	static
+	pure
+	returns Vec3
+	doc "The column vector `v` transformed: m * v."
+param m Mat3
+param v Vec3
+sheet body
+node n00900 Entry
+node n00901 Math
+	set expr "m.C0.X * v.X + m.C1.X * v.Y + m.C2.X * v.Z"
+node n00902 Math
+	set expr "m.C0.Y * v.X + m.C1.Y * v.Y + m.C2.Y * v.Z"
+node n00903 Math
+	set expr "m.C0.Z * v.X + m.C1.Z * v.Y + m.C2.Z * v.Z"
+node n00904 Make Vec3
+node n00905 Return
+wire n00900.m n00901.m
+wire n00900.v n00901.v
+wire n00900.m n00902.m
+wire n00900.v n00902.v
+wire n00900.m n00903.m
+wire n00900.v n00903.v
+wire n00901.result n00904.X
+wire n00902.result n00904.Y
+wire n00903.result n00904.Z
+wire n00900.then n00905.in
+wire n00904.value n00905.value
+
+operator m00a *
+	static
+	pure
+	returns Mat3
+	doc "Every element times `k`."
+param m Mat3
+param k float
+sheet body
+node n00a00 Entry
+node n00a01 Math
+	set expr "m.C0.X * k"
+node n00a02 Math
+	set expr "m.C0.Y * k"
+node n00a03 Math
+	set expr "m.C0.Z * k"
+node n00a04 Make Vec3
+node n00a05 Math
+	set expr "m.C1.X * k"
+node n00a06 Math
+	set expr "m.C1.Y * k"
+node n00a07 Math
+	set expr "m.C1.Z * k"
+node n00a08 Make Vec3
+node n00a09 Math
+	set expr "m.C2.X * k"
+node n00a0a Math
+	set expr "m.C2.Y * k"
+node n00a0b Math
+	set expr "m.C2.Z * k"
+node n00a0c Make Vec3
+node n00a0d Make Mat3
+node n00a0e Return
+wire n00a00.k n00a01.k
+wire n00a00.m n00a01.m
+wire n00a00.k n00a02.k
+wire n00a00.m n00a02.m
+wire n00a00.k n00a03.k
+wire n00a00.m n00a03.m
+wire n00a01.result n00a04.X
+wire n00a02.result n00a04.Y
+wire n00a03.result n00a04.Z
+wire n00a00.k n00a05.k
+wire n00a00.m n00a05.m
+wire n00a00.k n00a06.k
+wire n00a00.m n00a06.m
+wire n00a00.k n00a07.k
+wire n00a00.m n00a07.m
+wire n00a05.result n00a08.X
+wire n00a06.result n00a08.Y
+wire n00a07.result n00a08.Z
+wire n00a00.k n00a09.k
+wire n00a00.m n00a09.m
+wire n00a00.k n00a0a.k
+wire n00a00.m n00a0a.m
+wire n00a00.k n00a0b.k
+wire n00a00.m n00a0b.m
+wire n00a09.result n00a0c.X
+wire n00a0a.result n00a0c.Y
+wire n00a0b.result n00a0c.Z
+wire n00a04.value n00a0d.C0
+wire n00a08.value n00a0d.C1
+wire n00a0c.value n00a0d.C2
+wire n00a00.then n00a0e.in
+wire n00a0d.value n00a0e.value
+
+function m00b Multiply
+	pure
+	returns Mat3
+	doc "This matrix times `b` (the operator `*`): `b` is applied first."
+param b Mat3
+sheet body
+node n00b00 Entry
+node n00b01 This
+node n00b02 Math
+	set expr "a.C0.X * b.C0.X + a.C1.X * b.C0.Y + a.C2.X * b.C0.Z"
+node n00b03 Math
+	set expr "a.C0.Y * b.C0.X + a.C1.Y * b.C0.Y + a.C2.Y * b.C0.Z"
+node n00b04 Math
+	set expr "a.C0.Z * b.C0.X + a.C1.Z * b.C0.Y + a.C2.Z * b.C0.Z"
+node n00b05 Make Vec3
+node n00b06 Math
+	set expr "a.C0.X * b.C1.X + a.C1.X * b.C1.Y + a.C2.X * b.C1.Z"
+node n00b07 Math
+	set expr "a.C0.Y * b.C1.X + a.C1.Y * b.C1.Y + a.C2.Y * b.C1.Z"
+node n00b08 Math
+	set expr "a.C0.Z * b.C1.X + a.C1.Z * b.C1.Y + a.C2.Z * b.C1.Z"
+node n00b09 Make Vec3
+node n00b0a Math
+	set expr "a.C0.X * b.C2.X + a.C1.X * b.C2.Y + a.C2.X * b.C2.Z"
+node n00b0b Math
+	set expr "a.C0.Y * b.C2.X + a.C1.Y * b.C2.Y + a.C2.Y * b.C2.Z"
+node n00b0c Math
+	set expr "a.C0.Z * b.C2.X + a.C1.Z * b.C2.Y + a.C2.Z * b.C2.Z"
+node n00b0d Make Vec3
+node n00b0e Make Mat3
+node n00b0f Return
+wire n00b01.value n00b02.a
+wire n00b00.b n00b02.b
+wire n00b01.value n00b03.a
+wire n00b00.b n00b03.b
+wire n00b01.value n00b04.a
+wire n00b00.b n00b04.b
+wire n00b02.result n00b05.X
+wire n00b03.result n00b05.Y
+wire n00b04.result n00b05.Z
+wire n00b01.value n00b06.a
+wire n00b00.b n00b06.b
+wire n00b01.value n00b07.a
+wire n00b00.b n00b07.b
+wire n00b01.value n00b08.a
+wire n00b00.b n00b08.b
+wire n00b06.result n00b09.X
+wire n00b07.result n00b09.Y
+wire n00b08.result n00b09.Z
+wire n00b01.value n00b0a.a
+wire n00b00.b n00b0a.b
+wire n00b01.value n00b0b.a
+wire n00b00.b n00b0b.b
+wire n00b01.value n00b0c.a
+wire n00b00.b n00b0c.b
+wire n00b0a.result n00b0d.X
+wire n00b0b.result n00b0d.Y
+wire n00b0c.result n00b0d.Z
+wire n00b05.value n00b0e.C0
+wire n00b09.value n00b0e.C1
+wire n00b0d.value n00b0e.C2
+wire n00b00.then n00b0f.in
+wire n00b0e.value n00b0f.value
+
+function m00c Transform
+	pure
+	returns Vec3
+	doc "The column vector `v` transformed: M * v (the operator `*` with a vector)."
+param v Vec3
+sheet body
+node n00c00 Entry
+node n00c01 This
+node n00c02 Math
+	set expr "m.C0.X * v.X + m.C1.X * v.Y + m.C2.X * v.Z"
+node n00c03 Math
+	set expr "m.C0.Y * v.X + m.C1.Y * v.Y + m.C2.Y * v.Z"
+node n00c04 Math
+	set expr "m.C0.Z * v.X + m.C1.Z * v.Y + m.C2.Z * v.Z"
+node n00c05 Make Vec3
+node n00c06 Return
+wire n00c01.value n00c02.m
+wire n00c00.v n00c02.v
+wire n00c01.value n00c03.m
+wire n00c00.v n00c03.v
+wire n00c01.value n00c04.m
+wire n00c00.v n00c04.v
+wire n00c02.result n00c05.X
+wire n00c03.result n00c05.Y
+wire n00c04.result n00c05.Z
+wire n00c00.then n00c06.in
+wire n00c05.value n00c06.value
+
+function m00d Scaled
+	pure
+	returns Mat3
+	doc "Every element times `k`."
+param k float
+sheet body
+node n00d00 Entry
+node n00d01 This
+node n00d02 Math
+	set expr "m.C0.X * k"
+node n00d03 Math
+	set expr "m.C0.Y * k"
+node n00d04 Math
+	set expr "m.C0.Z * k"
+node n00d05 Make Vec3
+node n00d06 Math
+	set expr "m.C1.X * k"
+node n00d07 Math
+	set expr "m.C1.Y * k"
+node n00d08 Math
+	set expr "m.C1.Z * k"
+node n00d09 Make Vec3
+node n00d0a Math
+	set expr "m.C2.X * k"
+node n00d0b Math
+	set expr "m.C2.Y * k"
+node n00d0c Math
+	set expr "m.C2.Z * k"
+node n00d0d Make Vec3
+node n00d0e Make Mat3
+node n00d0f Return
+wire n00d00.k n00d02.k
+wire n00d01.value n00d02.m
+wire n00d00.k n00d03.k
+wire n00d01.value n00d03.m
+wire n00d00.k n00d04.k
+wire n00d01.value n00d04.m
+wire n00d02.result n00d05.X
+wire n00d03.result n00d05.Y
+wire n00d04.result n00d05.Z
+wire n00d00.k n00d06.k
+wire n00d01.value n00d06.m
+wire n00d00.k n00d07.k
+wire n00d01.value n00d07.m
+wire n00d00.k n00d08.k
+wire n00d01.value n00d08.m
+wire n00d06.result n00d09.X
+wire n00d07.result n00d09.Y
+wire n00d08.result n00d09.Z
+wire n00d00.k n00d0a.k
+wire n00d01.value n00d0a.m
+wire n00d00.k n00d0b.k
+wire n00d01.value n00d0b.m
+wire n00d00.k n00d0c.k
+wire n00d01.value n00d0c.m
+wire n00d0a.result n00d0d.X
+wire n00d0b.result n00d0d.Y
+wire n00d0c.result n00d0d.Z
+wire n00d05.value n00d0e.C0
+wire n00d09.value n00d0e.C1
+wire n00d0d.value n00d0e.C2
+wire n00d00.then n00d0f.in
+wire n00d0e.value n00d0f.value
+
+function m00e Transposed
+	pure
+	returns Mat3
+	doc "Rows and columns swapped."
+sheet body
+node n00e00 Entry
+node n00e01 This
+node n00e02 Math
+	set expr "m.C0.X"
+node n00e03 Math
+	set expr "m.C1.X"
+node n00e04 Math
+	set expr "m.C2.X"
+node n00e05 Make Vec3
+node n00e06 Math
+	set expr "m.C0.Y"
+node n00e07 Math
+	set expr "m.C1.Y"
+node n00e08 Math
+	set expr "m.C2.Y"
+node n00e09 Make Vec3
+node n00e0a Math
+	set expr "m.C0.Z"
+node n00e0b Math
+	set expr "m.C1.Z"
+node n00e0c Math
+	set expr "m.C2.Z"
+node n00e0d Make Vec3
+node n00e0e Make Mat3
+node n00e0f Return
+wire n00e01.value n00e02.m
+wire n00e01.value n00e03.m
+wire n00e01.value n00e04.m
+wire n00e02.result n00e05.X
+wire n00e03.result n00e05.Y
+wire n00e04.result n00e05.Z
+wire n00e01.value n00e06.m
+wire n00e01.value n00e07.m
+wire n00e01.value n00e08.m
+wire n00e06.result n00e09.X
+wire n00e07.result n00e09.Y
+wire n00e08.result n00e09.Z
+wire n00e01.value n00e0a.m
+wire n00e01.value n00e0b.m
+wire n00e01.value n00e0c.m
+wire n00e0a.result n00e0d.X
+wire n00e0b.result n00e0d.Y
+wire n00e0c.result n00e0d.Z
+wire n00e05.value n00e0e.C0
+wire n00e09.value n00e0e.C1
+wire n00e0d.value n00e0e.C2
+wire n00e00.then n00e0f.in
+wire n00e0e.value n00e0f.value
+
+function m00f Determinant
+	pure
+	returns float
+	doc "The determinant (0 for a matrix that has no inverse)."
+sheet body
+node n00f00 Entry
+node n00f01 This
+node n00f02 Math
+	set expr "m.C0.X * (m.C1.Y * m.C2.Z - m.C2.Y * m.C1.Z) + m.C0.Y * -(m.C1.X * m.C2.Z - m.C2.X * m.C1.Z) + m.C0.Z * (m.C1.X * m.C2.Y - m.C2.X * m.C1.Y)"
+node n00f03 Math
+	set expr "d != 0.0f ? 1.0f / d : 0.0f"
+node n00f04 Math
+	set expr "(m.C1.Y * m.C2.Z - m.C2.Y * m.C1.Z) * k"
+node n00f05 Math
+	set expr "-(m.C0.Y * m.C2.Z - m.C2.Y * m.C0.Z) * k"
+node n00f06 Math
+	set expr "(m.C0.Y * m.C1.Z - m.C1.Y * m.C0.Z) * k"
+node n00f07 Make Vec3
+node n00f08 Math
+	set expr "-(m.C1.X * m.C2.Z - m.C2.X * m.C1.Z) * k"
+node n00f09 Math
+	set expr "(m.C0.X * m.C2.Z - m.C2.X * m.C0.Z) * k"
+node n00f0a Math
+	set expr "-(m.C0.X * m.C1.Z - m.C1.X * m.C0.Z) * k"
+node n00f0b Make Vec3
+node n00f0c Math
+	set expr "(m.C1.X * m.C2.Y - m.C2.X * m.C1.Y) * k"
+node n00f0d Math
+	set expr "-(m.C0.X * m.C2.Y - m.C2.X * m.C0.Y) * k"
+node n00f0e Math
+	set expr "(m.C0.X * m.C1.Y - m.C1.X * m.C0.Y) * k"
+node n00f0f Make Vec3
+node n00f0g Make Mat3
+node n00f0h Return
+wire n00f01.value n00f02.m
+wire n00f02.result n00f03.d
+wire n00f03.result n00f04.k
+wire n00f01.value n00f04.m
+wire n00f03.result n00f05.k
+wire n00f01.value n00f05.m
+wire n00f03.result n00f06.k
+wire n00f01.value n00f06.m
+wire n00f04.result n00f07.X
+wire n00f05.result n00f07.Y
+wire n00f06.result n00f07.Z
+wire n00f03.result n00f08.k
+wire n00f01.value n00f08.m
+wire n00f03.result n00f09.k
+wire n00f01.value n00f09.m
+wire n00f03.result n00f0a.k
+wire n00f01.value n00f0a.m
+wire n00f08.result n00f0b.X
+wire n00f09.result n00f0b.Y
+wire n00f0a.result n00f0b.Z
+wire n00f03.result n00f0c.k
+wire n00f01.value n00f0c.m
+wire n00f03.result n00f0d.k
+wire n00f01.value n00f0d.m
+wire n00f03.result n00f0e.k
+wire n00f01.value n00f0e.m
+wire n00f0c.result n00f0f.X
+wire n00f0d.result n00f0f.Y
+wire n00f0e.result n00f0f.Z
+wire n00f07.value n00f0g.C0
+wire n00f0b.value n00f0g.C1
+wire n00f0f.value n00f0g.C2
+wire n00f00.then n00f0h.in
+wire n00f02.result n00f0h.value
+
+function m00g Inverted
+	pure
+	returns Mat3
+	doc "The inverse; a singular matrix (determinant 0) gives all zeros."
+sheet body
+node n00g00 Entry
+node n00g01 This
+node n00g02 Math
+	set expr "m.C0.X * (m.C1.Y * m.C2.Z - m.C2.Y * m.C1.Z) + m.C0.Y * -(m.C1.X * m.C2.Z - m.C2.X * m.C1.Z) + m.C0.Z * (m.C1.X * m.C2.Y - m.C2.X * m.C1.Y)"
+node n00g03 Math
+	set expr "d != 0.0f ? 1.0f / d : 0.0f"
+node n00g04 Math
+	set expr "(m.C1.Y * m.C2.Z - m.C2.Y * m.C1.Z) * k"
+node n00g05 Math
+	set expr "-(m.C0.Y * m.C2.Z - m.C2.Y * m.C0.Z) * k"
+node n00g06 Math
+	set expr "(m.C0.Y * m.C1.Z - m.C1.Y * m.C0.Z) * k"
+node n00g07 Make Vec3
+node n00g08 Math
+	set expr "-(m.C1.X * m.C2.Z - m.C2.X * m.C1.Z) * k"
+node n00g09 Math
+	set expr "(m.C0.X * m.C2.Z - m.C2.X * m.C0.Z) * k"
+node n00g0a Math
+	set expr "-(m.C0.X * m.C1.Z - m.C1.X * m.C0.Z) * k"
+node n00g0b Make Vec3
+node n00g0c Math
+	set expr "(m.C1.X * m.C2.Y - m.C2.X * m.C1.Y) * k"
+node n00g0d Math
+	set expr "-(m.C0.X * m.C2.Y - m.C2.X * m.C0.Y) * k"
+node n00g0e Math
+	set expr "(m.C0.X * m.C1.Y - m.C1.X * m.C0.Y) * k"
+node n00g0f Make Vec3
+node n00g0g Make Mat3
+node n00g0h Return
+wire n00g01.value n00g02.m
+wire n00g02.result n00g03.d
+wire n00g03.result n00g04.k
+wire n00g01.value n00g04.m
+wire n00g03.result n00g05.k
+wire n00g01.value n00g05.m
+wire n00g03.result n00g06.k
+wire n00g01.value n00g06.m
+wire n00g04.result n00g07.X
+wire n00g05.result n00g07.Y
+wire n00g06.result n00g07.Z
+wire n00g03.result n00g08.k
+wire n00g01.value n00g08.m
+wire n00g03.result n00g09.k
+wire n00g01.value n00g09.m
+wire n00g03.result n00g0a.k
+wire n00g01.value n00g0a.m
+wire n00g08.result n00g0b.X
+wire n00g09.result n00g0b.Y
+wire n00g0a.result n00g0b.Z
+wire n00g03.result n00g0c.k
+wire n00g01.value n00g0c.m
+wire n00g03.result n00g0d.k
+wire n00g01.value n00g0d.m
+wire n00g03.result n00g0e.k
+wire n00g01.value n00g0e.m
+wire n00g0c.result n00g0f.X
+wire n00g0d.result n00g0f.Y
+wire n00g0e.result n00g0f.Z
+wire n00g07.value n00g0g.C0
+wire n00g0b.value n00g0g.C1
+wire n00g0f.value n00g0g.C2
+wire n00g00.then n00g0h.in
+wire n00g0g.value n00g0h.value
+
+function m00h TryInvert
+	pure
+	returns bool
+	doc "The inverse in `inverse` and true; false and all zeros when the determinant is 0."
+out inverse Mat3
+sheet body
+node n00h00 Entry
+node n00h01 This
+node n00h02 Math
+	set expr "m.C0.X * (m.C1.Y * m.C2.Z - m.C2.Y * m.C1.Z) + m.C0.Y * -(m.C1.X * m.C2.Z - m.C2.X * m.C1.Z) + m.C0.Z * (m.C1.X * m.C2.Y - m.C2.X * m.C1.Y)"
+node n00h03 Math
+	set expr "d != 0.0f ? 1.0f / d : 0.0f"
+node n00h04 Math
+	set expr "(m.C1.Y * m.C2.Z - m.C2.Y * m.C1.Z) * k"
+node n00h05 Math
+	set expr "-(m.C0.Y * m.C2.Z - m.C2.Y * m.C0.Z) * k"
+node n00h06 Math
+	set expr "(m.C0.Y * m.C1.Z - m.C1.Y * m.C0.Z) * k"
+node n00h07 Make Vec3
+node n00h08 Math
+	set expr "-(m.C1.X * m.C2.Z - m.C2.X * m.C1.Z) * k"
+node n00h09 Math
+	set expr "(m.C0.X * m.C2.Z - m.C2.X * m.C0.Z) * k"
+node n00h0a Math
+	set expr "-(m.C0.X * m.C1.Z - m.C1.X * m.C0.Z) * k"
+node n00h0b Make Vec3
+node n00h0c Math
+	set expr "(m.C1.X * m.C2.Y - m.C2.X * m.C1.Y) * k"
+node n00h0d Math
+	set expr "-(m.C0.X * m.C2.Y - m.C2.X * m.C0.Y) * k"
+node n00h0e Math
+	set expr "(m.C0.X * m.C1.Y - m.C1.X * m.C0.Y) * k"
+node n00h0f Make Vec3
+node n00h0g Make Mat3
+node n00h0h Math
+	set expr "d != 0.0f"
+node n00h0i Return
+wire n00h01.value n00h02.m
+wire n00h02.result n00h03.d
+wire n00h03.result n00h04.k
+wire n00h01.value n00h04.m
+wire n00h03.result n00h05.k
+wire n00h01.value n00h05.m
+wire n00h03.result n00h06.k
+wire n00h01.value n00h06.m
+wire n00h04.result n00h07.X
+wire n00h05.result n00h07.Y
+wire n00h06.result n00h07.Z
+wire n00h03.result n00h08.k
+wire n00h01.value n00h08.m
+wire n00h03.result n00h09.k
+wire n00h01.value n00h09.m
+wire n00h03.result n00h0a.k
+wire n00h01.value n00h0a.m
+wire n00h08.result n00h0b.X
+wire n00h09.result n00h0b.Y
+wire n00h0a.result n00h0b.Z
+wire n00h03.result n00h0c.k
+wire n00h01.value n00h0c.m
+wire n00h03.result n00h0d.k
+wire n00h01.value n00h0d.m
+wire n00h03.result n00h0e.k
+wire n00h01.value n00h0e.m
+wire n00h0c.result n00h0f.X
+wire n00h0d.result n00h0f.Y
+wire n00h0e.result n00h0f.Z
+wire n00h07.value n00h0g.C0
+wire n00h0b.value n00h0g.C1
+wire n00h0f.value n00h0g.C2
+wire n00h02.result n00h0h.d
+wire n00h00.then n00h0i.in
+wire n00h0g.value n00h0i.inverse
+wire n00h0h.result n00h0i.value
+
+function m00i ApproxEquals
+	pure
+	returns bool
+	doc "True when every element is within `epsilon` of the other's (absolute)."
+param other Mat3
+param epsilon float
+	default 0.00001f
+sheet body
+node n00i00 Entry
+node n00i01 This
+node n00i02 Math
+	set expr "Abs(m.C0.X - o.C0.X) <= e && Abs(m.C0.Y - o.C0.Y) <= e && Abs(m.C0.Z - o.C0.Z) <= e && Abs(m.C1.X - o.C1.X) <= e && Abs(m.C1.Y - o.C1.Y) <= e && Abs(m.C1.Z - o.C1.Z) <= e && Abs(m.C2.X - o.C2.X) <= e && Abs(m.C2.Y - o.C2.Y) <= e && Abs(m.C2.Z - o.C2.Z) <= e"
+node n00i03 Return
+wire n00i00.epsilon n00i02.e
+wire n00i01.value n00i02.m
+wire n00i00.other n00i02.o
+wire n00i00.then n00i03.in
+wire n00i02.result n00i03.value
+
+function m00j FromQuat
+	static
+	pure
+	returns Mat3
+	doc "The rotation of a unit quaternion."
+param rotation Quat
+sheet body
+node n00j00 Entry
+node n00j01 Call Core.Quat.ToMat3
+node n00j02 Return
+wire n00j00.rotation n00j01.receiver
+wire n00j00.then n00j02.in
+wire n00j01.result n00j02.value
+
+function m00k Scale
+	static
+	pure
+	returns Mat3
+	doc "Scales along X, Y and Z."
+param scale Vec3
+sheet body
+node n00k00 Entry
+node n00k01 Math
+	set expr "v.X"
+node n00k02 Make Vec3
+	in Y 0.0f
+	in Z 0.0f
+node n00k03 Math
+	set expr "v.Y"
+node n00k04 Make Vec3
+	in X 0.0f
+	in Z 0.0f
+node n00k05 Math
+	set expr "v.Z"
+node n00k06 Make Vec3
+	in X 0.0f
+	in Y 0.0f
+node n00k07 Make Mat3
+node n00k08 Return
+wire n00k00.scale n00k01.v
+wire n00k01.result n00k02.X
+wire n00k00.scale n00k03.v
+wire n00k03.result n00k04.Y
+wire n00k00.scale n00k05.v
+wire n00k05.result n00k06.Z
+wire n00k02.value n00k07.C0
+wire n00k04.value n00k07.C1
+wire n00k06.value n00k07.C2
+wire n00k00.then n00k08.in
+wire n00k07.value n00k08.value
+
+function m00l RotationZ
+	static
+	pure
+	returns Mat3
+	doc "A rotation of `angle` radians about Z: the 2D rotation of X and Y (counter-clockwise)."
+param angle float
+sheet body
+node n00l00 Entry
+node n00l01 Math
+	set expr "Cos(a)"
+node n00l02 Math
+	set expr "Sin(a)"
+node n00l03 Math
+	set expr "-Sin(a)"
+node n00l04 Make Vec3
+	in Z 0.0f
+node n00l05 Make Vec3
+	in Z 0.0f
+node n00l06 Make Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+node n00l07 Make Mat3
+node n00l08 Return
+wire n00l00.angle n00l01.a
+wire n00l00.angle n00l02.a
+wire n00l00.angle n00l03.a
+wire n00l01.result n00l04.X
+wire n00l02.result n00l04.Y
+wire n00l03.result n00l05.X
+wire n00l01.result n00l05.Y
+wire n00l04.value n00l07.C0
+wire n00l05.value n00l07.C1
+wire n00l06.value n00l07.C2
+wire n00l00.then n00l08.in
+wire n00l07.value n00l08.value
+
+function m00m ToStd430
+	doc "Writes the matrix as a GPU buffer lays it out (std140 / std430: three columns of 4 floats, the 4th 0; 12 floats from the start of `into`; a shorter span is a fatal error)."
+param into Span<float>
+sheet body
+node n00m00 Entry
+node n00m01 Break Span<float>
+node n00m02 Operator <
+	in b 12
+node n00m03 Branch
+node n00m04 Fatal
+	in message "ToStd430: the span holds fewer than 12 floats"
+node n00m05 Scope
+	unsafe
+node n00m06 This
+node n00m07 Math
+	set expr "m.C0.X"
+node n00m08 Call Pointer.Add
+	in count 0
+node n00m09 Call Pointer.Store
+node n00m0a Math
+	set expr "m.C0.Y"
+node n00m0b Call Pointer.Add
+	in count 1
+node n00m0c Call Pointer.Store
+node n00m0d Math
+	set expr "m.C0.Z"
+node n00m0e Call Pointer.Add
+	in count 2
+node n00m0f Call Pointer.Store
+node n00m0g Call Pointer.Add
+	in count 3
+node n00m0h Call Pointer.Store
+	in value 0.0f
+node n00m0i Math
+	set expr "m.C1.X"
+node n00m0j Call Pointer.Add
+	in count 4
+node n00m0k Call Pointer.Store
+node n00m0l Math
+	set expr "m.C1.Y"
+node n00m0m Call Pointer.Add
+	in count 5
+node n00m0n Call Pointer.Store
+node n00m0o Math
+	set expr "m.C1.Z"
+node n00m0p Call Pointer.Add
+	in count 6
+node n00m0q Call Pointer.Store
+node n00m0r Call Pointer.Add
+	in count 7
+node n00m0s Call Pointer.Store
+	in value 0.0f
+node n00m0t Math
+	set expr "m.C2.X"
+node n00m0u Call Pointer.Add
+	in count 8
+node n00m0v Call Pointer.Store
+node n00m0w Math
+	set expr "m.C2.Y"
+node n00m0x Call Pointer.Add
+	in count 9
+node n00m0y Call Pointer.Store
+node n00m0z Math
+	set expr "m.C2.Z"
+node n00m10 Call Pointer.Add
+	in count 10
+node n00m11 Call Pointer.Store
+node n00m12 Call Pointer.Add
+	in count 11
+node n00m13 Call Pointer.Store
+	in value 0.0f
+node n00m14 Return
+wire n00m00.into n00m01.value
+wire n00m01.Length n00m02.a
+wire n00m02.result n00m03.condition
+wire n00m00.then n00m03.in
+wire n00m03.true n00m04.in
+wire n00m03.false n00m05.in
+wire n00m06.value n00m07.m
+wire n00m01.Ptr n00m08.ptr
+wire n00m05.body n00m09.in
+wire n00m08.result n00m09.ptr
+wire n00m07.result n00m09.value
+wire n00m06.value n00m0a.m
+wire n00m01.Ptr n00m0b.ptr
+wire n00m09.then n00m0c.in
+wire n00m0b.result n00m0c.ptr
+wire n00m0a.result n00m0c.value
+wire n00m06.value n00m0d.m
+wire n00m01.Ptr n00m0e.ptr
+wire n00m0c.then n00m0f.in
+wire n00m0e.result n00m0f.ptr
+wire n00m0d.result n00m0f.value
+wire n00m01.Ptr n00m0g.ptr
+wire n00m0f.then n00m0h.in
+wire n00m0g.result n00m0h.ptr
+wire n00m06.value n00m0i.m
+wire n00m01.Ptr n00m0j.ptr
+wire n00m0h.then n00m0k.in
+wire n00m0j.result n00m0k.ptr
+wire n00m0i.result n00m0k.value
+wire n00m06.value n00m0l.m
+wire n00m01.Ptr n00m0m.ptr
+wire n00m0k.then n00m0n.in
+wire n00m0m.result n00m0n.ptr
+wire n00m0l.result n00m0n.value
+wire n00m06.value n00m0o.m
+wire n00m01.Ptr n00m0p.ptr
+wire n00m0n.then n00m0q.in
+wire n00m0p.result n00m0q.ptr
+wire n00m0o.result n00m0q.value
+wire n00m01.Ptr n00m0r.ptr
+wire n00m0q.then n00m0s.in
+wire n00m0r.result n00m0s.ptr
+wire n00m06.value n00m0t.m
+wire n00m01.Ptr n00m0u.ptr
+wire n00m0s.then n00m0v.in
+wire n00m0u.result n00m0v.ptr
+wire n00m0t.result n00m0v.value
+wire n00m06.value n00m0w.m
+wire n00m01.Ptr n00m0x.ptr
+wire n00m0v.then n00m0y.in
+wire n00m0x.result n00m0y.ptr
+wire n00m0w.result n00m0y.value
+wire n00m06.value n00m0z.m
+wire n00m01.Ptr n00m10.ptr
+wire n00m0y.then n00m11.in
+wire n00m10.result n00m11.ptr
+wire n00m0z.result n00m11.value
+wire n00m01.Ptr n00m12.ptr
+wire n00m11.then n00m13.in
+wire n00m12.result n00m13.ptr
+wire n00m05.done n00m14.in

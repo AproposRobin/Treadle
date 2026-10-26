@@ -1,0 +1,24 @@
+# treadle 1
+# expect n3 collection T2103
+type EnumeratorProtocol class
+	namespace Broken
+	doc "The enumerator struct has no MoveNext and no Current."
+
+function f1 GetEnumerator
+	returns StringView
+sheet body
+node a1 Entry
+node a2 Make StringView
+node a3 Return
+wire a1.then a3.in
+wire a2.value a3.value
+
+function f2 Run
+	static
+sheet body
+node n1 Entry
+node n2 Local Broken.EnumeratorProtocol
+node n3 ForEach
+wire n1.then n2.in
+wire n2.object n3.collection
+wire n2.then n3.in

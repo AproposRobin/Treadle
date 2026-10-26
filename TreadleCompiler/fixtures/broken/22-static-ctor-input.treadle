@@ -1,0 +1,11 @@
+# treadle 1
+# expect - - T1032
+type StaticCtorInput class
+	namespace Broken
+	doc "A static constructor takes no inputs."
+
+ctor c1
+	static
+param level int
+sheet body
+node n1 Entry

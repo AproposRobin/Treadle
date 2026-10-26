@@ -1,0 +1,5 @@
+== exit
+3
+== stderr
+fatal: array length -1 is negative at Al.Program.Main node a3
+== stdout

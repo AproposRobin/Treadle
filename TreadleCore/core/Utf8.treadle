@@ -1,0 +1,122 @@
+# treadle 1
+type Utf8 class
+	namespace Core
+	static
+	doc "UTF-8, the encoding of String and StringView: Validate, Decode one code point, EncodedLength. Positions and lengths are in bytes."
+
+function u0001 Validate
+	static
+	pure
+	returns Result<int,int>
+	doc "Ok(the number of code points) when the text is valid UTF-8 (no overlong forms, surrogates, values past U+10FFFF or cut-off sequences); Err(the byte position of the first byte that starts no valid sequence) otherwise."
+param text StringView
+sheet body
+node a01 Entry
+node a02 Break StringView
+node a03 Call C.crt.rt_utf8_check
+node a04 Operator >=
+	in b 0
+node a05 Branch
+node a06 MakeCase Result<int,int>.Ok
+node a07 Return
+node a08 Operator neg
+node a09 Operator -
+	in b 1
+node a10 MakeCase Result<int,int>.Err
+node a11 Return
+wire a01.text a02.value
+wire a02.Length a03.n
+wire a02.Ptr a03.p
+wire a03.result a04.a
+wire a04.result a05.condition
+wire a01.then a05.in
+wire a03.result a06.value
+wire a05.true a07.in
+wire a06.value a07.value
+wire a03.result a08.a
+wire a08.result a09.a
+wire a09.result a10.error
+wire a05.false a11.in
+wire a10.value a11.value
+
+function u0002 Decode
+	static
+	pure
+	returns int
+	doc "Decodes the code point at byte `pos` into `codePoint` and gives the bytes it takes (1 to 4; 0 at or past the end). A byte that starts no valid sequence takes 1 byte and gives U+FFFD."
+param text StringView
+param pos int
+out codePoint char32
+local cp int32
+sheet body
+node b01 Entry
+node b02 Break StringView
+node b03 Get local:cp
+node b04 Call C.crt.rt_utf8_decode
+node b05 Get local:cp
+node b06 Cast char32
+node b07 Return
+wire b01.text b02.value
+wire b03.value b04.cp
+wire b01.then b04.in
+wire b02.Length b04.n
+wire b01.pos b04.pos
+wire b02.Ptr b04.text
+wire b05.value b06.value
+wire b06.result b07.codePoint
+wire b04.then b07.in
+wire b04.result b07.value
+
+function u0003 EncodedLength
+	static
+	pure
+	returns int
+	doc "The bytes String.Append(char32) writes for the code point: 1 to 4 (3 for a surrogate or a value past U+10FFFF, written as U+FFFD)."
+param c char32
+sheet body
+node c01 Entry
+node c02 Cast int
+node c03 Operator >
+	in b 1114111
+node c04 Operator >=
+	in b 55296
+node c05 Operator <=
+	in b 57343
+node c06 Operator &&
+node c07 Operator ||
+node c08 Operator <
+	in b 65536
+node c09 Select
+	in true 3
+	in false 4
+node c10 Operator <
+	in b 2048
+node c11 Select
+	in true 2
+node c12 Operator <
+	in b 128
+node c13 Select
+	in true 1
+node c14 Select
+	in true 3
+node c15 Return
+wire c01.c c02.value
+wire c02.result c03.a
+wire c02.result c04.a
+wire c02.result c05.a
+wire c04.result c06.a
+wire c05.result c06.b
+wire c03.result c07.a
+wire c06.result c07.b
+wire c02.result c08.a
+wire c08.result c09.condition
+wire c02.result c10.a
+wire c10.result c11.condition
+wire c09.result c11.false
+wire c02.result c12.a
+wire c12.result c13.condition
+wire c11.result c13.false
+wire c07.result c14.condition
+wire c13.result c14.false
+wire c01.then c15.in
+wire c14.result c15.value

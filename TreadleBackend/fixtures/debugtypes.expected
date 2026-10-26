@@ -1,0 +1,5 @@
+# Twice(21) = 42 minus sCount 42: exit code 0. Debug: no leaks.
+== exit
+0
+== stdout
+types

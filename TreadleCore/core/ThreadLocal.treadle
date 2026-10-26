@@ -1,0 +1,103 @@
+# treadle 1
+type ThreadLocal class
+	namespace Core
+	generic T
+	sealed
+	doc "A value per thread: each thread that calls Get or Set has its own T, `default` until that thread sets it. Deleting the ThreadLocal frees every thread's value (values are not destroyed: keep plain values or references someone else owns). docs: Threads."
+
+field mKey void*
+	access private
+
+ctor w0001
+	doc "A ThreadLocal whose value is `default` on every thread."
+local probe T*
+sheet body
+node a0 Scope
+	unsafe
+node a1 Entry
+node a2 Get local:probe
+node a3 Call Memory.ElementSize
+node a4 Call ThreadLocal<T>.rt_tls_new
+node a5 Set this.mKey
+node a6 Return
+wire a1.then a0.in
+wire a2.value a3.ptr
+wire a0.body a4.in
+wire a3.result a4.size
+wire a4.then a5.in
+wire a4.result a5.value
+wire a0.done a6.in
+
+dtor w0002
+	doc "Frees every thread's value."
+sheet body
+node b1 Entry
+node b2 Get this.mKey
+node b3 Call ThreadLocal<T>.rt_tls_free
+node b4 Return
+wire b1.then b3.in
+wire b2.value b3.key
+wire b3.then b4.in
+
+function w0003 Get
+	returns T
+	doc "This thread's value (`default` until this thread sets it)."
+sheet body
+node c0 Scope
+	unsafe
+node c1 Entry
+node c2 Get this.mKey
+node c3 Call ThreadLocal<T>.rt_tls_get
+node c4 Cast T*
+	set kind unchecked
+node c5 Call Pointer.Load
+node c6 Return
+wire c1.then c0.in
+wire c0.body c3.in
+wire c2.value c3.key
+wire c3.result c4.value
+wire c4.result c5.ptr
+wire c3.then c6.in
+wire c5.result c6.value
+
+function w0004 Set
+	doc "Sets this thread's value (other threads keep theirs)."
+param value T
+sheet body
+node d0 Scope
+	unsafe
+node d1 Entry
+node d2 Get this.mKey
+node d3 Call ThreadLocal<T>.rt_tls_get
+node d4 Cast T*
+	set kind unchecked
+node d5 Call Pointer.Store
+node d6 Return
+wire d1.then d0.in
+wire d0.body d3.in
+wire d2.value d3.key
+wire d3.result d4.value
+wire d3.then d5.in
+wire d4.result d5.ptr
+wire d1.value d5.value
+wire d0.done d6.in
+
+function w0020 rt_tls_new
+	static
+	access private
+	returns void*
+	attr Import treadle_rt rt_tls_new
+param size int
+
+function w0021 rt_tls_free
+	static
+	access private
+	attr Import treadle_rt rt_tls_free
+param key void*
+
+function w0022 rt_tls_get
+	static
+	access private
+	returns void*
+	attr Import treadle_rt rt_tls_get
+param key void*

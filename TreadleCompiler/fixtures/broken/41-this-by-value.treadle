@@ -1,0 +1,55 @@
+# treadle 1
+# expect n3 a T3064
+# expect m3 p T2231
+type ThisByValue struct
+	namespace Broken
+	doc "This of a struct with a destructor passed by value copies it bit for bit (T3064); this passed by ref from a function that is not Mutating (T2231: this is read-only there)."
+
+field mId int
+
+dtor d1
+sheet body
+node e1 Entry
+node e2 Return
+wire e1.then e2.in
+
+function f1 Take
+	static
+	returns int
+param a ThisByValue
+sheet body
+node b1 Entry
+node b2 Return
+	in value 1
+wire b1.then b2.in
+
+function f2 Change
+	static
+param p ThisByValue
+	mode ref
+sheet body
+node c1 Entry
+node c2 Return
+wire c1.then c2.in
+
+function f3 Copies
+	returns int
+sheet body
+node n1 Entry
+node n2 This
+node n3 Call Broken.ThisByValue.Take
+node n4 Return
+wire n1.then n3.in
+wire n3.then n4.in
+wire n2.value n3.a
+wire n3.result n4.value
+
+function f4 ReadOnly
+sheet body
+node m1 Entry
+node m2 This
+node m3 Call Broken.ThisByValue.Change
+node m4 Return
+wire m1.then m3.in
+wire m2.value m3.p
+wire m3.then m4.in

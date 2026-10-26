@@ -1,0 +1,232 @@
+# treadle 1
+type Program class
+	namespace Sdl
+	static
+	doc "An SDL2 window through the C import (docs/C-Import.md): 640x480, a renderer filled with a colour that a Flip Flop changes every 30 frames, events polled into an SDL_Event (a C union; Break reads its type) until SDL_QUIT, or until --frames <n> frames have been drawn."
+
+function m0001 Main
+	static
+	returns int
+param args String[]
+local maxFrames int
+local frame int
+local running bool
+	init true
+local window C.SDL_Window*
+local renderer C.SDL_Renderer*
+local ev C.SDL_Event
+local red bool
+sheet body
+node a1 Entry
+node a2 Get String[].Length
+node a3 Operator -
+	in b 1
+node a4 For
+	in start 0
+node a5 Index
+node a6 Call String.CStr()
+node a7 Call C.sdl2.SDL_strcmp
+	in str2 "--frames"
+node a8 Operator ==
+	in b 0
+node a9 Branch
+node b1 Operator +
+	in b 1
+node b2 Index
+node b3 Call String.CStr()
+node b4 Call C.sdl2.SDL_atoi
+node b5 Set local:maxFrames
+node b6 Call C.sdl2.SDL_SetMainReady
+node b7 Call C.sdl2.SDL_Init
+node b8 Get C.sdl2.SDL_INIT_VIDEO
+node b9 Operator !=
+	in b 0
+node c1 Branch
+node c2 Call C.libc.printf
+	in format "SDL_Init failed: %s\n"
+node c3 Call C.sdl2.SDL_GetError
+node c4 Return
+	in value 1
+node c5 Get C.sdl2.SDL_WINDOWPOS_CENTERED_MASK
+node c6 Cast int32
+node c7 MakeCase C.SDL_WindowFlags.SDL_WINDOW_SHOWN
+node c8 Cast uint32
+node c9 Call C.sdl2.SDL_CreateWindow
+	in title "Treadle SDL"
+	in w 640
+	in h 480
+node d1 Set local:window
+node d2 Call C.sdl2.SDL_CreateRenderer
+	in index -1
+	in flags 0
+node d3 Get local:window
+node d4 Set local:renderer
+node d5 While
+node d6 Get local:running
+node d7 While
+	in condition true
+node d8 Call C.sdl2.SDL_PollEvent
+node d9 Get local:ev
+node e1 Operator ==
+	in b 0
+node e2 Branch
+node e3 Break
+node e4 Break C.SDL_Event
+node e5 MakeCase C.SDL_EventType.SDL_QUIT
+node e6 Cast uint32
+node e7 Operator ==
+node e8 Branch
+node e9 Set local:running
+	in value false
+node f1 Get local:frame
+node f2 Operator %
+	in b 30
+node f3 Operator ==
+	in b 0
+node f4 Branch
+node f5 FlipFlop
+node f6 Set local:red
+	in value true
+node f7 Set local:red
+	in value false
+node f8 Call C.libc.printf
+	in format "frame %lld: red\n"
+node f9 Call C.libc.printf
+	in format "frame %lld: blue\n"
+node g1 Call C.sdl2.SDL_SetRenderDrawColor
+	in g 40
+	in a 255
+node g2 Get local:renderer
+node g3 Get local:red
+node g4 Select
+	in true 200
+	in false 30
+node g5 Cast uint8
+node g6 Select
+	in true 30
+	in false 200
+node g7 Cast uint8
+node g8 Call C.sdl2.SDL_RenderClear
+node g9 Call C.sdl2.SDL_RenderPresent
+node h1 Call C.sdl2.SDL_Delay
+	in ms 16
+node h2 Set local:frame
+	set op +=
+	in value 1
+node h3 Get local:maxFrames
+node h4 Operator >
+	in b 0
+node h5 Get local:frame
+node h6 Operator >=
+node h7 Operator &&
+node h8 Branch
+node h9 Set local:running
+	in value false
+node i1 Call C.libc.printf
+	in format "frames %lld\n"
+node i2 Get local:frame
+node i3 Call C.sdl2.SDL_DestroyRenderer
+node i4 Call C.sdl2.SDL_DestroyWindow
+node i5 Call C.sdl2.SDL_Quit
+node i6 Return
+	in value 0
+wire a1.args a2.receiver
+wire a2.value a3.a
+wire a3.result a4.count
+wire a1.then a4.in
+wire a1.args a5.collection
+wire a4.index a5.index
+wire a5.value a6.receiver
+wire a4.body a7.in
+wire a6.result a7.str1
+wire a7.result a8.a
+wire a8.result a9.condition
+wire a7.then a9.in
+wire a4.index b1.a
+wire a1.args b2.collection
+wire b1.result b2.index
+wire b2.value b3.receiver
+wire a9.true b4.in
+wire b3.result b4.str
+wire b4.then b5.in
+wire b4.result b5.value
+wire a4.done b6.in
+wire b8.value b7.flags
+wire b6.then b7.in
+wire b7.result b9.a
+wire b9.result c1.condition
+wire b7.then c1.in
+wire c3.then c2.in
+wire c3.result c2.va0
+wire c1.true c3.in
+wire c2.then c4.in
+wire c5.value c6.value
+wire c7.value c8.value
+wire c8.result c9.flags
+wire c1.false c9.in
+wire c6.result c9.x
+wire c6.result c9.y
+wire c9.then d1.in
+wire c9.result d1.value
+wire d1.then d2.in
+wire d3.value d2.window
+wire d2.then d4.in
+wire d2.result d4.value
+wire d6.value d5.condition
+wire d4.then d5.in
+wire d5.body d7.in
+wire d9.value d8.event
+wire d7.body d8.in
+wire d8.result e1.a
+wire e1.result e2.condition
+wire d8.then e2.in
+wire e2.true e3.in
+wire d9.value e4.value
+wire e5.value e6.value
+wire e4.type e7.a
+wire e6.result e7.b
+wire e7.result e8.condition
+wire e2.false e8.in
+wire e8.true e9.in
+wire f1.value f2.a
+wire f2.result f3.a
+wire f3.result f4.condition
+wire d7.done f4.in
+wire f4.true f5.in
+wire f5.a f6.in
+wire f5.b f7.in
+wire f6.then f8.in
+wire f1.value f8.va0
+wire f7.then f9.in
+wire f1.value f9.va0
+wire g7.result g1.b
+wire f4.false g1.in
+wire f5.done g1.in
+wire g5.result g1.r
+wire g2.value g1.renderer
+wire g3.value g4.condition
+wire g4.result g5.value
+wire g3.value g6.condition
+wire g6.result g7.value
+wire g1.then g8.in
+wire g2.value g8.renderer
+wire g8.then g9.in
+wire g2.value g9.renderer
+wire g9.then h1.in
+wire h1.then h2.in
+wire h3.value h4.a
+wire h5.value h6.a
+wire h3.value h6.b
+wire h4.result h7.a
+wire h6.result h7.b
+wire h7.result h8.condition
+wire h2.then h8.in
+wire h8.true h9.in
+wire d5.done i1.in
+wire i2.value i1.va0
+wire i1.then i3.in
+wire g2.value i3.renderer
+wire i3.then i4.in
+wire d3.value i4.window
+wire i4.then i5.in
+wire i5.then i6.in

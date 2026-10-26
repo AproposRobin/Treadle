@@ -1,0 +1,11 @@
+== exit
+0
+== stdout
+floats 3 20 50
+array lane 51
+body 21
+wide 3.5 11 8 / 1.5 11 6
+Wide is 96 bytes
+tuple 1 11
+packed 62 size 17
+slot mask any 0

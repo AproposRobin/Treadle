@@ -1,0 +1,7 @@
+== exit
+0
+== stdout
+whole: length 5, sum 150
+range: length 3, sum 90
+empty: length 0, sum 0
+cast: length 5, sum 150

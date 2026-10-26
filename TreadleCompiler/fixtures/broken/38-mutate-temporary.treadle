@@ -1,0 +1,45 @@
+# treadle 1
+# expect n3 receiver T2272
+# expect n5 receiver T2272
+type MutateTemporary struct
+	namespace Broken
+	doc "A Mutating call on a temporary (a Make, a call's result): the change would be lost."
+
+field mValue int
+
+function f1 Bump
+	mutating
+sheet body
+node b1 Entry
+node b2 Set this.mValue
+	set op +=
+	in value 1
+node b3 Return
+wire b1.then b2.in
+wire b2.then b3.in
+
+function f2 Made
+	static
+	pure
+	returns MutateTemporary
+sheet body
+node c1 Entry
+node c2 Make Broken.MutateTemporary
+node c3 Return
+wire c1.then c3.in
+wire c2.value c3.value
+
+function f3 Run
+	static
+sheet body
+node n1 Entry
+node n2 Make Broken.MutateTemporary
+node n3 Call Broken.MutateTemporary.Bump
+node n4 Call Broken.MutateTemporary.Made
+node n5 Call Broken.MutateTemporary.Bump
+node n6 Return
+wire n1.then n3.in
+wire n2.value n3.receiver
+wire n3.then n5.in
+wire n4.result n5.receiver
+wire n5.then n6.in

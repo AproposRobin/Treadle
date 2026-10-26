@@ -1,0 +1,16 @@
+# cimport 1
+import libc
+	param puts s
+	param strlen s
+	param strcmp a b
+	param memcmp a b n
+	param free ptr
+	param qsort base count size compare
+	header stdio.h
+	header stdlib.h
+	header string.h
+	lib msvcrt
+	pure strlen strcmp memcmp
+	hide _*
+	only puts printf malloc free strlen strcmp memcmp qsort
+	category "C / libc"

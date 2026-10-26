@@ -1,0 +1,75 @@
+# treadle 1
+type Events class
+	namespace M2
+	static
+	doc "Events (Language.md 4, Event): two handlers added to Button.OnClick (a static function and a member function, each a delegate made with Allocation construct: the event owns them), Count, Invoke through Press, Remove (which deletes the handler), and the Button's destructor deleting the one left. Run prints 2, 5, 1, 12."
+
+function e0001 Show
+	static
+param x int
+sheet body
+node a1 Entry
+node a2 Call Console.WriteLine(int)
+node a3 Return
+wire a1.then a2.in
+wire a1.x a2.value
+wire a2.then a3.in
+
+function e0002 Run
+	static
+sheet body
+node n1 Entry
+node n2 Construct M2.Button
+node n3 Construct M2.Meter
+node n4 Bind M2.Events.Show
+	set alloc construct
+node n5 Call M2.Button.OnClick.Add
+node n6 Bind M2.Meter.Add
+	set alloc construct
+node n7 Call M2.Button.OnClick.Add
+node n8 Call M2.Button.Handlers
+node n9 Call Console.WriteLine(int)
+node p1 Call M2.Button.Press
+	in times 5
+node p2 Call M2.Button.OnClick.Remove
+node p3 Call M2.Button.OnClick.Count
+node p4 Call Console.WriteLine(int)
+node p5 Call M2.Button.Press
+	in times 7
+node p6 Call M2.Meter.Read
+node p7 Call Console.WriteLine(int)
+node p8 Delete
+node p9 Delete
+node q1 Return
+wire n1.then n2.in
+wire n2.then n3.in
+wire n3.then n4.in
+wire n4.value n5.handler
+wire n4.then n5.in
+wire n2.object n5.receiver
+wire n5.then n6.in
+wire n3.object n6.receiver
+wire n6.value n7.handler
+wire n6.then n7.in
+wire n2.object n7.receiver
+wire n2.object n8.receiver
+wire n7.then n9.in
+wire n8.result n9.value
+wire n9.then p1.in
+wire n2.object p1.receiver
+wire n4.value p2.handler
+wire p1.then p2.in
+wire n2.object p2.receiver
+wire n2.object p3.receiver
+wire p2.then p4.in
+wire p3.result p4.value
+wire p4.then p5.in
+wire n2.object p5.receiver
+wire n3.object p6.receiver
+wire p5.then p7.in
+wire p6.result p7.value
+wire p7.then p8.in
+wire n2.object p8.object
+wire p8.then p9.in
+wire n3.object p9.object
+wire p9.then q1.in

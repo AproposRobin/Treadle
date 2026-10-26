@@ -1,0 +1,134 @@
+# treadle 1
+type JsonValue enum
+	namespace Json
+	doc "One JSON value: Null, Bool, Number, Text, Array or Object. A value owns what it holds: the Text's String, the Array's List and its elements, the Object's Dictionary with its String keys and its values. Free(value) deletes all of it, children first; a copy of a value is a second name for the same objects, not a second owner (Query and For Each give such copies)."
+
+case Null
+	doc "JSON null."
+
+case Bool
+	payload value bool
+	doc "true or false."
+
+case Number
+	payload value double
+	doc "Every JSON number, read as a double."
+
+case Text
+	payload value String
+	doc "A string, decoded to UTF-8 (escapes resolved). The value owns the String."
+
+case Array
+	payload items List<Json.JsonValue>
+	doc "The elements in order. The value owns the List and the elements."
+
+case Object
+	payload members Dictionary<String,Json.JsonValue>
+	doc "The members by key (keys are unique; the order is not kept). The value owns the Dictionary, its keys and its values."
+
+function m0001 Free
+	static
+	doc "Deletes everything `value` owns, nested values first: a Text's String, an Array's elements and List, an Object's keys, values and Dictionary. Null, Bool and Number own nothing. Call it once, on the owner (the root, or a value not stored in a container)."
+param value Json.JsonValue
+sheet body
+node a000 Entry
+node a001 Switch
+	case Text
+	case Array
+	case Object
+node a002 Delete
+node a003 ForEach
+node a004 Call Json.JsonValue.Free
+node a005 Delete
+node a006 ForEach
+node a007 Break (String,Json.JsonValue)
+node a008 Delete
+node a009 Call Json.JsonValue.Free
+node a00a Delete
+node a00b Return
+wire a000.then a001.in
+wire a000.value a001.value
+wire a001.case:Text a002.in
+wire a001.case:Text.value a002.object
+wire a001.case:Array.items a003.collection
+wire a001.case:Array a003.in
+wire a003.body a004.in
+wire a003.element a004.value
+wire a003.done a005.in
+wire a001.case:Array.items a005.object
+wire a001.case:Object.members a006.collection
+wire a001.case:Object a006.in
+wire a006.element a007.value
+wire a006.body a008.in
+wire a007.item0 a008.object
+wire a008.then a009.in
+wire a007.item1 a009.value
+wire a006.done a00a.in
+wire a001.case:Object.members a00a.object
+wire a001.done a00b.in
+
+function m0002 Kind
+	static
+	pure
+	returns int
+	doc "The case of `value` as a number: Null 0, Bool 1, Number 2, Text 3, Array 4, Object 5."
+param value Json.JsonValue
+sheet body
+node b000 Entry
+node b001 Switch
+	case Null
+	case Bool
+	case Number
+	case Text
+	case Array
+	case Object
+node b002 Return
+	in value 0
+node b003 Return
+	in value 1
+node b004 Return
+	in value 2
+node b005 Return
+	in value 3
+node b006 Return
+	in value 4
+node b007 Return
+	in value 5
+node b008 Return
+	in value -1
+wire b000.then b001.in
+wire b000.value b001.value
+wire b001.case:Null b002.in
+wire b001.case:Bool b003.in
+wire b001.case:Number b004.in
+wire b001.case:Text b005.in
+wire b001.case:Array b006.in
+wire b001.case:Object b007.in
+wire b001.done b008.in
+
+function m0003 Count
+	static
+	pure
+	returns int
+	doc "The number of elements of an Array or members of an Object; 0 for the other cases."
+param value Json.JsonValue
+sheet body
+node c000 Entry
+node c001 Switch
+	case Array
+	case Object
+node c002 Get List<Json.JsonValue>.Count
+node c003 Return
+node c004 Get Dictionary<String,Json.JsonValue>.Count
+node c005 Return
+node c006 Return
+	in value 0
+wire c000.then c001.in
+wire c000.value c001.value
+wire c001.case:Array.items c002.receiver
+wire c001.case:Array c003.in
+wire c002.value c003.value
+wire c001.case:Object.members c004.receiver
+wire c001.case:Object c005.in
+wire c004.value c005.value
+wire c001.done c006.in

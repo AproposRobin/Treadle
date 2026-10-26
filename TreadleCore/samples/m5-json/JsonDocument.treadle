@@ -1,0 +1,40 @@
+# treadle 1
+type JsonDocument class
+	namespace Json
+	doc "Owns a parsed root value: its destructor frees the whole tree (JsonValue.Free), so one Delete (or a Defer Delete) cleans up a document."
+
+field mRoot Json.JsonValue
+	doc "The root value; the document owns it."
+
+ctor m0001
+	doc "Takes over `root`: the document frees it from now on."
+param root Json.JsonValue
+sheet body
+node a000 Entry
+node a001 Set this.mRoot
+node a002 Return
+wire a000.then a001.in
+wire a000.root a001.value
+wire a001.then a002.in
+
+dtor m0002
+	doc "Frees the tree under the root."
+sheet body
+node b000 Entry
+node b001 Get this.mRoot
+node b002 Call Json.JsonValue.Free
+node b003 Return
+wire b000.then b002.in
+wire b001.value b002.value
+wire b002.then b003.in
+
+function m0003 Root
+	pure
+	returns Json.JsonValue
+	doc "The root value (the document still owns it)."
+sheet body
+node c000 Entry
+node c001 Get this.mRoot
+node c002 Return
+wire c000.then c002.in
+wire c001.value c002.value

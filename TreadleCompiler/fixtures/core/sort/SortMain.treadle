@@ -1,0 +1,535 @@
+# treadle 1
+type SortMain class
+	namespace Cx
+	static
+	doc "Core sort: List.Sort with a Lambda comparer and List.Sort() by operator < on random, sorted, reverse, all-equal and few-distinct lists of 0, 1, 2, 3, 17, 1,000, 100,000 and 1,000,000 elements (each line: the size, then whether each sort left the list ascending with the same sum); a List of a struct with a destructor sorted by a comparer that reads a field (keys ascending, tags kept, each value destroyed once); Arrays.Sort on an array (by operator <, then descending by a comparer) and Span.Sort on a Slice of a List."
+
+field sDestroyed int
+	static
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node b01 Call this.Case
+	in n 0
+	in a 0
+	in b 0
+	in c 1
+	in e 0
+	in d 0
+node b02 Call this.Case
+	in n 1
+	in a 0
+	in b 0
+	in c 1
+	in e 0
+	in d 0
+node b03 Call this.Case
+	in n 2
+	in a 0
+	in b 0
+	in c 1
+	in e 0
+	in d 0
+node b04 Call this.Case
+	in n 2
+	in a 0
+	in b 1
+	in c 0
+	in e 0
+	in d 0
+node b05 Call this.Case
+	in n 3
+	in a 0
+	in b 0
+	in c 1
+	in e 0
+	in d 0
+node b06 Call this.Case
+	in n 3
+	in a 0
+	in b 1
+	in c 0
+	in e 0
+	in d 0
+node b07 Call this.Case
+	in n 3
+	in a 0
+	in b 0
+	in c 0
+	in e 0
+	in d 5
+node b08 Call this.Case
+	in n 17
+	in a 0
+	in b 1
+	in c 0
+	in e 0
+	in d 0
+node b09 Call this.Case
+	in n 1000
+	in a 0
+	in b 0
+	in c 1
+	in e 0
+	in d 0
+node b10 Call this.Case
+	in n 1000
+	in a 1
+	in b 0
+	in c 0
+	in e 0
+	in d 0
+node b11 Call this.Case
+	in n 1000
+	in a 0
+	in b 1
+	in c 0
+	in e 0
+	in d 0
+node b12 Call this.Case
+	in n 1000
+	in a 0
+	in b 0
+	in c 0
+	in e 0
+	in d 7
+node b13 Call this.Case
+	in n 1000
+	in a 0
+	in b 0
+	in c 0
+	in e 1
+	in d 0
+node b14 Call this.Case
+	in n 100000
+	in a 0
+	in b 0
+	in c 0
+	in e 1
+	in d 0
+node b15 Call this.Case
+	in n 1000000
+	in a 0
+	in b 0
+	in c 1
+	in e 0
+	in d 0
+node c1 Call this.KeyedCase
+node c2 Call this.ArraysCase
+node c3 Return
+	in value 0
+wire a1.then b01.in
+wire b01.then b02.in
+wire b02.then b03.in
+wire b03.then b04.in
+wire b04.then b05.in
+wire b05.then b06.in
+wire b06.then b07.in
+wire b07.then b08.in
+wire b08.then b09.in
+wire b09.then b10.in
+wire b10.then b11.in
+wire b11.then b12.in
+wire b12.then b13.in
+wire b13.then b14.in
+wire b14.then b15.in
+wire b15.then c1.in
+wire c1.then c2.in
+wire c2.then c3.in
+
+function m2 Case
+	static
+	doc "Fills two lists with n values a*i + b*(n - i) + c*r + e*(r % 16) + d (r pseudo-random), sorts one with a Lambda comparer and one by operator <, and prints n and whether each came out ascending with the same sum."
+param n int
+param a int
+param b int
+param c int
+param e int
+param d int
+local seed int
+	init 12345
+local sum int
+local v int
+sheet body
+node c01 Entry
+node c02 Local List<int>
+node c03 Local List<int>
+node c04 For
+	in start 0
+node c05 Set local:seed
+node c06 Math
+	set expr "s * 6364136223846793005 + 1442695040888963407"
+node c07 Get local:seed
+node c08 Set local:v
+node c09 Math
+	set expr "a * i + b * (n - i) + c * r + e * (r % 16) + d"
+node c10 Operator &
+	in b 2147483647
+node c11 Operator >>
+	in b 33
+node c12 Call List<int>.Add
+node c13 Get local:v
+node c14 Call List<int>.Add
+node c15 Set local:sum
+	set op +=
+node c16 Lambda
+	set type delegate:int(int,int)
+	set alloc local
+	set inputs x y
+node c17 Call List<int>.Sort
+node c18 Call List<int>.Sort
+node c19 Call Console.Write(int)
+node c20 Call Console.Write(StringView)
+	in text " "
+node c21 Call Console.Write(bool)
+node c22 Call this.Check
+node c23 Get local:sum
+node c24 Call this.Check
+node c25 Call Console.Write(StringView)
+	in text " "
+node c26 Call Console.WriteLine(bool)
+node c27 Return
+wire c01.then c02.in
+wire c02.then c03.in
+wire c01.n c04.count
+wire c03.then c04.in
+wire c04.body c05.in
+wire c06.result c05.value
+wire c07.value c06.s
+wire c05.then c08.in
+wire c09.result c08.value
+wire c01.a c09.a
+wire c01.b c09.b
+wire c01.c c09.c
+wire c01.d c09.d
+wire c01.e c09.e
+wire c04.index c09.i
+wire c01.n c09.n
+wire c10.result c09.r
+wire c11.result c10.a
+wire c07.value c11.a
+wire c08.then c12.in
+wire c02.object c12.receiver
+wire c13.value c12.value
+wire c12.then c14.in
+wire c03.object c14.receiver
+wire c13.value c14.value
+wire c14.then c15.in
+wire c13.value c15.value
+wire c04.done c16.in
+wire c16.value c17.comparer
+wire c16.then c17.in
+wire c02.object c17.receiver
+wire c17.then c18.in
+wire c03.object c18.receiver
+wire c24.then c19.in
+wire c01.n c19.value
+wire c19.then c20.in
+wire c20.then c21.in
+wire c22.result c21.value
+wire c18.then c22.in
+wire c02.object c22.list
+wire c23.value c22.sum
+wire c22.then c24.in
+wire c03.object c24.list
+wire c23.value c24.sum
+wire c21.then c25.in
+wire c25.then c26.in
+wire c24.result c26.value
+wire c26.then c27.in
+sheet lambda:c16
+node l1 Entry
+node l2 Operator -
+node l3 Return
+wire l1.x l2.a
+wire l1.y l2.b
+wire l1.then l3.in
+wire l2.result l3.value
+
+function m3 Check
+	static
+	returns bool
+	doc "True when the list is ascending and its elements add up to `sum`."
+param list List<int>
+param sum int
+local s int
+local prev int
+	init -1
+local ok bool
+	init true
+sheet body
+node k01 Entry
+node k02 Get List<int>.Count
+node k03 For
+	in start 0
+node k04 Index
+node k05 Branch
+node k06 Operator <
+node k07 Get local:prev
+node k08 Set local:ok
+	in value false
+node k09 Set local:prev
+node k10 Set local:s
+	set op +=
+node k11 Return
+node k12 Operator &&
+node k13 Get local:ok
+node k14 Operator ==
+node k15 Get local:s
+wire k01.list k02.receiver
+wire k02.value k03.count
+wire k01.then k03.in
+wire k01.list k04.collection
+wire k03.index k04.index
+wire k06.result k05.condition
+wire k03.body k05.in
+wire k04.value k06.a
+wire k07.value k06.b
+wire k05.true k08.in
+wire k05.false k09.in
+wire k08.then k09.in
+wire k04.value k09.value
+wire k09.then k10.in
+wire k04.value k10.value
+wire k03.done k11.in
+wire k12.result k11.value
+wire k13.value k12.a
+wire k14.result k12.b
+wire k15.value k14.a
+wire k01.sum k14.b
+
+function m4 KeyedCase
+	static
+	doc "2,000 Keyed values with keys from 0 to 99 sorted by a comparer that reads Key: prints whether the keys came out ascending, the sum of the tags (0 to 1,999: 1999000) and, after the list is deleted, how many Keyed values were destroyed (2000)."
+local seed int
+	init 777
+local prev int
+	init -1
+local ok bool
+	init true
+local tags int
+sheet body
+node g01 Entry
+node g02 Construct List<Keyed>
+node g03 For
+	in start 0
+	in count 2000
+node g04 Set local:seed
+node g05 Math
+	set expr "s * 6364136223846793005 + 1442695040888963407"
+node g06 Get local:seed
+node g07 Make Keyed
+node g08 Math
+	set expr "r % 100"
+node g09 Operator >>
+	in b 33
+node g10 Operator &
+	in b 2147483647
+node g11 Call List<Keyed>.Add
+node g12 Lambda
+	set type delegate:int(Keyed,Keyed)
+	set alloc local
+	set inputs x y
+node g13 Call List<Keyed>.Sort
+node g14 ForEach
+node g15 Get Keyed.Key
+node g16 Branch
+node g17 Operator <
+node g18 Get local:prev
+node g19 Set local:ok
+	in value false
+node g20 Set local:prev
+node g21 Set local:tags
+	set op +=
+node g22 Get Keyed.Tag
+node g23 Delete
+node g24 Call Console.Write(bool)
+node g25 Get local:ok
+node g26 Call Console.Write(StringView)
+	in text " "
+node g27 Call Console.Write(int)
+node g28 Get local:tags
+node g29 Call Console.Write(StringView)
+	in text " "
+node g30 Call Console.WriteLine(int)
+node g31 Get SortMain.sDestroyed
+node g32 Return
+wire g01.then g02.in
+wire g02.then g03.in
+wire g03.body g04.in
+wire g05.result g04.value
+wire g06.value g05.s
+wire g08.result g07.Key
+wire g03.index g07.Tag
+wire g10.result g08.r
+wire g06.value g09.a
+wire g09.result g10.a
+wire g04.then g11.in
+wire g02.object g11.receiver
+wire g07.value g11.value
+wire g03.done g12.in
+wire g12.value g13.comparer
+wire g12.then g13.in
+wire g02.object g13.receiver
+wire g02.object g14.collection
+wire g13.then g14.in
+wire g14.element g15.receiver
+wire g17.result g16.condition
+wire g14.body g16.in
+wire g15.value g17.a
+wire g18.value g17.b
+wire g16.true g19.in
+wire g16.false g20.in
+wire g19.then g20.in
+wire g15.value g20.value
+wire g20.then g21.in
+wire g22.value g21.value
+wire g14.element g22.receiver
+wire g14.done g23.in
+wire g02.object g23.object
+wire g23.then g24.in
+wire g25.value g24.value
+wire g24.then g26.in
+wire g26.then g27.in
+wire g28.value g27.value
+wire g27.then g29.in
+wire g29.then g30.in
+wire g31.value g30.value
+wire g30.then g32.in
+sheet lambda:g12
+node q1 Entry
+node q2 Get Keyed.Key
+node q3 Get Keyed.Key
+node q4 Operator -
+node q5 Return
+wire q1.x q2.receiver
+wire q1.y q3.receiver
+wire q2.value q4.a
+wire q3.value q4.b
+wire q1.then q5.in
+wire q4.result q5.value
+
+function m5 ArraysCase
+	static
+	doc "Arrays.Sort on an int[] (5 3 9 1 7 3) by operator <, then descending with a comparer; then Span.Sort on the middle five elements of a List of 9 down to 0."
+sheet body
+node r01 Entry
+node r02 Construct int
+	set count
+	in count 6
+node r03 Call Arrays.Set
+	in index 0
+	in value 5
+node r04 Call Arrays.Set
+	in index 1
+	in value 3
+node r05 Call Arrays.Set
+	in index 2
+	in value 9
+node r06 Call Arrays.Set
+	in index 3
+	in value 1
+node r07 Call Arrays.Set
+	in index 4
+	in value 7
+node r08 Call Arrays.Set
+	in index 5
+	in value 3
+node r09 Call Arrays.Sort
+node r10 Call this.Show
+node r11 Lambda
+	set type delegate:int(int,int)
+	set alloc local
+	set inputs x y
+node r12 Call Arrays.Sort
+node r13 Call this.Show
+node r14 Construct List<int>
+node r15 For
+	in start 0
+	in count 10
+node r16 Call List<int>.Add
+node r17 Math
+	set expr "9 - i"
+node r18 Call List<int>.Slice
+	in start 2
+	in length 5
+node r19 Call Span<int>.Sort
+node r20 Call this.Show
+node r21 Call List<int>.Slice
+	in start 0
+	in length 10
+node r22 Delete
+node r23 Delete
+node r24 Return
+wire r01.then r02.in
+wire r02.object r03.array
+wire r02.then r03.in
+wire r02.object r04.array
+wire r03.then r04.in
+wire r02.object r05.array
+wire r04.then r05.in
+wire r02.object r06.array
+wire r05.then r06.in
+wire r02.object r07.array
+wire r06.then r07.in
+wire r02.object r08.array
+wire r07.then r08.in
+wire r02.object r09.array
+wire r08.then r09.in
+wire r09.then r10.in
+wire r02.object r10.items
+wire r10.then r11.in
+wire r02.object r12.array
+wire r11.value r12.comparer
+wire r11.then r12.in
+wire r12.then r13.in
+wire r02.object r13.items
+wire r13.then r14.in
+wire r14.then r15.in
+wire r15.body r16.in
+wire r14.object r16.receiver
+wire r17.result r16.value
+wire r15.index r17.i
+wire r14.object r18.receiver
+wire r15.done r19.in
+wire r18.result r19.receiver
+wire r19.then r20.in
+wire r21.result r20.items
+wire r14.object r21.receiver
+wire r20.then r22.in
+wire r02.object r22.object
+wire r22.then r23.in
+wire r14.object r23.object
+wire r23.then r24.in
+sheet lambda:r11
+node s1 Entry
+node s2 Operator -
+node s3 Return
+wire s1.y s2.a
+wire s1.x s2.b
+wire s1.then s3.in
+wire s2.result s3.value
+
+function m6 Show
+	static
+	doc "Writes the elements on one line, each followed by a space."
+param items Span<int>
+sheet body
+node w1 Entry
+node w2 ForEach
+node w3 Call Console.Write(int)
+node w4 Call Console.Write(StringView)
+	in text " "
+node w5 Call Console.WriteLine(StringView)
+	in text ""
+node w6 Return
+wire w1.items w2.collection
+wire w1.then w2.in
+wire w2.body w3.in
+wire w2.element w3.value
+wire w3.then w4.in
+wire w2.done w5.in
+wire w5.then w6.in

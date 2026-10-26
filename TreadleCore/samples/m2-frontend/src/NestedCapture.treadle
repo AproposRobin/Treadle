@@ -1,0 +1,78 @@
+# treadle 1
+type NestedCapture class
+	namespace M2
+	doc "A Lambda inside a Lambda Sheet capturing through the outer closure (Language.md 4.2): the inner Lambda reads a local of the function (total), its parameter k, this.mBase and the outer Lambda's input x, and writes outv by reference through the outer Lambda's by-reference capture. Run(3) prints 1110, then 2220."
+
+field mBase int
+	init 100
+
+function q0001 Run
+param k int
+local total int
+local outv int
+sheet body
+node a1 Entry
+node a2 Set local:total
+	in value 1000
+node a3 Lambda
+	set type IntFn
+	set alloc local
+	set inputs x
+	capture outv by-ref
+node a4 Invoke
+	in arg0 5
+node a5 Call Console.WriteLine(int)
+node a6 Get local:outv
+node a7 Call Console.WriteLine(int)
+node a8 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a3.value a4.delegate
+wire a3.then a4.in
+wire a4.then a5.in
+wire a4.result a5.value
+wire a5.then a7.in
+wire a6.value a7.value
+wire a7.then a8.in
+sheet lambda:a3
+node b1 Entry
+node b2 Lambda
+	set type IntFn
+	set alloc local
+	set inputs y
+	capture outv by-ref
+node b3 Invoke
+	in arg0 2
+node b4 Return
+wire b1.then b2.in
+wire b2.value b3.delegate
+wire b2.then b3.in
+wire b3.then b4.in
+wire b3.result b4.value
+sheet lambda:b2
+node c1 Entry
+node c2 Get param:x
+node c3 Get local:total
+node c4 Get param:k
+node c5 Get this.mBase
+node c6 Operator +
+node c7 Operator +
+node c8 Operator +
+node c9 Operator +
+node d1 Operator *
+	in b 2
+node d2 Set local:outv
+node d3 Return
+wire c1.y c6.a
+wire c2.value c6.b
+wire c6.result c7.a
+wire c3.value c7.b
+wire c7.result c8.a
+wire c4.value c8.b
+wire c8.result c9.a
+wire c5.value c9.b
+wire c9.result d1.a
+wire c1.then d2.in
+wire d1.result d2.value
+wire d2.then d3.in
+wire c9.result d3.value

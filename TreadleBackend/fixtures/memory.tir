@@ -1,0 +1,132 @@
+# tir 1
+# Memory: Construct (heap) with an owned field, a Local re-created on every loop pass, two Defers in
+# one Scope (the last runs first; one is a Defer Delete), a deliberate leak and a double free.
+# Debug: the double free is a fatal error naming both Delete nodes, and the leak report names the
+# Construct node of the leaked object. Release: no checks, the double free is undefined.
+program Memory console
+entry Mem.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+func C.libc.fflush(void*) int32 import "fflush"
+
+unit Mem.Node
+type Mem.Node class
+	field mId int
+	field mChild Mem.Node owned
+	dtor Mem.Node.~this()
+
+func Mem.Node.this(int) void sheet "c1" display "Mem.Node.this"
+	param id int
+	node a1 Entry
+	node a2 Set this.mId
+	node a3 Call C.libc.printf
+	block b0
+		%p = field.addr int* %this mId @a2
+		store %p %id @a2
+		%f = const char8* "Node %lld made\n" @a3.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %id @a3
+		ret @a3
+
+func Mem.Node.~this() void sheet "d1" display "Mem.Node.~this"
+	node a1 Entry
+	node a2 Get this.mId
+	node a3 Call C.libc.printf
+	block b0
+		%p = field.addr int* %this mId @a2
+		%id = load int %p @a2
+		%f = const char8* "~Node %lld\n" @a3.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %id @a3
+		ret @a3
+
+unit Mem.Program
+type Mem.Program class
+
+func Mem.Program.Main() int static sheet "m1" display "Mem.Program.Main"
+	region r1
+	region r2 parent r1
+	slot sa Mem.Node outtemp node a2.object
+	slot si int loopvar node a7.index
+	slot sl Mem.Node local region r2 node a8.object
+	node a1 Entry
+	node a2 Construct Mem.Node
+	node a3 Construct Mem.Node
+	node a4 Set a2.mChild
+	node a5 Defer
+	node a6 Defer Delete
+	node a7 For
+	node a8 Local Mem.Node
+	node a9 Call C.libc.printf
+	node b1 Construct Mem.Node
+	node b2 Call Mem.Program.DoubleFree
+	node b3 Return 0
+	node b4 Call C.libc.printf
+	node b5 Scope
+	block b0
+		region.enter r1 @b5
+		%one = const int 1 @a2.id
+		%a = alloc Mem.Node @a2
+		call void Mem.Node.this(int) %a %one @a2
+		store.slot sa %a @a2
+		%five = const int 5 @a3.id
+		%c = alloc Mem.Node @a3
+		call void Mem.Node.this(int) %c %five @a3
+		nullcheck %a @a4
+		%cp = field.addr Mem.Node* %a mChild @a4
+		store %cp %c @a4
+		defer r1 d1 @a5
+		defer r1 d2 @a6
+		%zero = const int 0 @a7.start
+		store.slot si %zero @a7
+		br cond
+	block cond
+		%i = load.slot int si @a7
+		%n = const int 3 @a7.count
+		%more = cmp bool lt %i %n @a7
+		condbr %more body done @a7
+	block body
+		region.enter r2 @a8
+		%l = local Mem.Node sl @a8
+		%ten = const int 10 @a8.id
+		%i2 = load.slot int si @a8.id
+		%lid = binop int add %ten %i2 @a8.id
+		call void Mem.Node.this(int) %l %lid @a8
+		%pf = const char8* "pass %lld\n" @a9.format
+		%i3 = load.slot int si @a9
+		%r9 = ccall int32 C.libc.printf(char8*,...) %pf %i3 @a9
+		region.exit r2 @a7
+		%i4 = load.slot int si @a7
+		%inc = const int 1 @a7
+		%i5 = binop int add %i4 %inc @a7
+		store.slot si %i5 @a7
+		br cond @a7
+	block done
+		%nn = const int 99 @b1.id
+		%leak = alloc Mem.Node @b1
+		call void Mem.Node.this(int) %leak %nn @b1
+		region.exit r1 @b5
+		call void Mem.Program.DoubleFree() @b2
+		%z = const int 0 @b3.value
+		ret %z @b3
+	block d1
+		%df = const char8* "deferred 1\n" @b4.format
+		%r4 = ccall int32 C.libc.printf(char8*,...) %df @b4
+		enddefer @a5
+	block d2
+		%x = load.slot Mem.Node sa @a6
+		delete %x @a6
+		enddefer @a6
+
+func Mem.Program.DoubleFree() void static sheet "m2" display "Mem.Program.DoubleFree"
+	node c1 Construct Mem.Node
+	node d1 Delete
+	node d2 Delete
+	node d3 Call C.libc.fflush
+	block b0
+		%seven = const int 7 @c1.id
+		%o = alloc Mem.Node @c1
+		call void Mem.Node.this(int) %o %seven @c1
+		delete %o @d1
+		%all = const void* null @d3.stream
+		%fl = ccall int32 C.libc.fflush(void*) %all @d3
+		delete %o @d2
+		ret @d2

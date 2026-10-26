@@ -1,0 +1,56 @@
+# treadle 1
+type Commands class
+	namespace M2
+	static
+	doc "Switch on text: each case label is a text; Default runs for anything else."
+
+function s0001 Handle
+	static
+param text StringView
+sheet body
+node a1 Entry
+node a2 Switch
+	case go
+	case stop
+node a3 Call Console.WriteLine(StringView)
+	in text "going"
+node a4 Call Console.WriteLine(StringView)
+	in text "stopping"
+node a5 Call Console.WriteLine(StringView)
+	in text "unknown command"
+wire a1.then a2.in
+wire a1.text a2.value
+wire a2.case:go a3.in
+wire a2.case:stop a4.in
+wire a2.default a5.in
+
+function s0002 Run
+	static
+sheet body
+node b1 Entry
+node b2 Call M2.Commands.Handle
+	in text "go"
+node b3 Call M2.Commands.Handle
+	in text "stop"
+node b4 Call M2.Commands.Handle
+	in text "jump"
+node b5 Construct String
+	set ctor (StringView)
+	in text "stop"
+node b6 Switch
+	case go
+	case stop
+node b7 Call Console.WriteLine(StringView)
+	in text "a String says stop"
+node b8 Delete
+node b9 Return
+wire b1.then b2.in
+wire b2.then b3.in
+wire b3.then b4.in
+wire b4.then b5.in
+wire b5.then b6.in
+wire b5.object b6.value
+wire b6.case:stop b7.in
+wire b6.done b8.in
+wire b5.object b8.object
+wire b8.then b9.in

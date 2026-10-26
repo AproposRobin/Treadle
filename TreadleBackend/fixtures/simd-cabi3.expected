@@ -1,0 +1,8 @@
+# simd-cabi at x86-64-v3.
+== simd x86-64-v3
+== exit
+0
+== stdout
+Treadle sees scale 3 12 swap 2 add 44 cross 1 twice 16 sum 36
+C sees mad 2.5 4.5 6.5 8.5 swap -2.5 1.5 hsum 36 twice 2 16 lerp 5 15 30 neg -1 4
+check 90

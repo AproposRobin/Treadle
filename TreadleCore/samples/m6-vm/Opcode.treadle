@@ -1,0 +1,88 @@
+# treadle 1
+type Opcode enum
+	namespace Mini
+	doc "The instructions of the virtual machine. A and B are the operands of an Instr."
+
+case Const
+	doc "Pushes constant A."
+
+case Nil
+	doc "Pushes nil."
+
+case Pop
+	doc "Drops the top value."
+
+case LoadLocal
+	doc "Pushes local slot A of the current call."
+
+case StoreLocal
+	doc "Pops into local slot A."
+
+case LoadGlobal
+	doc "Pushes the global named by constant A."
+
+case StoreGlobal
+	doc "Pops into the global named by constant A; with B 1 the global must exist (an assignment)."
+
+case Add
+	doc "+ (numbers, or texts joined when either side is a text)."
+
+case Sub
+	doc "-"
+
+case Mul
+	doc "*"
+
+case Div
+	doc "/ (whole numbers truncate)"
+
+case Mod
+	doc "%"
+
+case Neg
+	doc "Unary -."
+
+case Not
+	doc "Unary !."
+
+case Eq
+	doc "=="
+
+case Ne
+	doc "!="
+
+case Lt
+	doc "<"
+
+case Le
+	doc "<="
+
+case Gt
+	doc ">"
+
+case Ge
+	doc ">="
+
+case Jump
+	doc "Continues at A."
+
+case JumpIfFalse
+	doc "Pops; continues at A when the value is false."
+
+case JumpIfFalseKeep
+	doc "Continues at A when the top value is false, keeping it (&&)."
+
+case JumpIfTrueKeep
+	doc "Continues at A when the top value is true, keeping it (||)."
+
+case Call
+	doc "Calls the function below its A arguments."
+
+case CallNative
+	doc "Calls the native function named by constant A with B arguments."
+
+case Return
+	doc "Returns the top value to the caller."
+
+case Halt
+	doc "Ends the script."

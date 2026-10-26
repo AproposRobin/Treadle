@@ -1,0 +1,290 @@
+# treadle 1
+type Ray struct
+	namespace Core
+	attr CRepr
+	doc "A half-line from Origin along Direction (24 bytes): picking, line of sight, bullets. The Intersect functions give the distance `t` along it in units of Direction's length (the hit point is At(t)). Every function is Pure."
+
+field Origin Vec3
+
+field Direction Vec3
+
+function r000 At
+	pure
+	returns Vec3
+	doc "The point Origin + Direction * t."
+param t float
+sheet body
+node n00000 Entry
+node n00001 This
+node n00002 Math
+	set expr "r.Origin.X + r.Direction.X * t"
+node n00003 Math
+	set expr "r.Origin.Y + r.Direction.Y * t"
+node n00004 Math
+	set expr "r.Origin.Z + r.Direction.Z * t"
+node n00005 Make Vec3
+node n00006 Return
+wire n00001.value n00002.r
+wire n00000.t n00002.t
+wire n00001.value n00003.r
+wire n00000.t n00003.t
+wire n00001.value n00004.r
+wire n00000.t n00004.t
+wire n00002.result n00005.X
+wire n00003.result n00005.Y
+wire n00004.result n00005.Z
+wire n00000.then n00006.in
+wire n00005.value n00006.value
+
+function r001 IntersectAABB
+	pure
+	returns bool
+	doc "True when the ray meets the box; `t` is where it enters (0 when the origin is inside)."
+param box AABB
+out t float
+sheet body
+node n00100 Entry
+node n00101 This
+node n00102 Math
+	set expr "1.0f / r.Direction.X"
+node n00103 Math
+	set expr "(b.Min.X - r.Origin.X) * i"
+node n00104 Math
+	set expr "(b.Max.X - r.Origin.X) * i"
+node n00105 Math
+	set expr "Min(p, q)"
+node n00106 Math
+	set expr "Max(p, q)"
+node n00107 Math
+	set expr "1.0f / r.Direction.Y"
+node n00108 Math
+	set expr "(b.Min.Y - r.Origin.Y) * i"
+node n00109 Math
+	set expr "(b.Max.Y - r.Origin.Y) * i"
+node n0010a Math
+	set expr "Min(p, q)"
+node n0010b Math
+	set expr "Max(p, q)"
+node n0010c Math
+	set expr "1.0f / r.Direction.Z"
+node n0010d Math
+	set expr "(b.Min.Z - r.Origin.Z) * i"
+node n0010e Math
+	set expr "(b.Max.Z - r.Origin.Z) * i"
+node n0010f Math
+	set expr "Min(p, q)"
+node n0010g Math
+	set expr "Max(p, q)"
+node n0010h Math
+	set expr "Max(Max(loX, loY), loZ)"
+node n0010i Math
+	set expr "Min(Min(hiX, hiY), hiZ)"
+node n0010j Math
+	set expr "b >= Max(a, 0.0f)"
+node n0010k Math
+	set expr "h ? Max(a, 0.0f) : 0.0f"
+node n0010l Return
+wire n00101.value n00102.r
+wire n00100.box n00103.b
+wire n00102.result n00103.i
+wire n00101.value n00103.r
+wire n00100.box n00104.b
+wire n00102.result n00104.i
+wire n00101.value n00104.r
+wire n00103.result n00105.p
+wire n00104.result n00105.q
+wire n00103.result n00106.p
+wire n00104.result n00106.q
+wire n00101.value n00107.r
+wire n00100.box n00108.b
+wire n00107.result n00108.i
+wire n00101.value n00108.r
+wire n00100.box n00109.b
+wire n00107.result n00109.i
+wire n00101.value n00109.r
+wire n00108.result n0010a.p
+wire n00109.result n0010a.q
+wire n00108.result n0010b.p
+wire n00109.result n0010b.q
+wire n00101.value n0010c.r
+wire n00100.box n0010d.b
+wire n0010c.result n0010d.i
+wire n00101.value n0010d.r
+wire n00100.box n0010e.b
+wire n0010c.result n0010e.i
+wire n00101.value n0010e.r
+wire n0010d.result n0010f.p
+wire n0010e.result n0010f.q
+wire n0010d.result n0010g.p
+wire n0010e.result n0010g.q
+wire n00105.result n0010h.loX
+wire n0010a.result n0010h.loY
+wire n0010f.result n0010h.loZ
+wire n00106.result n0010i.hiX
+wire n0010b.result n0010i.hiY
+wire n0010g.result n0010i.hiZ
+wire n0010h.result n0010j.a
+wire n0010i.result n0010j.b
+wire n0010h.result n0010k.a
+wire n0010j.result n0010k.h
+wire n00100.then n0010l.in
+wire n0010k.result n0010l.t
+wire n0010j.result n0010l.value
+
+function r002 IntersectPlane
+	pure
+	returns bool
+	doc "True when the ray meets the plane ahead of its origin (a ray along the plane never does)."
+param plane Plane
+out t float
+sheet body
+node n00200 Entry
+node n00201 This
+node n00202 Math
+	set expr "p.Normal.X * r.Direction.X + p.Normal.Y * r.Direction.Y + p.Normal.Z * r.Direction.Z"
+node n00203 Math
+	set expr "-(p.Normal.X * r.Origin.X + p.Normal.Y * r.Origin.Y + p.Normal.Z * r.Origin.Z + p.D) / d"
+node n00204 Math
+	set expr "Abs(d) > 0.00000001f && t >= 0.0f"
+node n00205 Math
+	set expr "h ? t : 0.0f"
+node n00206 Return
+wire n00200.plane n00202.p
+wire n00201.value n00202.r
+wire n00202.result n00203.d
+wire n00200.plane n00203.p
+wire n00201.value n00203.r
+wire n00202.result n00204.d
+wire n00203.result n00204.t
+wire n00204.result n00205.h
+wire n00203.result n00205.t
+wire n00200.then n00206.in
+wire n00205.result n00206.t
+wire n00204.result n00206.value
+
+function r003 IntersectSphere
+	pure
+	returns bool
+	doc "True when the ray meets the sphere; `t` is where it enters (0 when the origin is inside)."
+param center Vec3
+param radius float
+out t float
+sheet body
+node n00300 Entry
+node n00301 This
+node n00302 Math
+	set expr "r.Origin.X - c.X"
+node n00303 Math
+	set expr "r.Origin.Y - c.Y"
+node n00304 Math
+	set expr "r.Origin.Z - c.Z"
+node n00305 Make Vec3
+node n00306 Math
+	set expr "r.Direction.X * r.Direction.X + r.Direction.Y * r.Direction.Y + r.Direction.Z * r.Direction.Z"
+node n00307 Math
+	set expr "m.X * r.Direction.X + m.Y * r.Direction.Y + m.Z * r.Direction.Z"
+node n00308 Math
+	set expr "m.X * m.X + m.Y * m.Y + m.Z * m.Z - s * s"
+node n00309 Math
+	set expr "b * b - a * c"
+node n0030a Math
+	set expr "a > 0.0f && disc >= 0.0f && !(c > 0.0f && b > 0.0f)"
+node n0030b Math
+	set expr "h ? Max((-b - Sqrt(disc)) / a, 0.0f) : 0.0f"
+node n0030c Return
+wire n00300.center n00302.c
+wire n00301.value n00302.r
+wire n00300.center n00303.c
+wire n00301.value n00303.r
+wire n00300.center n00304.c
+wire n00301.value n00304.r
+wire n00302.result n00305.X
+wire n00303.result n00305.Y
+wire n00304.result n00305.Z
+wire n00301.value n00306.r
+wire n00305.value n00307.m
+wire n00301.value n00307.r
+wire n00305.value n00308.m
+wire n00300.radius n00308.s
+wire n00306.result n00309.a
+wire n00307.result n00309.b
+wire n00308.result n00309.c
+wire n00306.result n0030a.a
+wire n00307.result n0030a.b
+wire n00308.result n0030a.c
+wire n00309.result n0030a.disc
+wire n00306.result n0030b.a
+wire n00307.result n0030b.b
+wire n00309.result n0030b.disc
+wire n0030a.result n0030b.h
+wire n00300.then n0030c.in
+wire n0030b.result n0030c.t
+wire n0030a.result n0030c.value
+
+function r004 IntersectTriangle
+	pure
+	returns bool
+	doc "True when the ray meets the triangle a, b, c from either side (the Moller-Trumbore test)."
+param a Vec3
+param b Vec3
+param c Vec3
+out t float
+sheet body
+node n00400 Entry
+node n00401 This
+node n00402 Operator -
+node n00403 Operator -
+node n00404 Math
+	set expr "r.Direction"
+node n00405 Call Core.Vec3.Cross
+node n00406 Call Core.Vec3.Dot
+node n00407 Math
+	set expr "1.0f / d"
+node n00408 Math
+	set expr "r.Origin"
+node n00409 Operator -
+node n0040a Math
+	set expr "(s.X * p.X + s.Y * p.Y + s.Z * p.Z) * i"
+node n0040b Call Core.Vec3.Cross
+node n0040c Math
+	set expr "(d.X * q.X + d.Y * q.Y + d.Z * q.Z) * i"
+node n0040d Math
+	set expr "(e.X * q.X + e.Y * q.Y + e.Z * q.Z) * i"
+node n0040e Math
+	set expr "Abs(d) > 0.00000001f && u >= 0.0f && u <= 1.0f && v >= 0.0f && u + v <= 1.0f && t >= 0.0f"
+node n0040f Math
+	set expr "h ? t : 0.0f"
+node n0040g Return
+wire n00400.b n00402.a
+wire n00400.a n00402.b
+wire n00400.c n00403.a
+wire n00400.a n00403.b
+wire n00401.value n00404.r
+wire n00403.result n00405.b
+wire n00404.result n00405.receiver
+wire n00405.result n00406.b
+wire n00402.result n00406.receiver
+wire n00406.result n00407.d
+wire n00401.value n00408.r
+wire n00408.result n00409.a
+wire n00400.a n00409.b
+wire n00407.result n0040a.i
+wire n00405.result n0040a.p
+wire n00409.result n0040a.s
+wire n00402.result n0040b.b
+wire n00409.result n0040b.receiver
+wire n00404.result n0040c.d
+wire n00407.result n0040c.i
+wire n0040b.result n0040c.q
+wire n00403.result n0040d.e
+wire n00407.result n0040d.i
+wire n0040b.result n0040d.q
+wire n00406.result n0040e.d
+wire n0040d.result n0040e.t
+wire n0040a.result n0040e.u
+wire n0040c.result n0040e.v
+wire n0040e.result n0040f.h
+wire n0040d.result n0040f.t
+wire n00400.then n0040g.in
+wire n0040f.result n0040g.t
+wire n0040e.result n0040g.value

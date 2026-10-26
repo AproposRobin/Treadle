@@ -1,0 +1,13 @@
+# treadle 1
+# expect n2 - T3030
+type BreakOutsideLoop class
+	namespace Broken
+	static
+	doc "A Break with no loop around it."
+
+function f1 Run
+	static
+sheet body
+node n1 Entry
+node n2 Break
+wire n1.then n2.in

@@ -1,0 +1,5 @@
+# treadle 1
+type IntFn delegate
+	namespace LambdaUi
+	signature int(int)
+	doc "An int in, an int out."

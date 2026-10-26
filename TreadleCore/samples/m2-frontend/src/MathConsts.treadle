@@ -1,0 +1,9 @@
+# treadle 1
+type MathConsts extension
+	namespace M2
+	extends Core.Math
+	doc "A constant added to Core.Math by an extension (Language.md 4.4, 4.6): TwoPi, two PI (the core has Tau itself)."
+
+field TwoPi double
+	const
+	init PI * 2

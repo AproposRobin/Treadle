@@ -1,0 +1,154 @@
+# tir 1
+# Returning aggregates (Compiler.md 6, "Returning aggregates"): a Treadle function whose result is over
+# 16 bytes or more than two scalars returns it through a hidden sret pointer, its first parameter;
+# smaller ones (two doubles) stay in registers. Covered: direct calls (a result used as the next call's
+# argument), a virtual call, a delegate bound to a static function (its thunk passes the pointer on),
+# C's ABI both ways through sretret.c (C's c_make_big returns a 24-byte struct to Treadle; c_check
+# calls the exported kx_big and kx_vscale, which return 24-byte structs to C).
+program SretRet console
+entry Sr.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+func C.self.c_make_big(int) Sr.Big3 import "c_make_big"
+func C.self.c_check() int import "c_check"
+
+unit Sr.Lib
+type Sr.Big3 struct
+	field a int
+	field b int
+	field c int
+type Sr.V3 struct
+	field x double
+	field y double
+	field z double
+type Sr.V2 struct
+	field x double
+	field y double
+type Sr.Lib class
+
+func Sr.Lib.Scaled(Sr.V3,double) Sr.V3 static export "kx_vscale" sheet "f1" display "Sr.Lib.Scaled"
+	param v Sr.V3
+	param k double
+	node a1 Entry
+	node a2 Make Sr.V3
+	block b0
+		%x = extract double %v 0 @a2
+		%y = extract double %v 1 @a2
+		%z = extract double %v 2 @a2
+		%x2 = binop double mul %x %k @a2
+		%y2 = binop double mul %y %k @a2
+		%z2 = binop double mul %z %k @a2
+		%r = make Sr.V3 %x2 %y2 %z2 @a2
+		ret %r @a2
+
+func Sr.Lib.MakeBig(int) Sr.Big3 static export "kx_big" sheet "f2" display "Sr.Lib.MakeBig"
+	param n int
+	node a1 Entry
+	node a2 Make Sr.Big3
+	block b0
+		%two = const int 2 @a2
+		%three = const int 3 @a2
+		%b = binop int mul %n %two @a2
+		%c = binop int mul %n %three @a2
+		%r = make Sr.Big3 %n %b %c @a2
+		ret %r @a2
+
+func Sr.Lib.Half(Sr.V2) Sr.V2 static sheet "f3" display "Sr.Lib.Half"
+	param v Sr.V2
+	node a1 Entry
+	node a2 Make Sr.V2
+	block b0
+		%x = extract double %v 0 @a2
+		%y = extract double %v 1 @a2
+		%h = const double 0.5 @a2
+		%x2 = binop double mul %x %h @a2
+		%y2 = binop double mul %y %h @a2
+		%r = make Sr.V2 %x2 %y2 @a2
+		ret %r @a2
+
+unit Sr.Base
+type Sr.Base class abstract
+	vslot Sr.Base.Get(int) abstract
+
+func Sr.Base.Get(int) Sr.Big3 virtual abstract
+
+unit Sr.Derived
+type Sr.Derived class
+	base Sr.Base
+	vslot Sr.Base.Get(int) Sr.Derived.Get(int)
+
+func Sr.Derived.Get(int) Sr.Big3 virtual sheet "g1" display "Sr.Derived.Get"
+	param n int
+	node a1 Entry
+	node a2 Make Sr.Big3
+	block b0
+		%one = const int 1 @a2
+		%two = const int 2 @a2
+		%b = binop int add %n %one @a2
+		%c = binop int add %n %two @a2
+		%r = make Sr.Big3 %n %b %c @a2
+		ret %r @a2
+
+unit Sr.Program
+type Sr.Program class
+
+func Sr.Program.Main() int static sheet "m1" display "Sr.Program.Main"
+	node a1 Entry
+	node a2 Call Sr.Lib.Scaled
+	node a3 Call Sr.Lib.MakeBig
+	node a4 Call C.self.c_make_big
+	node a5 Call C.self.c_check
+	node a6 Call Sr.Lib.Half
+	node a7 Call Sr.Base.Get
+	node a8 Invoke
+	node a9 Call C.libc.printf
+	node b1 Return 0
+	block b0
+		%x = const double 1.0 @a2
+		%y = const double 2.0 @a2
+		%z = const double 3.0 @a2
+		%v = make Sr.V3 %x %y %z @a2
+		%k = const double 2.5 @a2
+		%s1 = call Sr.V3 Sr.Lib.Scaled(Sr.V3,double) %v %k @a2
+		%k2 = const double 2.0 @a2
+		%s = call Sr.V3 Sr.Lib.Scaled(Sr.V3,double) %s1 %k2 @a2
+		%sx = extract double %s 0 @a9
+		%sy = extract double %s 1 @a9
+		%sz = extract double %s 2 @a9
+		%f1 = const char8* "scaled %.1f %.1f %.1f\n" @a9.format
+		%p1 = ccall int32 C.libc.printf(char8*,...) %f1 %sx %sy %sz @a9
+		%seven = const int 7 @a3
+		%b = call Sr.Big3 Sr.Lib.MakeBig(int) %seven @a3
+		%four = const int 4 @a4
+		%cb = ccall Sr.Big3 C.self.c_make_big(int) %four @a4
+		%chk = ccall int C.self.c_check() @a5
+		%ba = extract int %b 0 @a9
+		%bb = extract int %b 1 @a9
+		%bc = extract int %b 2 @a9
+		%ca = extract int %cb 0 @a9
+		%cbb = extract int %cb 1 @a9
+		%cc = extract int %cb 2 @a9
+		%f2 = const char8* "big %lld %lld %lld c %lld %lld %lld check %lld\n" @a9.format
+		%p2 = ccall int32 C.libc.printf(char8*,...) %f2 %ba %bb %bc %ca %cbb %cc %chk @a9
+		%hx = const double 3.0 @a6
+		%hy = const double 5.0 @a6
+		%hv = make Sr.V2 %hx %hy @a6
+		%h = call Sr.V2 Sr.Lib.Half(Sr.V2) %hv @a6
+		%h0 = extract double %h 0 @a9
+		%h1 = extract double %h 1 @a9
+		%o = alloc Sr.Derived @a7
+		%ob = cast Sr.Base %o @a7
+		%ten = const int 10 @a7
+		%vb = vcall Sr.Big3 Sr.Base.Get(int) %ob %ten @a7
+		%va = extract int %vb 0 @a9
+		%vc = extract int %vb 2 @a9
+		%d = bind delegate Sr.Big3(int) Sr.Lib.MakeBig(int) @a8
+		%three = const int 3 @a8
+		%db = invoke Sr.Big3 %d %three @a8
+		%dc = extract int %db 2 @a9
+		%f3 = const char8* "half %.1f %.1f virtual %lld %lld delegate %lld\n" @a9.format
+		%p3 = ccall int32 C.libc.printf(char8*,...) %f3 %h0 %h1 %va %vc %dc @a9
+		delete %o @a7
+		delete %d @a8
+		%r = const int 0 @b1.value
+		ret %r @b1

@@ -1,0 +1,17 @@
+# treadle 1
+type Gauge class
+	namespace M2
+	doc "A class that GaugeExt extends (Language.md 4, Extension): its own field and function."
+
+field mValue int
+	init 1
+
+function g0001 Read
+	pure
+	returns int
+sheet body
+node a1 Entry
+node a2 Get this.mValue
+node a3 Return
+wire a1.then a3.in
+wire a2.value a3.value

@@ -1,0 +1,13 @@
+# The m3-core sample (TreadleCore/samples/m3-core) on two arguments; the last line is its timing.
+== args
+the cat and the hat
+and the bat
+== exit
+0
+== stdout-prefix
+8 words, 5 different
+  the: 3
+  and: 2
+  bat: 1
+  cat: 1
+  hat: 1

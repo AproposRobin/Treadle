@@ -1,0 +1,270 @@
+# treadle 1
+type Hud class
+	namespace Breakout
+	static
+	doc "Drawing helpers over SDL's renderer: a colour, filled and outlined rectangles, seven-segment digits for the score, and the lives."
+
+function h0001 Color
+	static
+	doc "Sets the draw colour (opaque)."
+param renderer C.SDL_Renderer*
+param r int
+param g int
+param b int
+sheet body
+node a01 Entry
+node a02 Cast uint8
+node a03 Cast uint8
+node a04 Cast uint8
+node a05 Call C.sdl2.SDL_SetRenderDrawColor
+	in a 255
+node a06 Return
+wire a01.r a02.value
+wire a01.g a03.value
+wire a01.b a04.value
+wire a04.result a05.b
+wire a03.result a05.g
+wire a01.then a05.in
+wire a02.result a05.r
+wire a01.renderer a05.renderer
+wire a05.then a06.in
+
+function h0002 Fill
+	static
+	doc "Fills a rectangle in the draw colour (the SDL_Rect is a local: its address goes to SDL)."
+param renderer C.SDL_Renderer*
+param x int
+param y int
+param w int
+param h int
+local rect C.SDL_Rect
+sheet body
+node b01 Entry
+node b02 Cast int32
+node b03 Cast int32
+node b04 Cast int32
+node b05 Cast int32
+node b06 Make C.SDL_Rect
+node b07 Set local:rect
+node b08 Get local:rect
+node b09 Call C.sdl2.SDL_RenderFillRect
+node b0a Return
+wire b01.x b02.value
+wire b01.y b03.value
+wire b01.w b04.value
+wire b01.h b05.value
+wire b05.result b06.h
+wire b04.result b06.w
+wire b02.result b06.x
+wire b03.result b06.y
+wire b01.then b07.in
+wire b06.value b07.value
+wire b07.then b09.in
+wire b08.value b09.rect
+wire b01.renderer b09.renderer
+wire b09.then b0a.in
+
+function h0003 Outline
+	static
+	doc "Outlines a rectangle in the draw colour (the SDL_Rect is a local: its address goes to SDL)."
+param renderer C.SDL_Renderer*
+param x int
+param y int
+param w int
+param h int
+local rect C.SDL_Rect
+sheet body
+node c01 Entry
+node c02 Cast int32
+node c03 Cast int32
+node c04 Cast int32
+node c05 Cast int32
+node c06 Make C.SDL_Rect
+node c07 Set local:rect
+node c08 Get local:rect
+node c09 Call C.sdl2.SDL_RenderDrawRect
+node c0a Return
+wire c01.x c02.value
+wire c01.y c03.value
+wire c01.w c04.value
+wire c01.h c05.value
+wire c05.result c06.h
+wire c04.result c06.w
+wire c02.result c06.x
+wire c03.result c06.y
+wire c01.then c07.in
+wire c06.value c07.value
+wire c07.then c09.in
+wire c08.value c09.rect
+wire c01.renderer c09.renderer
+wire c09.then c0a.in
+
+function h0004 DrawDigit
+	static
+	doc "One seven-segment digit, 15x27 pixels. Segment s (a to g) is lit when bit s of the digit's mask is set; its place comes from the decimal digit s of three numbers: 110 (one segment length right), 1012100 (lengths down) and 1001001 (horizontal)."
+param renderer C.SDL_Renderer*
+param digit int
+param x int
+param y int
+local mask int
+local bit int
+	init 1
+local ten int
+	init 1
+sheet body
+node d01 Entry
+node d02 Switch
+	case 0
+	case 1
+	case 2
+	case 3
+	case 4
+	case 5
+	case 6
+	case 7
+	case 8
+	case 9
+node d03 Set local:mask
+	in value 63
+node d04 Set local:mask
+	in value 6
+node d05 Set local:mask
+	in value 91
+node d06 Set local:mask
+	in value 79
+node d07 Set local:mask
+	in value 102
+node d08 Set local:mask
+	in value 109
+node d09 Set local:mask
+	in value 125
+node d0a Set local:mask
+	in value 7
+node d0b Set local:mask
+	in value 127
+node d0c Set local:mask
+	in value 111
+node d0d For
+	in start 0
+	in count 7
+node d0e Get local:ten
+node d0f Get local:mask
+node d0g Get local:bit
+node d0h Math
+	set expr "m / b % 2"
+node d0i Operator ==
+	in b 1
+node d0j Branch
+node d0k Math
+	set expr "x + 110 / t % 10 * 12"
+node d0l Math
+	set expr "y + 1012100 / t % 10 * 12"
+node d0m Math
+	set expr "3 + 1001001 / t % 10 * 12"
+node d0n Math
+	set expr "15 - 1001001 / t % 10 * 12"
+node d0o Call Breakout.Hud.Fill
+node d0p Set local:bit
+	set op *=
+	in value 2
+node d0q Set local:ten
+	set op *=
+	in value 10
+node d0r Return
+wire d01.then d02.in
+wire d01.digit d02.value
+wire d02.case:0 d03.in
+wire d02.case:1 d04.in
+wire d02.case:2 d05.in
+wire d02.case:3 d06.in
+wire d02.case:4 d07.in
+wire d02.case:5 d08.in
+wire d02.case:6 d09.in
+wire d02.case:7 d0a.in
+wire d02.case:8 d0b.in
+wire d02.case:9 d0c.in
+wire d02.done d0d.in
+wire d0g.value d0h.b
+wire d0f.value d0h.m
+wire d0h.result d0i.a
+wire d0i.result d0j.condition
+wire d0d.body d0j.in
+wire d0e.value d0k.t
+wire d01.x d0k.x
+wire d0e.value d0l.t
+wire d01.y d0l.y
+wire d0e.value d0m.t
+wire d0e.value d0n.t
+wire d0n.result d0o.h
+wire d0j.true d0o.in
+wire d01.renderer d0o.renderer
+wire d0m.result d0o.w
+wire d0k.result d0o.x
+wire d0l.result d0o.y
+wire d0j.false d0p.in
+wire d0o.then d0p.in
+wire d0p.then d0q.in
+wire d0d.done d0r.in
+
+function h0005 DrawNumber
+	static
+	doc "The value in `digits` seven-segment digits, the last one at the right, 20 pixels apart."
+param renderer C.SDL_Renderer*
+param value int
+param x int
+param y int
+param digits int
+local p int
+	init 1
+sheet body
+node e01 Entry
+node e02 For
+	in start 0
+node e03 Get local:p
+node e04 Math
+	set expr "v / p % 10"
+node e05 Math
+	set expr "x + (n - 1 - i) * 20"
+node e06 Call Breakout.Hud.DrawDigit
+node e07 Set local:p
+	set op *=
+	in value 10
+node e08 Return
+wire e01.digits e02.count
+wire e01.then e02.in
+wire e03.value e04.p
+wire e01.value e04.v
+wire e02.index e05.i
+wire e01.digits e05.n
+wire e01.x e05.x
+wire e04.result e06.digit
+wire e02.body e06.in
+wire e01.renderer e06.renderer
+wire e05.result e06.x
+wire e01.y e06.y
+wire e06.then e07.in
+wire e02.done e08.in
+
+function h0006 DrawLives
+	static
+	doc "A small square per life left, from the right edge."
+param renderer C.SDL_Renderer*
+param lives int
+sheet body
+node f01 Entry
+node f02 For
+	in start 0
+node f03 Math
+	set expr "620 - i * 16"
+node f04 Call Breakout.Hud.Fill
+	in y 14
+	in w 10
+	in h 10
+node f05 Return
+wire f01.lives f02.count
+wire f01.then f02.in
+wire f02.index f03.i
+wire f02.body f04.in
+wire f01.renderer f04.renderer
+wire f03.result f04.x
+wire f02.done f05.in

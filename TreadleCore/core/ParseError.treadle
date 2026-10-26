@@ -1,0 +1,14 @@
+# treadle 1
+type ParseError enum
+	namespace Core
+	doc "Why a text is not a number or a bool (Int.Parse, Double.Parse, Float.Parse, Bool.Parse): NoValue, Overflow or InvalidChar(position)."
+
+case NoValue
+	doc "The text is empty or has no digits."
+
+case Overflow
+	doc "The number does not fit the type."
+
+case InvalidChar
+	payload position int
+	doc "A character that does not belong at byte `position` (white space included: trim the text first)."

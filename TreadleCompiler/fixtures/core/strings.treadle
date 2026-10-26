@@ -1,0 +1,199 @@
+# treadle 1
+type StringsMain class
+	namespace Cx
+	static
+	doc "Core String and StringView: Append of text, characters and numbers, Length, IndexOf, Contains, StartsWith, EndsWith, Equals, Substring, Trim, Concat, Set, Clear, hashing, For Each over the characters."
+
+function m1 Main
+	static
+	returns int
+local es int
+sheet body
+node a1 Entry
+node a2 Local String
+	set ctor (StringView)
+	in text "Treadle"
+node a3 Call String.Append(char8)
+	in value 32
+node a4 Call String.Append(int)
+	in value 2026
+node a5 Call String.Append(char8)
+	in value 32
+node a6 Call String.Append(float)
+	in value 1.25
+node a7 Call String.Append(char8)
+	in value 32
+node a8 Call String.Append(double)
+	in value 0.1
+node a9 Call String.Append(char8)
+	in value 32
+node b1 Call String.Append(bool)
+	in value false
+node b2 Call String.Append(char8)
+	in value 32
+node b3 Literal
+	set type int64
+	set value -9000000000
+node b4 Call String.Append(int)
+node b5 Call Console.WriteLine(String)
+node b6 Call String.Length
+node b7 Call Console.WriteLine(int)
+node b8 Call String.IndexOf(char8)
+	in c '2'
+node b9 Call Console.WriteLine(int)
+node c1 Call String.IndexOf(StringView)
+	in text "false"
+node c2 Call Console.WriteLine(int)
+node c3 Call String.IndexOf(StringView)
+	in text "zzz"
+node c4 Call Console.WriteLine(int)
+node c5 Call String.Contains
+	in text "2026"
+node c6 Call Console.WriteLine(bool)
+node c7 Call String.StartsWith
+	in text "Tre"
+node c8 Call Console.WriteLine(bool)
+node c9 Call String.EndsWith
+	in text "000"
+node d1 Call Console.WriteLine(bool)
+node d2 Call String.Equals
+	in other "Treadle"
+node d3 Call Console.WriteLine(bool)
+node d4 Call String.Substring
+	in start 8
+	in length 4
+node d5 Call Console.WriteLine(StringView)
+node d6 Call String.Set
+	in text "   padded\t "
+node d7 Call String.View
+node d8 Call StringView.Trim
+node d9 Call Console.Write(StringView)
+	in text "["
+node e1 Call Console.Write(StringView)
+node e2 Call Console.WriteLine(StringView)
+	in text "]"
+node e3 Call String.Concat
+	in a "con"
+	in b "cat"
+node e4 Call Console.WriteLine(String)
+node e5 Call String.Length
+node e6 Call Console.WriteLine(int)
+node e7 Delete
+node e8 Call String.Clear
+node e9 Call String.IsEmpty
+node f1 Call Console.WriteLine(bool)
+node f2 Call String.Append(StringView)
+	in text "2026"
+node f3 Call String.GetHashCode
+node f4 Literal
+	set type StringView
+	set value "2026"
+node f5 Call StringView.GetHashCode
+node f6 Operator ==
+node f7 Call Console.WriteLine(bool)
+node f8 Call Console.WriteLine(char8)
+	in value 'K'
+node f9 Call Console.WriteLine(double)
+	in value 2.5
+node g1 Return
+	in value 0
+node h1 ForEach
+node h2 Operator ==
+	in b 54
+node h3 Branch
+node h4 Set local:es
+	set op +=
+	in value 1
+node h5 Get local:es
+node h6 Call Console.WriteLine(int)
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.receiver
+wire a3.then a4.in
+wire a2.object a4.receiver
+wire a4.then a5.in
+wire a2.object a5.receiver
+wire a5.then a6.in
+wire a2.object a6.receiver
+wire a6.then a7.in
+wire a2.object a7.receiver
+wire a7.then a8.in
+wire a2.object a8.receiver
+wire a8.then a9.in
+wire a2.object a9.receiver
+wire a9.then b1.in
+wire a2.object b1.receiver
+wire b1.then b2.in
+wire a2.object b2.receiver
+wire b2.then b4.in
+wire a2.object b4.receiver
+wire b3.value b4.value
+wire b4.then b5.in
+wire a2.object b5.value
+wire a2.object b6.receiver
+wire b5.then b7.in
+wire b6.result b7.value
+wire a2.object b8.receiver
+wire b7.then b9.in
+wire b8.result b9.value
+wire a2.object c1.receiver
+wire b9.then c2.in
+wire c1.result c2.value
+wire a2.object c3.receiver
+wire c2.then c4.in
+wire c3.result c4.value
+wire a2.object c5.receiver
+wire c4.then c6.in
+wire c5.result c6.value
+wire a2.object c7.receiver
+wire c6.then c8.in
+wire c7.result c8.value
+wire a2.object c9.receiver
+wire c8.then d1.in
+wire c9.result d1.value
+wire a2.object d2.receiver
+wire d1.then d3.in
+wire d2.result d3.value
+wire a2.object d4.receiver
+wire d3.then d5.in
+wire d4.result d5.text
+wire d5.then d6.in
+wire a2.object d6.receiver
+wire a2.object d7.receiver
+wire d7.result d8.receiver
+wire d6.then d9.in
+wire d9.then e1.in
+wire d8.result e1.text
+wire e1.then e2.in
+wire e2.then e3.in
+wire e3.then e4.in
+wire e3.result e4.value
+wire e3.result e5.receiver
+wire e4.then e6.in
+wire e5.result e6.value
+wire e6.then e7.in
+wire e3.result e7.object
+wire e7.then e8.in
+wire a2.object e8.receiver
+wire a2.object e9.receiver
+wire e8.then f1.in
+wire e9.result f1.value
+wire f1.then f2.in
+wire a2.object f2.receiver
+wire a2.object f3.receiver
+wire f4.value f5.receiver
+wire f3.result f6.a
+wire f5.result f6.b
+wire f2.then f7.in
+wire f6.result f7.value
+wire f7.then f8.in
+wire f8.then f9.in
+wire h6.then g1.in
+wire a2.object h1.collection
+wire f9.then h1.in
+wire h1.element h2.a
+wire h2.result h3.condition
+wire h1.body h3.in
+wire h3.true h4.in
+wire h1.done h6.in
+wire h5.value h6.value

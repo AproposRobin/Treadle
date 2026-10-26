@@ -1,0 +1,240 @@
+# treadle 1
+type SimdOps class
+	namespace M2
+	static
+	doc "Vector primitives (SIMD-and-Vectors.md 1): Make / Break, element-wise Operators with a splatting scalar, comparisons to a lane mask and Select per lane, Swizzle and Shuffle, the Core.Vector and Core.Math vector functions, Load / Store on an array's elements, numeric and bits Casts, Math Expressions over vectors and vector constants."
+
+field Up float4
+	const
+	init float4(0, 1, 0, 0)
+
+field Lifted float4
+	const
+	init Up * 2 + 1
+
+field Ones int32x4
+	const
+	init 1
+
+function v0001 Show
+	static
+param v float4
+sheet body
+node a1 Entry
+node a2 Break float4
+node a3 Call Console.Write(float)
+node a4 Call Console.Write(StringView)
+	in text " "
+node a5 Call Console.Write(float)
+node a6 Call Console.Write(StringView)
+	in text " "
+node a7 Call Console.Write(float)
+node a8 Call Console.Write(StringView)
+	in text " "
+node a9 Call Console.WriteLine(float)
+wire a1.v a2.value
+wire a1.then a3.in
+wire a2.x a3.value
+wire a3.then a4.in
+wire a4.then a5.in
+wire a2.y a5.value
+wire a5.then a6.in
+wire a6.then a7.in
+wire a2.z a7.value
+wire a7.then a8.in
+wire a8.then a9.in
+wire a2.w a9.value
+
+function v0002 ShowI
+	static
+param v int32x4
+sheet body
+node h1 Entry
+node h2 Break int32x4
+node h3 Call Console.Write(int)
+node h4 Call Console.Write(StringView)
+	in text " "
+node h5 Call Console.Write(int)
+node h6 Call Console.Write(StringView)
+	in text " "
+node h7 Call Console.Write(int)
+node h8 Call Console.Write(StringView)
+	in text " "
+node h9 Call Console.WriteLine(int)
+wire h1.v h2.value
+wire h1.then h3.in
+wire h2.x h3.value
+wire h3.then h4.in
+wire h4.then h5.in
+wire h2.y h5.value
+wire h5.then h6.in
+wire h6.then h7.in
+wire h2.z h7.value
+wire h7.then h8.in
+wire h8.then h9.in
+wire h2.w h9.value
+
+function v0003 Run
+	static
+sheet body
+node b1 Entry
+node b2 Make float4
+	in x 1
+	in y 2
+	in z 3
+	in w 4
+node b3 Make float4
+	in x 5
+	in y 6
+	in z 7
+	in w 8
+node b4 Operator +
+	in b 2
+node b5 Call M2.SimdOps.Show
+node b6 Operator >
+	in b 2.5
+node b7 Select
+node b8 Call M2.SimdOps.Show
+node b9 Swizzle
+	set lanes wzyx
+node c1 Call M2.SimdOps.Show
+node c2 Shuffle
+	set mask 0 4 1 5
+node c3 Call M2.SimdOps.Show
+node c4 Call Core.Vector.Sum
+node c5 Call Console.WriteLine(float)
+node c6 Call Core.Vector.Any
+node c7 Call Console.WriteLine(bool)
+node c8 Call Core.Vector.GetLane
+	in i 2
+node c9 Call Console.WriteLine(float)
+node d1 Call Core.Vector.WithLane
+	in i 0
+	in s 9
+node d2 Call M2.SimdOps.Show
+node d3 Call Core.Math.Sqrt
+node d4 Call M2.SimdOps.Show
+node d5 Call Core.Math.Min
+	in b 2
+node d6 Call M2.SimdOps.Show
+node d7 Call Core.Vector.Dot
+node d8 Call Console.WriteLine(float)
+node d9 Cast int32x4
+node e1 Call M2.SimdOps.ShowI
+node e2 Math
+	set expr "v * 2 + float4(1, 0, 0, 0)"
+node e3 Call M2.SimdOps.Show
+node e4 Math
+	set expr "a > b.wzyx ? a : b"
+node e5 Call M2.SimdOps.Show
+node e6 Math
+	set expr "Dot(a.xyz, float3(1)) + Length(float2(3, 4))"
+node e7 Call Console.WriteLine(float)
+node e8 Get M2.SimdOps.Lifted
+node e9 Call M2.SimdOps.Show
+node f1 Get M2.SimdOps.Ones
+node f2 Operator <<
+	in b 3
+node f3 Call M2.SimdOps.ShowI
+node f4 Cast uint32x4
+	set kind bits
+node f5 Call Core.Vector.GetLane
+	in i 0
+node f6 Call Console.WriteLine(int)
+node f7 Construct float
+	set count
+	in count 8
+node f8 For
+	in start 0
+	in count 8
+node f9 Cast float
+node g1 Call Arrays.Set
+node g2 Call Core.Vector.Load<float4>
+	in index 2
+node g3 Call M2.SimdOps.Show
+node g4 Call Core.Vector.Store
+	in index 4
+node g5 Index
+	in index 7
+node g6 Call Console.WriteLine(float)
+node g7 Delete
+node g8 Return
+wire b2.value b4.a
+wire b1.then b5.in
+wire b4.result b5.v
+wire b2.value b6.a
+wire b6.result b7.condition
+wire b3.value b7.false
+wire b2.value b7.true
+wire b5.then b8.in
+wire b7.result b8.v
+wire b2.value b9.value
+wire b8.then c1.in
+wire b9.result c1.v
+wire b2.value c2.a
+wire b3.value c2.b
+wire c1.then c3.in
+wire c2.result c3.v
+wire b2.value c4.v
+wire c3.then c5.in
+wire c4.result c5.value
+wire b6.result c6.m
+wire c5.then c7.in
+wire c6.result c7.value
+wire b2.value c8.v
+wire c7.then c9.in
+wire c8.result c9.value
+wire b2.value d1.v
+wire c9.then d2.in
+wire d1.result d2.v
+wire b2.value d3.x
+wire d2.then d4.in
+wire d3.result d4.v
+wire b2.value d5.a
+wire d4.then d6.in
+wire d5.result d6.v
+wire b2.value d7.a
+wire b3.value d7.b
+wire d6.then d8.in
+wire d7.result d8.value
+wire b3.value d9.value
+wire d8.then e1.in
+wire d9.result e1.v
+wire b2.value e2.v
+wire e1.then e3.in
+wire e2.result e3.v
+wire b2.value e4.a
+wire b2.value e4.b
+wire e3.then e5.in
+wire e4.result e5.v
+wire b2.value e6.a
+wire e5.then e7.in
+wire e6.result e7.value
+wire e7.then e9.in
+wire e8.value e9.v
+wire f1.value f2.a
+wire e9.then f3.in
+wire f2.result f3.v
+wire b2.value f4.value
+wire f4.result f5.v
+wire f3.then f6.in
+wire f5.result f6.value
+wire f6.then f7.in
+wire f7.then f8.in
+wire f8.index f9.value
+wire f7.object g1.array
+wire f8.body g1.in
+wire f8.index g1.index
+wire f9.result g1.value
+wire f7.object g2.span
+wire f8.done g3.in
+wire g2.result g3.v
+wire g3.then g4.in
+wire f7.object g4.span
+wire g2.result g4.v
+wire f7.object g5.collection
+wire g4.then g6.in
+wire g5.value g6.value
+wire g6.then g7.in
+wire f7.object g7.object
+wire g7.then g8.in

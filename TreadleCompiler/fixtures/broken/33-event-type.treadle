@@ -1,0 +1,8 @@
+# treadle 1
+# expect - - T1074
+type EventType class
+	namespace Broken
+	doc "An event is a field of a delegate type that returns nothing."
+
+field OnCount int
+	attr Event

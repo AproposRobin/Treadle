@@ -1,0 +1,8 @@
+# treadle 1
+# expect - - T1077
+type Wide struct
+	namespace Broken
+	attr Align 32
+	doc "An alignment above 16 bytes is refused: objects, Locals and array elements are at most 16-byte aligned."
+
+field mX int

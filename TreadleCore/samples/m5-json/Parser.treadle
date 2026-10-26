@@ -1,0 +1,1245 @@
+# treadle 1
+type Parser class
+	namespace Json
+	doc "A recursive-descent JSON parser (RFC 8259) over a StringView: Parse() gives the value or a ParseError with the line and column. The parser does not own the text, which must live while it parses; the value it gives owns its own copies of the strings."
+
+field mText StringView
+	doc "The text being read."
+
+field mPos int
+	doc "The byte position of the next character."
+
+field mLine int
+	init 1
+	doc "The line of mPos (1-based)."
+
+field mLineStart int
+	doc "The byte position where the current line starts."
+
+field mMaxDepth int
+	init 512
+	doc "The deepest nesting accepted (512 levels); deeper documents are an error, not a stack overflow. A Debug build overflows the 1 MB main stack at about 650 levels."
+
+ctor m0001
+	doc "A parser over `text`, at its start."
+param text StringView
+sheet body
+node a000 Entry
+node a001 Set this.mText
+node a002 Return
+wire a000.then a001.in
+wire a000.text a001.value
+wire a001.then a002.in
+
+function m0002 Parse
+	returns Result<Json.JsonValue,Json.ParseError>
+	doc "Reads one JSON document: white space, a value, white space, the end of the text. Ok(value), which the caller owns (Free it), or Err with the position."
+sheet body
+node b000 Entry
+node b001 Call this.SkipWhitespace
+node b002 Call this.ParseValue
+	in depth 1
+node b003 ResultMatch
+node b004 Return
+node b005 Call this.SkipWhitespace
+node b006 Get this.mPos
+node b007 Get this.mText
+node b008 Get StringView.Length
+node b009 Operator ==
+node b00a Branch
+node b00b Return
+node b00c Call Json.JsonValue.Free
+node b00d Call this.FailValue
+	in message "unexpected text after the value"
+node b00e Return
+node b00f Fatal
+	in message "unreachable: both arms return"
+wire b000.then b001.in
+wire b001.then b002.in
+wire b002.then b003.in
+wire b002.result b003.result
+wire b003.err b004.in
+wire b002.result b004.value
+wire b003.ok b005.in
+wire b007.value b008.receiver
+wire b006.value b009.a
+wire b008.value b009.b
+wire b009.result b00a.condition
+wire b005.then b00a.in
+wire b00a.true b00b.in
+wire b002.result b00b.value
+wire b00a.false b00c.in
+wire b003.value b00c.value
+wire b00c.then b00e.in
+wire b00d.result b00e.value
+wire b003.done b00f.in
+
+function m0003 ParseValue
+	access private
+	returns Result<Json.JsonValue,Json.ParseError>
+	doc "Reads the value at the current position; `depth` is its nesting level (the document's value is 1)."
+param depth int
+sheet body
+node c000 Entry
+node c001 Get this.mMaxDepth
+node c002 Operator >
+node c003 Branch
+node c004 Call this.FailValue
+	in message "nesting is deeper than the parser's limit"
+node c005 Return
+node c006 Call this.Peek
+node c007 Switch
+	case 123
+	case 91
+	case 34
+	case 116
+	case 102
+	case 110
+node c008 Call this.ParseObject
+node c009 Return
+node c00a Call this.ParseArray
+node c00b Return
+node c00c Call this.ParseString
+node c00d ResultMatch
+node c00e MakeCase Json.JsonValue.Text
+node c00f MakeCase Result<Json.JsonValue,Json.ParseError>.Err
+node c00g Return
+node c00h MakeCase Result<Json.JsonValue,Json.ParseError>.Ok
+node c00i Return
+node c00j MakeCase Json.JsonValue.Bool
+	in value true
+node c00k Call this.ParseWord
+	in word "true"
+node c00l Return
+node c00m MakeCase Json.JsonValue.Bool
+	in value false
+node c00n Call this.ParseWord
+	in word "false"
+node c00o Return
+node c00p MakeCase Json.JsonValue.Null
+node c00q Call this.ParseWord
+	in word "null"
+node c00r Return
+node c00s Call this.ParseNumber
+node c00t Return
+node c00u Call this.FailValue
+	in message "unexpected character"
+node c00v Return
+node c00w Fatal
+	in message "unreachable: both arms return"
+wire c000.depth c002.a
+wire c001.value c002.b
+wire c002.result c003.condition
+wire c000.then c003.in
+wire c003.true c005.in
+wire c004.result c005.value
+wire c003.false c007.in
+wire c006.result c007.value
+wire c000.depth c008.depth
+wire c007.case:123 c008.in
+wire c008.then c009.in
+wire c008.result c009.value
+wire c000.depth c00a.depth
+wire c007.case:91 c00a.in
+wire c00a.then c00b.in
+wire c00a.result c00b.value
+wire c007.case:34 c00c.in
+wire c00c.then c00d.in
+wire c00c.result c00d.result
+wire c00d.value c00e.value
+wire c00d.error c00f.error
+wire c00d.err c00g.in
+wire c00f.value c00g.value
+wire c00e.value c00h.value
+wire c00d.ok c00i.in
+wire c00h.value c00i.value
+wire c007.case:116 c00k.in
+wire c00j.value c00k.value
+wire c00k.then c00l.in
+wire c00k.result c00l.value
+wire c007.case:102 c00n.in
+wire c00m.value c00n.value
+wire c00n.then c00o.in
+wire c00n.result c00o.value
+wire c007.case:110 c00q.in
+wire c00p.value c00q.value
+wire c00q.then c00r.in
+wire c00q.result c00r.value
+wire c007.default c00s.in
+wire c00s.then c00t.in
+wire c00s.result c00t.value
+wire c007.done c00v.in
+wire c00u.result c00v.value
+wire c00d.done c00w.in
+
+function m0004 ParseObject
+	access private
+	returns Result<Json.JsonValue,Json.ParseError>
+	doc "Reads `{ \"key\": value, ... }` at the current position (on the `{`). On an error the members read so far are freed."
+param depth int
+local members Dictionary<String,Json.JsonValue>
+local key String
+sheet body
+node d000 Entry
+node d001 Set this.mPos
+	set op +=
+	in value 1
+node d002 Call this.SkipWhitespace
+node d003 Construct Dictionary<String,Json.JsonValue>
+node d004 Set local:members
+node d005 Get local:members
+node d006 MakeCase Json.JsonValue.Object
+node d007 MakeCase Result<Json.JsonValue,Json.ParseError>.Ok
+node d008 Return
+node d009 Call this.Peek
+node d00a Operator ==
+	in b 125
+node d00b Branch
+node d00c Set this.mPos
+	set op +=
+	in value 1
+node d00d While
+	in condition true
+node d00e Call this.Peek
+node d00f Operator ==
+	in b 34
+node d00g Branch
+node d00h Call Json.JsonValue.Free
+node d00i Call this.FailValue
+	in message "expected a string key"
+node d00j Return
+node d00k Call this.ParseString
+node d00l ResultMatch
+node d00m Call Json.JsonValue.Free
+node d00n MakeCase Result<Json.JsonValue,Json.ParseError>.Err
+node d00o Return
+node d00p Set local:key
+node d00q Get local:key
+node d00r Call this.SkipWhitespace
+node d00s Call this.Peek
+node d00t Operator ==
+	in b 58
+node d00u Branch
+node d00v Delete
+node d00w Call Json.JsonValue.Free
+node d00x Call this.FailValue
+	in message "expected ':' after a key"
+node d00y Return
+node d00z Set this.mPos
+	set op +=
+	in value 1
+node d010 Call this.SkipWhitespace
+node d011 Operator +
+	in b 1
+node d012 Call this.ParseValue
+node d013 ResultMatch
+node d014 Delete
+node d015 Call Json.JsonValue.Free
+node d016 MakeCase Result<Json.JsonValue,Json.ParseError>.Err
+node d017 Return
+node d018 Call Dictionary<String,Json.JsonValue>.TryAdd
+node d019 Branch
+node d01a Delete
+node d01b Call Json.JsonValue.Free
+node d01c Call Json.JsonValue.Free
+node d01d Call this.FailValue
+	in message "duplicate key"
+node d01e Return
+node d01f Call this.SkipWhitespace
+node d01g Call this.Peek
+node d01h Switch
+	case 44
+	case 125
+node d01i Set this.mPos
+	set op +=
+	in value 1
+node d01j Call this.SkipWhitespace
+node d01k Call this.Peek
+node d01l Operator ==
+	in b 125
+node d01m Branch
+node d01n Call Json.JsonValue.Free
+node d01o Call this.FailValue
+	in message "trailing comma before '}'"
+node d01p Return
+node d01q Set this.mPos
+	set op +=
+	in value 1
+node d01r Call Json.JsonValue.Free
+node d01s Call this.FailValue
+	in message "expected ',' or '}' in an object"
+node d01t Return
+node d01u Fatal
+	in message "unreachable: the loop only ends by Return"
+wire d000.then d001.in
+wire d001.then d002.in
+wire d002.then d003.in
+wire d003.then d004.in
+wire d003.object d004.value
+wire d005.value d006.members
+wire d006.value d007.value
+wire d00c.then d008.in
+wire d01q.then d008.in
+wire d007.value d008.value
+wire d009.result d00a.a
+wire d00a.result d00b.condition
+wire d004.then d00b.in
+wire d00b.true d00c.in
+wire d00b.false d00d.in
+wire d00e.result d00f.a
+wire d00f.result d00g.condition
+wire d00d.body d00g.in
+wire d00g.false d00h.in
+wire d006.value d00h.value
+wire d00h.then d00j.in
+wire d00i.result d00j.value
+wire d00g.true d00k.in
+wire d00k.then d00l.in
+wire d00k.result d00l.result
+wire d00l.err d00m.in
+wire d006.value d00m.value
+wire d00l.error d00n.error
+wire d00m.then d00o.in
+wire d00n.value d00o.value
+wire d00l.ok d00p.in
+wire d00l.value d00p.value
+wire d00p.then d00r.in
+wire d00s.result d00t.a
+wire d00t.result d00u.condition
+wire d00r.then d00u.in
+wire d00u.false d00v.in
+wire d00q.value d00v.object
+wire d00v.then d00w.in
+wire d006.value d00w.value
+wire d00w.then d00y.in
+wire d00x.result d00y.value
+wire d00u.true d00z.in
+wire d00z.then d010.in
+wire d000.depth d011.a
+wire d011.result d012.depth
+wire d010.then d012.in
+wire d012.then d013.in
+wire d012.result d013.result
+wire d013.err d014.in
+wire d00q.value d014.object
+wire d014.then d015.in
+wire d006.value d015.value
+wire d013.error d016.error
+wire d015.then d017.in
+wire d016.value d017.value
+wire d013.ok d018.in
+wire d00q.value d018.key
+wire d005.value d018.receiver
+wire d013.value d018.value
+wire d018.result d019.condition
+wire d018.then d019.in
+wire d019.false d01a.in
+wire d00q.value d01a.object
+wire d01a.then d01b.in
+wire d013.value d01b.value
+wire d01b.then d01c.in
+wire d006.value d01c.value
+wire d01c.then d01e.in
+wire d01d.result d01e.value
+wire d019.true d01f.in
+wire d01f.then d01h.in
+wire d01g.result d01h.value
+wire d01h.case:44 d01i.in
+wire d01i.then d01j.in
+wire d01k.result d01l.a
+wire d01l.result d01m.condition
+wire d01j.then d01m.in
+wire d01m.true d01n.in
+wire d006.value d01n.value
+wire d01n.then d01p.in
+wire d01o.result d01p.value
+wire d01h.case:125 d01q.in
+wire d01h.default d01r.in
+wire d006.value d01r.value
+wire d01r.then d01t.in
+wire d01s.result d01t.value
+wire d00d.done d01u.in
+
+function m0005 ParseArray
+	access private
+	returns Result<Json.JsonValue,Json.ParseError>
+	doc "Reads `[ value, ... ]` at the current position (on the `[`). On an error the elements read so far are freed."
+param depth int
+local items List<Json.JsonValue>
+sheet body
+node e000 Entry
+node e001 Set this.mPos
+	set op +=
+	in value 1
+node e002 Call this.SkipWhitespace
+node e003 Construct List<Json.JsonValue>
+node e004 Set local:items
+node e005 Get local:items
+node e006 MakeCase Json.JsonValue.Array
+node e007 MakeCase Result<Json.JsonValue,Json.ParseError>.Ok
+node e008 Return
+node e009 Call this.Peek
+node e00a Operator ==
+	in b 93
+node e00b Branch
+node e00c Set this.mPos
+	set op +=
+	in value 1
+node e00d While
+	in condition true
+node e00e Operator +
+	in b 1
+node e00f Call this.ParseValue
+node e00g ResultMatch
+node e00h Call Json.JsonValue.Free
+node e00i MakeCase Result<Json.JsonValue,Json.ParseError>.Err
+node e00j Return
+node e00k Call List<Json.JsonValue>.Add
+node e00l Call this.SkipWhitespace
+node e00m Call this.Peek
+node e00n Switch
+	case 44
+	case 93
+node e00o Set this.mPos
+	set op +=
+	in value 1
+node e00p Call this.SkipWhitespace
+node e00q Call this.Peek
+node e00r Operator ==
+	in b 93
+node e00s Branch
+node e00t Call Json.JsonValue.Free
+node e00u Call this.FailValue
+	in message "trailing comma before ']'"
+node e00v Return
+node e00w Set this.mPos
+	set op +=
+	in value 1
+node e00x Call Json.JsonValue.Free
+node e00y Call this.FailValue
+	in message "expected ',' or ']' in an array"
+node e00z Return
+node e010 Fatal
+	in message "unreachable: the loop only ends by Return"
+wire e000.then e001.in
+wire e001.then e002.in
+wire e002.then e003.in
+wire e003.then e004.in
+wire e003.object e004.value
+wire e005.value e006.items
+wire e006.value e007.value
+wire e00c.then e008.in
+wire e00w.then e008.in
+wire e007.value e008.value
+wire e009.result e00a.a
+wire e00a.result e00b.condition
+wire e004.then e00b.in
+wire e00b.true e00c.in
+wire e00b.false e00d.in
+wire e000.depth e00e.a
+wire e00e.result e00f.depth
+wire e00d.body e00f.in
+wire e00f.then e00g.in
+wire e00f.result e00g.result
+wire e00g.err e00h.in
+wire e006.value e00h.value
+wire e00g.error e00i.error
+wire e00h.then e00j.in
+wire e00i.value e00j.value
+wire e00g.ok e00k.in
+wire e005.value e00k.receiver
+wire e00g.value e00k.value
+wire e00k.then e00l.in
+wire e00l.then e00n.in
+wire e00m.result e00n.value
+wire e00n.case:44 e00o.in
+wire e00o.then e00p.in
+wire e00q.result e00r.a
+wire e00r.result e00s.condition
+wire e00p.then e00s.in
+wire e00s.true e00t.in
+wire e006.value e00t.value
+wire e00t.then e00v.in
+wire e00u.result e00v.value
+wire e00n.case:93 e00w.in
+wire e00n.default e00x.in
+wire e006.value e00x.value
+wire e00x.then e00z.in
+wire e00y.result e00z.value
+wire e00d.done e010.in
+
+function m0006 ParseString
+	access private
+	returns Result<String,Json.ParseError>
+	doc "Reads a string at the current position (on the opening quote): runs of plain bytes are copied as they are (UTF-8 stays UTF-8), escapes are decoded. Ok(a new String the caller owns) or Err."
+local s String
+local start int
+sheet body
+node f000 Entry
+node f001 Set this.mPos
+	set op +=
+	in value 1
+node f002 Construct String
+	set ctor ()
+node f003 Set local:s
+node f004 While
+	in condition true
+node f005 Get this.mPos
+node f006 Set local:start
+node f007 Call this.Peek
+node f008 Call Json.Parser.IsPlain
+node f009 While
+node f00a Set this.mPos
+	set op +=
+	in value 1
+node f00b Get local:s
+node f00c Get this.mText
+node f00d Get local:start
+node f00e Get this.mPos
+node f00f Operator -
+node f00g Call StringView.Substring
+node f00h Call String.Append(StringView)
+node f00i Call this.Peek
+node f00j Switch
+	case 34
+	case 92
+node f00k Set this.mPos
+	set op +=
+	in value 1
+node f00l MakeCase Result<String,Json.ParseError>.Ok
+node f00m Return
+node f00n Set this.mPos
+	set op +=
+	in value 1
+node f00o Call this.ParseEscape
+node f00p ResultMatch
+node f00q Delete
+node f00r MakeCase Result<String,Json.ParseError>.Err
+node f00s Return
+node f00t Delete
+node f00u Operator <
+	in b 0
+node f00v Literal
+	set type StringView
+	set value "unterminated string"
+node f00w Literal
+	set type StringView
+	set value "control character in a string (escape it)"
+node f00x Select
+node f00y Call this.Fail
+node f00z MakeCase Result<String,Json.ParseError>.Err
+node f010 Return
+node f011 Fatal
+	in message "unreachable: the loop only ends by Return"
+wire f000.then f001.in
+wire f001.then f002.in
+wire f002.then f003.in
+wire f002.object f003.value
+wire f003.then f004.in
+wire f004.body f006.in
+wire f005.value f006.value
+wire f007.result f008.c
+wire f008.result f009.condition
+wire f006.then f009.in
+wire f009.body f00a.in
+wire f00e.value f00f.a
+wire f00d.value f00f.b
+wire f00f.result f00g.length
+wire f00c.value f00g.receiver
+wire f00d.value f00g.start
+wire f009.done f00h.in
+wire f00b.value f00h.receiver
+wire f00g.result f00h.text
+wire f00h.then f00j.in
+wire f00i.result f00j.value
+wire f00j.case:34 f00k.in
+wire f00b.value f00l.value
+wire f00k.then f00m.in
+wire f00l.value f00m.value
+wire f00j.case:92 f00n.in
+wire f00n.then f00o.in
+wire f00b.value f00o.into
+wire f00o.then f00p.in
+wire f00o.result f00p.result
+wire f00p.err f00q.in
+wire f00b.value f00q.object
+wire f00p.error f00r.error
+wire f00q.then f00s.in
+wire f00r.value f00s.value
+wire f00j.default f00t.in
+wire f00b.value f00t.object
+wire f00i.result f00u.a
+wire f00u.result f00x.condition
+wire f00w.value f00x.false
+wire f00v.value f00x.true
+wire f00x.result f00y.message
+wire f00y.result f00z.error
+wire f00t.then f010.in
+wire f00z.value f010.value
+wire f004.done f011.in
+
+function m0007 ParseEscape
+	access private
+	returns Result<int,Json.ParseError>
+	doc "Decodes the escape after a backslash (the position is on the letter) and appends the character to `into`: \\\" \\\\ \\/ \\b \\f \\n \\r \\t and \\uXXXX (surrogate pairs joined). Ok(0) or Err."
+param into String
+sheet body
+node g000 Entry
+node g001 Call this.Peek
+node g002 Switch
+	case 34
+	case 92
+	case 47
+	case 98
+	case 102
+	case 110
+	case 114
+	case 116
+	case 117
+node g003 Call String.Append(char8)
+	in value 34
+node g004 Call String.Append(char8)
+	in value 92
+node g005 Call String.Append(char8)
+	in value 47
+node g006 Call String.Append(char8)
+	in value 8
+node g007 Call String.Append(char8)
+	in value 12
+node g008 Call String.Append(char8)
+	in value 10
+node g009 Call String.Append(char8)
+	in value 13
+node g00a Call String.Append(char8)
+	in value 9
+node g00b Set this.mPos
+	set op +=
+	in value 1
+node g00c Call this.ParseUnicode
+node g00d Return
+node g00e Call this.Fail
+	in message "invalid escape sequence"
+node g00f MakeCase Result<int,Json.ParseError>.Err
+node g00g Return
+node g00h Set this.mPos
+	set op +=
+	in value 1
+node g00i MakeCase Result<int,Json.ParseError>.Ok
+	in value 0
+node g00j Return
+wire g000.then g002.in
+wire g001.result g002.value
+wire g002.case:34 g003.in
+wire g000.into g003.receiver
+wire g002.case:92 g004.in
+wire g000.into g004.receiver
+wire g002.case:47 g005.in
+wire g000.into g005.receiver
+wire g002.case:98 g006.in
+wire g000.into g006.receiver
+wire g002.case:102 g007.in
+wire g000.into g007.receiver
+wire g002.case:110 g008.in
+wire g000.into g008.receiver
+wire g002.case:114 g009.in
+wire g000.into g009.receiver
+wire g002.case:116 g00a.in
+wire g000.into g00a.receiver
+wire g002.case:117 g00b.in
+wire g00b.then g00c.in
+wire g000.into g00c.into
+wire g00c.then g00d.in
+wire g00c.result g00d.value
+wire g00e.result g00f.error
+wire g002.default g00g.in
+wire g00f.value g00g.value
+wire g002.done g00h.in
+wire g00h.then g00j.in
+wire g00i.value g00j.value
+
+function m0008 ParseUnicode
+	access private
+	returns Result<int,Json.ParseError>
+	doc "Reads the four hex digits of a \\u escape (the position is on the first) and appends the code point as UTF-8; a high surrogate must be followed by a \\u escape of a low one, and the pair is one code point. A lone surrogate is an error."
+param into String
+local hi int
+local lo int
+sheet body
+node h000 Entry
+node h001 Call this.ReadHex4
+node h002 Try
+node h003 Set local:hi
+node h004 Get local:hi
+node h005 Operator >=
+	in b 55296
+node h006 Operator <=
+	in b 56319
+node h007 Operator &&
+node h008 Branch
+node h009 Get this.mText
+node h00a Get this.mPos
+node h00b Get StringView.Length
+node h00c Operator -
+node h00d Call StringView.Substring
+node h00e Call StringView.StartsWith
+	in text "\\u"
+node h00f Branch
+node h00g Call this.Fail
+	in message "lone surrogate in a \\u escape"
+node h00h MakeCase Result<int,Json.ParseError>.Err
+node h00i Return
+node h00j Set this.mPos
+	set op +=
+	in value 2
+node h00k Call this.ReadHex4
+node h00l Try
+node h00m Set local:lo
+node h00n Get local:lo
+node h00o Operator >=
+	in b 56320
+node h00p Operator <=
+	in b 57343
+node h00q Operator &&
+node h00r Branch
+node h00s Call this.Fail
+	in message "a high surrogate must be followed by a low one"
+node h00t MakeCase Result<int,Json.ParseError>.Err
+node h00u Return
+node h00v Math
+	set expr "65536+(h-55296)*1024+(l-56320)"
+node h00w Cast char32
+node h00x Call String.Append(char32)
+node h00y MakeCase Result<int,Json.ParseError>.Ok
+	in value 0
+node h00z Return
+node h010 Operator >=
+	in b 56320
+node h011 Operator <=
+	in b 57343
+node h012 Operator &&
+node h013 Branch
+node h014 Cast char32
+node h015 Call String.Append(char32)
+wire h000.then h001.in
+wire h001.then h002.in
+wire h001.result h002.result
+wire h002.then h003.in
+wire h002.value h003.value
+wire h004.value h005.a
+wire h004.value h006.a
+wire h005.result h007.a
+wire h006.result h007.b
+wire h007.result h008.condition
+wire h003.then h008.in
+wire h009.value h00b.receiver
+wire h00b.value h00c.a
+wire h00a.value h00c.b
+wire h00c.result h00d.length
+wire h009.value h00d.receiver
+wire h00a.value h00d.start
+wire h00d.result h00e.receiver
+wire h00e.result h00f.condition
+wire h008.true h00f.in
+wire h00g.result h00h.error
+wire h00f.false h00i.in
+wire h013.true h00i.in
+wire h00h.value h00i.value
+wire h00f.true h00j.in
+wire h00j.then h00k.in
+wire h00k.then h00l.in
+wire h00k.result h00l.result
+wire h00l.then h00m.in
+wire h00l.value h00m.value
+wire h00n.value h00o.a
+wire h00n.value h00p.a
+wire h00o.result h00q.a
+wire h00p.result h00q.b
+wire h00q.result h00r.condition
+wire h00m.then h00r.in
+wire h00s.result h00t.error
+wire h00r.false h00u.in
+wire h00t.value h00u.value
+wire h004.value h00v.h
+wire h00n.value h00v.l
+wire h00v.result h00w.value
+wire h00r.true h00x.in
+wire h000.into h00x.receiver
+wire h00w.result h00x.value
+wire h00x.then h00z.in
+wire h015.then h00z.in
+wire h00y.value h00z.value
+wire h004.value h010.a
+wire h004.value h011.a
+wire h010.result h012.a
+wire h011.result h012.b
+wire h012.result h013.condition
+wire h008.false h013.in
+wire h004.value h014.value
+wire h013.false h015.in
+wire h000.into h015.receiver
+wire h014.result h015.value
+
+function m0009 ReadHex4
+	access private
+	returns Result<int,Json.ParseError>
+	doc "Reads four hex digits (either case) at the current position and gives their value."
+local acc int
+local d int
+sheet body
+node j000 Entry
+node j001 For
+	in start 0
+	in count 4
+node j002 Call this.Peek
+node j003 Call Json.Parser.HexDigit
+node j004 Set local:d
+node j005 Get local:d
+node j006 Operator <
+	in b 0
+node j007 Branch
+node j008 Call this.Fail
+	in message "invalid \\u escape (four hex digits expected)"
+node j009 MakeCase Result<int,Json.ParseError>.Err
+node j00a Return
+node j00b Get local:acc
+node j00c Math
+	set expr "a*16+d"
+node j00d Set local:acc
+node j00e Set this.mPos
+	set op +=
+	in value 1
+node j00f MakeCase Result<int,Json.ParseError>.Ok
+node j00g Return
+wire j000.then j001.in
+wire j002.result j003.c
+wire j001.body j004.in
+wire j003.result j004.value
+wire j005.value j006.a
+wire j006.result j007.condition
+wire j004.then j007.in
+wire j008.result j009.error
+wire j007.true j00a.in
+wire j009.value j00a.value
+wire j00b.value j00c.a
+wire j005.value j00c.d
+wire j007.false j00d.in
+wire j00c.result j00d.value
+wire j00d.then j00e.in
+wire j00b.value j00f.value
+wire j001.done j00g.in
+wire j00f.value j00g.value
+
+function m0010 ParseNumber
+	access private
+	returns Result<Json.JsonValue,Json.ParseError>
+	doc "Reads a number at the current position: a `-` or a digit starts it, the run of number characters after it goes to Double.Parse."
+local start int
+sheet body
+node k000 Entry
+node k001 Call this.Peek
+node k002 Call Json.Parser.IsNumberStart
+node k003 Branch
+node k004 Call this.FailValue
+	in message "unexpected character"
+node k005 Return
+node k006 Get this.mPos
+node k007 Set local:start
+node k008 Call this.Peek
+node k009 Call Json.Parser.IsNumberChar
+node k00a While
+node k00b Set this.mPos
+	set op +=
+	in value 1
+node k00c Get this.mText
+node k00d Get local:start
+node k00e Get this.mPos
+node k00f Operator -
+node k00g Call StringView.Substring
+node k00h Call Double.Parse
+node k00i ResultMatch
+node k00j MakeCase Json.JsonValue.Number
+node k00k MakeCase Result<Json.JsonValue,Json.ParseError>.Ok
+node k00l Return
+node k00m Set this.mPos
+node k00n Call this.FailValue
+	in message "invalid number"
+node k00o Return
+node k00p Fatal
+	in message "unreachable: both arms return"
+wire k001.result k002.c
+wire k002.result k003.condition
+wire k000.then k003.in
+wire k003.false k005.in
+wire k004.result k005.value
+wire k003.true k007.in
+wire k006.value k007.value
+wire k008.result k009.c
+wire k009.result k00a.condition
+wire k007.then k00a.in
+wire k00a.body k00b.in
+wire k00e.value k00f.a
+wire k00d.value k00f.b
+wire k00f.result k00g.length
+wire k00c.value k00g.receiver
+wire k00d.value k00g.start
+wire k00a.done k00h.in
+wire k00g.result k00h.text
+wire k00h.then k00i.in
+wire k00h.result k00i.result
+wire k00i.value k00j.value
+wire k00j.value k00k.value
+wire k00i.ok k00l.in
+wire k00k.value k00l.value
+wire k00i.err k00m.in
+wire k00d.value k00m.value
+wire k00m.then k00o.in
+wire k00n.result k00o.value
+wire k00i.done k00p.in
+
+function m0011 ParseWord
+	access private
+	returns Result<Json.JsonValue,Json.ParseError>
+	doc "Reads the literal `word` (true, false or null) at the current position and gives `value` for it."
+param word StringView
+param value Json.JsonValue
+sheet body
+node n000 Entry
+node n001 Get this.mText
+node n002 Get this.mPos
+node n003 Get StringView.Length
+node n004 Operator -
+node n005 Call StringView.Substring
+node n006 Call StringView.StartsWith
+node n007 Branch
+node n008 Get StringView.Length
+node n009 Set this.mPos
+	set op +=
+node n00a MakeCase Result<Json.JsonValue,Json.ParseError>.Ok
+node n00b Return
+node n00c Call this.FailValue
+	in message "invalid literal (true, false or null expected)"
+node n00d Return
+wire n001.value n003.receiver
+wire n003.value n004.a
+wire n002.value n004.b
+wire n004.result n005.length
+wire n001.value n005.receiver
+wire n002.value n005.start
+wire n005.result n006.receiver
+wire n000.word n006.text
+wire n006.result n007.condition
+wire n000.then n007.in
+wire n000.word n008.receiver
+wire n007.true n009.in
+wire n008.value n009.value
+wire n000.value n00a.value
+wire n009.then n00b.in
+wire n00a.value n00b.value
+wire n007.false n00d.in
+wire n00c.result n00d.value
+
+function m0012 SkipWhitespace
+	access private
+	doc "Skips spaces, tabs, carriage returns and line feeds, counting lines."
+sheet body
+node p000 Entry
+node p001 Call this.Peek
+node p002 Call Json.Parser.IsSpace
+node p003 While
+node p004 Call this.Peek
+node p005 Operator ==
+	in b 10
+node p006 Branch
+node p007 Set this.mLine
+	set op +=
+	in value 1
+node p008 Get this.mPos
+node p009 Operator +
+	in b 1
+node p00a Set this.mLineStart
+node p00b Set this.mPos
+	set op +=
+	in value 1
+node p00c Return
+wire p001.result p002.c
+wire p002.result p003.condition
+wire p000.then p003.in
+wire p004.result p005.a
+wire p005.result p006.condition
+wire p003.body p006.in
+wire p006.true p007.in
+wire p008.value p009.a
+wire p007.then p00a.in
+wire p009.result p00a.value
+wire p006.false p00b.in
+wire p00a.then p00b.in
+wire p003.done p00c.in
+
+function m0013 Peek
+	pure
+	access private
+	returns int
+	doc "The byte at the current position (0-255), or -1 at the end of the text."
+sheet body
+node q000 Entry
+node q001 Get this.mPos
+node q002 Get this.mText
+node q003 Get StringView.Length
+node q004 Operator <
+node q005 Index
+node q006 Cast int
+node q007 Select
+	in false -1
+node q008 Return
+wire q002.value q003.receiver
+wire q001.value q004.a
+wire q003.value q004.b
+wire q002.value q005.collection
+wire q001.value q005.index
+wire q005.value q006.value
+wire q004.result q007.condition
+wire q006.result q007.true
+wire q000.then q008.in
+wire q007.result q008.value
+
+function m0014 Fail
+	pure
+	access private
+	returns Json.ParseError
+	doc "A ParseError at the current position."
+param message StringView
+sheet body
+node r000 Entry
+node r001 Get this.mLine
+node r002 Get this.mPos
+node r003 Get this.mLineStart
+node r004 Math
+	set expr "p-s+1"
+node r005 Make Json.ParseError
+node r006 Return
+wire r002.value r004.p
+wire r003.value r004.s
+wire r004.result r005.Column
+wire r001.value r005.Line
+wire r000.message r005.Message
+wire r000.then r006.in
+wire r005.value r006.value
+
+function m0015 FailValue
+	pure
+	access private
+	returns Result<Json.JsonValue,Json.ParseError>
+	doc "Err(a ParseError at the current position) as a value result."
+param message StringView
+sheet body
+node s000 Entry
+node s001 Call this.Fail
+node s002 MakeCase Result<Json.JsonValue,Json.ParseError>.Err
+node s003 Return
+wire s000.message s001.message
+wire s001.result s002.error
+wire s000.then s003.in
+wire s002.value s003.value
+
+function m0016 IsSpace
+	static
+	pure
+	access private
+	returns bool
+	doc "True for the JSON white space bytes: space, tab, line feed, carriage return."
+param c int
+sheet body
+node t000 Entry
+node t001 Operator ==
+	in b 32
+node t002 Operator ==
+	in b 9
+node t003 Operator ==
+	in b 10
+node t004 Operator ==
+	in b 13
+node t005 Operator ||
+node t006 Operator ||
+node t007 Operator ||
+node t008 Return
+wire t000.c t001.a
+wire t000.c t002.a
+wire t000.c t003.a
+wire t000.c t004.a
+wire t001.result t005.a
+wire t002.result t005.b
+wire t005.result t006.a
+wire t003.result t006.b
+wire t006.result t007.a
+wire t004.result t007.b
+wire t000.then t008.in
+wire t007.result t008.value
+
+function m0017 IsNumberStart
+	static
+	pure
+	access private
+	returns bool
+	doc "True for a byte that starts a JSON number: a minus sign or a digit."
+param c int
+sheet body
+node v000 Entry
+node v001 Operator ==
+	in b 45
+node v002 Operator >=
+	in b 48
+node v003 Operator <=
+	in b 57
+node v004 Operator &&
+node v005 Operator ||
+node v006 Return
+wire v000.c v001.a
+wire v000.c v002.a
+wire v000.c v003.a
+wire v002.result v004.a
+wire v003.result v004.b
+wire v001.result v005.a
+wire v004.result v005.b
+wire v000.then v006.in
+wire v005.result v006.value
+
+function m0018 IsNumberChar
+	static
+	pure
+	access private
+	returns bool
+	doc "True for a byte that may appear in a number: digits, sign, point, exponent letter."
+param c int
+sheet body
+node w000 Entry
+node w001 Operator >=
+	in b 48
+node w002 Operator <=
+	in b 57
+node w003 Operator &&
+node w004 Operator ==
+	in b 45
+node w005 Operator ==
+	in b 43
+node w006 Operator ==
+	in b 46
+node w007 Operator ==
+	in b 101
+node w008 Operator ==
+	in b 69
+node w009 Operator ||
+node w00a Operator ||
+node w00b Operator ||
+node w00c Operator ||
+node w00d Operator ||
+node w00e Return
+wire w000.c w001.a
+wire w000.c w002.a
+wire w001.result w003.a
+wire w002.result w003.b
+wire w000.c w004.a
+wire w000.c w005.a
+wire w000.c w006.a
+wire w000.c w007.a
+wire w000.c w008.a
+wire w003.result w009.a
+wire w004.result w009.b
+wire w009.result w00a.a
+wire w005.result w00a.b
+wire w00a.result w00b.a
+wire w006.result w00b.b
+wire w00b.result w00c.a
+wire w007.result w00c.b
+wire w00c.result w00d.a
+wire w008.result w00d.b
+wire w000.then w00e.in
+wire w00d.result w00e.value
+
+function m0019 IsPlain
+	static
+	pure
+	access private
+	returns bool
+	doc "True for a string byte copied as it is: not a quote, a backslash, a control character or the end (-1)."
+param c int
+sheet body
+node x000 Entry
+node x001 Operator >=
+	in b 32
+node x002 Operator !=
+	in b 34
+node x003 Operator !=
+	in b 92
+node x004 Operator &&
+node x005 Operator &&
+node x006 Return
+wire x000.c x001.a
+wire x000.c x002.a
+wire x000.c x003.a
+wire x001.result x004.a
+wire x002.result x004.b
+wire x004.result x005.a
+wire x003.result x005.b
+wire x000.then x006.in
+wire x005.result x006.value
+
+function m0020 HexDigit
+	static
+	pure
+	access private
+	returns int
+	doc "The value of a hex digit byte (0-9, a-f, A-F), or -1."
+param c int
+sheet body
+node y000 Entry
+node y001 Operator >=
+	in b 48
+node y002 Operator <=
+	in b 57
+node y003 Operator &&
+node y004 Operator >=
+	in b 97
+node y005 Operator <=
+	in b 102
+node y006 Operator &&
+node y007 Operator >=
+	in b 65
+node y008 Operator <=
+	in b 70
+node y009 Operator &&
+node y00a Operator -
+	in b 48
+node y00b Operator -
+	in b 87
+node y00c Operator -
+	in b 55
+node y00d Select
+	in false -1
+node y00e Select
+node y00f Select
+node y00g Return
+wire y000.c y001.a
+wire y000.c y002.a
+wire y001.result y003.a
+wire y002.result y003.b
+wire y000.c y004.a
+wire y000.c y005.a
+wire y004.result y006.a
+wire y005.result y006.b
+wire y000.c y007.a
+wire y000.c y008.a
+wire y007.result y009.a
+wire y008.result y009.b
+wire y000.c y00a.a
+wire y000.c y00b.a
+wire y000.c y00c.a
+wire y009.result y00d.condition
+wire y00c.result y00d.true
+wire y006.result y00e.condition
+wire y00d.result y00e.false
+wire y00b.result y00e.true
+wire y003.result y00f.condition
+wire y00e.result y00f.false
+wire y00a.result y00f.true
+wire y000.then y00g.in
+wire y00f.result y00g.value

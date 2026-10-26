@@ -1,0 +1,29 @@
+# tir 1
+# The Debug check of a ranged array.span: a range that leaves the array (start 2, count 4 of 5) is a
+# fatal error naming the node (Release has no check, as for elem.addr).
+program SpanCastGuard console
+entry Sg.Program.Main()
+
+type Core.Span<int> struct
+	field Ptr int*
+	field Length int
+
+unit Sg.Program
+type Sg.Program class
+
+func Sg.Program.Main() int static sheet "m1" display "Sg.Program.Main"
+	node a1 Entry
+	node a2 Construct int[]
+	node a3 Call Core.Span<int>.Slice
+	node a4 Return 0
+	block b0
+		region.enter r0 @a1
+		%len = const int 5 @a2
+		%a = alloc.array int[] %len @a2
+		%st = const int 2 @a3.start
+		%n = const int 4 @a3.length
+		%s = array.span Core.Span<int> %a %st %n @a3
+		%l = extract int %s 1 @a3
+		delete %a @a4
+		region.exit r0 @a4
+		ret %l @a4

@@ -1,0 +1,28 @@
+# treadle 1
+# expect n3 value T3061
+type LocalDelegateReturn class
+	namespace Broken
+	static
+	doc "A Local delegate returned: it is freed when the function returns."
+
+function f1 Twice
+	static
+	returns int
+param x int
+sheet body
+node e1 Entry
+node e2 Return
+wire e1.then e2.in
+wire e1.x e2.value
+
+function f2 Make
+	static
+	returns delegate:int(int)
+sheet body
+node n1 Entry
+node n2 Bind Broken.LocalDelegateReturn.Twice
+	set alloc local
+node n3 Return
+wire n1.then n2.in
+wire n2.then n3.in
+wire n2.value n3.value

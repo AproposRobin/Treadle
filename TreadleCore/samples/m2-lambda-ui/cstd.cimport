@@ -1,0 +1,7 @@
+# cimport 1
+import cstd
+	header stdlib.h
+	header stdio.h
+	lib msvcrt
+	only div printf qsort RAND_MAX
+	category "C / cstd"

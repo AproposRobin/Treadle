@@ -1,0 +1,204 @@
+# treadle 1
+type UnicodeMain class
+	namespace Cx
+	static
+	doc "Core UTF-8: Length in bytes and CodePointCount, For Each over CodePoints (char32), IndexOf(char32) as a byte position, Substring by bytes, Append(char32) (U+FFFD for a surrogate), Utf8.Validate / Decode / EncodedLength, AppendF of char32, non-ASCII text on the console."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a01 Entry
+node a02 Local String
+	set ctor (StringView)
+	in text "héllo wörld ✓ 𝄞"
+node a03 Call Console.WriteLine(String)
+node a04 Call String.Length
+node a05 Call Console.WriteLine(int)
+node a06 Call String.CodePointCount
+node a07 Call Console.WriteLine(int)
+node a08 Call String.CodePoints
+node a09 ForEach
+node a10 Cast int
+node a11 Call Console.Write(int)
+node a12 Call Console.Write(StringView)
+	in text " "
+node a13 Call Console.WriteLine()
+node a14 Cast char32
+	in value 246
+node a15 Call String.IndexOf(char32)
+node a16 Call Console.WriteLine(int)
+node a17 Cast char32
+	in value 119070
+node a18 Call String.IndexOf(char32)
+node a19 Call Console.WriteLine(int)
+node a20 Cast char32
+	in value 122
+node a21 Call String.IndexOf(char32)
+node a22 Call Console.WriteLine(int)
+node a23 Call String.Substring
+	in start 7
+	in length 6
+node a24 Call Console.WriteLine(StringView)
+node a25 Cast char32
+	in value 128512
+node a26 Call String.Append(char32)
+node a27 Cast char32
+	in value 55296
+node a28 Call String.Append(char32)
+node a29 Call Console.WriteLine(String)
+node a30 Call String.Length
+node a31 Call Console.WriteLine(int)
+node a32 Call Utf8.Validate
+node a33 Call Result<int,int>.UnwrapOr
+	in fallback -1
+node a34 Call Console.WriteLine(int)
+node a35 Local String
+	set ctor (StringView)
+	in text "ab"
+node a36 Cast char8
+	in value 255
+node a37 Call String.Append(char8)
+node a38 Call String.Append(StringView)
+	in text "c"
+node a39 Call Utf8.Validate
+node a40 ResultMatch
+node a41 Call Console.WriteLine(StringView)
+	in text "valid"
+node a42 Call Console.Write(StringView)
+	in text "invalid at "
+node a43 Call Console.WriteLine(int)
+node a44 Call String.CodePointCount
+node a45 Call Console.WriteLine(int)
+node a46 Call Utf8.Decode
+	in text "é!"
+	in pos 0
+node a47 Call Console.WriteLine(int)
+node a48 Cast int
+node a49 Call Console.WriteLine(int)
+node a50 Cast char32
+	in value 119070
+node a51 Call Utf8.EncodedLength
+node a52 Call Console.WriteLine(int)
+node a53 Cast char32
+	in value 56000
+node a54 Call Utf8.EncodedLength
+node a55 Call Console.WriteLine(int)
+node a56 Local String
+node a57 Cast char32
+	in value 10003
+node a58 Cast char8
+	in value 33
+node a59 Cast char32
+	in value 233
+node a60 Call String.AppendF
+	in format "[{0}{1}{2,3}]"
+node a61 Call Console.WriteLine(String)
+node a62 Literal
+	set type StringView
+	set value "Καλημέρα"
+node a63 Call StringView.CodePointCount
+node a64 Call Console.WriteLine(int)
+node a65 Literal
+	set type StringView
+	set value "こんにちは"
+node a66 Cast char32
+	in value 12385
+node a67 Call StringView.IndexOf(char32)
+node a68 Call Console.WriteLine(int)
+node a69 Call Console.WriteLine(StringView)
+	in text "Grüße, Καλημέρα, こんにちは, 😀"
+node a70 Return
+	in value 0
+wire a01.then a02.in
+wire a02.then a03.in
+wire a02.object a03.value
+wire a02.object a04.receiver
+wire a03.then a05.in
+wire a04.result a05.value
+wire a02.object a06.receiver
+wire a05.then a07.in
+wire a06.result a07.value
+wire a02.object a08.receiver
+wire a08.result a09.collection
+wire a07.then a09.in
+wire a09.element a10.value
+wire a09.body a11.in
+wire a10.result a11.value
+wire a11.then a12.in
+wire a09.done a13.in
+wire a14.result a15.c
+wire a02.object a15.receiver
+wire a13.then a16.in
+wire a15.result a16.value
+wire a17.result a18.c
+wire a02.object a18.receiver
+wire a16.then a19.in
+wire a18.result a19.value
+wire a20.result a21.c
+wire a02.object a21.receiver
+wire a19.then a22.in
+wire a21.result a22.value
+wire a02.object a23.receiver
+wire a22.then a24.in
+wire a23.result a24.text
+wire a24.then a26.in
+wire a02.object a26.receiver
+wire a25.result a26.value
+wire a26.then a28.in
+wire a02.object a28.receiver
+wire a27.result a28.value
+wire a28.then a29.in
+wire a02.object a29.value
+wire a02.object a30.receiver
+wire a29.then a31.in
+wire a30.result a31.value
+wire a02.object a32.text
+wire a32.result a33.receiver
+wire a31.then a34.in
+wire a33.result a34.value
+wire a34.then a35.in
+wire a35.then a37.in
+wire a35.object a37.receiver
+wire a36.result a37.value
+wire a37.then a38.in
+wire a35.object a38.receiver
+wire a35.object a39.text
+wire a38.then a40.in
+wire a39.result a40.result
+wire a40.ok a41.in
+wire a40.err a42.in
+wire a42.then a43.in
+wire a40.error a43.value
+wire a35.object a44.receiver
+wire a40.done a45.in
+wire a44.result a45.value
+wire a45.then a46.in
+wire a46.then a47.in
+wire a46.result a47.value
+wire a46.codePoint a48.value
+wire a47.then a49.in
+wire a48.result a49.value
+wire a50.result a51.c
+wire a49.then a52.in
+wire a51.result a52.value
+wire a53.result a54.c
+wire a52.then a55.in
+wire a54.result a55.value
+wire a55.then a56.in
+wire a57.result a60.arg0
+wire a58.result a60.arg1
+wire a59.result a60.arg2
+wire a56.then a60.in
+wire a56.object a60.receiver
+wire a60.then a61.in
+wire a56.object a61.value
+wire a62.value a63.receiver
+wire a61.then a64.in
+wire a63.result a64.value
+wire a66.result a67.c
+wire a65.value a67.receiver
+wire a64.then a68.in
+wire a67.result a68.value
+wire a68.then a69.in
+wire a69.then a70.in

@@ -1,0 +1,305 @@
+# treadle 1
+type Program class
+	namespace Json
+	static
+	doc "Program Start of the m5-json sample: reads a JSON file (or stdin with `-`), prints its statistics, writes it compact and pretty, checks the round trip and saves the pretty form next to the input; `--selftest` runs the built-in cases."
+
+function m0001 Main
+	static
+	returns int
+	doc "`<file>`: 0 when the file is JSON and round-trips, 1 when it cannot be read, is not JSON or does not round-trip; `-` reads stdin and prints the pretty form; `--selftest`: 0 or 1; no argument: usage, 2."
+param args String[]
+sheet body
+node a000 Entry
+node a001 Get String[].Length
+node a002 Operator ==
+	in b 0
+node a003 Branch
+node a004 Call Console.ErrorLine
+	in text "usage: m5-json <file.json> | - | --selftest"
+node a005 Return
+	in value 2
+node a006 Index
+	in index 0
+node a007 Call String.Equals
+	in other "--selftest"
+node a008 Branch
+node a009 Call Json.SelfTest.Run
+node a00a Return
+node a00b Local String
+	set ctor ()
+node a00c Call String.Equals
+	in other "-"
+node a00d Branch
+node a00e Call Json.Program.ReadStdin
+node a00f Call File.ReadAllText
+node a00g Branch
+node a00h Local String
+	set ctor ()
+node a00i Call String.AppendF
+	in format "cannot read {0}"
+node a00j Call Console.ErrorLine
+node a00k Return
+	in value 1
+node a00l Call Json.Program.Process
+node a00m Return
+wire a000.args a001.receiver
+wire a001.value a002.a
+wire a002.result a003.condition
+wire a000.then a003.in
+wire a003.true a004.in
+wire a004.then a005.in
+wire a000.args a006.collection
+wire a006.value a007.receiver
+wire a007.result a008.condition
+wire a003.false a008.in
+wire a008.true a009.in
+wire a009.then a00a.in
+wire a009.result a00a.value
+wire a008.false a00b.in
+wire a006.value a00c.receiver
+wire a00c.result a00d.condition
+wire a00b.then a00d.in
+wire a00d.true a00e.in
+wire a00b.object a00e.into
+wire a00d.false a00f.in
+wire a00b.object a00f.into
+wire a006.value a00f.path
+wire a00f.result a00g.condition
+wire a00f.then a00g.in
+wire a00g.false a00h.in
+wire a006.value a00i.arg0
+wire a00h.then a00i.in
+wire a00h.object a00i.receiver
+wire a00i.then a00j.in
+wire a00h.object a00j.text
+wire a00j.then a00k.in
+wire a00e.then a00l.in
+wire a00g.true a00l.in
+wire a006.value a00l.path
+wire a00b.object a00l.text
+wire a00l.then a00m.in
+wire a00l.result a00m.value
+
+function m0002 ReadStdin
+	static
+	doc "Appends every line of stdin to `into`, each with a line feed."
+param into String
+sheet body
+node b000 Entry
+node b001 Local String
+	set ctor ()
+node b002 While
+	in condition true
+node b003 Call String.Clear
+node b004 Call Console.ReadLine
+node b005 Branch
+node b006 Return
+node b007 Call String.Append(StringView)
+node b008 Call String.Append(char8)
+	in value 10
+wire b000.then b001.in
+wire b001.then b002.in
+wire b002.body b003.in
+wire b001.object b003.receiver
+wire b003.then b004.in
+wire b001.object b004.into
+wire b004.result b005.condition
+wire b004.then b005.in
+wire b002.done b006.in
+wire b005.false b006.in
+wire b005.true b007.in
+wire b000.into b007.receiver
+wire b001.object b007.text
+wire b007.then b008.in
+wire b000.into b008.receiver
+
+function m0003 Process
+	static
+	returns int
+	doc "Parses `text`, prints the statistics and the sizes (and the compact text when it is short), checks the round trip and writes the pretty text to `<path without extension>.pretty.json` (to stdout when `path` is `-`)."
+param path StringView
+param text StringView
+local ok bool
+sheet body
+node c000 Entry
+node c001 Local Json.Parser
+node c002 Call Json.Parser.Parse
+node c003 ResultMatch
+node c004 Local String
+	set ctor ()
+node c005 Call String.Append(StringView)
+	in text "not JSON: "
+node c006 Call Json.ParseError.Describe
+node c007 Call Console.ErrorLine
+node c008 Return
+	in value 1
+node c009 Construct Json.JsonDocument
+node c00a DeferDelete
+node c00b Call Json.JsonDocument.Root
+node c00c Call Json.Stats.Of
+node c00d Break Json.Stats
+node c00e Get StringView.Length
+node c00f Local String
+	set ctor ()
+node c00g Call String.AppendF
+	in format "nodes {0}, depth {1}, bytes {2}"
+node c00h Call Console.WriteLine(String)
+node c00i Local String
+	set ctor ()
+node c00j Call Json.Writer.Write
+	in pretty false
+	in level 0
+node c00k Local String
+	set ctor ()
+node c00l Call Json.Writer.Write
+	in pretty true
+	in level 0
+node c00m Call String.Append(char8)
+	in value 10
+node c00n Call String.Length
+node c00o Call String.Length
+node c00p Local String
+	set ctor ()
+node c00q Call String.AppendF
+	in format "compact {0} bytes, pretty {1} bytes"
+node c00r Call Console.WriteLine(String)
+node c00s Operator <=
+	in b 2000
+node c00t Branch
+node c00u Call Console.WriteLine(String)
+node c00v Call Json.Equality.RoundTrips
+node c00w Set local:ok
+node c00x Get local:ok
+node c00y Literal
+	set type StringView
+	set value "round trip: ok"
+node c00z Literal
+	set type StringView
+	set value "round trip: FAILED (the text read back differs)"
+node c010 Select
+node c011 Call Console.WriteLine(StringView)
+node c012 Select
+	in true 0
+	in false 1
+node c013 Call StringView.Equals
+	in other "-"
+node c014 Branch
+node c015 Call Console.Write(String)
+node c016 Return
+node c017 Local String
+	set ctor ()
+node c018 Call Path.ChangeExtension
+	in extension ".pretty.json"
+node c019 Call File.WriteAllText
+node c01a Branch
+node c01b Local String
+	set ctor ()
+node c01c Call String.AppendF
+	in format "wrote {0}"
+node c01d Call Console.WriteLine(String)
+node c01e Local String
+	set ctor ()
+node c01f Call String.AppendF
+	in format "cannot write {0}"
+node c01g Call Console.ErrorLine
+node c01h Fatal
+	in message "unreachable: both arms return"
+wire c000.then c001.in
+wire c000.text c001.text
+wire c001.then c002.in
+wire c001.object c002.receiver
+wire c002.then c003.in
+wire c002.result c003.result
+wire c003.err c004.in
+wire c004.then c005.in
+wire c004.object c005.receiver
+wire c005.then c006.in
+wire c004.object c006.into
+wire c003.error c006.receiver
+wire c006.then c007.in
+wire c004.object c007.text
+wire c007.then c008.in
+wire c01g.then c008.in
+wire c003.ok c009.in
+wire c003.value c009.root
+wire c009.then c00a.in
+wire c009.object c00a.object
+wire c009.object c00b.receiver
+wire c00a.then c00c.in
+wire c00b.result c00c.value
+wire c00c.result c00d.value
+wire c000.text c00e.receiver
+wire c00c.then c00f.in
+wire c00d.Nodes c00g.arg0
+wire c00d.Depth c00g.arg1
+wire c00e.value c00g.arg2
+wire c00f.then c00g.in
+wire c00f.object c00g.receiver
+wire c00g.then c00h.in
+wire c00f.object c00h.value
+wire c00h.then c00i.in
+wire c00i.then c00j.in
+wire c00i.object c00j.into
+wire c00b.result c00j.value
+wire c00j.then c00k.in
+wire c00k.then c00l.in
+wire c00k.object c00l.into
+wire c00b.result c00l.value
+wire c00l.then c00m.in
+wire c00k.object c00m.receiver
+wire c00i.object c00n.receiver
+wire c00k.object c00o.receiver
+wire c00m.then c00p.in
+wire c00n.result c00q.arg0
+wire c00o.result c00q.arg1
+wire c00p.then c00q.in
+wire c00p.object c00q.receiver
+wire c00q.then c00r.in
+wire c00p.object c00r.value
+wire c00n.result c00s.a
+wire c00s.result c00t.condition
+wire c00r.then c00t.in
+wire c00t.true c00u.in
+wire c00i.object c00u.value
+wire c00t.false c00v.in
+wire c00u.then c00v.in
+wire c00b.result c00v.value
+wire c00v.then c00w.in
+wire c00v.result c00w.value
+wire c00x.value c010.condition
+wire c00z.value c010.false
+wire c00y.value c010.true
+wire c00w.then c011.in
+wire c010.result c011.text
+wire c00x.value c012.condition
+wire c000.path c013.receiver
+wire c013.result c014.condition
+wire c011.then c014.in
+wire c014.true c015.in
+wire c00k.object c015.value
+wire c015.then c016.in
+wire c01d.then c016.in
+wire c012.result c016.value
+wire c014.false c017.in
+wire c017.then c018.in
+wire c017.object c018.into
+wire c000.path c018.path
+wire c018.then c019.in
+wire c017.object c019.path
+wire c00k.object c019.text
+wire c019.result c01a.condition
+wire c019.then c01a.in
+wire c01a.true c01b.in
+wire c017.object c01c.arg0
+wire c01b.then c01c.in
+wire c01b.object c01c.receiver
+wire c01c.then c01d.in
+wire c01b.object c01d.value
+wire c01a.false c01e.in
+wire c017.object c01f.arg0
+wire c01e.then c01f.in
+wire c01e.object c01f.receiver
+wire c01f.then c01g.in
+wire c01e.object c01g.text
+wire c003.done c01h.in

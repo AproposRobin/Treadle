@@ -1,0 +1,913 @@
+# treadle 1
+type Vec3 struct
+	namespace Core
+	attr CRepr
+	doc "A 3D vector of floats (X, Y, Z; 12 bytes, laid out as in C): a position, a direction, a size. Every function is Pure."
+
+field X float
+
+field Y float
+
+field Z float
+
+property v000 Zero Vec3
+	static
+	doc "All components 0."
+sheet get
+node n00000 Entry
+node n00001 Make Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n00002 Return
+wire n00000.then n00002.in
+wire n00001.value n00002.value
+
+property v001 One Vec3
+	static
+	doc "All components 1."
+sheet get
+node n00100 Entry
+node n00101 Make Vec3
+	in X 1.0f
+	in Y 1.0f
+	in Z 1.0f
+node n00102 Return
+wire n00100.then n00102.in
+wire n00101.value n00102.value
+
+property v002 UnitX Vec3
+	static
+	doc "The unit vector along X."
+sheet get
+node n00200 Entry
+node n00201 Make Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n00202 Return
+wire n00200.then n00202.in
+wire n00201.value n00202.value
+
+property v003 UnitY Vec3
+	static
+	doc "The unit vector along Y."
+sheet get
+node n00300 Entry
+node n00301 Make Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n00302 Return
+wire n00300.then n00302.in
+wire n00301.value n00302.value
+
+property v004 UnitZ Vec3
+	static
+	doc "The unit vector along Z."
+sheet get
+node n00400 Entry
+node n00401 Make Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+node n00402 Return
+wire n00400.then n00402.in
+wire n00401.value n00402.value
+
+ctor v005
+	doc "Every component set to `all`."
+param all float
+sheet body
+node n00500 Entry
+node n00501 Set this.X
+node n00502 Set this.Y
+node n00503 Set this.Z
+node n00504 Return
+wire n00500.then n00501.in
+wire n00500.all n00501.value
+wire n00501.then n00502.in
+wire n00500.all n00502.value
+wire n00502.then n00503.in
+wire n00500.all n00503.value
+wire n00503.then n00504.in
+
+operator v006 +
+	static
+	pure
+	returns Vec3
+	doc "Component by component: the sum."
+param a Vec3
+param b Vec3
+sheet body
+node n00600 Entry
+node n00601 Math
+	set expr "a.X + b.X"
+node n00602 Math
+	set expr "a.Y + b.Y"
+node n00603 Math
+	set expr "a.Z + b.Z"
+node n00604 Make Vec3
+node n00605 Return
+wire n00600.a n00601.a
+wire n00600.b n00601.b
+wire n00600.a n00602.a
+wire n00600.b n00602.b
+wire n00600.a n00603.a
+wire n00600.b n00603.b
+wire n00601.result n00604.X
+wire n00602.result n00604.Y
+wire n00603.result n00604.Z
+wire n00600.then n00605.in
+wire n00604.value n00605.value
+
+operator v007 -
+	static
+	pure
+	returns Vec3
+	doc "Component by component: the difference."
+param a Vec3
+param b Vec3
+sheet body
+node n00700 Entry
+node n00701 Math
+	set expr "a.X - b.X"
+node n00702 Math
+	set expr "a.Y - b.Y"
+node n00703 Math
+	set expr "a.Z - b.Z"
+node n00704 Make Vec3
+node n00705 Return
+wire n00700.a n00701.a
+wire n00700.b n00701.b
+wire n00700.a n00702.a
+wire n00700.b n00702.b
+wire n00700.a n00703.a
+wire n00700.b n00703.b
+wire n00701.result n00704.X
+wire n00702.result n00704.Y
+wire n00703.result n00704.Z
+wire n00700.then n00705.in
+wire n00704.value n00705.value
+
+operator v008 *
+	static
+	pure
+	returns Vec3
+	doc "Component by component: the product."
+param a Vec3
+param b Vec3
+sheet body
+node n00800 Entry
+node n00801 Math
+	set expr "a.X * b.X"
+node n00802 Math
+	set expr "a.Y * b.Y"
+node n00803 Math
+	set expr "a.Z * b.Z"
+node n00804 Make Vec3
+node n00805 Return
+wire n00800.a n00801.a
+wire n00800.b n00801.b
+wire n00800.a n00802.a
+wire n00800.b n00802.b
+wire n00800.a n00803.a
+wire n00800.b n00803.b
+wire n00801.result n00804.X
+wire n00802.result n00804.Y
+wire n00803.result n00804.Z
+wire n00800.then n00805.in
+wire n00804.value n00805.value
+
+operator v009 /
+	static
+	pure
+	returns Vec3
+	doc "Component by component: the quotient."
+param a Vec3
+param b Vec3
+sheet body
+node n00900 Entry
+node n00901 Math
+	set expr "a.X / b.X"
+node n00902 Math
+	set expr "a.Y / b.Y"
+node n00903 Math
+	set expr "a.Z / b.Z"
+node n00904 Make Vec3
+node n00905 Return
+wire n00900.a n00901.a
+wire n00900.b n00901.b
+wire n00900.a n00902.a
+wire n00900.b n00902.b
+wire n00900.a n00903.a
+wire n00900.b n00903.b
+wire n00901.result n00904.X
+wire n00902.result n00904.Y
+wire n00903.result n00904.Z
+wire n00900.then n00905.in
+wire n00904.value n00905.value
+
+operator v00a neg
+	static
+	pure
+	returns Vec3
+	doc "Every component negated."
+param a Vec3
+sheet body
+node n00a00 Entry
+node n00a01 Math
+	set expr "-a.X"
+node n00a02 Math
+	set expr "-a.Y"
+node n00a03 Math
+	set expr "-a.Z"
+node n00a04 Make Vec3
+node n00a05 Return
+wire n00a00.a n00a01.a
+wire n00a00.a n00a02.a
+wire n00a00.a n00a03.a
+wire n00a01.result n00a04.X
+wire n00a02.result n00a04.Y
+wire n00a03.result n00a04.Z
+wire n00a00.then n00a05.in
+wire n00a04.value n00a05.value
+
+operator v00b *
+	static
+	pure
+	returns Vec3
+	doc "Every component times `k`."
+param a Vec3
+param k float
+sheet body
+node n00b00 Entry
+node n00b01 Math
+	set expr "a.X * k"
+node n00b02 Math
+	set expr "a.Y * k"
+node n00b03 Math
+	set expr "a.Z * k"
+node n00b04 Make Vec3
+node n00b05 Return
+wire n00b00.a n00b01.a
+wire n00b00.k n00b01.k
+wire n00b00.a n00b02.a
+wire n00b00.k n00b02.k
+wire n00b00.a n00b03.a
+wire n00b00.k n00b03.k
+wire n00b01.result n00b04.X
+wire n00b02.result n00b04.Y
+wire n00b03.result n00b04.Z
+wire n00b00.then n00b05.in
+wire n00b04.value n00b05.value
+
+operator v00c *
+	static
+	pure
+	returns Vec3
+	doc "`k` times every component."
+param k float
+param a Vec3
+sheet body
+node n00c00 Entry
+node n00c01 Math
+	set expr "k * a.X"
+node n00c02 Math
+	set expr "k * a.Y"
+node n00c03 Math
+	set expr "k * a.Z"
+node n00c04 Make Vec3
+node n00c05 Return
+wire n00c00.a n00c01.a
+wire n00c00.k n00c01.k
+wire n00c00.a n00c02.a
+wire n00c00.k n00c02.k
+wire n00c00.a n00c03.a
+wire n00c00.k n00c03.k
+wire n00c01.result n00c04.X
+wire n00c02.result n00c04.Y
+wire n00c03.result n00c04.Z
+wire n00c00.then n00c05.in
+wire n00c04.value n00c05.value
+
+operator v00d /
+	static
+	pure
+	returns Vec3
+	doc "Every component divided by `k`."
+param a Vec3
+param k float
+sheet body
+node n00d00 Entry
+node n00d01 Math
+	set expr "a.X / k"
+node n00d02 Math
+	set expr "a.Y / k"
+node n00d03 Math
+	set expr "a.Z / k"
+node n00d04 Make Vec3
+node n00d05 Return
+wire n00d00.a n00d01.a
+wire n00d00.k n00d01.k
+wire n00d00.a n00d02.a
+wire n00d00.k n00d02.k
+wire n00d00.a n00d03.a
+wire n00d00.k n00d03.k
+wire n00d01.result n00d04.X
+wire n00d02.result n00d04.Y
+wire n00d03.result n00d04.Z
+wire n00d00.then n00d05.in
+wire n00d04.value n00d05.value
+
+operator v00e ==
+	static
+	pure
+	returns bool
+	doc "True when every component is equal (exact)."
+param a Vec3
+param b Vec3
+sheet body
+node n00e00 Entry
+node n00e01 Math
+	set expr "a.X == b.X && a.Y == b.Y && a.Z == b.Z"
+node n00e02 Return
+wire n00e00.a n00e01.a
+wire n00e00.b n00e01.b
+wire n00e00.then n00e02.in
+wire n00e01.result n00e02.value
+
+operator v00f !=
+	static
+	pure
+	returns bool
+	doc "True when any component differs (exact)."
+param a Vec3
+param b Vec3
+sheet body
+node n00f00 Entry
+node n00f01 Math
+	set expr "a.X != b.X || a.Y != b.Y || a.Z != b.Z"
+node n00f02 Return
+wire n00f00.a n00f01.a
+wire n00f00.b n00f01.b
+wire n00f00.then n00f02.in
+wire n00f01.result n00f02.value
+
+function v00g Scaled
+	pure
+	returns Vec3
+	doc "Every component times `k` (the same as the operator `*` with a number)."
+param k float
+sheet body
+node n00g00 Entry
+node n00g01 This
+node n00g02 Math
+	set expr "v.X * k"
+node n00g03 Math
+	set expr "v.Y * k"
+node n00g04 Math
+	set expr "v.Z * k"
+node n00g05 Make Vec3
+node n00g06 Return
+wire n00g00.k n00g02.k
+wire n00g01.value n00g02.v
+wire n00g00.k n00g03.k
+wire n00g01.value n00g03.v
+wire n00g00.k n00g04.k
+wire n00g01.value n00g04.v
+wire n00g02.result n00g05.X
+wire n00g03.result n00g05.Y
+wire n00g04.result n00g05.Z
+wire n00g00.then n00g06.in
+wire n00g05.value n00g06.value
+
+function v00h Dot
+	pure
+	returns float
+	doc "The dot product."
+param b Vec3
+sheet body
+node n00h00 Entry
+node n00h01 This
+node n00h02 Math
+	set expr "v.X * b.X + v.Y * b.Y + v.Z * b.Z"
+node n00h03 Return
+wire n00h00.b n00h02.b
+wire n00h01.value n00h02.v
+wire n00h00.then n00h03.in
+wire n00h02.result n00h03.value
+
+function v00i LengthSquared
+	pure
+	returns float
+	doc "The squared length (no square root)."
+sheet body
+node n00i00 Entry
+node n00i01 This
+node n00i02 Math
+	set expr "v.X * v.X + v.Y * v.Y + v.Z * v.Z"
+node n00i03 Return
+wire n00i01.value n00i02.v
+wire n00i00.then n00i03.in
+wire n00i02.result n00i03.value
+
+function v00j Length
+	pure
+	returns float
+	doc "The length."
+sheet body
+node n00j00 Entry
+node n00j01 This
+node n00j02 Math
+	set expr "Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z)"
+node n00j03 Return
+wire n00j01.value n00j02.v
+wire n00j00.then n00j03.in
+wire n00j02.result n00j03.value
+
+function v00k DistanceSquared
+	pure
+	returns float
+	doc "The squared distance to `b`."
+param b Vec3
+sheet body
+node n00k00 Entry
+node n00k01 This
+node n00k02 Math
+	set expr "(v.X - b.X) * (v.X - b.X) + (v.Y - b.Y) * (v.Y - b.Y) + (v.Z - b.Z) * (v.Z - b.Z)"
+node n00k03 Return
+wire n00k00.b n00k02.b
+wire n00k01.value n00k02.v
+wire n00k00.then n00k03.in
+wire n00k02.result n00k03.value
+
+function v00l Distance
+	pure
+	returns float
+	doc "The distance to `b`."
+param b Vec3
+sheet body
+node n00l00 Entry
+node n00l01 This
+node n00l02 Math
+	set expr "Sqrt((v.X - b.X) * (v.X - b.X) + (v.Y - b.Y) * (v.Y - b.Y) + (v.Z - b.Z) * (v.Z - b.Z))"
+node n00l03 Return
+wire n00l00.b n00l02.b
+wire n00l01.value n00l02.v
+wire n00l00.then n00l03.in
+wire n00l02.result n00l03.value
+
+function v00m Normalized
+	pure
+	returns Vec3
+	doc "The vector scaled to length 1; a zero vector gives zero."
+sheet body
+node n00m00 Entry
+node n00m01 This
+node n00m02 Math
+	set expr "Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z)"
+node n00m03 Math
+	set expr "l > 0.0f ? 1.0f / l : 0.0f"
+node n00m04 Math
+	set expr "v.X * k"
+node n00m05 Math
+	set expr "v.Y * k"
+node n00m06 Math
+	set expr "v.Z * k"
+node n00m07 Make Vec3
+node n00m08 Return
+wire n00m01.value n00m02.v
+wire n00m02.result n00m03.l
+wire n00m03.result n00m04.k
+wire n00m01.value n00m04.v
+wire n00m03.result n00m05.k
+wire n00m01.value n00m05.v
+wire n00m03.result n00m06.k
+wire n00m01.value n00m06.v
+wire n00m04.result n00m07.X
+wire n00m05.result n00m07.Y
+wire n00m06.result n00m07.Z
+wire n00m00.then n00m08.in
+wire n00m07.value n00m08.value
+
+function v00n Lerp
+	pure
+	returns Vec3
+	doc "The point `t` of the way to `to`: this at 0, `to` at 1 (t is not clamped)."
+param to Vec3
+param t float
+sheet body
+node n00n00 Entry
+node n00n01 This
+node n00n02 Math
+	set expr "v.X + (b.X - v.X) * t"
+node n00n03 Math
+	set expr "v.Y + (b.Y - v.Y) * t"
+node n00n04 Math
+	set expr "v.Z + (b.Z - v.Z) * t"
+node n00n05 Make Vec3
+node n00n06 Return
+wire n00n00.to n00n02.b
+wire n00n00.t n00n02.t
+wire n00n01.value n00n02.v
+wire n00n00.to n00n03.b
+wire n00n00.t n00n03.t
+wire n00n01.value n00n03.v
+wire n00n00.to n00n04.b
+wire n00n00.t n00n04.t
+wire n00n01.value n00n04.v
+wire n00n02.result n00n05.X
+wire n00n03.result n00n05.Y
+wire n00n04.result n00n05.Z
+wire n00n00.then n00n06.in
+wire n00n05.value n00n06.value
+
+function v00o Min
+	pure
+	returns Vec3
+	doc "The smaller of each pair of components."
+param b Vec3
+sheet body
+node n00o00 Entry
+node n00o01 This
+node n00o02 Math
+	set expr "Min(v.X, b.X)"
+node n00o03 Math
+	set expr "Min(v.Y, b.Y)"
+node n00o04 Math
+	set expr "Min(v.Z, b.Z)"
+node n00o05 Make Vec3
+node n00o06 Return
+wire n00o00.b n00o02.b
+wire n00o01.value n00o02.v
+wire n00o00.b n00o03.b
+wire n00o01.value n00o03.v
+wire n00o00.b n00o04.b
+wire n00o01.value n00o04.v
+wire n00o02.result n00o05.X
+wire n00o03.result n00o05.Y
+wire n00o04.result n00o05.Z
+wire n00o00.then n00o06.in
+wire n00o05.value n00o06.value
+
+function v00p Max
+	pure
+	returns Vec3
+	doc "The larger of each pair of components."
+param b Vec3
+sheet body
+node n00p00 Entry
+node n00p01 This
+node n00p02 Math
+	set expr "Max(v.X, b.X)"
+node n00p03 Math
+	set expr "Max(v.Y, b.Y)"
+node n00p04 Math
+	set expr "Max(v.Z, b.Z)"
+node n00p05 Make Vec3
+node n00p06 Return
+wire n00p00.b n00p02.b
+wire n00p01.value n00p02.v
+wire n00p00.b n00p03.b
+wire n00p01.value n00p03.v
+wire n00p00.b n00p04.b
+wire n00p01.value n00p04.v
+wire n00p02.result n00p05.X
+wire n00p03.result n00p05.Y
+wire n00p04.result n00p05.Z
+wire n00p00.then n00p06.in
+wire n00p05.value n00p06.value
+
+function v00q Clamp
+	pure
+	returns Vec3
+	doc "Each component limited to the range `lo` to `hi`."
+param lo Vec3
+param hi Vec3
+sheet body
+node n00q00 Entry
+node n00q01 This
+node n00q02 Math
+	set expr "Clamp(v.X, lo.X, hi.X)"
+node n00q03 Math
+	set expr "Clamp(v.Y, lo.Y, hi.Y)"
+node n00q04 Math
+	set expr "Clamp(v.Z, lo.Z, hi.Z)"
+node n00q05 Make Vec3
+node n00q06 Return
+wire n00q00.hi n00q02.hi
+wire n00q00.lo n00q02.lo
+wire n00q01.value n00q02.v
+wire n00q00.hi n00q03.hi
+wire n00q00.lo n00q03.lo
+wire n00q01.value n00q03.v
+wire n00q00.hi n00q04.hi
+wire n00q00.lo n00q04.lo
+wire n00q01.value n00q04.v
+wire n00q02.result n00q05.X
+wire n00q03.result n00q05.Y
+wire n00q04.result n00q05.Z
+wire n00q00.then n00q06.in
+wire n00q05.value n00q06.value
+
+function v00r Abs
+	pure
+	returns Vec3
+	doc "The absolute value each component."
+sheet body
+node n00r00 Entry
+node n00r01 This
+node n00r02 Math
+	set expr "Abs(v.X)"
+node n00r03 Math
+	set expr "Abs(v.Y)"
+node n00r04 Math
+	set expr "Abs(v.Z)"
+node n00r05 Make Vec3
+node n00r06 Return
+wire n00r01.value n00r02.v
+wire n00r01.value n00r03.v
+wire n00r01.value n00r04.v
+wire n00r02.result n00r05.X
+wire n00r03.result n00r05.Y
+wire n00r04.result n00r05.Z
+wire n00r00.then n00r06.in
+wire n00r05.value n00r06.value
+
+function v00s Floor
+	pure
+	returns Vec3
+	doc "The largest whole number not above each component."
+sheet body
+node n00s00 Entry
+node n00s01 This
+node n00s02 Math
+	set expr "Floor(v.X)"
+node n00s03 Math
+	set expr "Floor(v.Y)"
+node n00s04 Math
+	set expr "Floor(v.Z)"
+node n00s05 Make Vec3
+node n00s06 Return
+wire n00s01.value n00s02.v
+wire n00s01.value n00s03.v
+wire n00s01.value n00s04.v
+wire n00s02.result n00s05.X
+wire n00s03.result n00s05.Y
+wire n00s04.result n00s05.Z
+wire n00s00.then n00s06.in
+wire n00s05.value n00s06.value
+
+function v00t Ceil
+	pure
+	returns Vec3
+	doc "The smallest whole number not below each component."
+sheet body
+node n00t00 Entry
+node n00t01 This
+node n00t02 Math
+	set expr "Ceil(v.X)"
+node n00t03 Math
+	set expr "Ceil(v.Y)"
+node n00t04 Math
+	set expr "Ceil(v.Z)"
+node n00t05 Make Vec3
+node n00t06 Return
+wire n00t01.value n00t02.v
+wire n00t01.value n00t03.v
+wire n00t01.value n00t04.v
+wire n00t02.result n00t05.X
+wire n00t03.result n00t05.Y
+wire n00t04.result n00t05.Z
+wire n00t00.then n00t06.in
+wire n00t05.value n00t06.value
+
+function v00u Round
+	pure
+	returns Vec3
+	doc "The nearest whole number (halves away from zero) to each component."
+sheet body
+node n00u00 Entry
+node n00u01 This
+node n00u02 Math
+	set expr "Round(v.X)"
+node n00u03 Math
+	set expr "Round(v.Y)"
+node n00u04 Math
+	set expr "Round(v.Z)"
+node n00u05 Make Vec3
+node n00u06 Return
+wire n00u01.value n00u02.v
+wire n00u01.value n00u03.v
+wire n00u01.value n00u04.v
+wire n00u02.result n00u05.X
+wire n00u03.result n00u05.Y
+wire n00u04.result n00u05.Z
+wire n00u00.then n00u06.in
+wire n00u05.value n00u06.value
+
+function v00v Reflect
+	pure
+	returns Vec3
+	doc "The vector mirrored off a surface with this unit `normal`: v - 2 Dot(v, n) n."
+param normal Vec3
+sheet body
+node n00v00 Entry
+node n00v01 This
+node n00v02 Math
+	set expr "2.0f * (v.X * n.X + v.Y * n.Y + v.Z * n.Z)"
+node n00v03 Math
+	set expr "v.X - n.X * k"
+node n00v04 Math
+	set expr "v.Y - n.Y * k"
+node n00v05 Math
+	set expr "v.Z - n.Z * k"
+node n00v06 Make Vec3
+node n00v07 Return
+wire n00v00.normal n00v02.n
+wire n00v01.value n00v02.v
+wire n00v02.result n00v03.k
+wire n00v00.normal n00v03.n
+wire n00v01.value n00v03.v
+wire n00v02.result n00v04.k
+wire n00v00.normal n00v04.n
+wire n00v01.value n00v04.v
+wire n00v02.result n00v05.k
+wire n00v00.normal n00v05.n
+wire n00v01.value n00v05.v
+wire n00v03.result n00v06.X
+wire n00v04.result n00v06.Y
+wire n00v05.result n00v06.Z
+wire n00v00.then n00v07.in
+wire n00v06.value n00v07.value
+
+function v00w ProjectOnto
+	pure
+	returns Vec3
+	doc "The part of this vector along `b`; a zero `b` gives zero."
+param b Vec3
+sheet body
+node n00w00 Entry
+node n00w01 This
+node n00w02 Math
+	set expr "b.X * b.X + b.Y * b.Y + b.Z * b.Z"
+node n00w03 Math
+	set expr "bb > 0.0f ? (v.X * b.X + v.Y * b.Y + v.Z * b.Z) / bb : 0.0f"
+node n00w04 Math
+	set expr "b.X * k"
+node n00w05 Math
+	set expr "b.Y * k"
+node n00w06 Math
+	set expr "b.Z * k"
+node n00w07 Make Vec3
+node n00w08 Return
+wire n00w00.b n00w02.b
+wire n00w00.b n00w03.b
+wire n00w02.result n00w03.bb
+wire n00w01.value n00w03.v
+wire n00w00.b n00w04.b
+wire n00w03.result n00w04.k
+wire n00w00.b n00w05.b
+wire n00w03.result n00w05.k
+wire n00w00.b n00w06.b
+wire n00w03.result n00w06.k
+wire n00w04.result n00w07.X
+wire n00w05.result n00w07.Y
+wire n00w06.result n00w07.Z
+wire n00w00.then n00w08.in
+wire n00w07.value n00w08.value
+
+function v00x AngleTo
+	pure
+	returns float
+	doc "The angle to `b` in radians, 0 to PI; 0 when either is zero."
+param b Vec3
+sheet body
+node n00x00 Entry
+node n00x01 This
+node n00x02 Math
+	set expr "Sqrt((v.X * v.X + v.Y * v.Y + v.Z * v.Z) * (b.X * b.X + b.Y * b.Y + b.Z * b.Z))"
+node n00x03 Math
+	set expr "d > 0.0f ? Acos(Clamp((v.X * b.X + v.Y * b.Y + v.Z * b.Z) / d, -1.0f, 1.0f)) : 0.0f"
+node n00x04 Return
+wire n00x00.b n00x02.b
+wire n00x01.value n00x02.v
+wire n00x00.b n00x03.b
+wire n00x02.result n00x03.d
+wire n00x01.value n00x03.v
+wire n00x00.then n00x04.in
+wire n00x03.result n00x04.value
+
+function v00y IsFinite
+	pure
+	returns bool
+	doc "True when no component is infinite or NaN."
+sheet body
+node n00y00 Entry
+node n00y01 This
+node n00y02 Math
+	set expr "v.X - v.X == 0.0f && v.Y - v.Y == 0.0f && v.Z - v.Z == 0.0f"
+node n00y03 Return
+wire n00y01.value n00y02.v
+wire n00y00.then n00y03.in
+wire n00y02.result n00y03.value
+
+function v00z ApproxEquals
+	pure
+	returns bool
+	doc "True when every component is within `epsilon` of the other's (absolute)."
+param other Vec3
+param epsilon float
+	default 0.00001f
+sheet body
+node n00z00 Entry
+node n00z01 This
+node n00z02 Math
+	set expr "Abs(v.X - o.X) <= e && Abs(v.Y - o.Y) <= e && Abs(v.Z - o.Z) <= e"
+node n00z03 Return
+wire n00z00.epsilon n00z02.e
+wire n00z00.other n00z02.o
+wire n00z01.value n00z02.v
+wire n00z00.then n00z03.in
+wire n00z02.result n00z03.value
+
+function v010 Cross
+	pure
+	returns Vec3
+	doc "The cross product (right-handed): perpendicular to both."
+param b Vec3
+sheet body
+node n01000 Entry
+node n01001 This
+node n01002 Math
+	set expr "v.Y * b.Z - v.Z * b.Y"
+node n01003 Math
+	set expr "v.Z * b.X - v.X * b.Z"
+node n01004 Math
+	set expr "v.X * b.Y - v.Y * b.X"
+node n01005 Make Vec3
+node n01006 Return
+wire n01000.b n01002.b
+wire n01001.value n01002.v
+wire n01000.b n01003.b
+wire n01001.value n01003.v
+wire n01000.b n01004.b
+wire n01001.value n01004.v
+wire n01002.result n01005.X
+wire n01003.result n01005.Y
+wire n01004.result n01005.Z
+wire n01000.then n01006.in
+wire n01005.value n01006.value
+
+function v011 XY
+	pure
+	returns Vec2
+	doc "X and Y as a 2D vector."
+sheet body
+node n01100 Entry
+node n01101 This
+node n01102 Math
+	set expr "v.X"
+node n01103 Math
+	set expr "v.Y"
+node n01104 Make Vec2
+node n01105 Return
+wire n01101.value n01102.v
+wire n01101.value n01103.v
+wire n01102.result n01104.X
+wire n01103.result n01104.Y
+wire n01100.then n01105.in
+wire n01104.value n01105.value
+
+function v012 ToVector
+	pure
+	returns float3
+	doc "The components as a float3 (the 4th lane 0): the vector primitive for SIMD work."
+sheet body
+node n01200 Entry
+node n01201 This
+node n01202 Math
+	set expr "float3(v.X, v.Y, v.Z)"
+node n01203 Return
+wire n01201.value n01202.v
+wire n01200.then n01203.in
+wire n01202.result n01203.value
+
+function v013 FromVector
+	static
+	pure
+	returns Vec3
+	doc "The lanes of a float3 as a Vec3."
+param value float3
+sheet body
+node n01300 Entry
+node n01301 Break float3
+node n01302 Make Vec3
+node n01303 Return
+wire n01300.value n01301.value
+wire n01301.x n01302.X
+wire n01301.y n01302.Y
+wire n01301.z n01302.Z
+wire n01300.then n01303.in
+wire n01302.value n01303.value

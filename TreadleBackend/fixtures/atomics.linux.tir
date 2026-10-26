@@ -1,0 +1,155 @@
+# tir 1
+# Atomics: store, add (the old value back), load, compare-exchange that succeeds and one that fails
+# ((T,bool): the old value and whether it was replaced), exchange, signed min / max, sub, a fence,
+# unsigned 8-bit min / max (umin / umax) with wrap-around, a pointer compare-exchange, and four
+# threads adding 1 to one counter 100000 times each with relaxed atomic adds (400000 at the end).
+# Linux variant of atomics.tir (the self test uses it in its place there): the threads are
+# pthread_create / pthread_join instead of CreateThread / WaitForSingleObject / CloseHandle; the
+# worker's uint32 result is not read (pthread_join gets a null result pointer).
+program Atomics console
+entry At.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+func C.pt.pthread_create(void*,void*,function uint32(void*),void*) int32 import "pthread_create"
+func C.pt.pthread_join(void*,void*) int32 import "pthread_join"
+
+unit At.Program
+type At.Program class
+
+global At.Program.sCount int
+global At.Program.sByte uint8
+global At.Program.sPtr void*
+global At.Program.sShared int
+
+func At.Program.Worker(void*) uint32 static cconv cdecl sheet "w1" display "At.Program.Worker"
+	param arg void*
+	slot si int loopvar node a2.index
+	node a1 Entry
+	node a2 For
+	node a3 Atomic Add
+	block b0
+		%z = const int 0 @a2
+		store.slot si %z @a2
+		br cond
+	block cond
+		%i = load.slot int si @a2
+		%n = const int 100000 @a2.count
+		%more = cmp bool lt %i %n @a2
+		condbr %more body done @a2
+	block body
+		%g = global.addr int* At.Program.sShared @a3
+		%one = const int 1 @a3
+		%o = atomic.rmw int add relaxed %g %one @a3
+		%i2 = binop int add %i %one @a2
+		store.slot si %i2 @a2
+		br cond @a2
+	block done
+		%r = const uint32 0 @a1
+		ret %r @a1
+
+func At.Program.Main() int static sheet "m1" display "At.Program.Main"
+	slot sh void*[4] variable
+	slot sj int loopvar node b1.index
+	node a1 Entry
+	node a2 Atomic Store
+	node a3 Atomic Add
+	node a4 Atomic Load
+	node a5 Atomic Compare Exchange
+	node a6 Atomic Compare Exchange
+	node a7 Atomic Exchange
+	node a8 Call C.libc.printf
+	node a9 Atomic uint8
+	node b0 Atomic pointer
+	node b1 For
+	node b2 Call C.pt.pthread_create
+	node b3 Call C.pt.pthread_join
+	node b4 Call C.libc.printf
+	node b5 Return 0
+	block b0
+		%g = global.addr int* At.Program.sCount @a2
+		%five = const int 5 @a2.value
+		atomic.store seqcst %g %five @a2
+		%ten = const int 10 @a3.value
+		%old = atomic.rmw int add seqcst %g %ten @a3
+		%v = atomic.load int acquire %g @a4
+		%k100 = const int 100 @a5
+		%c1 = atomic.cas (int,bool) acqrel %g %v %k100 @a5
+		%c1o = extract int %c1 0 @a5
+		%c1b = extract bool %c1 1 @a5
+		%k7 = const int 7 @a6
+		%k8 = const int 8 @a6
+		%c2 = atomic.cas (int,bool) seqcst %g %k7 %k8 @a6
+		%c2o = extract int %c2 0 @a6
+		%c2b = extract bool %c2 1 @a6
+		%k3 = const int 3 @a7
+		%x = atomic.rmw int xchg relaxed %g %k3 @a7
+		%km2 = const int -2 @a7
+		%mn = atomic.rmw int min seqcst %g %km2 @a7
+		%k9 = const int 9 @a7
+		%mx = atomic.rmw int max seqcst %g %k9 @a7
+		%k4 = const int 4 @a7
+		%sb = atomic.rmw int sub release %g %k4 @a7
+		fence seqcst @a7
+		%fin = atomic.load int seqcst %g @a7
+		%f1 = const char8* "add %lld load %lld cas %lld %d cas %lld %d xchg %lld min %lld max %lld sub %lld final %lld\n" @a8.format
+		%p1 = ccall int32 C.libc.printf(char8*,...) %f1 %old %v %c1o %c1b %c2o %c2b %x %mn %mx %sb %fin @a8
+		%gb = global.addr uint8* At.Program.sByte @a9
+		%u250 = const uint8 250 @a9
+		atomic.store relaxed %gb %u250 @a9
+		%u10 = const uint8 10 @a9
+		%ua = atomic.rmw uint8 add seqcst %gb %u10 @a9
+		%u200 = const uint8 200 @a9
+		%umx = atomic.rmw uint8 max seqcst %gb %u200 @a9
+		%u100 = const uint8 100 @a9
+		%umn = atomic.rmw uint8 min seqcst %gb %u100 @a9
+		%ul = atomic.load uint8 seqcst %gb @a9
+		%gp = global.addr void** At.Program.sPtr @b0
+		%nul = const void* null @b0
+		%target = cast void* %g @b0
+		%pc = atomic.cas (void*,bool) seqcst %gp %nul %target @b0
+		%pcb = extract bool %pc 1 @b0
+		%pl = atomic.load void* acquire %gp @b0
+		%same = cmp bool eq %pl %target @b0
+		%f2 = const char8* "uint8 add %u max %u min %u load %u ptr cas %d same %d\n" @a8.format
+		%p2 = ccall int32 C.libc.printf(char8*,...) %f2 %ua %umx %umn %ul %pcb %same @a8
+		%hs = slot.addr void*[4]* sh @b2
+		%wk = fn.addr function uint32(void*) At.Program.Worker(void*) @b2
+		%z = const int 0 @b1
+		store.slot sj %z @b1
+		br tcond
+	block tcond
+		%j = load.slot int sj @b1
+		%four = const int 4 @b1.count
+		%tm = cmp bool lt %j %four @b1
+		condbr %tm tstart wait @b1
+	block tstart
+		%he = elem.addr void** %hs %j @b2
+		%hv = cast void* %he @b2
+		%h = ccall int32 C.pt.pthread_create(void*,void*,function uint32(void*),void*) %hv %nul %wk %nul @b2
+		%one = const int 1 @b1
+		%j2 = binop int add %j %one @b1
+		store.slot sj %j2 @b1
+		br tcond @b1
+	block wait
+		store.slot sj %z @b3
+		br wcond
+	block wcond
+		%w = load.slot int sj @b3
+		%wm = cmp bool lt %w %four @b3
+		condbr %wm wone report @b3
+	block wone
+		%we = elem.addr void** %hs %w @b3
+		%wh = load void* %we @b3
+		%wn = const void* null @b3
+		%wr = ccall int32 C.pt.pthread_join(void*,void*) %wh %wn @b3
+		%one2 = const int 1 @b3
+		%w2 = binop int add %w %one2 @b3
+		store.slot sj %w2 @b3
+		br wcond @b3
+	block report
+		%gs = global.addr int* At.Program.sShared @b4
+		%total = atomic.load int seqcst %gs @b4
+		%f3 = const char8* "threads %lld\n" @b4.format
+		%p3 = ccall int32 C.libc.printf(char8*,...) %f3 %total @b4
+		%ret = const int 0 @b5.value
+		ret %ret @b5

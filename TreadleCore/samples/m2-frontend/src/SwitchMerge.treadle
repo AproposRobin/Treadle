@@ -1,0 +1,46 @@
+# treadle 1
+type SwitchMerge class
+	namespace M2
+	static
+	doc "Three Switch cases flow into one node (a flow merge, Language.md 5.3): it stays inside the Switch and continues to its done. Run prints merged, done, merged, done, single, done."
+
+function m0001 Show
+	static
+param x int
+sheet body
+node a1 Entry
+node a2 Switch
+	case 1
+	case 2
+	case 3
+node a3 Call Console.WriteLine(StringView)
+	in text "merged"
+node a4 Call Console.WriteLine(StringView)
+	in text "single"
+node a5 Call Console.WriteLine(StringView)
+	in text "done"
+node a6 Return
+wire a1.then a2.in
+wire a1.x a2.value
+wire a2.case:1 a3.in
+wire a2.case:2 a3.in
+wire a2.case:3 a3.in
+wire a2.default a4.in
+wire a2.done a5.in
+wire a5.then a6.in
+
+function m0002 Run
+	static
+sheet body
+node b1 Entry
+node b2 Call M2.SwitchMerge.Show
+	in x 1
+node b3 Call M2.SwitchMerge.Show
+	in x 3
+node b4 Call M2.SwitchMerge.Show
+	in x 9
+node b5 Return
+wire b1.then b2.in
+wire b2.then b3.in
+wire b3.then b4.in
+wire b4.then b5.in

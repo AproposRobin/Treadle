@@ -1,0 +1,279 @@
+# treadle 1
+type Path class
+	namespace Core
+	static
+	doc "Text operations on file paths: both the slash and the backslash separate folders (on every platform); Combine joins with /, which Windows and Linux both accept. The functions give views of the path they are given, or append to a String."
+
+function p0001 LastOf
+	static
+	pure
+	access internal
+	returns int
+	doc "The position of the last `a` or `b` in the text, or -1."
+param text StringView
+param a char8
+param b char8
+sheet body
+node a1 Entry
+node a2 Break StringView
+node a3 For
+	in start 0
+node a4 Operator -
+node a5 Operator -
+	in b 1
+node a6 Index
+node a7 Operator ==
+node a8 Operator ==
+node a9 Operator ||
+node b1 Branch
+node b2 Return
+node b3 Return
+	in value -1
+wire a1.text a2.value
+wire a2.Length a3.count
+wire a1.then a3.in
+wire a2.Length a4.a
+wire a3.index a4.b
+wire a4.result a5.a
+wire a1.text a6.collection
+wire a5.result a6.index
+wire a6.value a7.a
+wire a1.a a7.b
+wire a6.value a8.a
+wire a1.b a8.b
+wire a7.result a9.a
+wire a8.result a9.b
+wire a9.result b1.condition
+wire a3.body b1.in
+wire b1.true b2.in
+wire a5.result b2.value
+wire a3.done b3.in
+
+function p0002 GetFileName
+	static
+	pure
+	returns StringView
+	doc "The part after the last separator (the whole path when there is none): \"a/b/c.txt\" gives \"c.txt\"."
+param path StringView
+sheet body
+node c1 Entry
+node c2 Call Path.LastOf
+	in a 47
+	in b 92
+node c3 Operator +
+	in b 1
+node c4 Break StringView
+node c5 Operator -
+node c6 Call StringView.Substring
+node c7 Return
+wire c1.path c2.text
+wire c2.result c3.a
+wire c1.path c4.value
+wire c4.Length c5.a
+wire c3.result c5.b
+wire c5.result c6.length
+wire c1.path c6.receiver
+wire c3.result c6.start
+wire c1.then c7.in
+wire c6.result c7.value
+
+function p0003 GetDirectory
+	static
+	pure
+	returns StringView
+	doc "The part before the last separator: \"a/b/c.txt\" gives \"a/b\", \"/c.txt\" gives \"/\", \"c.txt\" gives an empty view."
+param path StringView
+sheet body
+node d1 Entry
+node d2 Call Path.LastOf
+	in a 47
+	in b 92
+node d3 Operator ==
+	in b 0
+node d4 Call Math.Max
+	in b 0
+node d5 Select
+	in true 1
+node d6 Call StringView.Substring
+	in start 0
+node d7 Return
+wire d1.path d2.text
+wire d2.result d3.a
+wire d2.result d4.a
+wire d3.result d5.condition
+wire d4.result d5.false
+wire d5.result d6.length
+wire d1.path d6.receiver
+wire d1.then d7.in
+wire d6.result d7.value
+
+function p0004 GetExtension
+	static
+	pure
+	returns StringView
+	doc "The file name's extension with its dot (\"a/b.tar.gz\" gives \".gz\"), or an empty view when the file name has no dot."
+param path StringView
+sheet body
+node e1 Entry
+node e2 Call Path.GetFileName
+node e3 Call Path.LastOf
+	in a 46
+	in b 46
+node e4 Operator <
+	in b 0
+node e5 Break StringView
+node e6 Select
+node e7 Operator -
+node e8 Call StringView.Substring
+node e9 Return
+wire e1.path e2.path
+wire e2.result e3.text
+wire e3.result e4.a
+wire e2.result e5.value
+wire e4.result e6.condition
+wire e3.result e6.false
+wire e5.Length e6.true
+wire e5.Length e7.a
+wire e6.result e7.b
+wire e7.result e8.length
+wire e2.result e8.receiver
+wire e6.result e8.start
+wire e1.then e9.in
+wire e8.result e9.value
+
+function p0005 ChangeExtension
+	static
+	doc "Appends the path with its file name's extension replaced by `extension` (a dot is added when it has none; an empty extension removes it): \"a/b.txt\" and \".md\" give \"a/b.md\"."
+param path StringView
+param extension StringView
+param into String
+sheet body
+node f1 Entry
+node f2 Call Path.LastOf
+	in a 47
+	in b 92
+node f3 Call Path.LastOf
+	in a 46
+	in b 46
+node f4 Operator >
+node f5 Break StringView
+node f6 Select
+node f7 Call StringView.Substring
+	in start 0
+node f8 Call String.Append(StringView)
+node f9 Break StringView
+node g1 Operator >
+	in b 0
+node g2 Index
+	in index 0
+node g3 Operator !=
+	in b 46
+node g4 Operator &&
+node g5 Branch
+node g6 Call String.Append(char8)
+	in value 46
+node g7 Call String.Append(StringView)
+node g8 Return
+wire f1.path f2.text
+wire f1.path f3.text
+wire f3.result f4.a
+wire f2.result f4.b
+wire f1.path f5.value
+wire f4.result f6.condition
+wire f5.Length f6.false
+wire f3.result f6.true
+wire f6.result f7.length
+wire f1.path f7.receiver
+wire f1.then f8.in
+wire f1.into f8.receiver
+wire f7.result f8.text
+wire f1.extension f9.value
+wire f9.Length g1.a
+wire f1.extension g2.collection
+wire g2.value g3.a
+wire g1.result g4.a
+wire g3.result g4.b
+wire g4.result g5.condition
+wire f8.then g5.in
+wire g5.true g6.in
+wire f1.into g6.receiver
+wire g5.false g7.in
+wire g6.then g7.in
+wire f1.into g7.receiver
+wire f1.extension g7.text
+wire g7.then g8.in
+
+function p0006 Combine
+	static
+	doc "Appends `a`, a / when neither `a` ends nor `b` starts with a separator (and both are not empty), then `b`."
+param a StringView
+param b StringView
+param into String
+sheet body
+node h1 Entry
+node h2 Call String.Append(StringView)
+node h3 Break StringView
+node h4 Break StringView
+node h5 Operator >
+	in b 0
+node h6 Operator >
+	in b 0
+node h7 Operator -
+	in b 1
+node h8 Index
+node h9 Index
+	in index 0
+node j1 Operator ==
+	in b 47
+node j2 Operator ==
+	in b 92
+node j3 Operator ==
+	in b 47
+node j4 Operator ==
+	in b 92
+node j5 Operator ||
+node j6 Operator ||
+node j7 Operator ||
+node j8 Operator !
+node j9 Operator &&
+node k1 Operator &&
+node k2 Branch
+node k3 Call String.Append(char8)
+	in value 47
+node k4 Call String.Append(StringView)
+node k5 Return
+wire h1.then h2.in
+wire h1.into h2.receiver
+wire h1.a h2.text
+wire h1.a h3.value
+wire h1.b h4.value
+wire h3.Length h5.a
+wire h4.Length h6.a
+wire h3.Length h7.a
+wire h1.a h8.collection
+wire h7.result h8.index
+wire h1.b h9.collection
+wire h8.value j1.a
+wire h8.value j2.a
+wire h9.value j3.a
+wire h9.value j4.a
+wire j1.result j5.a
+wire j2.result j5.b
+wire j3.result j6.a
+wire j4.result j6.b
+wire j5.result j7.a
+wire j6.result j7.b
+wire j7.result j8.a
+wire h5.result j9.a
+wire h6.result j9.b
+wire j9.result k1.a
+wire j8.result k1.b
+wire k1.result k2.condition
+wire h2.then k2.in
+wire k2.true k3.in
+wire h1.into k3.receiver
+wire k2.false k4.in
+wire k3.then k4.in
+wire h1.into k4.receiver
+wire h1.b k4.text
+wire k4.then k5.in

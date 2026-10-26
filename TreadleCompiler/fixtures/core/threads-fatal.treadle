@@ -1,0 +1,40 @@
+# treadle 1
+type ThreadsFatalMain class
+	namespace Cx
+	static
+	doc "A Fatal node on a worker thread: the fatal line names the thread (`doomed`) after the node (Debug) and the program ends with exit code 3 while Main waits in Join."
+
+function m1 Doom
+	static
+	doc "Ends the program."
+sheet body
+node da1 Entry
+node da2 Fatal
+	in message "the worker gave up"
+wire da1.then da2.in
+
+function m2 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Construct Thread
+	set ctor (StringView)
+	in name "doomed"
+node a3 Bind ThreadsFatalMain.Doom
+	set alloc construct
+node a4 Call Thread.Start
+node a5 Call Thread.Join
+node a6 Call Console.WriteLine(StringView)
+	in text "not reached"
+node a7 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a3.value a4.body
+wire a3.then a4.in
+wire a2.object a4.receiver
+wire a4.then a5.in
+wire a2.object a5.receiver
+wire a5.then a6.in
+wire a6.then a7.in

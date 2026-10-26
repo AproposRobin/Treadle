@@ -1,0 +1,85 @@
+# treadle 1
+type Parallel class
+	namespace Core
+	static
+	doc "Runs a body over a range of indices on the ThreadPool's threads and the calling thread at once, and returns when every call returned. The body runs only during the call, so a Local Lambda (with by-reference captures) is fine; the calls may run in any order and at the same time, so what they share needs Atomic calls, a Mutex or one slot per index. docs: Threads."
+
+function k0001 For
+	static
+	doc "Calls `body(i)` for every `i` from `from` up to (not including) `to`."
+param from int
+param to int
+param body delegate:void(int)
+sheet body
+node a1 Entry
+node a2 Call Parallel.rt_parallel_for
+node a3 Return
+wire a1.body a2.body
+wire a1.from a2.from
+wire a1.then a2.in
+wire a1.to a2.to
+wire a2.then a3.in
+
+function k0002 ForRange
+	static
+	doc "Cuts `from` .. `to` into chunks and calls `body(lo, hi)` once per chunk (indices lo up to, not including, hi): one call per chunk, for loops that sum or count into a local and publish once."
+param from int
+param to int
+param body delegate:void(int,int)
+sheet body
+node b1 Entry
+node b2 Call Parallel.rt_parallel_ranges
+node b3 Return
+wire b1.body b2.body
+wire b1.from b2.from
+wire b1.then b2.in
+wire b1.to b2.to
+wire b2.then b3.in
+
+function k0003 ForEach
+	static
+	generic T
+	doc "Calls `body(element)` for every element of `items` (a copy of each element, as For Each gives)."
+param items Span<T>
+param body delegate:void(T)
+sheet body
+node c1 Entry
+node c2 Local ParallelForEach<T>
+node c3 Set ParallelForEach<T>.mItems
+node c4 Set ParallelForEach<T>.mBody
+node c5 Bind ParallelForEach<T>.Run
+	set alloc local
+node c6 Break Span<T>
+node c7 Call Parallel.For
+	in from 0
+node c8 Return
+wire c1.then c2.in
+wire c2.then c3.in
+wire c2.object c3.receiver
+wire c1.items c3.value
+wire c3.then c4.in
+wire c2.object c4.receiver
+wire c1.body c4.value
+wire c4.then c5.in
+wire c2.object c5.receiver
+wire c1.items c6.value
+wire c5.value c7.body
+wire c5.then c7.in
+wire c6.Length c7.to
+wire c7.then c8.in
+
+function k0020 rt_parallel_for
+	static
+	access private
+	attr Import treadle_rt rt_parallel_for
+param from int
+param to int
+param body delegate:void(int)
+
+function k0021 rt_parallel_ranges
+	static
+	access private
+	attr Import treadle_rt rt_parallel_ranges
+param from int
+param to int
+param body delegate:void(int,int)

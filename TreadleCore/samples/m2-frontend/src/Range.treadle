@@ -1,0 +1,51 @@
+# treadle 1
+type Range struct
+	namespace M2
+	doc "A collection with GetEnumerator(): For Each walks it through a RangeEnumerator. Run prints 10 11 12, then the indexes of a three-element array."
+
+field First int
+
+field Count int
+
+function e0001 GetEnumerator
+	pure
+	returns M2.RangeEnumerator
+sheet body
+node a1 Entry
+node a2 Get this.First
+node a3 Get this.Count
+node a4 Make M2.RangeEnumerator
+node a5 Return
+wire a3.value a4.mLeft
+wire a2.value a4.mNext
+wire a1.then a5.in
+wire a4.value a5.value
+
+function e0002 Run
+	static
+sheet body
+node b1 Entry
+node b2 Make M2.Range
+	in First 10
+	in Count 3
+node b3 ForEach
+node b4 Call Console.WriteLine(int)
+node b5 Construct int
+	set count
+	in count 3
+node b6 ForEach
+node b7 Call Console.WriteLine(int)
+node b8 Delete
+node b9 Return
+wire b2.value b3.collection
+wire b1.then b3.in
+wire b3.body b4.in
+wire b3.element b4.value
+wire b3.done b5.in
+wire b5.object b6.collection
+wire b5.then b6.in
+wire b6.body b7.in
+wire b6.index b7.value
+wire b6.done b8.in
+wire b5.object b8.object
+wire b8.then b9.in

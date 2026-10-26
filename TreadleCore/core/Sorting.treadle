@@ -1,0 +1,1303 @@
+# treadle 1
+type Sorting class
+	namespace Core
+	access internal
+	static
+	doc "The sort behind List.Sort, Arrays.Sort and Span.Sort: an introsort (quicksort with a median-of-three pivot, insertion sort for ranges of 16 or fewer, heapsort when the partitions go deeper than 2 log2 n), in place and not stable. Each step has two versions: one orders with a comparer delegate (the By functions), the other with T's operator < (no call per comparison). Elements move bit for bit (Core-Library.md 3.1): no destructor runs on the temporaries."
+
+function s0001 Swap
+	static
+	unsafe
+	access internal
+	generic T
+	doc "Exchanges the elements at `a` and `b`, bit for bit."
+param a T*
+param b T*
+local t T
+sheet body
+node w01 Entry
+node w02 Set local:t
+node w03 Call Pointer.Load
+node w04 Call Pointer.Store
+node w05 Call Pointer.Load
+node w06 Call Pointer.Store
+node w07 Get local:t
+node w08 Return
+wire w01.then w02.in
+wire w03.result w02.value
+wire w01.a w03.ptr
+wire w02.then w04.in
+wire w01.a w04.ptr
+wire w05.result w04.value
+wire w01.b w05.ptr
+wire w04.then w06.in
+wire w01.b w06.ptr
+wire w07.value w06.value
+wire w06.then w08.in
+
+function b0001 LessBy
+	static
+	access internal
+	returns bool
+	generic T
+	doc "True when `comparer` puts `a` before `b` (a negative result)."
+param a T
+param b T
+param comparer delegate:int(T,T)
+sheet body
+node a1 Entry
+node a2 Invoke
+node a3 Operator <
+	in b 0
+node a4 Return
+wire a1.a a2.arg0
+wire a1.b a2.arg1
+wire a1.comparer a2.delegate
+wire a1.then a2.in
+wire a2.result a3.a
+wire a2.then a4.in
+wire a3.result a4.value
+
+function n0001 Less
+	static
+	pure
+	access internal
+	returns bool
+	generic T operator<
+	doc "a < b with T's operator <."
+param a T
+param b T
+sheet body
+node c1 Entry
+node c2 Operator <
+node c3 Return
+wire c1.a c2.a
+wire c1.b c2.b
+wire c1.then c3.in
+wire c2.result c3.value
+
+function b0002 InsertionBy
+	static
+	unsafe
+	access internal
+	generic T
+	doc "Insertion sort of the elements from `lo` up to (not including) `hi`: the small ranges IntroBy leaves."
+param p T*
+param lo int
+param hi int
+param comparer delegate:int(T,T)
+local i int
+local j int
+local t T
+sheet body
+node n01 Entry
+node n02 Operator +
+	in b 1
+node n03 Set local:i
+node n04 While
+node n05 Get local:i
+node n06 Operator <
+node n07 Set local:t
+node n08 Call Pointer.Add
+node n09 Call Pointer.Load
+node n10 Set local:j
+node n11 While
+node n12 Get local:j
+node n13 Operator >
+node n14 Call this.LessBy
+node n15 Get local:t
+node n16 Operator -
+	in b 1
+node n17 Call Pointer.Add
+node n18 Call Pointer.Load
+node n19 Branch
+node n20 Call Pointer.Store
+node n21 Call Pointer.Add
+node n22 Set local:j
+	set op -=
+	in value 1
+node n23 Break
+node n24 Call Pointer.Store
+node n26 Set local:i
+	set op +=
+	in value 1
+node n27 Return
+wire n01.lo n02.a
+wire n01.then n03.in
+wire n02.result n03.value
+wire n06.result n04.condition
+wire n03.then n04.in
+wire n05.value n06.a
+wire n01.hi n06.b
+wire n04.body n07.in
+wire n09.result n07.value
+wire n05.value n08.count
+wire n01.p n08.ptr
+wire n08.result n09.ptr
+wire n07.then n10.in
+wire n05.value n10.value
+wire n13.result n11.condition
+wire n10.then n11.in
+wire n12.value n13.a
+wire n01.lo n13.b
+wire n15.value n14.a
+wire n18.result n14.b
+wire n01.comparer n14.comparer
+wire n11.body n14.in
+wire n12.value n16.a
+wire n16.result n17.count
+wire n01.p n17.ptr
+wire n17.result n18.ptr
+wire n14.result n19.condition
+wire n14.then n19.in
+wire n19.true n20.in
+wire n21.result n20.ptr
+wire n18.result n20.value
+wire n12.value n21.count
+wire n01.p n21.ptr
+wire n20.then n22.in
+wire n19.false n23.in
+wire n11.done n24.in
+wire n21.result n24.ptr
+wire n15.value n24.value
+wire n24.then n26.in
+wire n04.done n27.in
+
+function b0003 SiftBy
+	static
+	unsafe
+	access internal
+	generic T
+	doc "Moves the element at `root` down the heap of `n` elements at `b` (a max-heap: no child orders after its parent)."
+param b T*
+param root int
+param n int
+param comparer delegate:int(T,T)
+local r int
+local c int
+local t T
+sheet body
+node e01 Entry
+node e02 Set local:r
+node e03 Set local:t
+node e04 Call Pointer.Add
+node e05 Call Pointer.Load
+node e06 While
+	in condition true
+node e07 Set local:c
+node e08 Math
+	set expr "r * 2 + 1"
+node e09 Get local:r
+node e10 Branch
+node e11 Get local:c
+node e12 Operator >=
+node e13 Break
+node e14 Branch
+node e15 Operator +
+	in b 1
+node e16 Operator <
+node e17 Call this.LessBy
+node e18 Call Pointer.Add
+node e19 Call Pointer.Load
+node e20 Call Pointer.Add
+node e21 Call Pointer.Load
+node e22 Branch
+node e23 Set local:c
+	set op +=
+	in value 1
+node e24 Call this.LessBy
+node e25 Get local:t
+node e26 Branch
+node e27 Break
+node e28 Call Pointer.Store
+node e29 Call Pointer.Add
+node e30 Set local:r
+node e31 Call Pointer.Store
+node e32 Return
+wire e01.then e02.in
+wire e01.root e02.value
+wire e02.then e03.in
+wire e05.result e03.value
+wire e01.root e04.count
+wire e01.b e04.ptr
+wire e04.result e05.ptr
+wire e03.then e06.in
+wire e06.body e07.in
+wire e08.result e07.value
+wire e09.value e08.r
+wire e12.result e10.condition
+wire e07.then e10.in
+wire e11.value e12.a
+wire e01.n e12.b
+wire e10.true e13.in
+wire e16.result e14.condition
+wire e10.false e14.in
+wire e11.value e15.a
+wire e15.result e16.a
+wire e01.n e16.b
+wire e19.result e17.a
+wire e21.result e17.b
+wire e01.comparer e17.comparer
+wire e14.true e17.in
+wire e11.value e18.count
+wire e01.b e18.ptr
+wire e18.result e19.ptr
+wire e15.result e20.count
+wire e01.b e20.ptr
+wire e20.result e21.ptr
+wire e17.result e22.condition
+wire e17.then e22.in
+wire e22.true e23.in
+wire e25.value e24.a
+wire e19.result e24.b
+wire e01.comparer e24.comparer
+wire e14.false e24.in
+wire e22.false e24.in
+wire e23.then e24.in
+wire e24.result e26.condition
+wire e24.then e26.in
+wire e26.false e27.in
+wire e26.true e28.in
+wire e29.result e28.ptr
+wire e19.result e28.value
+wire e09.value e29.count
+wire e01.b e29.ptr
+wire e28.then e30.in
+wire e11.value e30.value
+wire e06.done e31.in
+wire e29.result e31.ptr
+wire e25.value e31.value
+wire e31.then e32.in
+
+function b0004 HeapBy
+	static
+	unsafe
+	access internal
+	generic T
+	doc "Heapsort of the elements from `lo` up to (not including) `hi`: IntroBy's fallback when the partitions go too deep (O(n log n) in every case)."
+param p T*
+param lo int
+param hi int
+param comparer delegate:int(T,T)
+local base T*
+local n int
+local i int
+local t T
+sheet body
+node h01 Entry
+node h02 Set local:n
+node h03 Operator -
+node h04 Set local:base
+node h05 Call Pointer.Add
+node h06 Set local:i
+node h07 Math
+	set expr "n / 2 - 1"
+node h08 Get local:n
+node h09 While
+node h10 Get local:i
+node h11 Operator >=
+	in b 0
+node h12 Call this.SiftBy
+node h13 Get local:base
+node h14 Set local:i
+	set op -=
+	in value 1
+node h15 Set local:i
+node h16 Operator -
+	in b 1
+node h17 While
+node h18 Operator >
+	in b 0
+node h19 Set local:t
+node h20 Call Pointer.Load
+node h21 Call Pointer.Store
+node h22 Call Pointer.Add
+node h23 Call Pointer.Load
+node h24 Call Pointer.Store
+node h25 Get local:t
+node h26 Call this.SiftBy
+	in root 0
+node h27 Set local:i
+	set op -=
+	in value 1
+node h28 Return
+wire h01.then h02.in
+wire h03.result h02.value
+wire h01.hi h03.a
+wire h01.lo h03.b
+wire h02.then h04.in
+wire h05.result h04.value
+wire h01.lo h05.count
+wire h01.p h05.ptr
+wire h04.then h06.in
+wire h07.result h06.value
+wire h08.value h07.n
+wire h11.result h09.condition
+wire h06.then h09.in
+wire h10.value h11.a
+wire h13.value h12.b
+wire h01.comparer h12.comparer
+wire h09.body h12.in
+wire h08.value h12.n
+wire h10.value h12.root
+wire h12.then h14.in
+wire h09.done h15.in
+wire h16.result h15.value
+wire h08.value h16.a
+wire h18.result h17.condition
+wire h15.then h17.in
+wire h10.value h18.a
+wire h17.body h19.in
+wire h20.result h19.value
+wire h13.value h20.ptr
+wire h19.then h21.in
+wire h13.value h21.ptr
+wire h23.result h21.value
+wire h10.value h22.count
+wire h13.value h22.ptr
+wire h22.result h23.ptr
+wire h21.then h24.in
+wire h22.result h24.ptr
+wire h25.value h24.value
+wire h13.value h26.b
+wire h01.comparer h26.comparer
+wire h24.then h26.in
+wire h10.value h26.n
+wire h26.then h27.in
+wire h17.done h28.in
+
+function b0005 IntroBy
+	static
+	unsafe
+	access internal
+	generic T
+	doc "Introsort of the elements from `lo` up to (not including) `hi`: quicksort partitions around the median of the first, middle and last elements (Hoare's scheme, so runs of equal elements split evenly); the smaller side is sorted by a recursive call, the larger by the loop; ranges of 16 or fewer elements go to InsertionBy, and a range still partitioning after `depth` rounds goes to HeapBy."
+param p T*
+param lo int
+param hi int
+param depth int
+param comparer delegate:int(T,T)
+local l int
+local h int
+local d int
+local m int
+local last int
+local i int
+local j int
+local pv T
+sheet body
+node i01 Entry
+node i02 Set local:l
+node i03 Set local:h
+node i04 Set local:d
+node i05 While
+node i06 Get local:l
+node i07 Get local:h
+node i08 Operator -
+node i09 Operator >
+	in b 16
+node i10 Branch
+node i11 Get local:d
+node i12 Operator ==
+	in b 0
+node i13 Call this.HeapBy
+node i14 Return
+node i15 Set local:d
+	set op -=
+	in value 1
+node i16 Set local:m
+node i17 Math
+	set expr "l + (h - l) / 2"
+node i18 Set local:last
+node i19 Operator -
+	in b 1
+node i20 Call this.LessBy
+node i21 Get local:m
+node i22 Call Pointer.Add
+node i23 Call Pointer.Load
+node i24 Call Pointer.Add
+node i25 Call Pointer.Load
+node i26 Get local:last
+node i27 Call Pointer.Add
+node i28 Call Pointer.Load
+node i29 Branch
+node i30 Call this.Swap
+node i31 Call this.LessBy
+node i32 Branch
+node i33 Call this.Swap
+node i34 Call this.LessBy
+node i35 Branch
+node i36 Call this.Swap
+node i37 Call this.Swap
+node i38 Set local:pv
+node i39 Set local:i
+node i40 Set local:j
+node i41 While
+	in condition true
+node i42 Set local:i
+	set op +=
+	in value 1
+node i43 While
+	in condition true
+node i44 Branch
+node i45 Get local:i
+node i46 Operator >=
+node i47 Break
+node i48 Call this.LessBy
+node i49 Call Pointer.Add
+node i50 Call Pointer.Load
+node i51 Get local:pv
+node i52 Branch
+node i53 Set local:i
+	set op +=
+	in value 1
+node i54 Break
+node i55 Set local:j
+	set op -=
+	in value 1
+node i56 While
+	in condition true
+node i57 Call this.LessBy
+node i58 Get local:j
+node i59 Call Pointer.Add
+node i60 Call Pointer.Load
+node i61 Branch
+node i62 Set local:j
+	set op -=
+	in value 1
+node i63 Break
+node i64 Branch
+node i65 Operator >=
+node i66 Break
+node i67 Call this.Swap
+node i68 Call this.Swap
+node i69 Branch
+node i70 Math
+	set expr "j - l"
+node i71 Math
+	set expr "h - j - 1"
+node i72 Operator <
+node i73 Call this.IntroBy
+node i74 Set local:l
+node i75 Operator +
+	in b 1
+node i76 Call this.IntroBy
+node i77 Set local:h
+node i78 Call this.InsertionBy
+node i79 Return
+node i80 Branch
+node i81 Operator <=
+node i82 Break
+wire i01.then i02.in
+wire i01.lo i02.value
+wire i02.then i03.in
+wire i01.hi i03.value
+wire i03.then i04.in
+wire i01.depth i04.value
+wire i09.result i05.condition
+wire i04.then i05.in
+wire i07.value i08.a
+wire i06.value i08.b
+wire i08.result i09.a
+wire i12.result i10.condition
+wire i05.body i10.in
+wire i11.value i12.a
+wire i01.comparer i13.comparer
+wire i07.value i13.hi
+wire i10.true i13.in
+wire i06.value i13.lo
+wire i01.p i13.p
+wire i13.then i14.in
+wire i10.false i15.in
+wire i15.then i16.in
+wire i17.result i16.value
+wire i07.value i17.h
+wire i06.value i17.l
+wire i16.then i18.in
+wire i19.result i18.value
+wire i07.value i19.a
+wire i23.result i20.a
+wire i25.result i20.b
+wire i01.comparer i20.comparer
+wire i18.then i20.in
+wire i21.value i22.count
+wire i01.p i22.ptr
+wire i22.result i23.ptr
+wire i06.value i24.count
+wire i01.p i24.ptr
+wire i24.result i25.ptr
+wire i26.value i27.count
+wire i01.p i27.ptr
+wire i27.result i28.ptr
+wire i20.result i29.condition
+wire i20.then i29.in
+wire i22.result i30.a
+wire i24.result i30.b
+wire i29.true i30.in
+wire i28.result i31.a
+wire i23.result i31.b
+wire i01.comparer i31.comparer
+wire i29.false i31.in
+wire i30.then i31.in
+wire i31.result i32.condition
+wire i31.then i32.in
+wire i27.result i33.a
+wire i22.result i33.b
+wire i32.true i33.in
+wire i23.result i34.a
+wire i25.result i34.b
+wire i01.comparer i34.comparer
+wire i33.then i34.in
+wire i34.result i35.condition
+wire i34.then i35.in
+wire i22.result i36.a
+wire i24.result i36.b
+wire i35.true i36.in
+wire i22.result i37.a
+wire i24.result i37.b
+wire i32.false i37.in
+wire i35.false i37.in
+wire i36.then i37.in
+wire i37.then i38.in
+wire i25.result i38.value
+wire i38.then i39.in
+wire i06.value i39.value
+wire i39.then i40.in
+wire i07.value i40.value
+wire i40.then i41.in
+wire i41.body i42.in
+wire i42.then i43.in
+wire i46.result i44.condition
+wire i43.body i44.in
+wire i45.value i46.a
+wire i07.value i46.b
+wire i44.true i47.in
+wire i50.result i48.a
+wire i51.value i48.b
+wire i01.comparer i48.comparer
+wire i44.false i48.in
+wire i45.value i49.count
+wire i01.p i49.ptr
+wire i49.result i50.ptr
+wire i48.result i52.condition
+wire i48.then i52.in
+wire i52.true i53.in
+wire i52.false i54.in
+wire i43.done i55.in
+wire i55.then i56.in
+wire i51.value i57.a
+wire i60.result i57.b
+wire i01.comparer i57.comparer
+wire i80.false i57.in
+wire i58.value i59.count
+wire i01.p i59.ptr
+wire i59.result i60.ptr
+wire i57.result i61.condition
+wire i57.then i61.in
+wire i61.true i62.in
+wire i61.false i63.in
+wire i65.result i64.condition
+wire i56.done i64.in
+wire i45.value i65.a
+wire i58.value i65.b
+wire i64.true i66.in
+wire i49.result i67.a
+wire i59.result i67.b
+wire i64.false i67.in
+wire i24.result i68.a
+wire i59.result i68.b
+wire i41.done i68.in
+wire i72.result i69.condition
+wire i68.then i69.in
+wire i58.value i70.j
+wire i06.value i70.l
+wire i07.value i71.h
+wire i58.value i71.j
+wire i70.result i72.a
+wire i71.result i72.b
+wire i01.comparer i73.comparer
+wire i11.value i73.depth
+wire i58.value i73.hi
+wire i69.true i73.in
+wire i06.value i73.lo
+wire i01.p i73.p
+wire i73.then i74.in
+wire i75.result i74.value
+wire i58.value i75.a
+wire i01.comparer i76.comparer
+wire i11.value i76.depth
+wire i07.value i76.hi
+wire i69.false i76.in
+wire i75.result i76.lo
+wire i01.p i76.p
+wire i76.then i77.in
+wire i58.value i77.value
+wire i01.comparer i78.comparer
+wire i07.value i78.hi
+wire i05.done i78.in
+wire i06.value i78.lo
+wire i01.p i78.p
+wire i78.then i79.in
+wire i81.result i80.condition
+wire i56.body i80.in
+wire i58.value i81.a
+wire i06.value i81.b
+wire i80.true i82.in
+
+function b0006 SortBy
+	static
+	access internal
+	generic T
+	doc "Sorts the elements of `items` (in place, not stable): IntroBy with a depth limit of 2 log2 n."
+param items Span<T>
+param comparer delegate:int(T,T)
+local k int
+local d int
+sheet body
+node s01 Entry
+node s02 Get Span<T>.Length
+node s03 Operator <
+	in b 2
+node s04 Branch
+node s05 Return
+node s06 Set local:k
+node s07 While
+node s08 Get local:k
+node s09 Operator >
+	in b 1
+node s10 Set local:k
+	set op /=
+	in value 2
+node s11 Set local:d
+	set op +=
+	in value 2
+node s12 Scope
+	unsafe
+node s13 Get Span<T>.Ptr
+node s14 Call this.IntroBy
+	in lo 0
+node s15 Get local:d
+node s16 Return
+wire s01.items s02.receiver
+wire s02.value s03.a
+wire s03.result s04.condition
+wire s01.then s04.in
+wire s04.true s05.in
+wire s04.false s06.in
+wire s02.value s06.value
+wire s09.result s07.condition
+wire s06.then s07.in
+wire s08.value s09.a
+wire s07.body s10.in
+wire s10.then s11.in
+wire s07.done s12.in
+wire s01.items s13.receiver
+wire s01.comparer s14.comparer
+wire s15.value s14.depth
+wire s02.value s14.hi
+wire s12.body s14.in
+wire s13.value s14.p
+wire s12.done s16.in
+
+function n0002 Insertion
+	static
+	unsafe
+	access internal
+	generic T operator<
+	doc "Insertion sort of the elements from `lo` up to (not including) `hi`: the small ranges Intro leaves."
+param p T*
+param lo int
+param hi int
+local i int
+local j int
+local t T
+sheet body
+node q01 Entry
+node q02 Operator +
+	in b 1
+node q03 Set local:i
+node q04 While
+node q05 Get local:i
+node q06 Operator <
+node q07 Set local:t
+node q08 Call Pointer.Add
+node q09 Call Pointer.Load
+node q10 Set local:j
+node q11 While
+node q12 Get local:j
+node q13 Operator >
+node q14 Call this.Less
+node q15 Get local:t
+node q16 Operator -
+	in b 1
+node q17 Call Pointer.Add
+node q18 Call Pointer.Load
+node q19 Branch
+node q20 Call Pointer.Store
+node q21 Call Pointer.Add
+node q22 Set local:j
+	set op -=
+	in value 1
+node q23 Break
+node q24 Call Pointer.Store
+node q26 Set local:i
+	set op +=
+	in value 1
+node q27 Return
+wire q01.lo q02.a
+wire q01.then q03.in
+wire q02.result q03.value
+wire q06.result q04.condition
+wire q03.then q04.in
+wire q05.value q06.a
+wire q01.hi q06.b
+wire q04.body q07.in
+wire q09.result q07.value
+wire q05.value q08.count
+wire q01.p q08.ptr
+wire q08.result q09.ptr
+wire q07.then q10.in
+wire q05.value q10.value
+wire q13.result q11.condition
+wire q10.then q11.in
+wire q12.value q13.a
+wire q01.lo q13.b
+wire q15.value q14.a
+wire q18.result q14.b
+wire q11.body q14.in
+wire q12.value q16.a
+wire q16.result q17.count
+wire q01.p q17.ptr
+wire q17.result q18.ptr
+wire q14.result q19.condition
+wire q14.then q19.in
+wire q19.true q20.in
+wire q21.result q20.ptr
+wire q18.result q20.value
+wire q12.value q21.count
+wire q01.p q21.ptr
+wire q20.then q22.in
+wire q19.false q23.in
+wire q11.done q24.in
+wire q21.result q24.ptr
+wire q15.value q24.value
+wire q24.then q26.in
+wire q04.done q27.in
+
+function n0003 Sift
+	static
+	unsafe
+	access internal
+	generic T operator<
+	doc "Moves the element at `root` down the heap of `n` elements at `b` (a max-heap: no child orders after its parent)."
+param b T*
+param root int
+param n int
+local r int
+local c int
+local t T
+sheet body
+node f01 Entry
+node f02 Set local:r
+node f03 Set local:t
+node f04 Call Pointer.Add
+node f05 Call Pointer.Load
+node f06 While
+	in condition true
+node f07 Set local:c
+node f08 Math
+	set expr "r * 2 + 1"
+node f09 Get local:r
+node f10 Branch
+node f11 Get local:c
+node f12 Operator >=
+node f13 Break
+node f14 Branch
+node f15 Operator +
+	in b 1
+node f16 Operator <
+node f17 Call this.Less
+node f18 Call Pointer.Add
+node f19 Call Pointer.Load
+node f20 Call Pointer.Add
+node f21 Call Pointer.Load
+node f22 Branch
+node f23 Set local:c
+	set op +=
+	in value 1
+node f24 Call this.Less
+node f25 Get local:t
+node f26 Branch
+node f27 Break
+node f28 Call Pointer.Store
+node f29 Call Pointer.Add
+node f30 Set local:r
+node f31 Call Pointer.Store
+node f32 Return
+wire f01.then f02.in
+wire f01.root f02.value
+wire f02.then f03.in
+wire f05.result f03.value
+wire f01.root f04.count
+wire f01.b f04.ptr
+wire f04.result f05.ptr
+wire f03.then f06.in
+wire f06.body f07.in
+wire f08.result f07.value
+wire f09.value f08.r
+wire f12.result f10.condition
+wire f07.then f10.in
+wire f11.value f12.a
+wire f01.n f12.b
+wire f10.true f13.in
+wire f16.result f14.condition
+wire f10.false f14.in
+wire f11.value f15.a
+wire f15.result f16.a
+wire f01.n f16.b
+wire f19.result f17.a
+wire f21.result f17.b
+wire f14.true f17.in
+wire f11.value f18.count
+wire f01.b f18.ptr
+wire f18.result f19.ptr
+wire f15.result f20.count
+wire f01.b f20.ptr
+wire f20.result f21.ptr
+wire f17.result f22.condition
+wire f17.then f22.in
+wire f22.true f23.in
+wire f25.value f24.a
+wire f19.result f24.b
+wire f14.false f24.in
+wire f22.false f24.in
+wire f23.then f24.in
+wire f24.result f26.condition
+wire f24.then f26.in
+wire f26.false f27.in
+wire f26.true f28.in
+wire f29.result f28.ptr
+wire f19.result f28.value
+wire f09.value f29.count
+wire f01.b f29.ptr
+wire f28.then f30.in
+wire f11.value f30.value
+wire f06.done f31.in
+wire f29.result f31.ptr
+wire f25.value f31.value
+wire f31.then f32.in
+
+function n0004 Heap
+	static
+	unsafe
+	access internal
+	generic T operator<
+	doc "Heapsort of the elements from `lo` up to (not including) `hi`: Intro's fallback when the partitions go too deep (O(n log n) in every case)."
+param p T*
+param lo int
+param hi int
+local base T*
+local n int
+local i int
+local t T
+sheet body
+node j01 Entry
+node j02 Set local:n
+node j03 Operator -
+node j04 Set local:base
+node j05 Call Pointer.Add
+node j06 Set local:i
+node j07 Math
+	set expr "n / 2 - 1"
+node j08 Get local:n
+node j09 While
+node j10 Get local:i
+node j11 Operator >=
+	in b 0
+node j12 Call this.Sift
+node j13 Get local:base
+node j14 Set local:i
+	set op -=
+	in value 1
+node j15 Set local:i
+node j16 Operator -
+	in b 1
+node j17 While
+node j18 Operator >
+	in b 0
+node j19 Set local:t
+node j20 Call Pointer.Load
+node j21 Call Pointer.Store
+node j22 Call Pointer.Add
+node j23 Call Pointer.Load
+node j24 Call Pointer.Store
+node j25 Get local:t
+node j26 Call this.Sift
+	in root 0
+node j27 Set local:i
+	set op -=
+	in value 1
+node j28 Return
+wire j01.then j02.in
+wire j03.result j02.value
+wire j01.hi j03.a
+wire j01.lo j03.b
+wire j02.then j04.in
+wire j05.result j04.value
+wire j01.lo j05.count
+wire j01.p j05.ptr
+wire j04.then j06.in
+wire j07.result j06.value
+wire j08.value j07.n
+wire j11.result j09.condition
+wire j06.then j09.in
+wire j10.value j11.a
+wire j13.value j12.b
+wire j09.body j12.in
+wire j08.value j12.n
+wire j10.value j12.root
+wire j12.then j14.in
+wire j09.done j15.in
+wire j16.result j15.value
+wire j08.value j16.a
+wire j18.result j17.condition
+wire j15.then j17.in
+wire j10.value j18.a
+wire j17.body j19.in
+wire j20.result j19.value
+wire j13.value j20.ptr
+wire j19.then j21.in
+wire j13.value j21.ptr
+wire j23.result j21.value
+wire j10.value j22.count
+wire j13.value j22.ptr
+wire j22.result j23.ptr
+wire j21.then j24.in
+wire j22.result j24.ptr
+wire j25.value j24.value
+wire j13.value j26.b
+wire j24.then j26.in
+wire j10.value j26.n
+wire j26.then j27.in
+wire j17.done j28.in
+
+function n0005 Intro
+	static
+	unsafe
+	access internal
+	generic T operator<
+	doc "Introsort of the elements from `lo` up to (not including) `hi`: quicksort partitions around the median of the first, middle and last elements (Hoare's scheme, so runs of equal elements split evenly); the smaller side is sorted by a recursive call, the larger by the loop; ranges of 16 or fewer elements go to Insertion, and a range still partitioning after `depth` rounds goes to Heap."
+param p T*
+param lo int
+param hi int
+param depth int
+local l int
+local h int
+local d int
+local m int
+local last int
+local i int
+local j int
+local pv T
+sheet body
+node k01 Entry
+node k02 Set local:l
+node k03 Set local:h
+node k04 Set local:d
+node k05 While
+node k06 Get local:l
+node k07 Get local:h
+node k08 Operator -
+node k09 Operator >
+	in b 16
+node k10 Branch
+node k11 Get local:d
+node k12 Operator ==
+	in b 0
+node k13 Call this.Heap
+node k14 Return
+node k15 Set local:d
+	set op -=
+	in value 1
+node k16 Set local:m
+node k17 Math
+	set expr "l + (h - l) / 2"
+node k18 Set local:last
+node k19 Operator -
+	in b 1
+node k20 Call this.Less
+node k21 Get local:m
+node k22 Call Pointer.Add
+node k23 Call Pointer.Load
+node k24 Call Pointer.Add
+node k25 Call Pointer.Load
+node k26 Get local:last
+node k27 Call Pointer.Add
+node k28 Call Pointer.Load
+node k29 Branch
+node k30 Call this.Swap
+node k31 Call this.Less
+node k32 Branch
+node k33 Call this.Swap
+node k34 Call this.Less
+node k35 Branch
+node k36 Call this.Swap
+node k37 Call this.Swap
+node k38 Set local:pv
+node k39 Set local:i
+node k40 Set local:j
+node k41 While
+	in condition true
+node k42 Set local:i
+	set op +=
+	in value 1
+node k43 While
+	in condition true
+node k44 Branch
+node k45 Get local:i
+node k46 Operator >=
+node k47 Break
+node k48 Call this.Less
+node k49 Call Pointer.Add
+node k50 Call Pointer.Load
+node k51 Get local:pv
+node k52 Branch
+node k53 Set local:i
+	set op +=
+	in value 1
+node k54 Break
+node k55 Set local:j
+	set op -=
+	in value 1
+node k56 While
+	in condition true
+node k57 Call this.Less
+node k58 Get local:j
+node k59 Call Pointer.Add
+node k60 Call Pointer.Load
+node k61 Branch
+node k62 Set local:j
+	set op -=
+	in value 1
+node k63 Break
+node k64 Branch
+node k65 Operator >=
+node k66 Break
+node k67 Call this.Swap
+node k68 Call this.Swap
+node k69 Branch
+node k70 Math
+	set expr "j - l"
+node k71 Math
+	set expr "h - j - 1"
+node k72 Operator <
+node k73 Call this.Intro
+node k74 Set local:l
+node k75 Operator +
+	in b 1
+node k76 Call this.Intro
+node k77 Set local:h
+node k78 Call this.Insertion
+node k79 Return
+node k80 Branch
+node k81 Operator <=
+node k82 Break
+wire k01.then k02.in
+wire k01.lo k02.value
+wire k02.then k03.in
+wire k01.hi k03.value
+wire k03.then k04.in
+wire k01.depth k04.value
+wire k09.result k05.condition
+wire k04.then k05.in
+wire k07.value k08.a
+wire k06.value k08.b
+wire k08.result k09.a
+wire k12.result k10.condition
+wire k05.body k10.in
+wire k11.value k12.a
+wire k07.value k13.hi
+wire k10.true k13.in
+wire k06.value k13.lo
+wire k01.p k13.p
+wire k13.then k14.in
+wire k10.false k15.in
+wire k15.then k16.in
+wire k17.result k16.value
+wire k07.value k17.h
+wire k06.value k17.l
+wire k16.then k18.in
+wire k19.result k18.value
+wire k07.value k19.a
+wire k23.result k20.a
+wire k25.result k20.b
+wire k18.then k20.in
+wire k21.value k22.count
+wire k01.p k22.ptr
+wire k22.result k23.ptr
+wire k06.value k24.count
+wire k01.p k24.ptr
+wire k24.result k25.ptr
+wire k26.value k27.count
+wire k01.p k27.ptr
+wire k27.result k28.ptr
+wire k20.result k29.condition
+wire k20.then k29.in
+wire k22.result k30.a
+wire k24.result k30.b
+wire k29.true k30.in
+wire k28.result k31.a
+wire k23.result k31.b
+wire k29.false k31.in
+wire k30.then k31.in
+wire k31.result k32.condition
+wire k31.then k32.in
+wire k27.result k33.a
+wire k22.result k33.b
+wire k32.true k33.in
+wire k23.result k34.a
+wire k25.result k34.b
+wire k33.then k34.in
+wire k34.result k35.condition
+wire k34.then k35.in
+wire k22.result k36.a
+wire k24.result k36.b
+wire k35.true k36.in
+wire k22.result k37.a
+wire k24.result k37.b
+wire k32.false k37.in
+wire k35.false k37.in
+wire k36.then k37.in
+wire k37.then k38.in
+wire k25.result k38.value
+wire k38.then k39.in
+wire k06.value k39.value
+wire k39.then k40.in
+wire k07.value k40.value
+wire k40.then k41.in
+wire k41.body k42.in
+wire k42.then k43.in
+wire k46.result k44.condition
+wire k43.body k44.in
+wire k45.value k46.a
+wire k07.value k46.b
+wire k44.true k47.in
+wire k50.result k48.a
+wire k51.value k48.b
+wire k44.false k48.in
+wire k45.value k49.count
+wire k01.p k49.ptr
+wire k49.result k50.ptr
+wire k48.result k52.condition
+wire k48.then k52.in
+wire k52.true k53.in
+wire k52.false k54.in
+wire k43.done k55.in
+wire k55.then k56.in
+wire k51.value k57.a
+wire k60.result k57.b
+wire k80.false k57.in
+wire k58.value k59.count
+wire k01.p k59.ptr
+wire k59.result k60.ptr
+wire k57.result k61.condition
+wire k57.then k61.in
+wire k61.true k62.in
+wire k61.false k63.in
+wire k65.result k64.condition
+wire k56.done k64.in
+wire k45.value k65.a
+wire k58.value k65.b
+wire k64.true k66.in
+wire k49.result k67.a
+wire k59.result k67.b
+wire k64.false k67.in
+wire k24.result k68.a
+wire k59.result k68.b
+wire k41.done k68.in
+wire k72.result k69.condition
+wire k68.then k69.in
+wire k58.value k70.j
+wire k06.value k70.l
+wire k07.value k71.h
+wire k58.value k71.j
+wire k70.result k72.a
+wire k71.result k72.b
+wire k11.value k73.depth
+wire k58.value k73.hi
+wire k69.true k73.in
+wire k06.value k73.lo
+wire k01.p k73.p
+wire k73.then k74.in
+wire k75.result k74.value
+wire k58.value k75.a
+wire k11.value k76.depth
+wire k07.value k76.hi
+wire k69.false k76.in
+wire k75.result k76.lo
+wire k01.p k76.p
+wire k76.then k77.in
+wire k58.value k77.value
+wire k07.value k78.hi
+wire k05.done k78.in
+wire k06.value k78.lo
+wire k01.p k78.p
+wire k78.then k79.in
+wire k81.result k80.condition
+wire k56.body k80.in
+wire k58.value k81.a
+wire k06.value k81.b
+wire k80.true k82.in
+
+function n0006 Sort
+	static
+	access internal
+	generic T operator<
+	doc "Sorts the elements of `items` (in place, not stable): Intro with a depth limit of 2 log2 n."
+param items Span<T>
+local k int
+local d int
+sheet body
+node t01 Entry
+node t02 Get Span<T>.Length
+node t03 Operator <
+	in b 2
+node t04 Branch
+node t05 Return
+node t06 Set local:k
+node t07 While
+node t08 Get local:k
+node t09 Operator >
+	in b 1
+node t10 Set local:k
+	set op /=
+	in value 2
+node t11 Set local:d
+	set op +=
+	in value 2
+node t12 Scope
+	unsafe
+node t13 Get Span<T>.Ptr
+node t14 Call this.Intro
+	in lo 0
+node t15 Get local:d
+node t16 Return
+wire t01.items t02.receiver
+wire t02.value t03.a
+wire t03.result t04.condition
+wire t01.then t04.in
+wire t04.true t05.in
+wire t04.false t06.in
+wire t02.value t06.value
+wire t09.result t07.condition
+wire t06.then t07.in
+wire t08.value t09.a
+wire t07.body t10.in
+wire t10.then t11.in
+wire t07.done t12.in
+wire t01.items t13.receiver
+wire t15.value t14.depth
+wire t02.value t14.hi
+wire t12.body t14.in
+wire t13.value t14.p
+wire t12.done t16.in

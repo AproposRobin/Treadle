@@ -1,0 +1,29 @@
+# tir 1
+# Debug: Vector.Load of 4 lanes from index 6 of an 8-element array leaves it: a fatal error naming the
+# node (vec.spancheck -> rt_span_range); Release has no check (SIMD-and-Vectors.md 1.5).
+program SimdMemGuard console
+entry Mg.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Mg.Program
+type Mg.Program class
+
+func Mg.Program.Main() int static sheet "f1" display "Mg.Program.Main"
+	node a1 Entry
+	node a2 Call Core.Vector.Load
+	block b0
+		%n = const int 8
+		%arr = alloc.array float[] %n
+		%i = const int 6 @a2
+		%len = array.len int %arr @a2
+		vec.spancheck %i %len 4 @a2
+		%p = elem.addr float* %arr %i @a2
+		%v = vec.load float4 %p 4 @a2
+		%x = vec.get float %v 0
+		%xd = cast double %x
+		%f = const char8* "lane %g\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %xd
+		delete %arr
+		%z = const int 0
+		ret %z

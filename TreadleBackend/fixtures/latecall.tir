@@ -1,0 +1,70 @@
+# tir 1
+# Callees defined after their caller: Main constructs, calls an instance function and makes a
+# virtual call to functions of a type that comes later in the program (the linker resolves every
+# function's owner before it links any body).
+program LateCall console
+entry Late.Program.Main()
+
+unit Late.Program
+type Late.Program class
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+func Late.Program.Main() int static sheet "m1" display "Late.Program.Main"
+	node a1 Entry
+	node a2 Construct Late.Counter
+	node a3 Call Late.Counter.Add
+	node a4 Call Late.Counter.Get
+	node a5 Call C.libc.printf
+	node a6 Delete
+	node a7 Return 0
+	block b0
+		%start = const int32 40 @a2.start
+		%c = alloc Late.Counter @a2
+		call void Late.Counter.this(int32) %c %start @a2
+		%two = const int32 2 @a3.amount
+		nullcheck %c @a3
+		call void Late.Counter.Add(int32) %c %two @a3
+		nullcheck %c @a4
+		%v = vcall int32 Late.Counter.Get() %c @a4
+		%fmt = const char8* "count = %d\n" @a5.format
+		%p = ccall int32 C.libc.printf(char8*,...) %fmt %v @a5
+		delete %c @a6
+		%zero = const int 0 @a7.value
+		ret %zero @a7
+
+unit Late.Counter
+type Late.Counter class
+	field mCount int32
+	vslot Late.Counter.Get() Late.Counter.Get()
+
+func Late.Counter.this(int32) void sheet "c1" display "Late.Counter.this"
+	param start int32
+	node a1 Entry
+	node a2 Set this.mCount
+	block b0
+		%p = field.addr int32* %this mCount @a2
+		store %p %start @a2
+		ret @a2
+
+func Late.Counter.Add(int32) void sheet "f1" display "Late.Counter.Add"
+	param amount int32
+	node a1 Entry
+	node a2 Get this.mCount
+	node a3 Add
+	node a4 Set this.mCount
+	block b0
+		%p = field.addr int32* %this mCount @a2
+		%old = load int32 %p @a2
+		%new = binop int32 add %old %amount @a3
+		store %p %new @a4
+		ret @a4
+
+func Late.Counter.Get() int32 virtual sheet "f2" display "Late.Counter.Get"
+	node a1 Entry
+	node a2 Get this.mCount
+	node a3 Return
+	block b0
+		%p = field.addr int32* %this mCount @a2
+		%v = load int32 %p @a2
+		ret %v @a3

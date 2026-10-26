@@ -1,0 +1,35 @@
+# treadle 1
+# expect n2 done T3032
+# expect m2 done T3032
+type FlowFallsOff class
+	namespace Broken
+	static
+	doc "Paths that still end without a Return: a Switch whose default falls through to an unwired done, and an endless While left by a Break (its done then runs)."
+
+function f1 Pick
+	static
+	returns int
+param c int
+sheet body
+node n1 Entry
+node n2 Switch
+	case 1
+node n3 Return
+	in value 1
+node n4 Call Console.WriteLine(StringView)
+	in text "two"
+wire n1.then n2.in
+wire n1.c n2.value
+wire n2.case:1 n3.in
+wire n2.default n4.in
+
+function f2 Loop
+	static
+	returns int
+sheet body
+node m1 Entry
+node m2 While
+	in condition true
+node m3 Break
+wire m1.then m2.in
+wire m2.body m3.in

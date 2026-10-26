@@ -1,0 +1,80 @@
+# treadle 1
+type SpanCasts class
+	namespace M2
+	static
+	doc "An array as a Span<int> (Language.md 2.3): wired into a Span input, through a Cast node, and Set into a Span local. Run prints 60, 60, 4, then 0 10 20 30."
+
+function s0001 Total
+	static
+	pure
+	returns int
+	doc "The sum of the span's elements."
+param s Span<int>
+local total int
+sheet body
+node a1 Entry
+node a2 ForEach
+node a3 Set local:total
+	set op +=
+node a4 Get local:total
+node a5 Return
+wire a1.s a2.collection
+wire a1.then a2.in
+wire a2.body a3.in
+wire a2.element a3.value
+wire a2.done a5.in
+wire a4.value a5.value
+
+function s0002 Run
+	static
+local view Span<int>
+sheet body
+node b1 Entry
+node b2 Construct int
+	set count
+	in count 4
+node b3 For
+	in start 0
+	in count 4
+node b4 Operator *
+	in b 10
+node b5 Call Arrays.Set
+node b6 Call M2.SpanCasts.Total
+node b7 Call Console.WriteLine(int)
+node b8 Cast Span<int>
+node b9 Call M2.SpanCasts.Total
+node c1 Call Console.WriteLine(int)
+node c2 Set local:view
+node c3 Get local:view
+node c4 Get Span<int>.Length
+node c5 Call Console.WriteLine(int)
+node c6 ForEach
+node c7 Call Console.WriteLine(int)
+node c8 Delete
+node c9 Return
+wire b1.then b2.in
+wire b2.then b3.in
+wire b3.index b4.a
+wire b2.object b5.array
+wire b3.body b5.in
+wire b3.index b5.index
+wire b4.result b5.value
+wire b2.object b6.s
+wire b3.done b7.in
+wire b6.result b7.value
+wire b2.object b8.value
+wire b8.result b9.s
+wire b7.then c1.in
+wire b9.result c1.value
+wire c1.then c2.in
+wire b2.object c2.value
+wire c3.value c4.receiver
+wire c2.then c5.in
+wire c4.value c5.value
+wire c3.value c6.collection
+wire c5.then c6.in
+wire c6.body c7.in
+wire c6.element c7.value
+wire c6.done c8.in
+wire b2.object c8.object
+wire c8.then c9.in

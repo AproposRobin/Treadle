@@ -1,0 +1,156 @@
+# treadle 1
+type ThreadsMutexMain class
+	namespace Cx
+	static
+	doc "Threads and a Mutex: 8 Threads each add 1 to a shared count 125,000 times, each add inside a Local LockGuard in the loop body (the region of one pass is the critical section), so the count is exactly 1,000,000. Each thread also counts in a ThreadLocal<int> and checks its own count; TryLock succeeds once the threads are done (Unlock follows)."
+
+field sCount int
+	static
+
+field sOwnOk int
+	static
+
+field sLock Mutex
+	static
+
+field sMine ThreadLocal<int>
+	static
+
+function m1 Work
+	static
+	doc "125,000 locked adds; then this thread's ThreadLocal count must be 125,000 (other threads count their own)."
+sheet body
+node wa1 Entry
+node wa2 For
+	in start 0
+	in count 125000
+node wa3 Get ThreadsMutexMain.sLock
+node wa4 Local LockGuard
+	set ctor (Mutex)
+node wa5 Set ThreadsMutexMain.sCount
+	set op +=
+	in value 1
+node wa6 Get ThreadsMutexMain.sMine
+node wa7 Call ThreadLocal<int>.Get
+node wa8 Operator +
+	in b 1
+node wa9 Get ThreadsMutexMain.sMine
+node wb1 Call ThreadLocal<int>.Set
+node wb2 Get ThreadsMutexMain.sMine
+node wb3 Call ThreadLocal<int>.Get
+node wb4 Operator ==
+	in b 125000
+node wb5 Branch
+node wb6 Call Atomic.Add
+	in value 1
+node wb7 Return
+node wb8 Get ThreadsMutexMain.sOwnOk
+wire wa1.then wa2.in
+wire wa2.body wa4.in
+wire wa3.value wa4.mutex
+wire wa4.then wa5.in
+wire wa5.then wa7.in
+wire wa6.value wa7.receiver
+wire wa7.result wa8.a
+wire wa7.then wb1.in
+wire wa9.value wb1.receiver
+wire wa8.result wb1.value
+wire wa2.done wb3.in
+wire wb2.value wb3.receiver
+wire wb3.result wb4.a
+wire wb4.result wb5.condition
+wire wb3.then wb5.in
+wire wb5.true wb6.in
+wire wb8.value wb6.location
+wire wb5.false wb7.in
+wire wb6.then wb7.in
+
+function m2 Main
+	static
+	returns int
+local threads List<Thread>
+sheet body
+node a1 Entry
+node a2 Construct Mutex
+node a3 Set ThreadsMutexMain.sLock
+node a4 Construct ThreadLocal<int>
+node a5 Set ThreadsMutexMain.sMine
+node a6 Construct List<Thread>
+node a7 Set local:threads
+node a8 For
+	in start 0
+	in count 8
+node a9 Construct Thread
+	set ctor (StringView)
+	in name "adder"
+node b1 Get local:threads
+node b2 Call List<Thread>.Add
+node b3 Bind ThreadsMutexMain.Work
+	set alloc construct
+node b4 Call Thread.Start
+node c1 Get local:threads
+node c2 ForEach
+node c3 Call Thread.Join
+node c4 Get ThreadsMutexMain.sCount
+node c5 Call Console.WriteLine(int)
+node c6 Get ThreadsMutexMain.sOwnOk
+node c7 Call Console.WriteLine(int)
+node c8 Get ThreadsMutexMain.sLock
+node c9 Call Mutex.TryLock
+node d1 Call Console.WriteLine(bool)
+node d2 Get ThreadsMutexMain.sLock
+node d3 Call Mutex.Unlock
+node d4 Get local:threads
+node d5 ForEach
+node d6 Delete
+node d7 Get local:threads
+node d8 Delete
+node d9 Get ThreadsMutexMain.sLock
+node e1 Delete
+node e2 Get ThreadsMutexMain.sMine
+node e3 Delete
+node e4 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value
+wire a3.then a4.in
+wire a4.then a5.in
+wire a4.object a5.value
+wire a5.then a6.in
+wire a6.then a7.in
+wire a6.object a7.value
+wire a7.then a8.in
+wire a8.body a9.in
+wire a9.then b2.in
+wire b1.value b2.receiver
+wire a9.object b2.value
+wire b2.then b3.in
+wire b3.value b4.body
+wire b3.then b4.in
+wire a9.object b4.receiver
+wire c1.value c2.collection
+wire a8.done c2.in
+wire c2.body c3.in
+wire c2.element c3.receiver
+wire c2.done c5.in
+wire c4.value c5.value
+wire c5.then c7.in
+wire c6.value c7.value
+wire c7.then c9.in
+wire c8.value c9.receiver
+wire c9.then d1.in
+wire c9.result d1.value
+wire d1.then d3.in
+wire d2.value d3.receiver
+wire d4.value d5.collection
+wire d3.then d5.in
+wire d5.body d6.in
+wire d5.element d6.object
+wire d5.done d8.in
+wire d7.value d8.object
+wire d8.then e1.in
+wire d9.value e1.object
+wire e1.then e3.in
+wire e2.value e3.object
+wire e3.then e4.in

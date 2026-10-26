@@ -1,0 +1,619 @@
+# treadle 1
+type Color struct
+	namespace Core
+	attr CRepr
+	doc "A colour of four floats R, G, B, A (linear light; 0 to 1 is the usual range, more is allowed for bright lights; 16 bytes). Color32 holds it as four bytes in sRGB. Every function is Pure."
+
+field R float
+
+field G float
+
+field B float
+
+field A float
+
+property c000 White Color
+	static
+	doc "White (1, 1, 1, 1)."
+sheet get
+node n00000 Entry
+node n00001 Make Color
+	in R 1.0f
+	in G 1.0f
+	in B 1.0f
+	in A 1.0f
+node n00002 Return
+wire n00000.then n00002.in
+wire n00001.value n00002.value
+
+property c001 Black Color
+	static
+	doc "Black (0, 0, 0, 1)."
+sheet get
+node n00100 Entry
+node n00101 Make Color
+	in R 0.0f
+	in G 0.0f
+	in B 0.0f
+	in A 1.0f
+node n00102 Return
+wire n00100.then n00102.in
+wire n00101.value n00102.value
+
+property c002 Transparent Color
+	static
+	doc "Transparent (0, 0, 0, 0)."
+sheet get
+node n00200 Entry
+node n00201 Make Color
+	in R 0.0f
+	in G 0.0f
+	in B 0.0f
+	in A 0.0f
+node n00202 Return
+wire n00200.then n00202.in
+wire n00201.value n00202.value
+
+property c003 Red Color
+	static
+	doc "Red (1, 0, 0, 1)."
+sheet get
+node n00300 Entry
+node n00301 Make Color
+	in R 1.0f
+	in G 0.0f
+	in B 0.0f
+	in A 1.0f
+node n00302 Return
+wire n00300.then n00302.in
+wire n00301.value n00302.value
+
+property c004 Green Color
+	static
+	doc "Green (0, 1, 0, 1)."
+sheet get
+node n00400 Entry
+node n00401 Make Color
+	in R 0.0f
+	in G 1.0f
+	in B 0.0f
+	in A 1.0f
+node n00402 Return
+wire n00400.then n00402.in
+wire n00401.value n00402.value
+
+property c005 Blue Color
+	static
+	doc "Blue (0, 0, 1, 1)."
+sheet get
+node n00500 Entry
+node n00501 Make Color
+	in R 0.0f
+	in G 0.0f
+	in B 1.0f
+	in A 1.0f
+node n00502 Return
+wire n00500.then n00502.in
+wire n00501.value n00502.value
+
+property c006 Yellow Color
+	static
+	doc "Yellow (1, 1, 0, 1)."
+sheet get
+node n00600 Entry
+node n00601 Make Color
+	in R 1.0f
+	in G 1.0f
+	in B 0.0f
+	in A 1.0f
+node n00602 Return
+wire n00600.then n00602.in
+wire n00601.value n00602.value
+
+property c007 Cyan Color
+	static
+	doc "Cyan (0, 1, 1, 1)."
+sheet get
+node n00700 Entry
+node n00701 Make Color
+	in R 0.0f
+	in G 1.0f
+	in B 1.0f
+	in A 1.0f
+node n00702 Return
+wire n00700.then n00702.in
+wire n00701.value n00702.value
+
+property c008 Magenta Color
+	static
+	doc "Magenta (1, 0, 1, 1)."
+sheet get
+node n00800 Entry
+node n00801 Make Color
+	in R 1.0f
+	in G 0.0f
+	in B 1.0f
+	in A 1.0f
+node n00802 Return
+wire n00800.then n00802.in
+wire n00801.value n00802.value
+
+property c009 Gray Color
+	static
+	doc "Gray (0.5, 0.5, 0.5, 1)."
+sheet get
+node n00900 Entry
+node n00901 Make Color
+	in R 0.5f
+	in G 0.5f
+	in B 0.5f
+	in A 1.0f
+node n00902 Return
+wire n00900.then n00902.in
+wire n00901.value n00902.value
+
+function c00a FromRGBA8
+	static
+	pure
+	returns Color
+	doc "Bytes 0 to 255 as 0 to 1, as they are (no sRGB decoding: FromSrgb does that)."
+param r uint8
+param g uint8
+param b uint8
+param a uint8
+	default 255
+sheet body
+node n00a00 Entry
+node n00a01 Cast float
+node n00a02 Math
+	set expr "x / 255.0f"
+node n00a03 Cast float
+node n00a04 Math
+	set expr "x / 255.0f"
+node n00a05 Cast float
+node n00a06 Math
+	set expr "x / 255.0f"
+node n00a07 Cast float
+node n00a08 Math
+	set expr "x / 255.0f"
+node n00a09 Make Color
+node n00a0a Return
+wire n00a00.r n00a01.value
+wire n00a01.result n00a02.x
+wire n00a00.g n00a03.value
+wire n00a03.result n00a04.x
+wire n00a00.b n00a05.value
+wire n00a05.result n00a06.x
+wire n00a00.a n00a07.value
+wire n00a07.result n00a08.x
+wire n00a08.result n00a09.A
+wire n00a06.result n00a09.B
+wire n00a04.result n00a09.G
+wire n00a02.result n00a09.R
+wire n00a00.then n00a0a.in
+wire n00a09.value n00a0a.value
+
+function c00b FromHex
+	static
+	pure
+	returns Color
+	doc "A colour written 0xRRGGBBAA, each byte 0 to 255 as 0 to 1 (no sRGB decoding)."
+param rrggbbaa uint32
+sheet body
+node n00b00 Entry
+node n00b01 Math
+	set expr "(h >> 24) & 255"
+node n00b02 Cast float
+node n00b03 Math
+	set expr "x / 255.0f"
+node n00b04 Math
+	set expr "(h >> 16) & 255"
+node n00b05 Cast float
+node n00b06 Math
+	set expr "x / 255.0f"
+node n00b07 Math
+	set expr "(h >> 8) & 255"
+node n00b08 Cast float
+node n00b09 Math
+	set expr "x / 255.0f"
+node n00b0a Math
+	set expr "(h >> 0) & 255"
+node n00b0b Cast float
+node n00b0c Math
+	set expr "x / 255.0f"
+node n00b0d Make Color
+node n00b0e Return
+wire n00b00.rrggbbaa n00b01.h
+wire n00b01.result n00b02.value
+wire n00b02.result n00b03.x
+wire n00b00.rrggbbaa n00b04.h
+wire n00b04.result n00b05.value
+wire n00b05.result n00b06.x
+wire n00b00.rrggbbaa n00b07.h
+wire n00b07.result n00b08.value
+wire n00b08.result n00b09.x
+wire n00b00.rrggbbaa n00b0a.h
+wire n00b0a.result n00b0b.value
+wire n00b0b.result n00b0c.x
+wire n00b0c.result n00b0d.A
+wire n00b09.result n00b0d.B
+wire n00b06.result n00b0d.G
+wire n00b03.result n00b0d.R
+wire n00b00.then n00b0e.in
+wire n00b0d.value n00b0e.value
+
+function c00c FromSrgb
+	static
+	pure
+	returns Color
+	doc "A colour given in sRGB (as images and colour pickers store it) decoded to linear light; alpha is unchanged."
+param srgb Color
+sheet body
+node n00c00 Entry
+node n00c01 Math
+	set expr "s.R"
+node n00c02 Math
+	set expr "x <= 0.04045f ? x / 12.92f : Pow((x + 0.055f) / 1.055f, 2.4f)"
+node n00c03 Math
+	set expr "s.G"
+node n00c04 Math
+	set expr "x <= 0.04045f ? x / 12.92f : Pow((x + 0.055f) / 1.055f, 2.4f)"
+node n00c05 Math
+	set expr "s.B"
+node n00c06 Math
+	set expr "x <= 0.04045f ? x / 12.92f : Pow((x + 0.055f) / 1.055f, 2.4f)"
+node n00c07 Math
+	set expr "s.A"
+node n00c08 Make Color
+node n00c09 Return
+wire n00c00.srgb n00c01.s
+wire n00c01.result n00c02.x
+wire n00c00.srgb n00c03.s
+wire n00c03.result n00c04.x
+wire n00c00.srgb n00c05.s
+wire n00c05.result n00c06.x
+wire n00c00.srgb n00c07.s
+wire n00c07.result n00c08.A
+wire n00c06.result n00c08.B
+wire n00c04.result n00c08.G
+wire n00c02.result n00c08.R
+wire n00c00.then n00c09.in
+wire n00c08.value n00c09.value
+
+function c00d ToSrgb
+	pure
+	returns Color
+	doc "The colour encoded to sRGB; alpha is unchanged."
+sheet body
+node n00d00 Entry
+node n00d01 This
+node n00d02 Math
+	set expr "s.R"
+node n00d03 Math
+	set expr "x <= 0.0031308f ? x * 12.92f : 1.055f * Pow(x, 1.0f / 2.4f) - 0.055f"
+node n00d04 Math
+	set expr "s.G"
+node n00d05 Math
+	set expr "x <= 0.0031308f ? x * 12.92f : 1.055f * Pow(x, 1.0f / 2.4f) - 0.055f"
+node n00d06 Math
+	set expr "s.B"
+node n00d07 Math
+	set expr "x <= 0.0031308f ? x * 12.92f : 1.055f * Pow(x, 1.0f / 2.4f) - 0.055f"
+node n00d08 Math
+	set expr "s.A"
+node n00d09 Make Color
+node n00d0a Return
+wire n00d01.value n00d02.s
+wire n00d02.result n00d03.x
+wire n00d01.value n00d04.s
+wire n00d04.result n00d05.x
+wire n00d01.value n00d06.s
+wire n00d06.result n00d07.x
+wire n00d01.value n00d08.s
+wire n00d08.result n00d09.A
+wire n00d07.result n00d09.B
+wire n00d05.result n00d09.G
+wire n00d03.result n00d09.R
+wire n00d00.then n00d0a.in
+wire n00d09.value n00d0a.value
+
+function c00e ToColor32
+	pure
+	returns Color32
+	doc "Encoded to sRGB, clamped to 0 to 1 and rounded to bytes."
+sheet body
+node n00e00 Entry
+node n00e01 This
+node n00e02 Call Core.Color.ToSrgb
+node n00e03 Math
+	set expr "Round(Clamp(s.R, 0.0f, 1.0f) * 255.0f)"
+node n00e04 Cast uint8
+node n00e05 Math
+	set expr "Round(Clamp(s.G, 0.0f, 1.0f) * 255.0f)"
+node n00e06 Cast uint8
+node n00e07 Math
+	set expr "Round(Clamp(s.B, 0.0f, 1.0f) * 255.0f)"
+node n00e08 Cast uint8
+node n00e09 Math
+	set expr "Round(Clamp(s.A, 0.0f, 1.0f) * 255.0f)"
+node n00e0a Cast uint8
+node n00e0b Make Color32
+node n00e0c Return
+wire n00e01.value n00e02.receiver
+wire n00e02.result n00e03.s
+wire n00e03.result n00e04.value
+wire n00e02.result n00e05.s
+wire n00e05.result n00e06.value
+wire n00e02.result n00e07.s
+wire n00e07.result n00e08.value
+wire n00e02.result n00e09.s
+wire n00e09.result n00e0a.value
+wire n00e0a.result n00e0b.A
+wire n00e08.result n00e0b.B
+wire n00e06.result n00e0b.G
+wire n00e04.result n00e0b.R
+wire n00e00.then n00e0c.in
+wire n00e0b.value n00e0c.value
+
+function c00f WithAlpha
+	pure
+	returns Color
+	doc "The same colour with alpha `alpha`."
+param alpha float
+sheet body
+node n00f00 Entry
+node n00f01 This
+node n00f02 Math
+	set expr "c.R"
+node n00f03 Math
+	set expr "c.G"
+node n00f04 Math
+	set expr "c.B"
+node n00f05 Make Color
+node n00f06 Return
+wire n00f01.value n00f02.c
+wire n00f01.value n00f03.c
+wire n00f01.value n00f04.c
+wire n00f00.alpha n00f05.A
+wire n00f04.result n00f05.B
+wire n00f03.result n00f05.G
+wire n00f02.result n00f05.R
+wire n00f00.then n00f06.in
+wire n00f05.value n00f06.value
+
+function c00g Premultiplied
+	pure
+	returns Color
+	doc "R, G and B multiplied by alpha (for premultiplied blending)."
+sheet body
+node n00g00 Entry
+node n00g01 This
+node n00g02 Math
+	set expr "v.R * v.A"
+node n00g03 Math
+	set expr "v.G * v.A"
+node n00g04 Math
+	set expr "v.B * v.A"
+node n00g05 Math
+	set expr "v.A"
+node n00g06 Make Color
+node n00g07 Return
+wire n00g01.value n00g02.v
+wire n00g01.value n00g03.v
+wire n00g01.value n00g04.v
+wire n00g01.value n00g05.v
+wire n00g05.result n00g06.A
+wire n00g04.result n00g06.B
+wire n00g03.result n00g06.G
+wire n00g02.result n00g06.R
+wire n00g00.then n00g07.in
+wire n00g06.value n00g07.value
+
+function c00h Lerp
+	pure
+	returns Color
+	doc "The colour `t` of the way to `to`, each component (t is not clamped)."
+param to Color
+param t float
+sheet body
+node n00h00 Entry
+node n00h01 This
+node n00h02 Math
+	set expr "v.R + (b.R - v.R) * t"
+node n00h03 Math
+	set expr "v.G + (b.G - v.G) * t"
+node n00h04 Math
+	set expr "v.B + (b.B - v.B) * t"
+node n00h05 Math
+	set expr "v.A + (b.A - v.A) * t"
+node n00h06 Make Color
+node n00h07 Return
+wire n00h00.to n00h02.b
+wire n00h00.t n00h02.t
+wire n00h01.value n00h02.v
+wire n00h00.to n00h03.b
+wire n00h00.t n00h03.t
+wire n00h01.value n00h03.v
+wire n00h00.to n00h04.b
+wire n00h00.t n00h04.t
+wire n00h01.value n00h04.v
+wire n00h00.to n00h05.b
+wire n00h00.t n00h05.t
+wire n00h01.value n00h05.v
+wire n00h05.result n00h06.A
+wire n00h04.result n00h06.B
+wire n00h03.result n00h06.G
+wire n00h02.result n00h06.R
+wire n00h00.then n00h07.in
+wire n00h06.value n00h07.value
+
+function c00i Scaled
+	pure
+	returns Color
+	doc "Every component (alpha too) times `k`."
+param k float
+sheet body
+node n00i00 Entry
+node n00i01 This
+node n00i02 Math
+	set expr "v.R * k"
+node n00i03 Math
+	set expr "v.G * k"
+node n00i04 Math
+	set expr "v.B * k"
+node n00i05 Math
+	set expr "v.A * k"
+node n00i06 Make Color
+node n00i07 Return
+wire n00i00.k n00i02.k
+wire n00i01.value n00i02.v
+wire n00i00.k n00i03.k
+wire n00i01.value n00i03.v
+wire n00i00.k n00i04.k
+wire n00i01.value n00i04.v
+wire n00i00.k n00i05.k
+wire n00i01.value n00i05.v
+wire n00i05.result n00i06.A
+wire n00i04.result n00i06.B
+wire n00i03.result n00i06.G
+wire n00i02.result n00i06.R
+wire n00i00.then n00i07.in
+wire n00i06.value n00i07.value
+
+operator c00j +
+	static
+	pure
+	returns Color
+	doc "Component by component: the sum."
+param a Color
+param b Color
+sheet body
+node n00j00 Entry
+node n00j01 Math
+	set expr "a.R + b.R"
+node n00j02 Math
+	set expr "a.G + b.G"
+node n00j03 Math
+	set expr "a.B + b.B"
+node n00j04 Math
+	set expr "a.A + b.A"
+node n00j05 Make Color
+node n00j06 Return
+wire n00j00.a n00j01.a
+wire n00j00.b n00j01.b
+wire n00j00.a n00j02.a
+wire n00j00.b n00j02.b
+wire n00j00.a n00j03.a
+wire n00j00.b n00j03.b
+wire n00j00.a n00j04.a
+wire n00j00.b n00j04.b
+wire n00j04.result n00j05.A
+wire n00j03.result n00j05.B
+wire n00j02.result n00j05.G
+wire n00j01.result n00j05.R
+wire n00j00.then n00j06.in
+wire n00j05.value n00j06.value
+
+operator c00k *
+	static
+	pure
+	returns Color
+	doc "Component by component: the product (a tint)."
+param a Color
+param b Color
+sheet body
+node n00k00 Entry
+node n00k01 Math
+	set expr "a.R * b.R"
+node n00k02 Math
+	set expr "a.G * b.G"
+node n00k03 Math
+	set expr "a.B * b.B"
+node n00k04 Math
+	set expr "a.A * b.A"
+node n00k05 Make Color
+node n00k06 Return
+wire n00k00.a n00k01.a
+wire n00k00.b n00k01.b
+wire n00k00.a n00k02.a
+wire n00k00.b n00k02.b
+wire n00k00.a n00k03.a
+wire n00k00.b n00k03.b
+wire n00k00.a n00k04.a
+wire n00k00.b n00k04.b
+wire n00k04.result n00k05.A
+wire n00k03.result n00k05.B
+wire n00k02.result n00k05.G
+wire n00k01.result n00k05.R
+wire n00k00.then n00k06.in
+wire n00k05.value n00k06.value
+
+operator c00l *
+	static
+	pure
+	returns Color
+	doc "Every component times `k`."
+param a Color
+param k float
+sheet body
+node n00l00 Entry
+node n00l01 Math
+	set expr "a.R * k"
+node n00l02 Math
+	set expr "a.G * k"
+node n00l03 Math
+	set expr "a.B * k"
+node n00l04 Math
+	set expr "a.A * k"
+node n00l05 Make Color
+node n00l06 Return
+wire n00l00.a n00l01.a
+wire n00l00.k n00l01.k
+wire n00l00.a n00l02.a
+wire n00l00.k n00l02.k
+wire n00l00.a n00l03.a
+wire n00l00.k n00l03.k
+wire n00l00.a n00l04.a
+wire n00l00.k n00l04.k
+wire n00l04.result n00l05.A
+wire n00l03.result n00l05.B
+wire n00l02.result n00l05.G
+wire n00l01.result n00l05.R
+wire n00l00.then n00l06.in
+wire n00l05.value n00l06.value
+
+operator c00m ==
+	static
+	pure
+	returns bool
+	doc "True when every component is equal (exact)."
+param a Color
+param b Color
+sheet body
+node n00m00 Entry
+node n00m01 Math
+	set expr "a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A"
+node n00m02 Return
+wire n00m00.a n00m01.a
+wire n00m00.b n00m01.b
+wire n00m00.then n00m02.in
+wire n00m01.result n00m02.value
+
+function c00n ApproxEquals
+	pure
+	returns bool
+	doc "True when every component is within `epsilon` of the other's (absolute)."
+param other Color
+param epsilon float
+	default 0.00001f
+sheet body
+node n00n00 Entry
+node n00n01 This
+node n00n02 Math
+	set expr "Abs(v.R - o.R) <= e && Abs(v.G - o.G) <= e && Abs(v.B - o.B) <= e && Abs(v.A - o.A) <= e"
+node n00n03 Return
+wire n00n00.epsilon n00n02.e
+wire n00n00.other n00n02.o
+wire n00n01.value n00n02.v
+wire n00n00.then n00n03.in
+wire n00n02.result n00n03.value

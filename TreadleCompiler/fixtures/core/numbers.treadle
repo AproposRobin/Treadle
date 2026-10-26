@@ -1,0 +1,113 @@
+# treadle 1
+type NumbersMain class
+	namespace Cx
+	static
+	doc "Core Math.Lerp (double and float overloads, picked by the literals' suffixes), Math.Sign (int and double), Math.IsNaN, Random.NextFloat and Random.Range stay in their ranges over 1000 draws."
+
+function m1 Main
+	static
+	returns int
+local bad int
+sheet body
+node a1 Entry
+node a2 Call Math.Lerp
+	in a 0.0
+	in b 10.0
+	in t 0.25
+node a3 Call Math.Lerp
+	in a 1.0f
+	in b 3.0f
+	in t 0.5f
+node a4 Call Math.Sign
+	in x -5
+node a5 Call Math.Sign
+	in x 0
+node a6 Call Math.Sign
+	in x 2.5
+node a7 Local String
+node a8 Call String.AppendF
+	in format "{0} {1} {2} {3}"
+node a9 Call Console.WriteLine(String)
+node b1 Call Math.Sqrt
+	in x -1.0
+node b2 Call Math.IsNaN
+node b3 Call Math.IsNaN
+	in x 1.0
+node b4 Local String
+node b5 Call String.AppendF
+	in format "{0} {1} {2}"
+node b6 Call Console.WriteLine(String)
+node c1 Local Random
+	set ctor (int)
+	in seed 42
+node c2 For
+	in start 0
+	in count 1000
+node c3 Call Random.NextFloat
+node c4 Operator <
+	in b 0.0f
+node c5 Operator >=
+	in b 1.0f
+node c6 Operator ||
+node c7 Branch
+node c8 Set local:bad
+	set op +=
+	in value 1
+node c9 Call Random.Range
+	in min 5.0f
+	in max 6.0f
+node d1 Operator <
+	in b 5.0f
+node d2 Operator >=
+	in b 6.0f
+node d3 Operator ||
+node d4 Branch
+node d5 Set local:bad
+	set op +=
+	in value 1
+node d6 Get local:bad
+node d7 Call Console.WriteLine(int)
+node d8 Return
+	in value 0
+wire a1.then a7.in
+wire a2.result a8.arg0
+wire a3.result a8.arg1
+wire a4.result a8.arg2
+wire a5.result a8.arg3
+wire a7.then a8.in
+wire a7.object a8.receiver
+wire a8.then a9.in
+wire a7.object a9.value
+wire b1.result b2.x
+wire a9.then b4.in
+wire a6.result b5.arg0
+wire b2.result b5.arg1
+wire b3.result b5.arg2
+wire b4.then b5.in
+wire b4.object b5.receiver
+wire b5.then b6.in
+wire b4.object b6.value
+wire b6.then c1.in
+wire c1.then c2.in
+wire c2.body c3.in
+wire c1.object c3.receiver
+wire c3.result c4.a
+wire c3.result c5.a
+wire c4.result c6.a
+wire c5.result c6.b
+wire c6.result c7.condition
+wire c3.then c7.in
+wire c7.true c8.in
+wire c7.false c9.in
+wire c8.then c9.in
+wire c1.object c9.receiver
+wire c9.result d1.a
+wire c9.result d2.a
+wire d1.result d3.a
+wire d2.result d3.b
+wire d3.result d4.condition
+wire c9.then d4.in
+wire d4.true d5.in
+wire c2.done d7.in
+wire d6.value d7.value
+wire d7.then d8.in

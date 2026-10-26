@@ -1,0 +1,4 @@
+# tproj 1
+project B
+	kind library
+depends ../A/A.tproj

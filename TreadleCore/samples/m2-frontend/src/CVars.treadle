@@ -1,0 +1,39 @@
+# treadle 1
+type CVars class
+	namespace M2
+	static
+	doc "Extern C variables (cvar, docs/C-Import.md): treadle_counter (an extern int of small.h, defined in counter.c, which the cvars set compiles in with csource) read, changed with a compound Set and read again; errno set and read through _errno(); stdout read through __acrt_iob_func(1) and passed to fputs and fflush. Run prints 41, 42, 7, then cvar stdout."
+
+function v0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 Get C.cvars.treadle_counter
+node a3 Call Console.WriteLine(int)
+node a4 Set C.cvars.treadle_counter
+	set op +=
+	in value 1
+node a5 Get C.cvars.treadle_counter
+node a6 Call Console.WriteLine(int)
+node a7 Set C.cvars.errno
+	in value 7
+node a8 Get C.cvars.errno
+node a9 Call Console.WriteLine(int)
+node b1 Get C.cvars.stdout
+node b2 Call C.cvars.fputs
+	in str "cvar stdout\n"
+node b3 Call C.cvars.fflush
+node b4 Return
+wire a1.then a3.in
+wire a2.value a3.value
+wire a3.then a4.in
+wire a4.then a6.in
+wire a5.value a6.value
+wire a6.then a7.in
+wire a7.then a9.in
+wire a8.value a9.value
+wire b1.value b2.file
+wire a9.then b2.in
+wire b1.value b3.file
+wire b2.then b3.in
+wire b3.then b4.in

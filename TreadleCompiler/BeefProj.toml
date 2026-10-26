@@ -1,0 +1,7 @@
+FileVersion = 1
+Dependencies = {corlib = "*", TreadleCore = "*"}
+
+[Project]
+Name = "TreadleCompiler"
+TargetType = "BeefLib"
+DefaultNamespace = "Treadle.Compiler"

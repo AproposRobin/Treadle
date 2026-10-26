@@ -1,0 +1,154 @@
+# treadle 1
+type Color32 struct
+	namespace Core
+	attr CRepr
+	doc "A colour of four bytes R, G, B, A (sRGB as stored in images and textures; 4 bytes). Color is the linear float form. Every function is Pure."
+
+field R uint8
+
+field G uint8
+
+field B uint8
+
+field A uint8
+
+function c000 FromHex
+	static
+	pure
+	returns Color32
+	doc "A colour written 0xRRGGBBAA."
+param rrggbbaa uint32
+sheet body
+node n00000 Entry
+node n00001 Math
+	set expr "(h >> 24) & 255"
+node n00002 Cast uint8
+node n00003 Math
+	set expr "(h >> 16) & 255"
+node n00004 Cast uint8
+node n00005 Math
+	set expr "(h >> 8) & 255"
+node n00006 Cast uint8
+node n00007 Math
+	set expr "(h >> 0) & 255"
+node n00008 Cast uint8
+node n00009 Make Color32
+node n0000a Return
+wire n00000.rrggbbaa n00001.h
+wire n00001.result n00002.value
+wire n00000.rrggbbaa n00003.h
+wire n00003.result n00004.value
+wire n00000.rrggbbaa n00005.h
+wire n00005.result n00006.value
+wire n00000.rrggbbaa n00007.h
+wire n00007.result n00008.value
+wire n00008.result n00009.A
+wire n00006.result n00009.B
+wire n00004.result n00009.G
+wire n00002.result n00009.R
+wire n00000.then n0000a.in
+wire n00009.value n0000a.value
+
+function c001 ToHex
+	pure
+	returns uint32
+	doc "The colour as 0xRRGGBBAA."
+sheet body
+node n00100 Entry
+node n00101 This
+node n00102 Math
+	set expr "v.R"
+node n00103 Cast uint32
+node n00104 Math
+	set expr "v.G"
+node n00105 Cast uint32
+node n00106 Math
+	set expr "v.B"
+node n00107 Cast uint32
+node n00108 Math
+	set expr "v.A"
+node n00109 Cast uint32
+node n0010a Math
+	set expr "(r << 24) | (g << 16) | (b << 8) | a"
+node n0010b Return
+wire n00101.value n00102.v
+wire n00102.result n00103.value
+wire n00101.value n00104.v
+wire n00104.result n00105.value
+wire n00101.value n00106.v
+wire n00106.result n00107.value
+wire n00101.value n00108.v
+wire n00108.result n00109.value
+wire n00109.result n0010a.a
+wire n00107.result n0010a.b
+wire n00105.result n0010a.g
+wire n00103.result n0010a.r
+wire n00100.then n0010b.in
+wire n0010a.result n0010b.value
+
+function c002 ToColor
+	pure
+	returns Color
+	doc "Decoded from sRGB to a linear Color (alpha 0 to 255 as 0 to 1)."
+sheet body
+node n00200 Entry
+node n00201 This
+node n00202 Math
+	set expr "v.R"
+node n00203 Cast float
+node n00204 Math
+	set expr "x / 255.0f"
+node n00205 Math
+	set expr "v.G"
+node n00206 Cast float
+node n00207 Math
+	set expr "x / 255.0f"
+node n00208 Math
+	set expr "v.B"
+node n00209 Cast float
+node n0020a Math
+	set expr "x / 255.0f"
+node n0020b Math
+	set expr "v.A"
+node n0020c Cast float
+node n0020d Math
+	set expr "x / 255.0f"
+node n0020e Make Color
+node n0020f Call Core.Color.FromSrgb
+node n0020g Return
+wire n00201.value n00202.v
+wire n00202.result n00203.value
+wire n00203.result n00204.x
+wire n00201.value n00205.v
+wire n00205.result n00206.value
+wire n00206.result n00207.x
+wire n00201.value n00208.v
+wire n00208.result n00209.value
+wire n00209.result n0020a.x
+wire n00201.value n0020b.v
+wire n0020b.result n0020c.value
+wire n0020c.result n0020d.x
+wire n0020d.result n0020e.A
+wire n0020a.result n0020e.B
+wire n00207.result n0020e.G
+wire n00204.result n0020e.R
+wire n0020e.value n0020f.srgb
+wire n00200.then n0020g.in
+wire n0020f.result n0020g.value
+
+operator c003 ==
+	static
+	pure
+	returns bool
+	doc "True when every byte is equal."
+param a Color32
+param b Color32
+sheet body
+node n00300 Entry
+node n00301 Math
+	set expr "a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A"
+node n00302 Return
+wire n00300.a n00301.a
+wire n00300.b n00301.b
+wire n00300.then n00302.in
+wire n00301.result n00302.value

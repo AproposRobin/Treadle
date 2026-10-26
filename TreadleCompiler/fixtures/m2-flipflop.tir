@@ -1,0 +1,121 @@
+# tir 1
+program m2-flipflop console
+entry Fx.AlternateMain.Main()
+
+unit Fx.AlternateMain "AlternateMain.treadle"
+
+type Fx.AlternateMain class
+
+func Fx.AlternateMain.Main() int static sheet "m1" display "Fx.AlternateMain.Main"
+	node a1 Entry
+	node a2 Call M2.Alternate.Run
+	node a3 Return
+	block b0
+		br b1
+	block b1
+		call void M2.Alternate.Run() @a2
+		br b2
+	block b2
+		%_0 = const int 0 @a3.value
+		region.exit r0 @a3
+		ret %_0 @a3
+
+unit M2.Alternate "Alternate.treadle"
+
+type M2.Alternate class
+
+global M2.Alternate.__flipFlop_a3 bool
+
+func M2.Alternate.Run() void static sheet "f0001" display "M2.Alternate.Run"
+	region r1
+	region r2 parent r1
+	region r3 parent r1
+	region r4 parent r1
+	region r5 parent r1
+	slot s0 int loopvar "a2.index" pin node a2.index
+	slot s1 int loopvar "a2.count" pin node a2.count
+	slot s2 bool outtemp "a3.isA" pin node a3.isA
+	node a1 Entry
+	node a2 For
+	node a3 FlipFlop
+	node a4 Call Console.WriteLine(StringView)
+	node a5 Call Console.WriteLine(StringView)
+	node a6 Branch
+	node a7 Call Console.WriteLine(StringView)
+	node a8 Return
+	block b0
+		br b1
+	block b1
+		%_0 = const int 0 @a2.start
+		%_1 = const int 3 @a2.count
+		store.slot s0 %_0 @a2.start
+		store.slot s1 %_1 @a2.count
+		br b2
+	block b2
+		%_2 = load.slot int s1 @a2.count
+		%_3 = const int 0 @a2.count
+		%_4 = cmp bool gt %_2 %_3 @a2.count
+		condbr %_4 b5 b4 @a2
+	block b3
+		%_5 = const int 1 @a2.step
+		%_6 = load.slot int s0 @a2.index
+		%_7 = binop int add %_6 %_5 @a2.index
+		store.slot s0 %_7 @a2.index
+		%_8 = load.slot int s1 @a2.count
+		%_9 = const int 1 @a2.count
+		%_10 = binop int sub %_8 %_9 @a2.count
+		store.slot s1 %_10 @a2.count
+		br b2
+	block b4
+		br b7
+	block b5
+		region.enter r1 @a2.body
+		br b6
+	block b6
+		%_11 = global.addr bool* M2.Alternate.__flipFlop_a3 @a3.state
+		%_12 = load bool %_11 @a3.state
+		condbr %_12 b8 b9 @a3
+	block b7
+		region.exit r0 @a8
+		ret @a8
+	block b8
+		%_15 = const bool false @a3.state
+		store %_11 %_15 @a3.state
+		%_16 = const bool false @a3.isA
+		store.slot s2 %_16 @a3.isA
+		region.enter r4 @a3.b
+		br b11
+	block b9
+		%_13 = const bool true @a3.state
+		store %_11 %_13 @a3.state
+		%_14 = const bool true @a3.isA
+		store.slot s2 %_14 @a3.isA
+		region.enter r5 @a3.a
+		br b10
+	block b10
+		%_17 = const StringView "A" @a4.text
+		intrinsic void console.writeline %_17 @a4
+		region.exit r5 @a4
+		br b12
+	block b11
+		%_18 = const StringView "B" @a5.text
+		intrinsic void console.writeline %_18 @a5
+		region.exit r4 @a5
+		br b12
+	block b12
+		%_19 = load.slot bool s2 @a3.isA
+		condbr %_19 b13 b14 @a6
+	block b13
+		region.enter r3 @a6.true
+		br b15
+	block b14
+		region.enter r2 @a6.false
+		region.exit r2 @a6
+		region.exit r1 @a6
+		br b3
+	block b15
+		%_20 = const StringView "A ran" @a7.text
+		intrinsic void console.writeline %_20 @a7
+		region.exit r3 @a7
+		region.exit r1 @a7
+		br b3

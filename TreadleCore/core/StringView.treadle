@@ -1,0 +1,558 @@
+# treadle 1
+type StringView struct
+	namespace Core
+	implements IHashable
+	attr CRepr
+	doc "A pointer and a length: a view of UTF-8 text someone else owns (a String, a literal, a C buffer). Copying a view copies the pointer, not the text."
+
+field Ptr char8*
+
+field Length int
+
+function v0001 IsEmpty
+	pure
+	returns bool
+	doc "True when the view has no characters."
+sheet body
+node a1 Entry
+node a2 Get this.Length
+node a3 Operator ==
+	in b 0
+node a4 Return
+wire a2.value a3.a
+wire a1.then a4.in
+wire a3.result a4.value
+
+function v0002 MatchesAt
+	pure
+	access internal
+	returns bool
+	doc "True when `text` appears at position `pos` (false when it would not fit): one memcmp of its bytes."
+param pos int
+param text StringView
+sheet body
+node b1 Entry
+node b2 Break StringView
+node b3 Get this.Length
+node b4 Operator <
+	in b 0
+node b5 Operator +
+node b6 Operator >
+node b7 Operator ||
+node b8 Branch
+node b9 Return
+	in value false
+node c1 Return
+node c2 Call this.Substring
+node c3 Break StringView
+node c4 Call C.crt.memcmp
+node c5 Operator ==
+	in b 0
+node c6 Cast uint
+wire b1.text b2.value
+wire b1.pos b4.a
+wire b1.pos b5.a
+wire b2.Length b5.b
+wire b5.result b6.a
+wire b3.value b6.b
+wire b4.result b7.a
+wire b6.result b7.b
+wire b7.result b8.condition
+wire b1.then b8.in
+wire b8.true b9.in
+wire b8.false c1.in
+wire c5.result c1.value
+wire b2.Length c2.length
+wire b1.pos c2.start
+wire c2.result c3.value
+wire c3.Ptr c4.a
+wire b2.Ptr c4.b
+wire c6.result c4.n
+wire c4.result c5.a
+wire b2.Length c6.value
+
+function v0003 Equals
+	pure
+	returns bool
+	doc "True when both views hold the same text (byte for byte)."
+param other StringView
+sheet body
+node e1 Entry
+node e2 Get this.Length
+node e3 Break StringView
+node e4 Operator ==
+node e5 Call this.MatchesAt
+	in pos 0
+node e6 Operator &&
+node e7 Return
+wire e1.other e3.value
+wire e2.value e4.a
+wire e3.Length e4.b
+wire e1.other e5.text
+wire e4.result e6.a
+wire e5.result e6.b
+wire e1.then e7.in
+wire e6.result e7.value
+
+function v0004 StartsWith
+	pure
+	returns bool
+	doc "True when the view begins with `text`."
+param text StringView
+sheet body
+node f1 Entry
+node f2 Call this.MatchesAt
+	in pos 0
+node f3 Return
+wire f1.text f2.text
+wire f1.then f3.in
+wire f2.result f3.value
+
+function v0005 EndsWith
+	pure
+	returns bool
+	doc "True when the view ends with `text`."
+param text StringView
+sheet body
+node g1 Entry
+node g2 Get this.Length
+node g3 Break StringView
+node g4 Operator -
+node g5 Call this.MatchesAt
+node g6 Return
+wire g1.text g3.value
+wire g2.value g4.a
+wire g3.Length g4.b
+wire g4.result g5.pos
+wire g1.text g5.text
+wire g1.then g6.in
+wire g5.result g6.value
+
+function v0006 IndexOf
+	pure
+	returns int
+	doc "The position of the first `c`, or -1."
+param c char8
+sheet body
+node h1 Entry
+node h2 Get this.Length
+node h3 For
+	in start 0
+node h4 Make StringView
+node h5 Get this.Ptr
+node h6 Index
+node h7 Operator ==
+node h8 Branch
+node h9 Return
+node i1 Return
+	in value -1
+wire h2.value h3.count
+wire h1.then h3.in
+wire h2.value h4.Length
+wire h5.value h4.Ptr
+wire h4.value h6.collection
+wire h3.index h6.index
+wire h6.value h7.a
+wire h1.c h7.b
+wire h7.result h8.condition
+wire h3.body h8.in
+wire h8.true h9.in
+wire h3.index h9.value
+wire h3.done i1.in
+
+function v0007 IndexOf
+	pure
+	returns int
+	doc "The position of the first occurrence of `text`, or -1 (an empty text is found at 0)."
+param text StringView
+sheet body
+node j1 Entry
+node j2 Get this.Length
+node j3 Break StringView
+node j4 Operator -
+node j5 Operator +
+	in b 1
+node j6 For
+	in start 0
+node j7 Call this.MatchesAt
+node j8 Branch
+node j9 Return
+node k1 Return
+	in value -1
+wire j1.text j3.value
+wire j2.value j4.a
+wire j3.Length j4.b
+wire j4.result j5.a
+wire j5.result j6.count
+wire j1.then j6.in
+wire j6.index j7.pos
+wire j1.text j7.text
+wire j7.result j8.condition
+wire j6.body j8.in
+wire j8.true j9.in
+wire j6.index j9.value
+wire j6.done k1.in
+
+function v0008 Contains
+	pure
+	returns bool
+	doc "True when `text` appears in the view."
+param text StringView
+sheet body
+node l1 Entry
+node l2 Call this.IndexOf(StringView)
+node l3 Operator >=
+	in b 0
+node l4 Return
+wire l1.text l2.text
+wire l2.result l3.a
+wire l1.then l4.in
+wire l3.result l4.value
+
+function v0009 Substring
+	pure
+	returns StringView
+	attr Intrinsic StringView.Substring
+	doc "The `length` characters from position `start` (a view of the same text; the range is not checked)."
+param start int
+param length int
+
+function v000a Trim
+	pure
+	returns StringView
+	doc "The view without the spaces, tabs and line breaks at both ends."
+local first int
+local last int
+sheet body
+node m1 Entry
+node m2 Get this.Length
+node m3 Set local:last
+node m4 While
+node m5 Get local:first
+node m6 Get local:last
+node m7 Operator <
+node m8 Make StringView
+node m9 Get this.Ptr
+node n0 Index
+node n1 Operator &&
+node n2 Operator <=
+	in b 32
+node n3 Set local:first
+	set op +=
+	in value 1
+node n4 While
+node n5 Operator -
+	in b 1
+node n6 Index
+node n7 Operator &&
+node n8 Operator <=
+	in b 32
+node n9 Set local:last
+	set op -=
+	in value 1
+node o1 Operator -
+node o2 Call this.Substring
+node o3 Return
+wire m1.then m3.in
+wire m2.value m3.value
+wire n1.result m4.condition
+wire m3.then m4.in
+wire m5.value m7.a
+wire m6.value m7.b
+wire m2.value m8.Length
+wire m9.value m8.Ptr
+wire m8.value n0.collection
+wire m5.value n0.index
+wire m7.result n1.a
+wire n2.result n1.b
+wire n0.value n2.a
+wire m4.body n3.in
+wire n7.result n4.condition
+wire m4.done n4.in
+wire m6.value n5.a
+wire m8.value n6.collection
+wire n5.result n6.index
+wire m7.result n7.a
+wire n8.result n7.b
+wire n6.value n8.a
+wire n4.body n9.in
+wire m6.value o1.a
+wire m5.value o1.b
+wire o1.result o2.length
+wire m5.value o2.start
+wire n4.done o3.in
+wire o2.result o3.value
+
+function v000b GetHashCode
+	pure
+	returns int
+	doc "A hash of the text (FNV-1a over the bytes): equal texts give equal hashes."
+local h int
+	init -3750763034362895579
+sheet body
+node p1 Entry
+node p2 Get this.Length
+node p3 For
+	in start 0
+node p4 Make StringView
+node p5 Get this.Ptr
+node p6 Index
+node p7 Cast int
+node p8 Get local:h
+node p9 Operator ^
+node q1 Operator *
+	in b 1099511628211
+node q2 Set local:h
+node q3 Return
+wire p2.value p3.count
+wire p1.then p3.in
+wire p2.value p4.Length
+wire p5.value p4.Ptr
+wire p4.value p6.collection
+wire p3.index p6.index
+wire p6.value p7.value
+wire p8.value p9.a
+wire p7.result p9.b
+wire p9.result q1.a
+wire p3.body q2.in
+wire q1.result q2.value
+wire p3.done q3.in
+wire p8.value q3.value
+
+function v000c Split
+	doc "Adds the pieces between the separators to `into` (views of this text). With `skipEmpty` the empty pieces (two separators in a row, one at an end) are left out."
+param separator char8
+param into List<StringView>
+param skipEmpty bool
+	default false
+local start int
+sheet body
+node r1 Entry
+node r2 Get this.Length
+node r3 For
+	in start 0
+node r4 Make StringView
+node r5 Get this.Ptr
+node r6 Index
+node r7 Operator ==
+node r8 Branch
+node r9 Get local:start
+node s1 Operator -
+node s2 Call this.AddPiece
+node s3 Operator +
+	in b 1
+node s4 Set local:start
+node s5 Operator -
+node s6 Call this.AddPiece
+node s7 Return
+wire r2.value r3.count
+wire r1.then r3.in
+wire r2.value r4.Length
+wire r5.value r4.Ptr
+wire r4.value r6.collection
+wire r3.index r6.index
+wire r6.value r7.a
+wire r1.separator r7.b
+wire r7.result r8.condition
+wire r3.body r8.in
+wire r3.index s1.a
+wire r9.value s1.b
+wire r8.true s2.in
+wire r1.into s2.into
+wire s1.result s2.length
+wire r1.skipEmpty s2.skipEmpty
+wire r9.value s2.start
+wire r3.index s3.a
+wire s2.then s4.in
+wire s3.result s4.value
+wire r2.value s5.a
+wire r9.value s5.b
+wire r3.done s6.in
+wire r1.into s6.into
+wire s5.result s6.length
+wire r1.skipEmpty s6.skipEmpty
+wire r9.value s6.start
+wire s6.then s7.in
+
+function v000d AddPiece
+	access private
+	doc "Split's step: adds the piece unless it is empty and empties are skipped."
+param start int
+param length int
+param into List<StringView>
+param skipEmpty bool
+sheet body
+node t1 Entry
+node t2 Operator >
+	in b 0
+node t3 Operator !
+node t4 Operator ||
+node t5 Branch
+node t6 Call this.Substring
+node t7 Call List<StringView>.Add
+node t8 Return
+node t9 Return
+wire t1.length t2.a
+wire t1.skipEmpty t3.a
+wire t2.result t4.a
+wire t3.result t4.b
+wire t4.result t5.condition
+wire t1.then t5.in
+wire t1.length t6.length
+wire t1.start t6.start
+wire t5.true t7.in
+wire t1.into t7.receiver
+wire t6.result t7.value
+wire t7.then t8.in
+wire t5.false t9.in
+
+function v000e CompareTo
+	pure
+	returns int
+	doc "Orders two texts by their bytes: negative when this comes first, 0 when equal, positive when `other` comes first."
+param other StringView
+sheet body
+node w1 Entry
+node w2 Get this.Length
+node w3 Break StringView
+node w4 Call Math.Min
+node w5 For
+	in start 0
+node w6 Make StringView
+node w7 Get this.Ptr
+node w8 Index
+node w9 Index
+node x1 Operator !=
+node x2 Branch
+node x3 Cast int
+node x4 Cast int
+node x5 Operator -
+node x6 Return
+node x7 Operator -
+node x8 Return
+wire w1.other w3.value
+wire w2.value w4.a
+wire w3.Length w4.b
+wire w4.result w5.count
+wire w1.then w5.in
+wire w2.value w6.Length
+wire w7.value w6.Ptr
+wire w6.value w8.collection
+wire w5.index w8.index
+wire w1.other w9.collection
+wire w5.index w9.index
+wire w8.value x1.a
+wire w9.value x1.b
+wire x1.result x2.condition
+wire w5.body x2.in
+wire w8.value x3.value
+wire w9.value x4.value
+wire x3.result x5.a
+wire x4.result x5.b
+wire x2.true x6.in
+wire x5.result x6.value
+wire w2.value x7.a
+wire w3.Length x7.b
+wire w5.done x8.in
+wire x7.result x8.value
+
+function v000f EqualsIgnoreCase
+	pure
+	returns bool
+	doc "True when both views hold the same text, ASCII letters compared without their case (other bytes as they are)."
+param other StringView
+sheet body
+node w01 Entry
+node w02 Break StringView
+node w03 Get this.Ptr
+node w04 Get this.Length
+node w05 Call C.crt.rt_ascii_ieq
+node w06 Operator !=
+	in b 0
+node w07 Return
+wire w01.other w02.value
+wire w03.value w05.a
+wire w04.value w05.an
+wire w02.Ptr w05.b
+wire w02.Length w05.bn
+wire w05.result w06.a
+wire w01.then w07.in
+wire w06.result w07.value
+
+function v0010 CodePointCount
+	pure
+	returns int
+	doc "The number of Unicode code points (Length is the number of bytes); a byte that starts no valid UTF-8 sequence counts as one."
+sheet body
+node ya01 Entry
+node ya02 Get this.Ptr
+node ya03 Get this.Length
+node ya04 Call C.crt.rt_utf8_count
+node ya05 Return
+wire ya03.value ya04.n
+wire ya02.value ya04.p
+wire ya01.then ya05.in
+wire ya04.result ya05.value
+
+function v0011 CodePoints
+	pure
+	returns CodePointEnumerator
+	doc "The code points for For Each (char32 elements), decoded from UTF-8 (a byte that starts no valid sequence gives U+FFFD)."
+sheet body
+node yb01 Entry
+node yb02 Get this.Ptr
+node yb03 Get this.Length
+node yb04 Make StringView
+node yb05 Make CodePointEnumerator
+node yb06 Return
+wire yb03.value yb04.Length
+wire yb02.value yb04.Ptr
+wire yb04.value yb05.mText
+wire yb01.then yb06.in
+wire yb05.value yb06.value
+
+function v0012 IndexOf
+	pure
+	returns int
+	doc "The byte position of the first code point `c`, or -1 (a position from here is where Substring starts)."
+param c char32
+local pos int
+local cp int32
+sheet body
+node yc01 Entry
+node yc02 Get local:pos
+node yc03 Get this.Length
+node yc04 Operator <
+node yc05 While
+node yc06 Get this.Ptr
+node yc07 Get this.Length
+node yc08 Get local:cp
+node yc09 Call C.crt.rt_utf8_decode
+node yc10 Get local:cp
+node yc11 Cast int32
+node yc12 Operator ==
+node yc13 Branch
+node yc14 Return
+node yc15 Set local:pos
+	set op +=
+node yc16 Return
+	in value -1
+wire yc02.value yc04.a
+wire yc03.value yc04.b
+wire yc04.result yc05.condition
+wire yc01.then yc05.in
+wire yc08.value yc09.cp
+wire yc05.body yc09.in
+wire yc07.value yc09.n
+wire yc02.value yc09.pos
+wire yc06.value yc09.text
+wire yc01.c yc11.value
+wire yc10.value yc12.a
+wire yc11.result yc12.b
+wire yc12.result yc13.condition
+wire yc09.then yc13.in
+wire yc13.true yc14.in
+wire yc02.value yc14.value
+wire yc13.false yc15.in
+wire yc09.result yc15.value
+wire yc05.done yc16.in

@@ -1,0 +1,20 @@
+# Each Local Res dies at the end of its loop pass; Delete runs a class's struct field and an array's
+# elements; the copy is destroyed only by the explicit dtor; at the body region's exit the Trio
+# (elements first to last) and then the Pair (~Pair, then b, then a) are destroyed. No leaks.
+== exit
+0
+== stdout
+pass 0
+~Res 10
+pass 1
+~Res 11
+~Res 7
+~Res 20
+~Res 21
+~Res 22
+~Res 1
+~Res 30
+~Res 31
+~Pair 1 2
+~Res 2
+~Res 1

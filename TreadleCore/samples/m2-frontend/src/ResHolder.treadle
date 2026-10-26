@@ -1,0 +1,6 @@
+# treadle 1
+type ResHolder class
+	namespace M2
+	doc "A class with a struct field that has a destructor: the field is destroyed with the object."
+
+field mRes Res

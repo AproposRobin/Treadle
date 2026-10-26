@@ -1,0 +1,145 @@
+# treadle 1
+type Lambdas class
+	namespace M2
+	doc "Lambda Sheets (Language.md 4.2): a heap Lambda capturing a local by value, a Local Lambda writing a local by reference, a Lambda returned by a member function capturing this and a parameter, a function pointer Lambda. Run prints 1005, 2008, 16, 106, 81."
+
+field mBase int
+	init 100
+
+function l0001 Scaled
+	returns IntFn
+param k int
+sheet body
+node a1 Entry
+node a2 Lambda
+	set type IntFn
+	set alloc construct
+	set inputs x
+node a3 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.value a3.value
+sheet lambda:a2
+node k1 Entry
+node k2 Get param:k
+node k3 Operator *
+node k4 Get this.mBase
+node k5 Operator +
+node k6 Return
+wire k1.x k3.a
+wire k2.value k3.b
+wire k3.result k5.a
+wire k4.value k5.b
+wire k1.then k6.in
+wire k5.result k6.value
+
+function l0002 Run
+	static
+local total int
+local outv int
+sheet body
+node b1 Entry
+node b2 Set local:total
+	in value 1000
+node b3 Lambda
+	set type delegate:int(int)
+	set alloc construct
+	set inputs x
+node b4 Invoke
+	in arg0 5
+node b5 Call Console.WriteLine(int)
+node b6 Set local:total
+	in value 2000
+node b7 Lambda
+	set type IntFn
+	set alloc local
+	set inputs x
+	capture outv by-ref
+node b8 Invoke
+	in arg0 8
+node b9 Call Console.WriteLine(int)
+node c1 Get local:outv
+node c2 Call Console.WriteLine(int)
+node c3 Construct M2.Lambdas
+node c4 Call M2.Lambdas.Scaled
+	in k 3
+node c5 Invoke
+	in arg0 2
+node c6 Call Console.WriteLine(int)
+node c7 Lambda
+	set type function:int(int)
+	set inputs x
+node c8 Scope
+	unsafe
+node c9 Invoke
+	in arg0 9
+node d1 Call Console.WriteLine(int)
+node d2 Delete
+node d3 Delete
+node d4 Delete
+node d5 Return
+wire b1.then b2.in
+wire b2.then b3.in
+wire b3.value b4.delegate
+wire b3.then b4.in
+wire b4.then b5.in
+wire b4.result b5.value
+wire b5.then b6.in
+wire b6.then b7.in
+wire b7.value b8.delegate
+wire b7.then b8.in
+wire b8.then b9.in
+wire b8.result b9.value
+wire b9.then c2.in
+wire c1.value c2.value
+wire c2.then c3.in
+wire c3.then c4.in
+wire c3.object c4.receiver
+wire c4.result c5.delegate
+wire c4.then c5.in
+wire c5.then c6.in
+wire c5.result c6.value
+wire c6.then c8.in
+wire c7.value c9.delegate
+wire c8.body c9.in
+wire c9.then d1.in
+wire c9.result d1.value
+wire c8.done d2.in
+wire b3.value d2.object
+wire d2.then d3.in
+wire c4.result d3.object
+wire d3.then d4.in
+wire c3.object d4.object
+wire d4.then d5.in
+sheet lambda:b3
+node l1 Entry
+node l2 Get local:total
+node l3 Operator +
+node l4 Return
+wire l1.x l3.a
+wire l2.value l3.b
+wire l1.then l4.in
+wire l3.result l4.value
+sheet lambda:b7
+node m1 Entry
+node m2 Operator *
+	in b 2
+node m3 Set local:outv
+node m4 Get local:total
+node m5 Operator +
+node m6 Return
+wire m1.x m2.a
+wire m1.then m3.in
+wire m2.result m3.value
+wire m1.x m5.a
+wire m4.value m5.b
+wire m3.then m6.in
+wire m5.result m6.value
+sheet lambda:c7
+node n1 Entry
+node n2 Operator *
+node n3 Return
+wire n1.x n2.a
+wire n1.x n2.b
+wire n1.then n3.in
+wire n2.result n3.value

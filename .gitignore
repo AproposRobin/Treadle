@@ -1,0 +1,26 @@
+build/
+recovery/
+*.user
+BeefSpace_User.toml
+*.bak
+
+# Probe and tool build output (sources and scripts only are committed)
+tools/probe/out/
+tools/**/*.exe
+tools/**/*.dll
+tools/**/*.pdb
+tools/**/*.lib
+tools/**/*.o
+tools/**/*.obj
+tools/llvm-mingw/
+tools/libclang/
+tools/libclang-download/
+tools/llvm-mingw-download/
+tools/SDL2-*/
+Native/obj/
+
+# Packages (scripts/package.ps1)
+dist/
+
+# m5-json writes the pretty form next to its input
+TreadleCore/samples/m5-json/*.pretty.json

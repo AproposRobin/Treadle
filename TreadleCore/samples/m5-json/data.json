@@ -1,0 +1,19 @@
+{
+  "name": "Treadle sample catalogue",
+  "version": 3,
+  "published": true,
+  "rating": 4.75,
+  "tags": ["graphs", "native", "no GC", "UTF-8 ✓"],
+  "owner": {
+    "name": "Zoë Ångström",
+    "email": null,
+    "languages": ["en", "sv", "fr"]
+  },
+  "items": [
+    {"id": 1, "title": "Breakout", "size": 1.5e6, "path": "C:\\samples\\m4-breakout"},
+    {"id": 2, "title": "Line\nbreak and \"quotes\"", "size": 0.25, "path": "/tmp/m3"},
+    {"id": 3, "title": "Snow \u2603 and a clef \ud834\udd1e", "size": -12, "path": ""}
+  ],
+  "matrix": [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+  "empty": {"list": [], "map": {}}
+}

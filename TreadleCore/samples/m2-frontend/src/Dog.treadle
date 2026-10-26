@@ -1,0 +1,35 @@
+# treadle 1
+type Dog class
+	namespace M2
+	base Animal
+	implements IScale
+	doc "Overrides Animal.Speak (legs * 100 + x) and implements IScale.Scale (x * 3)."
+
+function g0001 Speak
+	override
+	returns int
+param x int
+sheet body
+node a1 Entry
+node a2 Get this.mLegs
+node a3 Operator *
+	in b 100
+node a4 Operator +
+node a5 Return
+wire a2.value a3.a
+wire a3.result a4.a
+wire a1.x a4.b
+wire a1.then a5.in
+wire a4.result a5.value
+
+function g0002 Scale
+	returns int
+param x int
+sheet body
+node b1 Entry
+node b2 Operator *
+	in b 3
+node b3 Return
+wire b1.x b2.a
+wire b1.then b3.in
+wire b2.result b3.value

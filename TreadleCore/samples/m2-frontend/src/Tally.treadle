@@ -1,0 +1,19 @@
+# treadle 1
+type Tally class
+	namespace M2
+	doc "A running total: Add is the member function the delegates sample binds."
+
+field mTotal int
+
+function t0001 Add
+	returns int
+param x int
+sheet body
+node a1 Entry
+node a2 Set this.mTotal
+	set op +=
+node a3 Return
+wire a1.then a2.in
+wire a1.x a2.value
+wire a2.then a3.in
+wire a2.result a3.value

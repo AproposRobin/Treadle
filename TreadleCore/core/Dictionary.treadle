@@ -1,0 +1,732 @@
+# treadle 1
+type Dictionary class
+	namespace Core
+	generic K IHashable
+	generic V
+	doc "A hash map from keys to values (open addressing). Keys hash and compare through Hash.Get / Hash.Equal: numbers, characters, bools and simple enums by value, String and StringView by their text, other IHashable types through GetHashCode / Equals. The dictionary owns its storage, not what keys or values refer to. Get [ ] reads a value, SetItem writes one, For Each walks (key, value) pairs."
+
+field mKeys K[]
+	access internal
+
+field mValues V[]
+	access internal
+
+field mStates uint8[]
+	access internal
+	owner owned
+	doc "Per slot: 0 empty, 1 in use, 2 removed."
+
+field mCount int
+	access internal
+
+field mUsed int
+	access internal
+	doc "Slots in use or removed (what makes probing longer)."
+
+field mCapacity int
+	access internal
+
+ctor d0001
+	doc "An empty dictionary (no storage until something is added)."
+sheet body
+node a0 Entry
+node a9 Return
+wire a0.then a9.in
+
+dtor d0011
+	doc "Destroys the keys and values in use (a struct that has a destructor) and frees the storage; objects keys and values refer to are not deleted."
+sheet body
+node a1 Entry
+node a2 Call this.DestroyAll
+node a3 Get this.mKeys
+node a4 Call Arrays.Free
+node a5 Get this.mValues
+node a6 Call Arrays.Free
+node a7 Return
+wire a1.then a2.in
+wire a3.value a4.array
+wire a2.then a4.in
+wire a5.value a6.array
+wire a4.then a6.in
+wire a6.then a7.in
+
+property d0002 Count int
+	doc "The number of keys."
+sheet get
+node ba Entry
+node bb Get this.mCount
+node bc Return
+wire ba.then bc.in
+wire bb.value bc.value
+
+function d0003 FindSlot
+	pure
+	access internal
+	returns int
+	doc "The slot holding `key`, or -1."
+param key K
+local h int
+sheet body
+node a8 Operator &
+node aa Set local:h
+node ab Entry
+node ac Get this.mCapacity
+node ad Operator ==
+	in b 0
+node ae Branch
+node af Return
+	in value -1
+node ag Call Hash.Get
+node ah Operator -
+	in b 1
+node b1 For
+	in start 0
+node b2 Get local:h
+node b3 Get this.mStates
+node b4 Index
+node b5 Operator ==
+	in b 0
+node b6 Branch
+node b7 Return
+	in value -1
+node b8 Operator ==
+	in b 1
+node b9 Get this.mKeys
+node c1 Index
+node c2 Call Hash.Equal
+node c3 Operator &&
+node c4 Branch
+node c5 Return
+node c6 Operator +
+	in b 1
+node c7 Operator &
+node c8 Set local:h
+node c9 Return
+	in value -1
+wire ag.result a8.a
+wire ah.result a8.b
+wire ae.false aa.in
+wire a8.result aa.value
+wire ac.value ad.a
+wire ad.result ae.condition
+wire ab.then ae.in
+wire ae.true af.in
+wire ab.key ag.value
+wire ac.value ah.a
+wire ac.value b1.count
+wire aa.then b1.in
+wire b3.value b4.collection
+wire b2.value b4.index
+wire b4.value b5.a
+wire b5.result b6.condition
+wire b1.body b6.in
+wire b6.true b7.in
+wire b4.value b8.a
+wire b9.value c1.collection
+wire b2.value c1.index
+wire c1.value c2.a
+wire ab.key c2.b
+wire b8.result c3.a
+wire c2.result c3.b
+wire c3.result c4.condition
+wire b6.false c4.in
+wire c4.true c5.in
+wire b2.value c5.value
+wire b2.value c6.a
+wire c6.result c7.a
+wire ah.result c7.b
+wire c4.false c8.in
+wire c7.result c8.value
+wire b1.done c9.in
+
+function d0004 Insert
+	access private
+	doc "Puts a key that is not there yet (growing first when three quarters of the slots are taken)."
+param key K
+param value V
+local h int
+sheet body
+node i1 Entry
+node i2 Get this.mUsed
+node i3 Operator +
+	in b 1
+node i4 Operator *
+	in b 4
+node i5 Get this.mCapacity
+node i6 Operator *
+	in b 3
+node i7 Operator >
+node i8 Branch
+node i9 Operator *
+	in b 2
+node j1 Call Math.Max
+	in b 8
+node j2 Call this.Rehash
+node j3 Call Hash.Get
+node j5 Operator -
+	in b 1
+node j6 Operator &
+node j7 Set local:h
+node j8 Get local:h
+node j9 Get this.mStates
+node k1 Index
+node k2 Operator ==
+	in b 1
+node k3 While
+node k4 Operator +
+	in b 1
+node k5 Operator &
+node k6 Set local:h
+node k7 Operator ==
+	in b 0
+node k8 Branch
+node k9 Set this.mUsed
+	set op +=
+	in value 1
+node l1 Call Arrays.Set
+	in value 1
+node l2 Get this.mKeys
+node l3 Call Arrays.Set
+node l4 Get this.mValues
+node l5 Call Arrays.Set
+node l6 Set this.mCount
+	set op +=
+	in value 1
+node l7 Return
+wire i2.value i3.a
+wire i3.result i4.a
+wire i5.value i6.a
+wire i4.result i7.a
+wire i6.result i7.b
+wire i7.result i8.condition
+wire i1.then i8.in
+wire i5.value i9.a
+wire i9.result j1.a
+wire j1.result j2.capacity
+wire i8.true j2.in
+wire i1.key j3.value
+wire i5.value j5.a
+wire j3.result j6.a
+wire j5.result j6.b
+wire i8.false j7.in
+wire j2.then j7.in
+wire j6.result j7.value
+wire j9.value k1.collection
+wire j8.value k1.index
+wire k1.value k2.a
+wire k2.result k3.condition
+wire j7.then k3.in
+wire j8.value k4.a
+wire k4.result k5.a
+wire j5.result k5.b
+wire k3.body k6.in
+wire k5.result k6.value
+wire k1.value k7.a
+wire k7.result k8.condition
+wire k3.done k8.in
+wire k8.true k9.in
+wire j9.value l1.array
+wire k8.false l1.in
+wire k9.then l1.in
+wire j8.value l1.index
+wire l2.value l3.array
+wire l1.then l3.in
+wire j8.value l3.index
+wire i1.key l3.value
+wire l4.value l5.array
+wire l3.then l5.in
+wire j8.value l5.index
+wire i1.value l5.value
+wire l5.then l6.in
+wire l6.then l7.in
+
+function d0005 Rehash
+	access private
+	doc "Moves every key to new storage of `capacity` slots (a power of two); the old storage is freed without destroying what moved."
+param capacity int
+local oldKeys K[]
+local oldValues V[]
+local oldStates uint8[]
+local oldCap int
+sheet body
+node r1 Entry
+node r2 Get this.mKeys
+node r3 Set local:oldKeys
+node r4 Get this.mValues
+node r5 Set local:oldValues
+node r6 Get this.mStates
+node r7 Set local:oldStates
+node r8 Get this.mCapacity
+node r9 Set local:oldCap
+node s1 Construct K
+	set count
+node s2 Set this.mKeys
+node s3 Construct V
+	set count
+node s4 Set this.mValues
+node s5 Construct uint8
+	set count
+node s6 Set this.mStates
+node s7 Set this.mCapacity
+node s8 Set this.mCount
+	in value 0
+node s9 Set this.mUsed
+	in value 0
+node t1 Get local:oldCap
+node t2 For
+	in start 0
+node t3 Get local:oldStates
+node t4 Index
+node t5 Operator ==
+	in b 1
+node t6 Branch
+node t7 Get local:oldKeys
+node t8 Index
+node t9 Get local:oldValues
+node u1 Index
+node u2 Call this.Insert
+node u3 Call Arrays.Free
+node u4 Call Arrays.Free
+node u5 Delete
+node u6 Return
+wire r1.then r3.in
+wire r2.value r3.value
+wire r3.then r5.in
+wire r4.value r5.value
+wire r5.then r7.in
+wire r6.value r7.value
+wire r7.then r9.in
+wire r8.value r9.value
+wire r1.capacity s1.count
+wire r9.then s1.in
+wire s1.then s2.in
+wire s1.object s2.value
+wire r1.capacity s3.count
+wire s2.then s3.in
+wire s3.then s4.in
+wire s3.object s4.value
+wire r1.capacity s5.count
+wire s4.then s5.in
+wire s5.then s6.in
+wire s5.object s6.value
+wire s6.then s7.in
+wire r1.capacity s7.value
+wire s7.then s8.in
+wire s8.then s9.in
+wire t1.value t2.count
+wire s9.then t2.in
+wire t3.value t4.collection
+wire t2.index t4.index
+wire t4.value t5.a
+wire t5.result t6.condition
+wire t2.body t6.in
+wire t7.value t8.collection
+wire t2.index t8.index
+wire t9.value u1.collection
+wire t2.index u1.index
+wire t6.true u2.in
+wire t8.value u2.key
+wire u1.value u2.value
+wire t7.value u3.array
+wire t2.done u3.in
+wire t9.value u4.array
+wire u3.then u4.in
+wire u4.then u5.in
+wire t3.value u5.object
+wire u5.then u6.in
+
+function d0006 Add
+	doc "Adds the key with its value. A key that is already there is a fatal error (TryAdd and SetItem do not fail)."
+param key K
+param value V
+sheet body
+node e1 Entry
+node e2 Call this.FindSlot
+node e3 Operator >=
+	in b 0
+node e4 Branch
+node e5 Fatal
+	in message "Dictionary.Add: the key is already there"
+node e6 Call this.Insert
+node e7 Return
+wire e1.key e2.key
+wire e2.result e3.a
+wire e3.result e4.condition
+wire e1.then e4.in
+wire e4.true e5.in
+wire e4.false e6.in
+wire e1.key e6.key
+wire e1.value e6.value
+wire e6.then e7.in
+
+function d0007 TryAdd
+	returns bool
+	doc "Adds the key with its value when it is not there yet; false (and nothing changed) when it is."
+param key K
+param value V
+sheet body
+node f1 Entry
+node f2 Call this.FindSlot
+node f3 Operator >=
+	in b 0
+node f4 Branch
+node f5 Return
+	in value false
+node f6 Call this.Insert
+node f7 Return
+	in value true
+wire f1.key f2.key
+wire f2.result f3.a
+wire f3.result f4.condition
+wire f1.then f4.in
+wire f4.true f5.in
+wire f4.false f6.in
+wire f1.key f6.key
+wire f1.value f6.value
+wire f6.then f7.in
+
+function d0008 SetItem
+	doc "Sets the value of the key: replaces it when the key is there (the old value is destroyed when it is a struct that has a destructor), adds the key otherwise."
+param key K
+param value V
+local slot int
+sheet body
+node g1 Entry
+node g2 Call this.FindSlot
+node g3 Set local:slot
+node g4 Get local:slot
+node g5 Operator >=
+	in b 0
+node g6 Branch
+node g7 Get this.mValues
+node g8 Call Arrays.Set
+node g9 Call this.Insert
+node ga Call Arrays.DestroyAt
+node h1 Return
+wire g1.key g2.key
+wire g1.then g3.in
+wire g2.result g3.value
+wire g4.value g5.a
+wire g5.result g6.condition
+wire g3.then g6.in
+wire g7.value g8.array
+wire ga.then g8.in
+wire g4.value g8.index
+wire g1.value g8.value
+wire g6.false g9.in
+wire g1.key g9.key
+wire g1.value g9.value
+wire g7.value ga.array
+wire g6.true ga.in
+wire g4.value ga.index
+wire g8.then h1.in
+wire g9.then h1.in
+
+function d0009 TryGet
+	returns bool
+	doc "True with the key's value in `item`; false (item is default) when the key is not there."
+param key K
+out item V
+local slot int
+sheet body
+node w1 Entry
+node w2 Call this.FindSlot
+node w3 Set local:slot
+node w4 Get local:slot
+node w5 Operator >=
+	in b 0
+node w6 Branch
+node w7 Get this.mValues
+node w8 Index
+node w9 Return
+	in value true
+node wa Return
+	in value false
+	in item default
+wire w1.key w2.key
+wire w1.then w3.in
+wire w2.result w3.value
+wire w4.value w5.a
+wire w5.result w6.condition
+wire w3.then w6.in
+wire w7.value w8.collection
+wire w4.value w8.index
+wire w6.true w9.in
+wire w8.value w9.item
+wire w6.false wa.in
+
+function d000a ContainsKey
+	pure
+	returns bool
+	doc "True when the key is there."
+param key K
+sheet body
+node m1 Entry
+node m2 Call this.FindSlot
+node m3 Operator >=
+	in b 0
+node m4 Return
+wire m1.key m2.key
+wire m2.result m3.a
+wire m1.then m4.in
+wire m3.result m4.value
+
+function d000b Remove
+	returns bool
+	doc "Removes the key and its value (structs that have a destructor are destroyed); false when the key was not there."
+param key K
+local slot int
+sheet body
+node n1 Entry
+node n2 Call this.FindSlot
+node n3 Set local:slot
+node n4 Get local:slot
+node n5 Operator <
+	in b 0
+node n6 Branch
+node n7 Return
+	in value false
+node n8 Get this.mStates
+node n9 Call Arrays.Set
+	in value 2
+node o1 Get this.mKeys
+node o2 Call Arrays.Set
+	in value default
+node o3 Get this.mValues
+node o4 Call Arrays.Set
+	in value default
+node o5 Set this.mCount
+	set op -=
+	in value 1
+node o6 Return
+	in value true
+node oa Call Arrays.DestroyAt
+node ob Call Arrays.DestroyAt
+wire n1.key n2.key
+wire n1.then n3.in
+wire n2.result n3.value
+wire n4.value n5.a
+wire n5.result n6.condition
+wire n3.then n6.in
+wire n6.true n7.in
+wire n8.value n9.array
+wire n6.false n9.in
+wire n4.value n9.index
+wire o1.value o2.array
+wire ob.then o2.in
+wire n4.value o2.index
+wire o3.value o4.array
+wire o2.then o4.in
+wire n4.value o4.index
+wire o4.then o5.in
+wire o5.then o6.in
+wire o1.value oa.array
+wire n9.then oa.in
+wire n4.value oa.index
+wire o3.value ob.array
+wire oa.then ob.in
+wire n4.value ob.index
+
+operator d000c []
+	pure
+	returns V
+	doc "The value of the key (Get [ ] on a Dictionary). A key that is not there is a fatal error (TryGet does not fail)."
+param dict Dictionary<K,V>
+param key K
+local slot int
+sheet body
+node p1 Entry
+node p2 Call Dictionary<K,V>.FindSlot
+node p3 Set local:slot
+node p4 Get local:slot
+node p5 Operator <
+	in b 0
+node p6 Branch
+node p7 Fatal
+	in message "Dictionary: the key is not there"
+node p8 Get Dictionary<K,V>.mValues
+node p9 Index
+node q1 Return
+wire p1.key p2.key
+wire p1.dict p2.receiver
+wire p1.then p3.in
+wire p2.result p3.value
+wire p4.value p5.a
+wire p5.result p6.condition
+wire p3.then p6.in
+wire p6.true p7.in
+wire p1.dict p8.receiver
+wire p8.value p9.collection
+wire p4.value p9.index
+wire p6.false q1.in
+wire p9.value q1.value
+
+function d000d Clear
+	doc "Removes every key: keys and values that are structs with a destructor are destroyed; the storage is kept; objects keys and values refer to are not deleted."
+sheet body
+node s0 Entry
+node sa Get this.mCapacity
+node sb Operator >
+	in b 0
+node sc Branch
+node sd Get this.mStates
+node se Call Arrays.Fill
+	in value 0
+node sf Get this.mKeys
+node sg Call Arrays.Fill
+	in value default
+node sh Get this.mValues
+node sj Call Arrays.Fill
+	in value default
+node sk Set this.mCount
+	in value 0
+node sm Set this.mUsed
+	in value 0
+node sn Return
+node sp Call this.DestroyAll
+wire sa.value sb.a
+wire sb.result sc.condition
+wire sp.then sc.in
+wire sd.value se.array
+wire sc.true se.in
+wire sf.value sg.array
+wire se.then sg.in
+wire sh.value sj.array
+wire sg.then sj.in
+wire sc.false sk.in
+wire sj.then sk.in
+wire sk.then sm.in
+wire sm.then sn.in
+wire s0.then sp.in
+
+function d000e GetEnumerator
+	returns DictionaryEnumerator<K,V>
+	doc "The enumerator For Each uses: (key, value) pairs in slot order."
+sheet body
+node x1 Entry
+node x2 This
+node x3 Make DictionaryEnumerator<K,V>
+	in mIndex -1
+node x4 Return
+wire x2.value x3.mDict
+wire x1.then x4.in
+wire x3.value x4.value
+
+function d000f DeleteKeys
+	generic K delete
+	doc "Deletes every key object (for a dictionary that owns its keys); the dictionary itself is not changed: Clear or delete it next."
+sheet body
+node ya Entry
+node yb Get this.mCapacity
+node yc For
+	in start 0
+node yd Get this.mStates
+node ye Index
+node yf Operator ==
+	in b 1
+node yg Branch
+node yh Get this.mKeys
+node yj Index
+node yk Delete
+node ym Return
+wire yb.value yc.count
+wire ya.then yc.in
+wire yd.value ye.collection
+wire yc.index ye.index
+wire ye.value yf.a
+wire yf.result yg.condition
+wire yc.body yg.in
+wire yh.value yj.collection
+wire yc.index yj.index
+wire yg.true yk.in
+wire yj.value yk.object
+wire yc.done ym.in
+
+function d0010 DeleteValues
+	generic V delete
+	doc "Deletes every value object (for a dictionary that owns its values); the dictionary itself is not changed: Clear or delete it next."
+sheet body
+node za Entry
+node zb Get this.mCapacity
+node zc For
+	in start 0
+node zd Get this.mStates
+node ze Index
+node zf Operator ==
+	in b 1
+node zg Branch
+node zh Get this.mValues
+node zj Index
+node zk Delete
+node zm Return
+wire zb.value zc.count
+wire za.then zc.in
+wire zd.value ze.collection
+wire zc.index ze.index
+wire ze.value zf.a
+wire zf.result zg.condition
+wire zc.body zg.in
+wire zh.value zj.collection
+wire zc.index zj.index
+wire zg.true zk.in
+wire zj.value zk.object
+wire zc.done zm.in
+
+function d0012 DestroyAll
+	access private
+	doc "DestroyAt for every key and value in use."
+sheet body
+node ai Entry
+node aj Get this.mCapacity
+node ak For
+	in start 0
+node al Get this.mStates
+node am Index
+node an Operator ==
+	in b 1
+node ao Branch
+node ap Get this.mKeys
+node aq Call Arrays.DestroyAt
+node ar Get this.mValues
+node as Call Arrays.DestroyAt
+node at Return
+wire aj.value ak.count
+wire ai.then ak.in
+wire al.value am.collection
+wire ak.index am.index
+wire am.value an.a
+wire an.result ao.condition
+wire ak.body ao.in
+wire ap.value aq.array
+wire ao.true aq.in
+wire ak.index aq.index
+wire ar.value as.array
+wire aq.then as.in
+wire ak.index as.index
+wire ak.done at.in
+
+function d0013 Keys
+	returns DictionaryKeys<K,V>
+	doc "The keys, for For Each (slot order)."
+sheet body
+node au Entry
+node av This
+node aw Make DictionaryKeys<K,V>
+	in mIndex -1
+node ax Return
+wire av.value aw.mDict
+wire au.then ax.in
+wire aw.value ax.value
+
+function d0014 Values
+	returns DictionaryValues<K,V>
+	doc "The values, for For Each (slot order, the keys' order)."
+sheet body
+node ay Entry
+node az This
+node bd Make DictionaryValues<K,V>
+	in mIndex -1
+node be Return
+wire az.value bd.mDict
+wire ay.then be.in
+wire bd.value be.value

@@ -1,0 +1,39 @@
+# treadle 1
+type LockGuard struct
+	namespace Core
+	doc "Holds a Mutex for a region: a Local LockGuard over the Mutex locks it where the Local runs and unlocks it where the Local's region ends (any way out: the end of the region, Return, Break). Do not copy it into a variable (each copy would unlock). docs: Threads."
+
+field mMutex Mutex
+	access private
+
+ctor y0001
+	doc "Locks `mutex` (waits for it) and holds it until the guard is destroyed."
+param mutex Mutex
+sheet body
+node a1 Entry
+node a2 Set this.mMutex
+node a3 Call Mutex.Lock
+node a4 Return
+wire a1.then a2.in
+wire a1.mutex a2.value
+wire a2.then a3.in
+wire a1.mutex a3.receiver
+wire a3.then a4.in
+
+dtor y0002
+	doc "Unlocks the Mutex."
+sheet body
+node b1 Entry
+node b2 Get this.mMutex
+node b3 Operator !=
+	in b null
+node b4 Branch
+node b5 Call Mutex.Unlock
+node b6 Return
+wire b2.value b3.a
+wire b3.result b4.condition
+wire b1.then b4.in
+wire b4.true b5.in
+wire b2.value b5.receiver
+wire b4.false b6.in
+wire b5.then b6.in

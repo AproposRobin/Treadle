@@ -1,0 +1,12 @@
+== exit
+0
+== stdout
+plane.FromPointNormal true
+plane.FromPoints true
+plane.DistanceTo true
+plane.DistanceTo.back true
+plane.Side.front true
+plane.Side.back true
+plane.Side.on true
+plane.Normalized true
+plane.Project true

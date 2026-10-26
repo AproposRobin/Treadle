@@ -1,0 +1,471 @@
+# treadle 1
+type Value enum
+	namespace Mini
+	doc "A value of the scripting language. A Str refers to a String that someone else owns: the Chunk for texts in the script, the Vm for texts made while running; copying a Value never copies the text."
+
+case Nil
+	doc "No value: what a function returns without return, and print."
+
+case Int
+	payload value int
+	doc "A 64-bit whole number."
+
+case Float
+	payload value double
+	doc "A double."
+
+case Bool
+	payload value bool
+	doc "true or false."
+
+case Str
+	payload text String
+	doc "A text (not owned)."
+
+case Func
+	payload index int
+	doc "A function of the script, by its index in the Chunk."
+
+function m0001 Append
+	static
+	doc "Appends the value as print shows it: nil, 42, 2.5, true, the text itself, <fn 3>."
+param value Mini.Value
+param into String
+sheet body
+node x00000 Entry
+node x00001 Switch
+	case Nil
+	case Int
+	case Float
+	case Bool
+	case Str
+	case Func
+node x00002 Call String.Append(StringView)
+	in text "nil"
+node x00003 Call String.Append(int)
+node x00004 Call String.Append(double)
+node x00005 Call String.Append(bool)
+node x00006 Call String.Append(StringView)
+node x00007 Call String.AppendF
+	in format "<fn {0}>"
+node x00008 Return
+wire x00000.then x00001.in
+wire x00000.value x00001.value
+wire x00001.case:Nil x00002.in
+wire x00000.into x00002.receiver
+wire x00001.case:Int x00003.in
+wire x00000.into x00003.receiver
+wire x00001.case:Int.value x00003.value
+wire x00001.case:Float x00004.in
+wire x00000.into x00004.receiver
+wire x00001.case:Float.value x00004.value
+wire x00001.case:Bool x00005.in
+wire x00000.into x00005.receiver
+wire x00001.case:Bool.value x00005.value
+wire x00001.case:Str x00006.in
+wire x00000.into x00006.receiver
+wire x00001.case:Str.text x00006.text
+wire x00001.case:Func.index x00007.arg0
+wire x00001.case:Func x00007.in
+wire x00000.into x00007.receiver
+wire x00001.done x00008.in
+
+function m0002 Truthy
+	static
+	pure
+	returns bool
+	doc "false for nil, false and 0; true for everything else."
+param value Mini.Value
+sheet body
+node x01000 Entry
+node x01001 Switch
+	case Nil
+	case Bool
+	case Int
+node x01002 Return
+	in value false
+node x01003 Return
+node x01004 Operator !=
+	in b 0
+node x01005 Return
+node x01006 Return
+	in value true
+wire x01000.then x01001.in
+wire x01000.value x01001.value
+wire x01001.case:Nil x01002.in
+wire x01001.case:Bool x01003.in
+wire x01001.case:Bool.value x01003.value
+wire x01001.case:Int.value x01004.a
+wire x01001.case:Int x01005.in
+wire x01004.result x01005.value
+wire x01001.done x01006.in
+
+function m0003 IsNumber
+	static
+	pure
+	returns bool
+	doc "True for Int and Float."
+param value Mini.Value
+sheet body
+node x02000 Entry
+node x02001 IsCase Mini.Value.Int
+node x02002 IsCase Mini.Value.Float
+node x02003 Operator ||
+node x02004 Return
+wire x02000.value x02001.value
+wire x02000.value x02002.value
+wire x02001.result x02003.a
+wire x02002.result x02003.b
+wire x02000.then x02004.in
+wire x02003.result x02004.value
+
+function m0004 IsText
+	static
+	pure
+	returns bool
+	doc "True for Str."
+param value Mini.Value
+sheet body
+node x03000 Entry
+node x03001 IsCase Mini.Value.Str
+node x03002 Return
+wire x03000.value x03001.value
+wire x03000.then x03002.in
+wire x03001.result x03002.value
+
+function m0005 ToFloat
+	static
+	pure
+	returns double
+	doc "An Int or a Float as a double; 0 for the other cases."
+param value Mini.Value
+sheet body
+node x04000 Entry
+node x04001 Switch
+	case Int
+	case Float
+node x04002 Cast double
+node x04003 Return
+node x04004 Return
+node x04005 Return
+	in value 0.0
+wire x04000.then x04001.in
+wire x04000.value x04001.value
+wire x04001.case:Int.value x04002.value
+wire x04001.case:Int x04003.in
+wire x04002.result x04003.value
+wire x04001.case:Float x04004.in
+wire x04001.case:Float.value x04004.value
+wire x04001.done x04005.in
+
+function m0006 Equal
+	static
+	pure
+	returns bool
+	doc "== of the language: numbers by value (an Int equals the same Float), texts by their bytes, functions by index, nil equals nil, other mixes are not equal."
+param a Mini.Value
+param b Mini.Value
+sheet body
+node x05000 Entry
+node x05001 Call Mini.Value.IsNumber
+node x05002 Call Mini.Value.IsNumber
+node x05003 Operator &&
+node x05004 Branch
+node x05005 Call Mini.Value.ToFloat
+node x05006 Call Mini.Value.ToFloat
+node x05007 Operator ==
+node x05008 Return
+node x05009 Switch
+	case Nil
+	case Bool
+	case Str
+	case Func
+node x0500a IsCase Mini.Value.Nil
+node x0500b Return
+node x0500c IsCase Mini.Value.Bool
+node x0500d Operator ==
+node x0500e Operator &&
+node x0500f Return
+node x0500g IsCase Mini.Value.Str
+node x0500h Call String.Equals
+node x0500i Operator &&
+node x0500j Return
+node x0500k IsCase Mini.Value.Func
+node x0500l Operator ==
+node x0500m Operator &&
+node x0500n Return
+node x0500o Return
+	in value false
+wire x05000.a x05001.value
+wire x05000.b x05002.value
+wire x05001.result x05003.a
+wire x05002.result x05003.b
+wire x05003.result x05004.condition
+wire x05000.then x05004.in
+wire x05000.a x05005.value
+wire x05000.b x05006.value
+wire x05005.result x05007.a
+wire x05006.result x05007.b
+wire x05004.true x05008.in
+wire x05007.result x05008.value
+wire x05004.false x05009.in
+wire x05000.a x05009.value
+wire x05000.b x0500a.value
+wire x05009.case:Nil x0500b.in
+wire x0500a.result x0500b.value
+wire x05000.b x0500c.value
+wire x0500c.value x0500d.a
+wire x05009.case:Bool.value x0500d.b
+wire x0500c.result x0500e.a
+wire x0500d.result x0500e.b
+wire x05009.case:Bool x0500f.in
+wire x0500e.result x0500f.value
+wire x05000.b x0500g.value
+wire x0500g.text x0500h.other
+wire x05009.case:Str.text x0500h.receiver
+wire x0500g.result x0500i.a
+wire x0500h.result x0500i.b
+wire x05009.case:Str x0500j.in
+wire x0500i.result x0500j.value
+wire x05000.b x0500k.value
+wire x0500k.index x0500l.a
+wire x05009.case:Func.index x0500l.b
+wire x0500k.result x0500m.a
+wire x0500l.result x0500m.b
+wire x05009.case:Func x0500n.in
+wire x0500m.result x0500n.value
+wire x05009.done x0500o.in
+
+function m0007 IntOp
+	static
+	pure
+	returns Mini.Value
+	doc "An arithmetic or comparison opcode on two int values (Div and Mod need a non-zero b for whole numbers); nil for any other opcode."
+param op Mini.Opcode
+param a int
+param b int
+sheet body
+node x06000 Entry
+node x06001 Switch
+	case Add
+	case Sub
+	case Mul
+	case Div
+	case Mod
+	case Lt
+	case Le
+	case Gt
+	case Ge
+	case Eq
+	case Ne
+node x06002 Operator +
+node x06003 MakeCase Mini.Value.Int
+node x06004 Return
+node x06005 Operator -
+node x06006 MakeCase Mini.Value.Int
+node x06007 Return
+node x06008 Operator *
+node x06009 MakeCase Mini.Value.Int
+node x0600a Return
+node x0600b Operator /
+node x0600c MakeCase Mini.Value.Int
+node x0600d Return
+node x0600e Operator %
+node x0600f MakeCase Mini.Value.Int
+node x0600g Return
+node x0600h Operator <
+node x0600i MakeCase Mini.Value.Bool
+node x0600j Return
+node x0600k Operator <=
+node x0600l MakeCase Mini.Value.Bool
+node x0600m Return
+node x0600n Operator >
+node x0600o MakeCase Mini.Value.Bool
+node x0600p Return
+node x0600q Operator >=
+node x0600r MakeCase Mini.Value.Bool
+node x0600s Return
+node x0600t Operator ==
+node x0600u MakeCase Mini.Value.Bool
+node x0600v Return
+node x0600w Operator !=
+node x0600x MakeCase Mini.Value.Bool
+node x0600y Return
+node x0600z MakeCase Mini.Value.Nil
+node x06010 Return
+wire x06000.then x06001.in
+wire x06000.op x06001.value
+wire x06000.a x06002.a
+wire x06000.b x06002.b
+wire x06002.result x06003.value
+wire x06001.case:Add x06004.in
+wire x06003.value x06004.value
+wire x06000.a x06005.a
+wire x06000.b x06005.b
+wire x06005.result x06006.value
+wire x06001.case:Sub x06007.in
+wire x06006.value x06007.value
+wire x06000.a x06008.a
+wire x06000.b x06008.b
+wire x06008.result x06009.value
+wire x06001.case:Mul x0600a.in
+wire x06009.value x0600a.value
+wire x06000.a x0600b.a
+wire x06000.b x0600b.b
+wire x0600b.result x0600c.value
+wire x06001.case:Div x0600d.in
+wire x0600c.value x0600d.value
+wire x06000.a x0600e.a
+wire x06000.b x0600e.b
+wire x0600e.result x0600f.value
+wire x06001.case:Mod x0600g.in
+wire x0600f.value x0600g.value
+wire x06000.a x0600h.a
+wire x06000.b x0600h.b
+wire x0600h.result x0600i.value
+wire x06001.case:Lt x0600j.in
+wire x0600i.value x0600j.value
+wire x06000.a x0600k.a
+wire x06000.b x0600k.b
+wire x0600k.result x0600l.value
+wire x06001.case:Le x0600m.in
+wire x0600l.value x0600m.value
+wire x06000.a x0600n.a
+wire x06000.b x0600n.b
+wire x0600n.result x0600o.value
+wire x06001.case:Gt x0600p.in
+wire x0600o.value x0600p.value
+wire x06000.a x0600q.a
+wire x06000.b x0600q.b
+wire x0600q.result x0600r.value
+wire x06001.case:Ge x0600s.in
+wire x0600r.value x0600s.value
+wire x06000.a x0600t.a
+wire x06000.b x0600t.b
+wire x0600t.result x0600u.value
+wire x06001.case:Eq x0600v.in
+wire x0600u.value x0600v.value
+wire x06000.a x0600w.a
+wire x06000.b x0600w.b
+wire x0600w.result x0600x.value
+wire x06001.case:Ne x0600y.in
+wire x0600x.value x0600y.value
+wire x06001.done x06010.in
+wire x0600z.value x06010.value
+
+function m0008 FloatOp
+	static
+	pure
+	returns Mini.Value
+	doc "An arithmetic or comparison opcode on two double values (Div and Mod need a non-zero b for whole numbers); nil for any other opcode."
+param op Mini.Opcode
+param a double
+param b double
+sheet body
+node x07000 Entry
+node x07001 Switch
+	case Add
+	case Sub
+	case Mul
+	case Div
+	case Mod
+	case Lt
+	case Le
+	case Gt
+	case Ge
+	case Eq
+	case Ne
+node x07002 Operator +
+node x07003 MakeCase Mini.Value.Float
+node x07004 Return
+node x07005 Operator -
+node x07006 MakeCase Mini.Value.Float
+node x07007 Return
+node x07008 Operator *
+node x07009 MakeCase Mini.Value.Float
+node x0700a Return
+node x0700b Operator /
+node x0700c MakeCase Mini.Value.Float
+node x0700d Return
+node x0700e Operator %
+node x0700f MakeCase Mini.Value.Float
+node x0700g Return
+node x0700h Operator <
+node x0700i MakeCase Mini.Value.Bool
+node x0700j Return
+node x0700k Operator <=
+node x0700l MakeCase Mini.Value.Bool
+node x0700m Return
+node x0700n Operator >
+node x0700o MakeCase Mini.Value.Bool
+node x0700p Return
+node x0700q Operator >=
+node x0700r MakeCase Mini.Value.Bool
+node x0700s Return
+node x0700t Operator ==
+node x0700u MakeCase Mini.Value.Bool
+node x0700v Return
+node x0700w Operator !=
+node x0700x MakeCase Mini.Value.Bool
+node x0700y Return
+node x0700z MakeCase Mini.Value.Nil
+node x07010 Return
+wire x07000.then x07001.in
+wire x07000.op x07001.value
+wire x07000.a x07002.a
+wire x07000.b x07002.b
+wire x07002.result x07003.value
+wire x07001.case:Add x07004.in
+wire x07003.value x07004.value
+wire x07000.a x07005.a
+wire x07000.b x07005.b
+wire x07005.result x07006.value
+wire x07001.case:Sub x07007.in
+wire x07006.value x07007.value
+wire x07000.a x07008.a
+wire x07000.b x07008.b
+wire x07008.result x07009.value
+wire x07001.case:Mul x0700a.in
+wire x07009.value x0700a.value
+wire x07000.a x0700b.a
+wire x07000.b x0700b.b
+wire x0700b.result x0700c.value
+wire x07001.case:Div x0700d.in
+wire x0700c.value x0700d.value
+wire x07000.a x0700e.a
+wire x07000.b x0700e.b
+wire x0700e.result x0700f.value
+wire x07001.case:Mod x0700g.in
+wire x0700f.value x0700g.value
+wire x07000.a x0700h.a
+wire x07000.b x0700h.b
+wire x0700h.result x0700i.value
+wire x07001.case:Lt x0700j.in
+wire x0700i.value x0700j.value
+wire x07000.a x0700k.a
+wire x07000.b x0700k.b
+wire x0700k.result x0700l.value
+wire x07001.case:Le x0700m.in
+wire x0700l.value x0700m.value
+wire x07000.a x0700n.a
+wire x07000.b x0700n.b
+wire x0700n.result x0700o.value
+wire x07001.case:Gt x0700p.in
+wire x0700o.value x0700p.value
+wire x07000.a x0700q.a
+wire x07000.b x0700q.b
+wire x0700q.result x0700r.value
+wire x07001.case:Ge x0700s.in
+wire x0700r.value x0700s.value
+wire x07000.a x0700t.a
+wire x07000.b x0700t.b
+wire x0700t.result x0700u.value
+wire x07001.case:Eq x0700v.in
+wire x0700u.value x0700v.value
+wire x07000.a x0700w.a
+wire x07000.b x0700w.b
+wire x0700w.result x0700x.value
+wire x07001.case:Ne x0700y.in
+wire x0700x.value x0700y.value
+wire x07001.done x07010.in
+wire x0700z.value x07010.value

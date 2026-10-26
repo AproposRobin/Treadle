@@ -1,0 +1,9 @@
+# The program's stdout (exact) and exit code; "== stderr" lines must appear in stderr in order.
+# A section header may name a config ("== exit Release") to apply to that config only.
+== exit
+0
+== stdout
+Rect area = 12
+Square area = 25
+Rect corners = 4
+square is a rect: 0

@@ -1,0 +1,7 @@
+# treadle 1
+type Color enum
+	namespace Res
+
+case Red
+
+case Green

@@ -1,0 +1,1132 @@
+# treadle 1
+type Game class
+	namespace Breakout
+	doc "Breakout: the paddle, the ball, a wall of 60 bricks in a List<Brick>, the score and three lives. Update is one fixed step (60 per second); RunWindowed paces it with Time.Ticks, RunHeadless runs steps without SDL. Until a key is pressed the paddle follows the ball by itself (the attract mode, which is also how the headless run plays)."
+
+field mBall Ball
+
+field mPaddleX float
+
+field mBricks List<Brick>
+	owner owned
+
+field mKeys Dictionary<int,bool>
+	owner owned
+	doc "Which keys are down, by SDL key code."
+
+field mEffects Effects
+	owner owned
+
+field mRandom Random
+	owner owned
+
+field mScore int
+
+field mLives int
+
+field mServe int
+	doc "Steps until the ball is launched; the ball rides on the paddle meanwhile."
+
+field mAuto bool
+
+field mAim float
+
+field mOver bool
+
+field mPaddleHits int
+
+field OnBrickDestroyed BrickHandler
+	attr Event
+	doc "Invoked with each brick that breaks: AddPoints and Effects.OnBrickDestroyed are its handlers."
+
+ctor g0001
+	doc "Makes the collections, the seeded Random and the wall, subscribes the two handlers and serves."
+param seed int
+sheet body
+node a01 Entry
+node a02 Construct List<Brick>
+node a03 Construct Dictionary<int,bool>
+node a04 Construct Effects
+node a05 Construct Random
+	set ctor (int)
+node a06 This
+node a07 Bind Breakout.Game.AddPoints
+	set alloc construct
+node a08 Call this.OnBrickDestroyed.Add
+node a09 Get this.mEffects
+node a0a Bind Breakout.Effects.OnBrickDestroyed
+	set alloc construct
+node a0b Call this.OnBrickDestroyed.Add
+node a0c Set this.mBricks
+node a0d Set this.mKeys
+node a0e Set this.mEffects
+node a0f Set this.mRandom
+node a0g Set this.mLives
+	in value 3
+node a0h Set this.mAuto
+	in value true
+node a0i Set this.mPaddleX
+	in value 280.0f
+node a0j Call this.BuildBricks
+node a0k Call this.Serve
+node a0l Return
+wire a01.then a02.in
+wire a0c.then a03.in
+wire a0d.then a04.in
+wire a0e.then a05.in
+wire a01.seed a05.seed
+wire a0j.then a07.in
+wire a06.value a07.receiver
+wire a07.value a08.handler
+wire a07.then a08.in
+wire a08.then a0a.in
+wire a09.value a0a.receiver
+wire a0a.value a0b.handler
+wire a0a.then a0b.in
+wire a02.then a0c.in
+wire a02.object a0c.value
+wire a03.then a0d.in
+wire a03.object a0d.value
+wire a04.then a0e.in
+wire a04.object a0e.value
+wire a05.then a0f.in
+wire a05.object a0f.value
+wire a0f.then a0g.in
+wire a0g.then a0h.in
+wire a0h.then a0i.in
+wire a0i.then a0j.in
+wire a0b.then a0k.in
+wire a0k.then a0l.in
+
+function g0002 BuildBricks
+	doc "6 rows of 10 bricks; the top rows give more points, and one brick in four (by the seeded Random) takes two hits."
+sheet body
+node b01 Entry
+node b02 For
+	in start 0
+	in count 6
+node b03 For
+	in start 0
+	in count 10
+node b04 Get this.mRandom
+node b05 Call Random.Next(int)
+	in maxExclusive 4
+node b06 Math
+	set expr "22 + c * 60"
+node b07 Math
+	set expr "60 + r * 22"
+node b08 Operator ==
+	in b 0
+node b09 Select
+	in true 2
+	in false 1
+node b0a Math
+	set expr "(6 - r) * 5"
+node b0b Make Breakout.Brick
+	in W 56
+	in H 18
+node b0c Get this.mBricks
+node b0d Call List<Brick>.Add
+node b0e Return
+wire b01.then b02.in
+wire b02.body b03.in
+wire b03.body b05.in
+wire b04.value b05.receiver
+wire b03.index b06.c
+wire b02.index b07.r
+wire b05.result b08.a
+wire b08.result b09.condition
+wire b02.index b0a.r
+wire b09.result b0b.Hits
+wire b0a.result b0b.Points
+wire b02.index b0b.Row
+wire b06.result b0b.X
+wire b07.result b0b.Y
+wire b05.then b0d.in
+wire b0c.value b0d.receiver
+wire b0b.value b0d.value
+wire b02.done b0e.in
+
+function g0003 Serve
+	doc "Puts the ball on the paddle, still, for 45 steps."
+sheet body
+node c01 Entry
+node c02 Set this.mServe
+	in value 45
+node c03 Get this.mBall
+node c04 Make Breakout.Vec2
+	in X 0.0f
+	in Y 0.0f
+node c05 Call Breakout.Ball.WithVel
+node c06 Set this.mBall
+node c07 Call this.FollowPaddle
+node c08 Return
+wire c01.then c02.in
+wire c03.value c05.receiver
+wire c04.value c05.vel
+wire c02.then c06.in
+wire c05.result c06.value
+wire c06.then c07.in
+wire c07.then c08.in
+
+function g0004 FollowPaddle
+	doc "Keeps the served ball on the middle of the paddle."
+sheet body
+node d01 Entry
+node d02 Get this.mPaddleX
+node d03 Operator +
+	in b 35.0f
+node d04 Make Breakout.Vec2
+	in Y 428.0f
+node d05 Get this.mBall
+node d06 Call Breakout.Ball.At
+node d07 Set this.mBall
+node d08 Return
+wire d02.value d03.a
+wire d03.result d04.X
+wire d04.value d06.pos
+wire d05.value d06.receiver
+wire d01.then d07.in
+wire d06.result d07.value
+wire d07.then d08.in
+
+function g0005 Launch
+	doc "Sends the ball up at a random slant."
+sheet body
+node e01 Entry
+node e02 Get this.mRandom
+node e03 Call Random.Range
+	in min -3.0f
+	in max 3.0f
+node e04 Get this.mBall
+node e05 Make Breakout.Vec2
+	in Y -4.5f
+node e06 Call Breakout.Ball.WithVel
+node e07 Set this.mBall
+node e08 Return
+wire e01.then e03.in
+wire e02.value e03.receiver
+wire e03.result e05.X
+wire e04.value e06.receiver
+wire e05.value e06.vel
+wire e03.then e07.in
+wire e06.result e07.value
+wire e07.then e08.in
+
+function g0006 AddPoints
+	doc "The first handler of OnBrickDestroyed: the brick's points go to the score."
+param brick Brick
+sheet body
+node f01 Entry
+node f02 Get Breakout.Brick.Points
+node f03 Set this.mScore
+	set op +=
+node f04 Return
+wire f01.brick f02.receiver
+wire f01.then f03.in
+wire f02.value f03.value
+wire f03.then f04.in
+
+function g0007 HandleKey
+	doc "Records a key going down or up; the first key pressed ends the attract mode."
+param code int
+param down bool
+sheet body
+node g01 Entry
+node g02 Get this.mKeys
+node g03 Call Dictionary<int,bool>.SetItem
+node g04 Branch
+node g05 Return
+node g06 Set this.mAuto
+	in value false
+wire g01.then g03.in
+wire g01.code g03.key
+wire g02.value g03.receiver
+wire g01.down g03.value
+wire g01.down g04.condition
+wire g03.then g04.in
+wire g04.false g05.in
+wire g06.then g05.in
+wire g04.true g06.in
+
+function g0008 IsDown
+	returns bool
+	doc "Whether the key is down (a key never pressed is up)."
+param code int
+sheet body
+node h01 Entry
+node h02 Get this.mKeys
+node h03 Call Dictionary<int,bool>.TryGet
+node h04 Operator &&
+node h05 Return
+wire h01.then h03.in
+wire h01.code h03.key
+wire h02.value h03.receiver
+wire h03.result h04.a
+wire h03.item h04.b
+wire h03.then h05.in
+wire h04.result h05.value
+
+function g0009 MovePaddle
+	doc "Moves the paddle at most 6 pixels a step: toward the ball (plus a random aim) in the attract mode, else by the arrow keys or A / D."
+local delta float
+sheet body
+node i01 Entry
+node i02 Get this.mAuto
+node i03 Branch
+node i04 Get this.mBall
+node i05 Get Breakout.Ball.Pos
+node i06 Break Breakout.Vec2
+node i07 Get Breakout.Ball.Vel
+node i08 Break Breakout.Vec2
+node i09 Get this.mAim
+node i0a Get this.mPaddleX
+node i0b Math
+	set expr "b + a - p - 35"
+node i0c Call Math.Clamp
+	in min -6.0f
+	in max 6.0f
+node i0d Set local:delta
+node i0e MakeCase C.SDL_KeyCode.SDLK_LEFT
+node i0f Cast int
+node i0g Call this.IsDown
+node i0h MakeCase C.SDL_KeyCode.SDLK_a
+node i0i Cast int
+node i0j Call this.IsDown
+node i0k MakeCase C.SDL_KeyCode.SDLK_RIGHT
+node i0l Cast int
+node i0m Call this.IsDown
+node i0n MakeCase C.SDL_KeyCode.SDLK_d
+node i0o Cast int
+node i0p Call this.IsDown
+node i0q Operator ||
+node i0r Select
+	in true 6.0f
+	in false 0.0f
+node i0s Operator ||
+node i0t Select
+	in true 6.0f
+	in false 0.0f
+node i0u Operator -
+node i0v Set local:delta
+node i0w Get this.mPaddleX
+node i0x Get local:delta
+node i0y Operator +
+node i0z Call Math.Clamp
+	in min 0.0f
+	in max 560.0f
+node i10 Set this.mPaddleX
+node i11 Return
+wire i02.value i03.condition
+wire i01.then i03.in
+wire i04.value i05.receiver
+wire i05.value i06.value
+wire i04.value i07.receiver
+wire i07.value i08.value
+wire i09.value i0b.a
+wire i06.X i0b.b
+wire i0a.value i0b.p
+wire i0b.result i0c.x
+wire i03.true i0d.in
+wire i0c.result i0d.value
+wire i0e.value i0f.value
+wire i0f.result i0g.code
+wire i03.false i0g.in
+wire i0h.value i0i.value
+wire i0i.result i0j.code
+wire i0g.then i0j.in
+wire i0k.value i0l.value
+wire i0l.result i0m.code
+wire i0j.then i0m.in
+wire i0n.value i0o.value
+wire i0o.result i0p.code
+wire i0m.then i0p.in
+wire i0m.result i0q.a
+wire i0p.result i0q.b
+wire i0q.result i0r.condition
+wire i0g.result i0s.a
+wire i0j.result i0s.b
+wire i0s.result i0t.condition
+wire i0r.result i0u.a
+wire i0t.result i0u.b
+wire i0p.then i0v.in
+wire i0u.result i0v.value
+wire i0w.value i0y.a
+wire i0x.value i0y.b
+wire i0y.result i0z.x
+wire i0d.then i10.in
+wire i0v.then i10.in
+wire i0z.result i10.value
+wire i10.then i11.in
+
+function g000a Update
+	doc "One fixed step: the flashes, the paddle, then the serve countdown or the ball."
+sheet body
+node j01 Entry
+node j02 Get this.mOver
+node j03 Branch
+node j04 Return
+node j05 Get this.mEffects
+node j06 Call Breakout.Effects.Update
+node j07 Get this.mServe
+node j08 Operator >
+	in b 0
+node j09 Branch
+node j0a Set this.mServe
+	set op -=
+	in value 1
+node j0b Get this.mServe
+node j0c Operator ==
+	in b 0
+node j0d Branch
+node j0e Call this.MovePaddle
+node j0f Call this.FollowPaddle
+node j0g Call this.Launch
+node j0h Call this.StepBall
+wire j02.value j03.condition
+wire j01.then j03.in
+wire j03.true j04.in
+wire j0d.false j04.in
+wire j0g.then j04.in
+wire j0h.then j04.in
+wire j03.false j06.in
+wire j05.value j06.receiver
+wire j07.value j08.a
+wire j08.result j09.condition
+wire j0e.then j09.in
+wire j09.true j0a.in
+wire j0b.value j0c.a
+wire j0c.result j0d.condition
+wire j0f.then j0d.in
+wire j06.then j0e.in
+wire j0a.then j0f.in
+wire j0d.true j0g.in
+wire j09.false j0h.in
+
+function g000b StepBall
+	doc "Moves the ball, bounces it off the walls, the paddle and the bricks, and takes a life when it falls out."
+sheet body
+node k01 Entry
+node k02 Get this.mBall
+node k03 Call Breakout.Ball.Stepped
+node k04 Set this.mBall
+node k05 Get this.mBall
+node k06 Get Breakout.Ball.Pos
+node k07 Break Breakout.Vec2
+node k08 Get Breakout.Ball.Vel
+node k09 Break Breakout.Vec2
+node k0a Operator >
+	in b 480.0f
+node k0b Branch
+node k0c Set this.mLives
+	set op -=
+	in value 1
+node k0d Get this.mLives
+node k0e Operator <=
+	in b 0
+node k0f Branch
+node k0g Return
+node k0h Get this.mBricks
+node k0i Get List<Brick>.Count
+node k0j Operator ==
+	in b 0
+node k0k Branch
+node k0l Call this.BounceWalls
+node k0m Call this.BouncePaddle
+node k0n Call this.HitBricks
+node k0o Set this.mOver
+	in value true
+node k0p Call this.Serve
+node k0q Set this.mOver
+	in value true
+wire k02.value k03.receiver
+wire k01.then k04.in
+wire k03.result k04.value
+wire k05.value k06.receiver
+wire k06.value k07.value
+wire k05.value k08.receiver
+wire k08.value k09.value
+wire k07.Y k0a.a
+wire k0a.result k0b.condition
+wire k0n.then k0b.in
+wire k0b.true k0c.in
+wire k0d.value k0e.a
+wire k0e.result k0f.condition
+wire k0c.then k0f.in
+wire k0k.false k0g.in
+wire k0o.then k0g.in
+wire k0p.then k0g.in
+wire k0q.then k0g.in
+wire k0h.value k0i.receiver
+wire k0i.value k0j.a
+wire k0j.result k0k.condition
+wire k0b.false k0k.in
+wire k04.then k0l.in
+wire k0l.then k0m.in
+wire k0m.then k0n.in
+wire k0f.true k0o.in
+wire k0f.false k0p.in
+wire k0k.true k0q.in
+
+function g000c BounceWalls
+	doc "Side walls at x 0 and 640, the ceiling under the score line at y 40."
+sheet body
+node l01 Entry
+node l02 Get this.mBall
+node l03 Get Breakout.Ball.Pos
+node l04 Break Breakout.Vec2
+node l05 Get Breakout.Ball.Vel
+node l06 Break Breakout.Vec2
+node l07 Operator <
+	in b 0.0f
+node l08 Operator <
+	in b 0.0f
+node l09 Operator &&
+node l0a Operator >
+	in b 630.0f
+node l0b Operator >
+	in b 0.0f
+node l0c Operator &&
+node l0d Operator ||
+node l0e Branch
+node l0f Operator <
+	in b 40.0f
+node l0g Operator <
+	in b 0.0f
+node l0h Operator &&
+node l0i Branch
+node l0j Return
+node l0k Call Breakout.Ball.BouncedX
+node l0l Set this.mBall
+node l0m Call Breakout.Ball.BouncedY
+node l0n Set this.mBall
+wire l02.value l03.receiver
+wire l03.value l04.value
+wire l02.value l05.receiver
+wire l05.value l06.value
+wire l04.X l07.a
+wire l06.X l08.a
+wire l07.result l09.a
+wire l08.result l09.b
+wire l04.X l0a.a
+wire l06.X l0b.a
+wire l0a.result l0c.a
+wire l0b.result l0c.b
+wire l09.result l0d.a
+wire l0c.result l0d.b
+wire l0d.result l0e.condition
+wire l01.then l0e.in
+wire l04.Y l0f.a
+wire l06.Y l0g.a
+wire l0f.result l0h.a
+wire l0g.result l0h.b
+wire l0h.result l0i.condition
+wire l0e.false l0i.in
+wire l0l.then l0i.in
+wire l0i.false l0j.in
+wire l0n.then l0j.in
+wire l02.value l0k.receiver
+wire l0e.true l0l.in
+wire l0k.result l0l.value
+wire l02.value l0m.receiver
+wire l0i.true l0n.in
+wire l0m.result l0n.value
+
+function g000d BouncePaddle
+	doc "A falling ball that meets the paddle goes back up, slanted by where it hit (the edges send it wider)."
+sheet body
+node m01 Entry
+node m02 Get this.mBall
+node m03 Get Breakout.Ball.Pos
+node m04 Break Breakout.Vec2
+node m05 Get Breakout.Ball.Vel
+node m06 Break Breakout.Vec2
+node m07 Get this.mPaddleX
+node m08 Operator +
+	in b 10.0f
+node m09 Operator >
+	in b 0.0f
+node m0a Operator >=
+	in b 440.0f
+node m0b Operator &&
+node m0c Operator <=
+	in b 452.0f
+node m0d Operator &&
+node m0e Operator +
+	in b 10.0f
+node m0f Operator >=
+node m0g Operator +
+	in b 80.0f
+node m0h Operator <=
+node m0i Operator &&
+node m0j Operator &&
+node m0k Branch
+node m0l Math
+	set expr "(x + 5 - p - 40) / 40 * 4.5"
+node m0m Operator neg
+node m0n Make Breakout.Vec2
+node m0o Call Breakout.Ball.WithVel
+node m0p Set this.mBall
+node m0q Get this.mRandom
+node m0r Call Random.Range
+	in min -30.0f
+	in max 30.0f
+node m0s Return
+node m0t Set this.mAim
+node m0u Set this.mPaddleHits
+	set op +=
+	in value 1
+wire m02.value m03.receiver
+wire m03.value m04.value
+wire m02.value m05.receiver
+wire m05.value m06.value
+wire m04.Y m08.a
+wire m06.Y m09.a
+wire m08.result m0a.a
+wire m09.result m0b.a
+wire m0a.result m0b.b
+wire m08.result m0c.a
+wire m0b.result m0d.a
+wire m0c.result m0d.b
+wire m04.X m0e.a
+wire m0e.result m0f.a
+wire m07.value m0f.b
+wire m07.value m0g.a
+wire m04.X m0h.a
+wire m0g.result m0h.b
+wire m0f.result m0i.a
+wire m0h.result m0i.b
+wire m0d.result m0j.a
+wire m0i.result m0j.b
+wire m0j.result m0k.condition
+wire m01.then m0k.in
+wire m07.value m0l.p
+wire m04.X m0l.x
+wire m06.Y m0m.a
+wire m0l.result m0n.X
+wire m0m.result m0n.Y
+wire m02.value m0o.receiver
+wire m0n.value m0o.vel
+wire m0k.true m0p.in
+wire m0o.result m0p.value
+wire m0p.then m0r.in
+wire m0q.value m0r.receiver
+wire m0k.false m0s.in
+wire m0u.then m0s.in
+wire m0r.then m0t.in
+wire m0r.result m0t.value
+wire m0t.then m0u.in
+
+function g000e HitBricks
+	doc "Finds a brick the ball overlaps with List.FindIndex and a Lambda filter (it captures the ball's place), bounces off the face it hit more squarely and hits the brick."
+local bx float
+local by float
+local idx int
+local brick Brick
+sheet body
+node n01 Entry
+node n02 Get this.mBall
+node n03 Get Breakout.Ball.Pos
+node n04 Break Breakout.Vec2
+node n05 Get Breakout.Ball.Vel
+node n06 Break Breakout.Vec2
+node n07 Set local:bx
+node n08 Set local:by
+node n09 Lambda
+	set type delegate:bool(Breakout.Brick)
+	set alloc local
+	set inputs b
+node n0a Get this.mBricks
+node n0b Call List<Brick>.FindIndex
+node n0c Set local:idx
+node n0d Get local:idx
+node n0e Operator >=
+	in b 0
+node n0f Branch
+node n0g Get this.mBricks
+node n0h Get local:idx
+node n0i Index
+node n0j Set local:brick
+node n0k Get local:brick
+node n0l Break Breakout.Brick
+node n0m Get local:bx
+node n0n Math
+	set expr "(x + 5 - l - w / 2) / w"
+node n0o Call Math.Abs(double)
+node n0p Get local:by
+node n0q Math
+	set expr "(y + 5 - t - h / 2) / h"
+node n0r Call Math.Abs(double)
+node n0s Operator >
+node n0t Branch
+node n0u Get local:idx
+node n0v Call this.HitBrick
+node n0w Return
+node n0x Call Breakout.Ball.BouncedX
+node n0y Set this.mBall
+node n0z Call Breakout.Ball.BouncedY
+node n10 Set this.mBall
+wire n02.value n03.receiver
+wire n03.value n04.value
+wire n02.value n05.receiver
+wire n05.value n06.value
+wire n01.then n07.in
+wire n04.X n07.value
+wire n07.then n08.in
+wire n04.Y n08.value
+wire n08.then n09.in
+wire n09.then n0b.in
+wire n09.value n0b.match
+wire n0a.value n0b.receiver
+wire n0b.then n0c.in
+wire n0b.result n0c.value
+wire n0d.value n0e.a
+wire n0e.result n0f.condition
+wire n0c.then n0f.in
+wire n0g.value n0i.collection
+wire n0h.value n0i.index
+wire n0f.true n0j.in
+wire n0i.value n0j.value
+wire n0k.value n0l.value
+wire n0l.X n0n.l
+wire n0l.W n0n.w
+wire n0m.value n0n.x
+wire n0n.result n0o.x
+wire n0l.H n0q.h
+wire n0l.Y n0q.t
+wire n0p.value n0q.y
+wire n0q.result n0r.x
+wire n0o.result n0s.a
+wire n0r.result n0s.b
+wire n0s.result n0t.condition
+wire n0j.then n0t.in
+wire n0y.then n0v.in
+wire n10.then n0v.in
+wire n0u.value n0v.index
+wire n0f.false n0w.in
+wire n0v.then n0w.in
+wire n02.value n0x.receiver
+wire n0t.true n0y.in
+wire n0x.result n0y.value
+wire n02.value n0z.receiver
+wire n0t.false n10.in
+wire n0z.result n10.value
+sheet lambda:n09
+node nl001 Entry
+node nl002 Get local:bx
+node nl003 Get local:by
+node nl004 Call Breakout.Brick.Overlaps
+	in size 10
+node nl005 Return
+wire nl001.b nl004.receiver
+wire nl002.value nl004.x
+wire nl003.value nl004.y
+wire nl001.then nl005.in
+wire nl004.result nl005.value
+
+function g000f HitBrick
+	doc "A brick with hits left loses one; the last hit removes it and invokes OnBrickDestroyed."
+param index int
+local brick Brick
+sheet body
+node o01 Entry
+node o02 Get this.mBricks
+node o03 Index
+node o04 Set local:brick
+node o05 Get local:brick
+node o06 Break Breakout.Brick
+node o07 Operator >
+	in b 1
+node o08 Branch
+node o09 Operator -
+	in b 1
+node o0a Make Breakout.Brick
+node o0b Call List<Brick>.SetAt
+node o0c Call List<Brick>.RemoveAt
+node o0d Get local:brick
+node o0e Call this.OnBrickDestroyed.Invoke
+node o0f Return
+wire o02.value o03.collection
+wire o01.index o03.index
+wire o01.then o04.in
+wire o03.value o04.value
+wire o05.value o06.value
+wire o06.Hits o07.a
+wire o07.result o08.condition
+wire o04.then o08.in
+wire o06.Hits o09.a
+wire o06.H o0a.H
+wire o09.result o0a.Hits
+wire o06.Points o0a.Points
+wire o06.Row o0a.Row
+wire o06.W o0a.W
+wire o06.X o0a.X
+wire o06.Y o0a.Y
+wire o08.true o0b.in
+wire o01.index o0b.index
+wire o02.value o0b.receiver
+wire o0a.value o0b.value
+wire o08.false o0c.in
+wire o01.index o0c.index
+wire o02.value o0c.receiver
+wire o0d.value o0e.arg0
+wire o0c.then o0e.in
+wire o0b.then o0f.in
+wire o0e.then o0f.in
+
+function g000g Render
+	doc "Draws one frame: the bricks (two-hit ones outlined), the paddle, the ball, the flashes, the score and the lives."
+param renderer C.SDL_Renderer*
+sheet body
+node p01 Entry
+node p02 Call C.sdl2.SDL_RenderClear
+node p03 Get this.mBricks
+node p04 ForEach
+node p05 Break Breakout.Brick
+node p06 Math
+	set expr "70 + r * 30"
+node p07 Math
+	set expr "200 - r * 25"
+node p08 Math
+	set expr "230 - r * 12"
+node p09 Call Breakout.Hud.Color
+node p0a Call Breakout.Hud.Fill
+node p0b Operator >
+	in b 1
+node p0c Branch
+node p0d Call Breakout.Hud.Color
+	in r 255
+	in g 255
+	in b 255
+node p0e Call Breakout.Hud.Outline
+node p0f Get this.mBall
+node p0g Get Breakout.Ball.Pos
+node p0h Break Breakout.Vec2
+node p0i Get Breakout.Ball.Vel
+node p0j Break Breakout.Vec2
+node p0k Call Breakout.Hud.Color
+	in r 220
+	in g 220
+	in b 235
+node p0l Get this.mPaddleX
+node p0m Cast int
+node p0n Call Breakout.Hud.Fill
+	in y 440
+	in w 80
+	in h 10
+node p0o Call Breakout.Hud.Color
+	in r 255
+	in g 240
+	in b 120
+node p0p Cast int
+node p0q Cast int
+node p0r Call Breakout.Hud.Fill
+	in w 10
+	in h 10
+node p0s Get this.mEffects
+node p0t Call Breakout.Effects.Draw
+node p0u Call Breakout.Hud.Color
+	in r 90
+	in g 90
+	in b 120
+node p0v Call Breakout.Hud.Fill
+	in x 0
+	in y 36
+	in w 640
+	in h 2
+node p0w Call Breakout.Hud.Color
+	in r 240
+	in g 240
+	in b 255
+node p0x Get this.mScore
+node p0y Call Breakout.Hud.DrawNumber
+	in x 20
+	in y 5
+	in digits 5
+node p0z Call Breakout.Hud.Color
+	in r 255
+	in g 90
+	in b 90
+node p10 Get this.mLives
+node p11 Call Breakout.Hud.DrawLives
+node p12 Call C.sdl2.SDL_RenderPresent
+node p13 Call Breakout.Hud.Color
+	in r 12
+	in g 14
+	in b 28
+node p14 Return
+wire p13.then p02.in
+wire p01.renderer p02.renderer
+wire p03.value p04.collection
+wire p02.then p04.in
+wire p04.element p05.value
+wire p05.Row p06.r
+wire p05.Row p07.r
+wire p05.Row p08.r
+wire p08.result p09.b
+wire p07.result p09.g
+wire p04.body p09.in
+wire p06.result p09.r
+wire p01.renderer p09.renderer
+wire p05.H p0a.h
+wire p09.then p0a.in
+wire p01.renderer p0a.renderer
+wire p05.W p0a.w
+wire p05.X p0a.x
+wire p05.Y p0a.y
+wire p05.Hits p0b.a
+wire p0b.result p0c.condition
+wire p0a.then p0c.in
+wire p0c.true p0d.in
+wire p01.renderer p0d.renderer
+wire p05.H p0e.h
+wire p0d.then p0e.in
+wire p01.renderer p0e.renderer
+wire p05.W p0e.w
+wire p05.X p0e.x
+wire p05.Y p0e.y
+wire p0f.value p0g.receiver
+wire p0g.value p0h.value
+wire p0f.value p0i.receiver
+wire p0i.value p0j.value
+wire p04.done p0k.in
+wire p01.renderer p0k.renderer
+wire p0l.value p0m.value
+wire p0k.then p0n.in
+wire p01.renderer p0n.renderer
+wire p0m.result p0n.x
+wire p0n.then p0o.in
+wire p01.renderer p0o.renderer
+wire p0h.X p0p.value
+wire p0h.Y p0q.value
+wire p0o.then p0r.in
+wire p01.renderer p0r.renderer
+wire p0p.result p0r.x
+wire p0q.result p0r.y
+wire p0r.then p0t.in
+wire p0s.value p0t.receiver
+wire p01.renderer p0t.renderer
+wire p0t.then p0u.in
+wire p01.renderer p0u.renderer
+wire p0u.then p0v.in
+wire p01.renderer p0v.renderer
+wire p0v.then p0w.in
+wire p01.renderer p0w.renderer
+wire p0w.then p0y.in
+wire p01.renderer p0y.renderer
+wire p0x.value p0y.value
+wire p0y.then p0z.in
+wire p01.renderer p0z.renderer
+wire p0z.then p11.in
+wire p10.value p11.lives
+wire p01.renderer p11.renderer
+wire p11.then p12.in
+wire p01.renderer p12.renderer
+wire p01.then p13.in
+wire p01.renderer p13.renderer
+wire p12.then p14.in
+
+function g000h RunHeadless
+	doc "Runs `frames` fixed steps without SDL (the same steps a window would show in attract mode)."
+param frames int
+sheet body
+node q01 Entry
+node q02 For
+	in start 0
+node q03 Call this.Update
+node q04 Return
+wire q01.frames q02.count
+wire q01.then q02.in
+wire q02.body q03.in
+wire q02.done q04.in
+
+function g000i RunWindowed
+	returns int
+	doc "The window loop: polls SDL events into the key Dictionary, runs as many fixed steps as Time.Ticks says have passed (at most five per frame), draws, and sleeps until the next step is due (vertical sync may not hold the loop). Ends on Escape, on closing the window, or after maxFrames frames (when above 0). Returns the frames drawn."
+param renderer C.SDL_Renderer*
+param maxFrames int
+local running bool
+	init true
+local frame int
+local step int
+local last int
+local acc int
+local freq int
+local ev C.SDL_Event
+sheet body
+node r01 Entry
+node r02 Call Time.Frequency
+node r03 Set local:freq
+node r04 Get local:freq
+node r05 Operator /
+	in b 60
+node r06 Set local:step
+node r07 Call Time.Ticks
+node r08 Set local:last
+node r09 Get local:running
+node r0a While
+node r0b While
+	in condition true
+node r0c Get local:ev
+node r0d Call C.sdl2.SDL_PollEvent
+node r0e Operator ==
+	in b 0
+node r0f Branch
+node r0g Break
+node r0h Break C.SDL_Event
+node r0i MakeCase C.SDL_EventType.SDL_QUIT
+node r0j Cast uint32
+node r0k Operator ==
+node r0l Branch
+node r0m Set local:running
+	in value false
+node r0n MakeCase C.SDL_EventType.SDL_KEYDOWN
+node r0o Cast uint32
+node r0p Operator ==
+node r0q MakeCase C.SDL_EventType.SDL_KEYUP
+node r0r Cast uint32
+node r0s Operator ==
+node r0t Operator ||
+node r0u Branch
+node r0v Break C.SDL_KeyboardEvent
+node r0w Break C.SDL_Keysym
+node r0x Call this.HandleKey
+node r0y MakeCase C.SDL_KeyCode.SDLK_ESCAPE
+node r0z Cast int
+node r10 Operator ==
+node r11 Branch
+node r12 Set local:running
+	in value false
+node r13 Call Time.Ticks
+node r14 Get local:last
+node r15 Operator -
+node r16 Set local:acc
+	set op +=
+node r17 Set local:last
+node r18 Get local:acc
+node r19 Get local:step
+node r1a Operator *
+	in b 5
+node r1b Operator >
+node r1c Branch
+node r1d Get local:step
+node r1e Operator *
+	in b 5
+node r1f Set local:acc
+node r1g Get local:acc
+node r1h Get local:step
+node r1i Operator >=
+node r1j While
+node r1k Call this.Update
+node r1l Get local:step
+node r1m Set local:acc
+	set op -=
+node r1n Call this.Render
+node r1o Get local:step
+node r1p Get local:acc
+node r1q Get local:freq
+node r1r Math
+	set expr "(s - a) * 1000 / f"
+node r1s Cast uint32
+node r1t Call C.sdl2.SDL_Delay
+node r1u Set local:frame
+	set op +=
+	in value 1
+node r1v Operator >
+	in b 0
+node r1w Get local:frame
+node r1x Operator >=
+node r1y Operator &&
+node r1z Branch
+node r20 Set local:running
+	in value false
+node r21 Get local:frame
+node r22 Return
+wire r01.then r02.in
+wire r02.then r03.in
+wire r02.result r03.value
+wire r04.value r05.a
+wire r03.then r06.in
+wire r05.result r06.value
+wire r06.then r07.in
+wire r07.then r08.in
+wire r07.result r08.value
+wire r09.value r0a.condition
+wire r08.then r0a.in
+wire r0a.body r0b.in
+wire r0c.value r0d.event
+wire r0b.body r0d.in
+wire r0d.result r0e.a
+wire r0e.result r0f.condition
+wire r0d.then r0f.in
+wire r0f.true r0g.in
+wire r0c.value r0h.value
+wire r0i.value r0j.value
+wire r0h.type r0k.a
+wire r0j.result r0k.b
+wire r0k.result r0l.condition
+wire r0f.false r0l.in
+wire r0l.true r0m.in
+wire r0n.value r0o.value
+wire r0h.type r0p.a
+wire r0o.result r0p.b
+wire r0q.value r0r.value
+wire r0h.type r0s.a
+wire r0r.result r0s.b
+wire r0p.result r0t.a
+wire r0s.result r0t.b
+wire r0t.result r0u.condition
+wire r0l.false r0u.in
+wire r0h.key r0v.value
+wire r0v.keysym r0w.value
+wire r0w.sym r0x.code
+wire r0p.result r0x.down
+wire r0u.true r0x.in
+wire r0y.value r0z.value
+wire r0w.sym r10.a
+wire r0z.result r10.b
+wire r10.result r11.condition
+wire r0x.then r11.in
+wire r11.true r12.in
+wire r0b.done r13.in
+wire r13.result r15.a
+wire r14.value r15.b
+wire r13.then r16.in
+wire r15.result r16.value
+wire r16.then r17.in
+wire r13.result r17.value
+wire r19.value r1a.a
+wire r18.value r1b.a
+wire r1a.result r1b.b
+wire r1b.result r1c.condition
+wire r17.then r1c.in
+wire r1d.value r1e.a
+wire r1c.true r1f.in
+wire r1e.result r1f.value
+wire r1g.value r1i.a
+wire r1h.value r1i.b
+wire r1i.result r1j.condition
+wire r1c.false r1j.in
+wire r1f.then r1j.in
+wire r1j.body r1k.in
+wire r1k.then r1m.in
+wire r1l.value r1m.value
+wire r1j.done r1n.in
+wire r01.renderer r1n.renderer
+wire r1p.value r1r.a
+wire r1q.value r1r.f
+wire r1o.value r1r.s
+wire r1r.result r1s.value
+wire r1n.then r1t.in
+wire r1s.result r1t.ms
+wire r1t.then r1u.in
+wire r01.maxFrames r1v.a
+wire r1w.value r1x.a
+wire r01.maxFrames r1x.b
+wire r1v.result r1y.a
+wire r1x.result r1y.b
+wire r1y.result r1z.condition
+wire r1u.then r1z.in
+wire r1z.true r20.in
+wire r0a.done r22.in
+wire r21.value r22.value

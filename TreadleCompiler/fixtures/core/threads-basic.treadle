@@ -1,0 +1,190 @@
+# treadle 1
+type ThreadsBasicMain class
+	namespace Cx
+	doc "Threads: four named Threads each square their number into a slot of an array (a Lambda made with Allocation construct, capturing the array and the number by value); Main joins them in order and prints the results and the names. The body names its own thread (CurrentName) and Current is the Thread object."
+
+function m1 Main
+	static
+	returns int
+local results int[]
+local threads List<Thread>
+local names List<String>
+local lock Mutex
+local n int
+sheet body
+node a1 Entry
+node a2 Construct int[]
+	in count 4
+node a3 Set local:results
+node a4 Construct List<Thread>
+node a5 Set local:threads
+node a5g Get local:threads
+node a6 Construct List<String>
+node a7 Set local:names
+node a8 Construct Mutex
+node a9 Set local:lock
+node b1 For
+	in start 0
+	in count 4
+node b2 Local String
+node b3 Call String.AppendF
+	in format "worker {0}"
+node b4 Construct Thread
+	set ctor (StringView)
+node b5 Call List<Thread>.Add
+node b5n Set local:n
+node b6 Lambda
+	set type delegate:void()
+	set alloc construct
+node b7 Call Thread.Start
+node c1 For
+	in start 0
+	in count 4
+node c2 Get local:threads
+node c3 Index
+node c4 Call Thread.Join
+node c5 Get local:results
+node c6 Index
+node c7 Local String
+node c8 Call String.AppendF
+	in format "result {0} = {1}"
+node c9 Call Console.WriteLine(StringView)
+node d1 Call Thread.Name
+node d2 Call Console.WriteLine(StringView)
+node d3 Call Thread.IsAlive
+node d4 Call Console.WriteLine(bool)
+node e1 Get List<String>.Count
+node e2 Call Console.WriteLine(int)
+node e3 Call Thread.Current
+node e4 Operator ==
+	in b null
+node e5 Call Console.WriteLine(bool)
+node e6 Call Thread.CurrentName
+node e7 Call Console.WriteLine(StringView)
+node f1 For
+	in start 0
+	in count 4
+node f2 Get local:threads
+node f3 Index
+node f4 Delete
+node f5 Get local:threads
+node f6 Delete
+node f7 Get local:results
+node f8 Delete
+node f9 Get local:names
+node g1 Call List<String>.DeleteAll
+node g2 Get local:names
+node g3 Delete
+node g4 Get local:lock
+node g5 Delete
+node g6 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value
+wire a3.then a4.in
+wire a4.then a5.in
+wire a4.object a5.value
+wire a5.then a6.in
+wire a6.then a7.in
+wire a6.object a7.value
+wire a7.then a8.in
+wire a8.then a9.in
+wire a8.object a9.value
+wire a9.then b1.in
+wire b1.body b2.in
+wire b1.index b3.arg0
+wire b2.then b3.in
+wire b2.object b3.receiver
+wire b3.then b4.in
+wire b2.object b4.name
+wire b4.then b5.in
+wire a5g.value b5.receiver
+wire b4.object b5.value
+wire b5.then b5n.in
+wire b1.index b5n.value
+wire b5n.then b6.in
+wire b6.value b7.body
+wire b6.then b7.in
+wire b4.object b7.receiver
+wire b1.done c1.in
+wire c2.value c3.collection
+wire c1.index c3.index
+wire c1.body c4.in
+wire c3.value c4.receiver
+wire c5.value c6.collection
+wire c1.index c6.index
+wire c4.then c7.in
+wire c1.index c8.arg0
+wire c6.value c8.arg1
+wire c7.then c8.in
+wire c7.object c8.receiver
+wire c8.then c9.in
+wire c7.object c9.text
+wire c9.then d1.in
+wire c3.value d1.receiver
+wire d1.then d2.in
+wire d1.result d2.text
+wire d2.then d3.in
+wire c3.value d3.receiver
+wire d3.then d4.in
+wire d3.result d4.value
+wire f9.value e1.receiver
+wire e7.then e2.in
+wire e1.value e2.value
+wire c1.done e3.in
+wire e3.result e4.a
+wire e3.then e5.in
+wire e4.result e5.value
+wire e5.then e6.in
+wire e6.then e7.in
+wire e6.result e7.text
+wire e2.then f1.in
+wire f2.value f3.collection
+wire f1.index f3.index
+wire f1.body f4.in
+wire f3.value f4.object
+wire f1.done f6.in
+wire f5.value f6.object
+wire f6.then f8.in
+wire f7.value f8.object
+wire f8.then g1.in
+wire f9.value g1.receiver
+wire g1.then g3.in
+wire g2.value g3.object
+wire g3.then g5.in
+wire g4.value g5.object
+wire g5.then g6.in
+sheet lambda:b6
+node l1 Entry
+node l2 Get local:results
+node l3 Get local:n
+node l4 Operator *
+node l5 Call Arrays.Set
+node l6 Call Thread.CurrentName
+node l7 Get local:lock
+node l8 Call Mutex.Lock
+node l9 Construct String
+	set ctor (StringView)
+node m2 Get local:names
+node m3 Call List<String>.Add
+node m4 Get local:lock
+node m5 Call Mutex.Unlock
+node m6 Return
+wire l3.value l4.a
+wire l3.value l4.b
+wire l2.value l5.array
+wire l1.then l5.in
+wire l3.value l5.index
+wire l4.result l5.value
+wire l5.then l6.in
+wire l6.then l8.in
+wire l7.value l8.receiver
+wire l8.then l9.in
+wire l6.result l9.text
+wire l9.then m3.in
+wire m2.value m3.receiver
+wire l9.object m3.value
+wire m3.then m5.in
+wire m4.value m5.receiver
+wire m5.then m6.in

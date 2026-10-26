@@ -1,0 +1,146 @@
+# tir 1
+# DWARF types of every kind a variable can have: payload enums (Option, Result: the tag by case name,
+# the payload per case), a simple enum (its case name), a tuple (item0, item1), a nullable
+# (hasValue, value), an array (length, elements), a delegate (target, fn naming the function), a
+# generic struct instance by its instantiated name, a generic class instance, and a static field as
+# a global of its qualified name. The backend self test stops on the Call of puts with lldb and reads
+# `frame variable` and `target variable`.
+program DebugTypes console
+entry Dbg.Program.Main()
+
+func C.libc.puts(char8*) int32 import "puts"
+
+type Core.Option<int> enum
+	case None
+	case Some int
+type Core.Result<int,int32> enum
+	case Ok int
+	case Err int32
+
+unit Dbg.Shapes
+type Dbg.Color enum
+	case Red = 1
+	case Green = 2
+	case Blue = 4
+type Dbg.Shape enum
+	case Circle double
+	case Rect int int
+	case Empty
+type Gen.Cell<int> struct
+	field Value int
+	field Ok bool
+type Gen.Box<double> class
+	field mItem double
+
+unit Dbg.Program
+type Dbg.Program class
+
+global Dbg.Program.sCount int 42
+
+func Dbg.Program.Twice(int) int static sheet "f1" display "Dbg.Program.Twice"
+	param x int
+	node a1 Entry
+	node a2 Return
+	block b0
+		%two = const int 2 @a2
+		%r = binop int mul %x %two @a2
+		ret %r @a2
+
+func Dbg.Program.Main() int static sheet "m1" display "Dbg.Program.Main"
+	slot v0 Core.Option<int> variable "some" local
+	slot v1 Core.Option<int> variable "none" local
+	slot v2 Core.Result<int,int32> variable "err" local
+	slot v3 Dbg.Color variable "color" local
+	slot v4 (int,bool) variable "pair" local
+	slot v5 int? variable "maybe" local
+	slot v6 int[] variable "arr" local
+	slot v7 delegate int(int) variable "dg" local
+	slot v8 Gen.Cell<int> variable "cell" local
+	slot v9 Gen.Box<double> variable "box" local
+	slot v10 Dbg.Shape variable "shape" local
+	slot v11 int? variable "nothing" local
+	node a1 Entry
+	node a2 Set local:some
+	node a3 Set local:none
+	node a4 Set local:err
+	node a5 Set local:color
+	node a6 Set local:pair
+	node a7 Set local:maybe
+	node a8 Construct int[]
+	node a9 Bind Dbg.Program.Twice
+	node b1 Set local:cell
+	node b2 Construct Gen.Box<double>
+	node b3 Set local:shape
+	node b4 Call C.libc.puts
+	node b5 Invoke
+	node b6 Delete
+	node b7 Return
+	block b0
+		region.enter r0 @a1
+		%k5 = const int 5 @a2
+		%s = case.make Core.Option<int> Some %k5 @a2
+		store.slot v0 %s @a2
+		%n = case.make Core.Option<int> None @a3
+		store.slot v1 %n @a3
+		%k7 = const int32 7 @a4
+		%e = case.make Core.Result<int,int32> Err %k7 @a4
+		store.slot v2 %e @a4
+		%c = const Dbg.Color Green @a5
+		store.slot v3 %c @a5
+		%k3 = const int 3 @a6
+		%t = const bool true @a6
+		%p = make (int,bool) %k3 %t @a6
+		store.slot v4 %p @a6
+		%k9 = const int 9 @a7
+		%t2 = const bool true @a7
+		%m = make int? %k9 %t2 @a7
+		store.slot v5 %m @a7
+		%z = const int 0 @a7
+		%f = const bool false @a7
+		%m2 = make int? %z %f @a7
+		store.slot v11 %m2 @a7
+		%len = const int 3 @a8
+		%a = alloc.array int[] %len @a8
+		%i0 = const int 0 @a8
+		%e0 = elem.addr int* %a %i0 @a8
+		%x0 = const int 10 @a8
+		store %e0 %x0 @a8
+		%i1 = const int 1 @a8
+		%e1 = elem.addr int* %a %i1 @a8
+		%x1 = const int 20 @a8
+		store %e1 %x1 @a8
+		%i2 = const int 2 @a8
+		%e2 = elem.addr int* %a %i2 @a8
+		%x2 = const int 30 @a8
+		store %e2 %x2 @a8
+		store.slot v6 %a @a8
+		%d = bind delegate int(int) Dbg.Program.Twice(int) @a9
+		store.slot v7 %d @a9
+		%k11 = const int 11 @b1
+		%ok = const bool true @b1
+		%cl = make Gen.Cell<int> %k11 %ok @b1
+		store.slot v8 %cl @b1
+		%bx = alloc Gen.Box<double> @b2
+		%bp = field.addr double* %bx mItem @b2
+		%hf = const double 0.5 @b2
+		store %bp %hf @b2
+		store.slot v9 %bx @b2
+		%w = const int 4 @b3
+		%h = const int 6 @b3
+		%sh = case.make Dbg.Shape Rect %w %h @b3
+		store.slot v10 %sh @b3
+		%txt = const char8* "types" @b4.text
+		%q = ccall int32 C.libc.puts(char8*) %txt @b4
+		%dd = load.slot delegate int(int) v7 @b5
+		%k21 = const int 21 @b5
+		%r = invoke int %dd %k21 @b5
+		%a2 = load.slot int[] v6 @b6
+		delete %a2 @b6
+		delete %dd @b6
+		%bx2 = load.slot Gen.Box<double> v9 @b6
+		delete %bx2 @b6
+		%g = global.addr int* Dbg.Program.sCount @b7
+		%gv = load int %g @b7
+		%sum = binop int sub %r %gv @b7
+		region.exit r0 @b7
+		ret %sum @b7

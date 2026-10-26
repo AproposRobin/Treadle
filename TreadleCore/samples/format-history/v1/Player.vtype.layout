@@ -1,0 +1,25 @@
+# vtype-layout 1
+sheet get:q7k2m
+	node a1 0 0
+	node a2 300 0
+	node a3 120 120
+sheet c4x9p
+	node b1 0 0
+	node b2 260 0
+	node b3 780 0
+	node b4 520 0
+	node b5 1040 0
+sheet f8d2a
+	view -40 120 1.0
+	node d1 0 0
+	node d2 260 0
+	node d3 520 0
+	node d4 380 160
+	node d5 780 -60
+	node d6 220 180
+	node d7 1040 0
+	box x1 200 -80 700 320 "Damage" 2
+	route d6.value d4.a 300,170
+sheet g3m1c
+	node e1 0 0
+	node e2 300 0

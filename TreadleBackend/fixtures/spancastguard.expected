@@ -1,0 +1,5 @@
+== only Debug
+== exit
+3
+== stderr
+fatal: span of 4 from 2 out of range (length 5) at Sg.Program.Main node a3

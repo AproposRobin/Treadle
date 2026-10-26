@@ -1,0 +1,45 @@
+FileVersion = 1
+Dependencies = {corlib = "*", TreadleCore = "*", TreadleCompiler = "*", TreadleNative = "*", TreadleBackend = "*", TreadleCImport = "*", TreadleDebug = "*"}
+
+[Project]
+Name = "TreadleEditor"
+TargetType = "BeefGUIApplication"
+StartupObject = "Treadle.Editor.Program"
+DefaultNamespace = "Treadle.Editor"
+
+[Configs.Debug.Win64]
+TargetName = "Treadle"
+PreprocessorMacros = ["DEBUG", "TREADLE_SELFTEST"]
+PostBuildCmds = ["CopyFilesIfNewer(\"$(ProjectDir)/assets\", \"$(TargetDir)\")"]
+
+[Configs.Release.Win64]
+TargetName = "Treadle"
+PreprocessorMacros = ["RELEASE", "TREADLE_SELFTEST"]
+PostBuildCmds = ["CopyFilesIfNewer(\"$(ProjectDir)/assets\", \"$(TargetDir)\")"]
+
+[Configs.ReleasePackage.Win64]
+TargetName = "Treadle"
+PostBuildCmds = ["CopyFilesIfNewer(\"$(ProjectDir)/assets\", \"$(TargetDir)\")"]
+
+[Configs.Debug.Linux64]
+TargetName = "treadle"
+PreprocessorMacros = ["DEBUG", "TREADLE_SELFTEST"]
+PostBuildCmds = ["CopyFilesIfNewer(\"$(ProjectDir)/assets\", \"$(TargetDir)\")"]
+
+[Configs.Release.Linux64]
+TargetName = "treadle"
+PreprocessorMacros = ["RELEASE", "TREADLE_SELFTEST"]
+PostBuildCmds = ["CopyFilesIfNewer(\"$(ProjectDir)/assets\", \"$(TargetDir)\")"]
+
+[Configs.ReleasePackage.Linux64]
+TargetName = "treadle"
+PostBuildCmds = ["CopyFilesIfNewer(\"$(ProjectDir)/assets\", \"$(TargetDir)\")"]
+
+[Platform.Windows]
+IconFile = "Resources/Treadle.ico"
+Description = "Treadle visual programming editor"
+Company = "AproposRobin"
+Product = "Treadle"
+Copyright = "Copyright 2026 AproposRobin"
+FileVersion = "0.1.0.0"
+ProductVersion = "0.1.0"

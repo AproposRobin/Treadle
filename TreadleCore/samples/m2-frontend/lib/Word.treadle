@@ -1,0 +1,16 @@
+# treadle 1
+type Word class
+	namespace Lib
+	doc "A type of the library project M2Lib, brought in by the depends line of M2: an auto property set by its constructor."
+
+property w0001 Size int
+	auto
+
+ctor w0002
+sheet body
+node a1 Entry
+node a2 Set this.Size
+	in value 5
+node a3 Return
+wire a1.then a2.in
+wire a2.then a3.in

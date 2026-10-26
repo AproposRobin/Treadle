@@ -1,0 +1,75 @@
+# tir 1
+# Lanes of a vector (SIMD-and-Vectors.md 1.4, 1.5): vec.get / vec.set with a constant lane and with a
+# variable one (a loop over the lanes; `lanecheck` in front, a Debug check that Release leaves out), a
+# mask's lanes, and a vector kept in a slot across the loop.
+program SimdLanes console
+entry Sl.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Sl.Program
+type Sl.Program class
+
+func Sl.Program.Main() int static sheet "f1" display "Sl.Program.Main"
+	node a1 Entry
+	node a2 For
+	node a3 Call Core.Vector.GetLane
+	node a4 Call Core.Vector.WithLane
+	slot s0 int loopvar "a2.index" pin node a2.index
+	slot s1 float variable "sum" local
+	slot s2 int32x4 variable "v" local
+	block b0
+		%a = const int32x4 10,20,30,40
+		store.slot s2 %a
+		%z = const int 0
+		store.slot s0 %z
+		%fz = const float 0
+		store.slot s1 %fz
+		br head
+	block head
+		%i = load.slot int s0 @a2
+		%n = const int 4 @a2
+		%more = cmp bool lt %i %n @a2
+		condbr %more body done @a2
+	block body
+		%v = load.slot int32x4 s2 @a3
+		%i2 = load.slot int s0 @a3
+		lanecheck %i2 4 @a3
+		%lane = vec.get int32 %v %i2 @a3
+		%one = const int32 1 @a4
+		%lp = binop int32 add %lane %one @a4
+		lanecheck %i2 4 @a4
+		%v2 = vec.set int32x4 %v %i2 %lp @a4
+		store.slot s2 %v2 @a4
+		%lf = cast float %lane @a3
+		%s = load.slot float s1 @a3
+		%s2 = binop float add %s %lf @a3
+		store.slot s1 %s2 @a3
+		%i3 = load.slot int s0 @a2
+		%inc = const int 1 @a2
+		%i4 = binop int add %i3 %inc @a2
+		store.slot s0 %i4 @a2
+		br head @a2
+	block done
+		%fin = load.slot int32x4 s2
+		%c9 = const int32 -9
+		%fin2 = vec.set int32x4 %fin 3 %c9
+		%x = vec.get int32 %fin2 0
+		%y = vec.get int32 %fin2 1
+		%w = vec.get int32 %fin2 3
+		%sum = load.slot float s1
+		%sumd = cast double %sum
+		%f = const char8* "sum %g lanes %d %d %d\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %sumd %x %y %w
+		%m = const bool4 true,false,false,true
+		%m1 = vec.get bool %m 1
+		%m3 = vec.get bool %m 3
+		%t = const bool true
+		%m2 = vec.set bool4 %m 1 %t
+		%bm = vec.bitmask uint %m2
+		%m1i = cast int32 %m1
+		%m3i = cast int32 %m3
+		%f2 = const char8* "mask lanes %d %d bits %llu\n"
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %m1i %m3i %bm
+		%ret = const int 0
+		ret %ret

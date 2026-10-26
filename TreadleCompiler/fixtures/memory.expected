@@ -1,0 +1,14 @@
+== exit
+0
+== stdout
+made
+pass
+freed
+made
+pass
+freed
+made
+scope end
+freed
+made
+freed

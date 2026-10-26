@@ -1,0 +1,18 @@
+# treadle 1
+# expect n3 condition T2230
+type TypeMismatch class
+	namespace Broken
+	static
+	doc "An int wired into a Branch condition: a type mismatch."
+
+function f1 Run
+	static
+param count int
+sheet body
+node n1 Entry
+node n2 Return
+node n3 Branch
+wire n1.then n3.in
+wire n1.count n3.condition
+wire n3.true n2.in
+wire n3.false n2.in

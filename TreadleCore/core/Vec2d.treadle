@@ -1,0 +1,784 @@
+# treadle 1
+type Vec2d struct
+	namespace Core
+	attr CRepr
+	doc "A 2D vector of doubles (X, Y; 16 bytes, laid out as in C): a position, a direction, a size. Every function is Pure."
+
+field X double
+
+field Y double
+
+property v000 Zero Vec2d
+	static
+	doc "All components 0."
+sheet get
+node n00000 Entry
+node n00001 Make Vec2d
+	in X 0.0
+	in Y 0.0
+node n00002 Return
+wire n00000.then n00002.in
+wire n00001.value n00002.value
+
+property v001 One Vec2d
+	static
+	doc "All components 1."
+sheet get
+node n00100 Entry
+node n00101 Make Vec2d
+	in X 1.0
+	in Y 1.0
+node n00102 Return
+wire n00100.then n00102.in
+wire n00101.value n00102.value
+
+property v002 UnitX Vec2d
+	static
+	doc "The unit vector along X."
+sheet get
+node n00200 Entry
+node n00201 Make Vec2d
+	in X 1.0
+	in Y 0.0
+node n00202 Return
+wire n00200.then n00202.in
+wire n00201.value n00202.value
+
+property v003 UnitY Vec2d
+	static
+	doc "The unit vector along Y."
+sheet get
+node n00300 Entry
+node n00301 Make Vec2d
+	in X 0.0
+	in Y 1.0
+node n00302 Return
+wire n00300.then n00302.in
+wire n00301.value n00302.value
+
+ctor v004
+	doc "Every component set to `all`."
+param all double
+sheet body
+node n00400 Entry
+node n00401 Set this.X
+node n00402 Set this.Y
+node n00403 Return
+wire n00400.then n00401.in
+wire n00400.all n00401.value
+wire n00401.then n00402.in
+wire n00400.all n00402.value
+wire n00402.then n00403.in
+
+operator v005 +
+	static
+	pure
+	returns Vec2d
+	doc "Component by component: the sum."
+param a Vec2d
+param b Vec2d
+sheet body
+node n00500 Entry
+node n00501 Math
+	set expr "double2(a.X, a.Y) + double2(b.X, b.Y)"
+node n00502 Break double2
+node n00503 Make Vec2d
+node n00504 Return
+wire n00500.a n00501.a
+wire n00500.b n00501.b
+wire n00501.result n00502.value
+wire n00502.x n00503.X
+wire n00502.y n00503.Y
+wire n00500.then n00504.in
+wire n00503.value n00504.value
+
+operator v006 -
+	static
+	pure
+	returns Vec2d
+	doc "Component by component: the difference."
+param a Vec2d
+param b Vec2d
+sheet body
+node n00600 Entry
+node n00601 Math
+	set expr "double2(a.X, a.Y) - double2(b.X, b.Y)"
+node n00602 Break double2
+node n00603 Make Vec2d
+node n00604 Return
+wire n00600.a n00601.a
+wire n00600.b n00601.b
+wire n00601.result n00602.value
+wire n00602.x n00603.X
+wire n00602.y n00603.Y
+wire n00600.then n00604.in
+wire n00603.value n00604.value
+
+operator v007 *
+	static
+	pure
+	returns Vec2d
+	doc "Component by component: the product."
+param a Vec2d
+param b Vec2d
+sheet body
+node n00700 Entry
+node n00701 Math
+	set expr "double2(a.X, a.Y) * double2(b.X, b.Y)"
+node n00702 Break double2
+node n00703 Make Vec2d
+node n00704 Return
+wire n00700.a n00701.a
+wire n00700.b n00701.b
+wire n00701.result n00702.value
+wire n00702.x n00703.X
+wire n00702.y n00703.Y
+wire n00700.then n00704.in
+wire n00703.value n00704.value
+
+operator v008 /
+	static
+	pure
+	returns Vec2d
+	doc "Component by component: the quotient."
+param a Vec2d
+param b Vec2d
+sheet body
+node n00800 Entry
+node n00801 Math
+	set expr "double2(a.X, a.Y) / double2(b.X, b.Y)"
+node n00802 Break double2
+node n00803 Make Vec2d
+node n00804 Return
+wire n00800.a n00801.a
+wire n00800.b n00801.b
+wire n00801.result n00802.value
+wire n00802.x n00803.X
+wire n00802.y n00803.Y
+wire n00800.then n00804.in
+wire n00803.value n00804.value
+
+operator v009 neg
+	static
+	pure
+	returns Vec2d
+	doc "Every component negated."
+param a Vec2d
+sheet body
+node n00900 Entry
+node n00901 Math
+	set expr "-double2(a.X, a.Y)"
+node n00902 Break double2
+node n00903 Make Vec2d
+node n00904 Return
+wire n00900.a n00901.a
+wire n00901.result n00902.value
+wire n00902.x n00903.X
+wire n00902.y n00903.Y
+wire n00900.then n00904.in
+wire n00903.value n00904.value
+
+operator v00a *
+	static
+	pure
+	returns Vec2d
+	doc "Every component times `k`."
+param a Vec2d
+param k double
+sheet body
+node n00a00 Entry
+node n00a01 Math
+	set expr "double2(a.X, a.Y) * k"
+node n00a02 Break double2
+node n00a03 Make Vec2d
+node n00a04 Return
+wire n00a00.a n00a01.a
+wire n00a00.k n00a01.k
+wire n00a01.result n00a02.value
+wire n00a02.x n00a03.X
+wire n00a02.y n00a03.Y
+wire n00a00.then n00a04.in
+wire n00a03.value n00a04.value
+
+operator v00b *
+	static
+	pure
+	returns Vec2d
+	doc "`k` times every component."
+param k double
+param a Vec2d
+sheet body
+node n00b00 Entry
+node n00b01 Math
+	set expr "k * double2(a.X, a.Y)"
+node n00b02 Break double2
+node n00b03 Make Vec2d
+node n00b04 Return
+wire n00b00.a n00b01.a
+wire n00b00.k n00b01.k
+wire n00b01.result n00b02.value
+wire n00b02.x n00b03.X
+wire n00b02.y n00b03.Y
+wire n00b00.then n00b04.in
+wire n00b03.value n00b04.value
+
+operator v00c /
+	static
+	pure
+	returns Vec2d
+	doc "Every component divided by `k`."
+param a Vec2d
+param k double
+sheet body
+node n00c00 Entry
+node n00c01 Math
+	set expr "double2(a.X, a.Y) / k"
+node n00c02 Break double2
+node n00c03 Make Vec2d
+node n00c04 Return
+wire n00c00.a n00c01.a
+wire n00c00.k n00c01.k
+wire n00c01.result n00c02.value
+wire n00c02.x n00c03.X
+wire n00c02.y n00c03.Y
+wire n00c00.then n00c04.in
+wire n00c03.value n00c04.value
+
+operator v00d ==
+	static
+	pure
+	returns bool
+	doc "True when every component is equal (exact)."
+param a Vec2d
+param b Vec2d
+sheet body
+node n00d00 Entry
+node n00d01 Math
+	set expr "a.X == b.X && a.Y == b.Y"
+node n00d02 Return
+wire n00d00.a n00d01.a
+wire n00d00.b n00d01.b
+wire n00d00.then n00d02.in
+wire n00d01.result n00d02.value
+
+operator v00e !=
+	static
+	pure
+	returns bool
+	doc "True when any component differs (exact)."
+param a Vec2d
+param b Vec2d
+sheet body
+node n00e00 Entry
+node n00e01 Math
+	set expr "a.X != b.X || a.Y != b.Y"
+node n00e02 Return
+wire n00e00.a n00e01.a
+wire n00e00.b n00e01.b
+wire n00e00.then n00e02.in
+wire n00e01.result n00e02.value
+
+function v00f Scaled
+	pure
+	returns Vec2d
+	doc "Every component times `k` (the same as the operator `*` with a number)."
+param k double
+sheet body
+node n00f00 Entry
+node n00f01 This
+node n00f02 Math
+	set expr "double2(v.X, v.Y) * k"
+node n00f03 Break double2
+node n00f04 Make Vec2d
+node n00f05 Return
+wire n00f00.k n00f02.k
+wire n00f01.value n00f02.v
+wire n00f02.result n00f03.value
+wire n00f03.x n00f04.X
+wire n00f03.y n00f04.Y
+wire n00f00.then n00f05.in
+wire n00f04.value n00f05.value
+
+function v00g Dot
+	pure
+	returns double
+	doc "The dot product."
+param b Vec2d
+sheet body
+node n00g00 Entry
+node n00g01 This
+node n00g02 Math
+	set expr "Dot(double2(v.X, v.Y), double2(b.X, b.Y))"
+node n00g03 Return
+wire n00g00.b n00g02.b
+wire n00g01.value n00g02.v
+wire n00g00.then n00g03.in
+wire n00g02.result n00g03.value
+
+function v00h LengthSquared
+	pure
+	returns double
+	doc "The squared length (no square root)."
+sheet body
+node n00h00 Entry
+node n00h01 This
+node n00h02 Math
+	set expr "Dot(double2(v.X, v.Y), double2(v.X, v.Y))"
+node n00h03 Return
+wire n00h01.value n00h02.v
+wire n00h00.then n00h03.in
+wire n00h02.result n00h03.value
+
+function v00i Length
+	pure
+	returns double
+	doc "The length."
+sheet body
+node n00i00 Entry
+node n00i01 This
+node n00i02 Math
+	set expr "Sqrt(Dot(double2(v.X, v.Y), double2(v.X, v.Y)))"
+node n00i03 Return
+wire n00i01.value n00i02.v
+wire n00i00.then n00i03.in
+wire n00i02.result n00i03.value
+
+function v00j DistanceSquared
+	pure
+	returns double
+	doc "The squared distance to `b`."
+param b Vec2d
+sheet body
+node n00j00 Entry
+node n00j01 This
+node n00j02 Math
+	set expr "Dot(double2(v.X, v.Y) - double2(b.X, b.Y), double2(v.X, v.Y) - double2(b.X, b.Y))"
+node n00j03 Return
+wire n00j00.b n00j02.b
+wire n00j01.value n00j02.v
+wire n00j00.then n00j03.in
+wire n00j02.result n00j03.value
+
+function v00k Distance
+	pure
+	returns double
+	doc "The distance to `b`."
+param b Vec2d
+sheet body
+node n00k00 Entry
+node n00k01 This
+node n00k02 Math
+	set expr "Sqrt(Dot(double2(v.X, v.Y) - double2(b.X, b.Y), double2(v.X, v.Y) - double2(b.X, b.Y)))"
+node n00k03 Return
+wire n00k00.b n00k02.b
+wire n00k01.value n00k02.v
+wire n00k00.then n00k03.in
+wire n00k02.result n00k03.value
+
+function v00l Normalized
+	pure
+	returns Vec2d
+	doc "The vector scaled to length 1; a zero vector gives zero."
+sheet body
+node n00l00 Entry
+node n00l01 This
+node n00l02 Math
+	set expr "Sqrt(Dot(double2(v.X, v.Y), double2(v.X, v.Y)))"
+node n00l03 Math
+	set expr "l > 0.0 ? 1.0 / l : 0.0"
+node n00l04 Math
+	set expr "double2(v.X, v.Y) * k"
+node n00l05 Break double2
+node n00l06 Make Vec2d
+node n00l07 Return
+wire n00l01.value n00l02.v
+wire n00l02.result n00l03.l
+wire n00l03.result n00l04.k
+wire n00l01.value n00l04.v
+wire n00l04.result n00l05.value
+wire n00l05.x n00l06.X
+wire n00l05.y n00l06.Y
+wire n00l00.then n00l07.in
+wire n00l06.value n00l07.value
+
+function v00m Lerp
+	pure
+	returns Vec2d
+	doc "The point `t` of the way to `to`: this at 0, `to` at 1 (t is not clamped)."
+param to Vec2d
+param t double
+sheet body
+node n00m00 Entry
+node n00m01 This
+node n00m02 Math
+	set expr "double2(v.X, v.Y) + (double2(b.X, b.Y) - double2(v.X, v.Y)) * t"
+node n00m03 Break double2
+node n00m04 Make Vec2d
+node n00m05 Return
+wire n00m00.to n00m02.b
+wire n00m00.t n00m02.t
+wire n00m01.value n00m02.v
+wire n00m02.result n00m03.value
+wire n00m03.x n00m04.X
+wire n00m03.y n00m04.Y
+wire n00m00.then n00m05.in
+wire n00m04.value n00m05.value
+
+function v00n Min
+	pure
+	returns Vec2d
+	doc "The smaller of each pair of components."
+param b Vec2d
+sheet body
+node n00n00 Entry
+node n00n01 This
+node n00n02 Math
+	set expr "Min(v.X, b.X)"
+node n00n03 Math
+	set expr "Min(v.Y, b.Y)"
+node n00n04 Make Vec2d
+node n00n05 Return
+wire n00n00.b n00n02.b
+wire n00n01.value n00n02.v
+wire n00n00.b n00n03.b
+wire n00n01.value n00n03.v
+wire n00n02.result n00n04.X
+wire n00n03.result n00n04.Y
+wire n00n00.then n00n05.in
+wire n00n04.value n00n05.value
+
+function v00o Max
+	pure
+	returns Vec2d
+	doc "The larger of each pair of components."
+param b Vec2d
+sheet body
+node n00o00 Entry
+node n00o01 This
+node n00o02 Math
+	set expr "Max(v.X, b.X)"
+node n00o03 Math
+	set expr "Max(v.Y, b.Y)"
+node n00o04 Make Vec2d
+node n00o05 Return
+wire n00o00.b n00o02.b
+wire n00o01.value n00o02.v
+wire n00o00.b n00o03.b
+wire n00o01.value n00o03.v
+wire n00o02.result n00o04.X
+wire n00o03.result n00o04.Y
+wire n00o00.then n00o05.in
+wire n00o04.value n00o05.value
+
+function v00p Clamp
+	pure
+	returns Vec2d
+	doc "Each component limited to the range `lo` to `hi`."
+param lo Vec2d
+param hi Vec2d
+sheet body
+node n00p00 Entry
+node n00p01 This
+node n00p02 Math
+	set expr "Clamp(v.X, lo.X, hi.X)"
+node n00p03 Math
+	set expr "Clamp(v.Y, lo.Y, hi.Y)"
+node n00p04 Make Vec2d
+node n00p05 Return
+wire n00p00.hi n00p02.hi
+wire n00p00.lo n00p02.lo
+wire n00p01.value n00p02.v
+wire n00p00.hi n00p03.hi
+wire n00p00.lo n00p03.lo
+wire n00p01.value n00p03.v
+wire n00p02.result n00p04.X
+wire n00p03.result n00p04.Y
+wire n00p00.then n00p05.in
+wire n00p04.value n00p05.value
+
+function v00q Abs
+	pure
+	returns Vec2d
+	doc "The absolute value each component."
+sheet body
+node n00q00 Entry
+node n00q01 This
+node n00q02 Math
+	set expr "Abs(double2(v.X, v.Y))"
+node n00q03 Break double2
+node n00q04 Make Vec2d
+node n00q05 Return
+wire n00q01.value n00q02.v
+wire n00q02.result n00q03.value
+wire n00q03.x n00q04.X
+wire n00q03.y n00q04.Y
+wire n00q00.then n00q05.in
+wire n00q04.value n00q05.value
+
+function v00r Floor
+	pure
+	returns Vec2d
+	doc "The largest whole number not above each component."
+sheet body
+node n00r00 Entry
+node n00r01 This
+node n00r02 Math
+	set expr "Floor(double2(v.X, v.Y))"
+node n00r03 Break double2
+node n00r04 Make Vec2d
+node n00r05 Return
+wire n00r01.value n00r02.v
+wire n00r02.result n00r03.value
+wire n00r03.x n00r04.X
+wire n00r03.y n00r04.Y
+wire n00r00.then n00r05.in
+wire n00r04.value n00r05.value
+
+function v00s Ceil
+	pure
+	returns Vec2d
+	doc "The smallest whole number not below each component."
+sheet body
+node n00s00 Entry
+node n00s01 This
+node n00s02 Math
+	set expr "Ceil(double2(v.X, v.Y))"
+node n00s03 Break double2
+node n00s04 Make Vec2d
+node n00s05 Return
+wire n00s01.value n00s02.v
+wire n00s02.result n00s03.value
+wire n00s03.x n00s04.X
+wire n00s03.y n00s04.Y
+wire n00s00.then n00s05.in
+wire n00s04.value n00s05.value
+
+function v00t Round
+	pure
+	returns Vec2d
+	doc "The nearest whole number (halves away from zero) to each component."
+sheet body
+node n00t00 Entry
+node n00t01 This
+node n00t02 Math
+	set expr "Round(double2(v.X, v.Y))"
+node n00t03 Break double2
+node n00t04 Make Vec2d
+node n00t05 Return
+wire n00t01.value n00t02.v
+wire n00t02.result n00t03.value
+wire n00t03.x n00t04.X
+wire n00t03.y n00t04.Y
+wire n00t00.then n00t05.in
+wire n00t04.value n00t05.value
+
+function v00u Reflect
+	pure
+	returns Vec2d
+	doc "The vector mirrored off a surface with this unit `normal`: v - 2 Dot(v, n) n."
+param normal Vec2d
+sheet body
+node n00u00 Entry
+node n00u01 This
+node n00u02 Math
+	set expr "2.0 * (Dot(double2(v.X, v.Y), double2(n.X, n.Y)))"
+node n00u03 Math
+	set expr "double2(v.X, v.Y) - double2(n.X, n.Y) * k"
+node n00u04 Break double2
+node n00u05 Make Vec2d
+node n00u06 Return
+wire n00u00.normal n00u02.n
+wire n00u01.value n00u02.v
+wire n00u02.result n00u03.k
+wire n00u00.normal n00u03.n
+wire n00u01.value n00u03.v
+wire n00u03.result n00u04.value
+wire n00u04.x n00u05.X
+wire n00u04.y n00u05.Y
+wire n00u00.then n00u06.in
+wire n00u05.value n00u06.value
+
+function v00v ProjectOnto
+	pure
+	returns Vec2d
+	doc "The part of this vector along `b`; a zero `b` gives zero."
+param b Vec2d
+sheet body
+node n00v00 Entry
+node n00v01 This
+node n00v02 Math
+	set expr "Dot(double2(b.X, b.Y), double2(b.X, b.Y))"
+node n00v03 Math
+	set expr "bb > 0.0 ? (Dot(double2(v.X, v.Y), double2(b.X, b.Y))) / bb : 0.0"
+node n00v04 Math
+	set expr "double2(b.X, b.Y) * k"
+node n00v05 Break double2
+node n00v06 Make Vec2d
+node n00v07 Return
+wire n00v00.b n00v02.b
+wire n00v00.b n00v03.b
+wire n00v02.result n00v03.bb
+wire n00v01.value n00v03.v
+wire n00v00.b n00v04.b
+wire n00v03.result n00v04.k
+wire n00v04.result n00v05.value
+wire n00v05.x n00v06.X
+wire n00v05.y n00v06.Y
+wire n00v00.then n00v07.in
+wire n00v06.value n00v07.value
+
+function v00w AngleTo
+	pure
+	returns double
+	doc "The angle to `b` in radians, 0 to PI; 0 when either is zero."
+param b Vec2d
+sheet body
+node n00w00 Entry
+node n00w01 This
+node n00w02 Math
+	set expr "Sqrt((Dot(double2(v.X, v.Y), double2(v.X, v.Y))) * (Dot(double2(b.X, b.Y), double2(b.X, b.Y))))"
+node n00w03 Math
+	set expr "d > 0.0 ? Acos(Clamp((Dot(double2(v.X, v.Y), double2(b.X, b.Y))) / d, -1.0, 1.0)) : 0.0"
+node n00w04 Return
+wire n00w00.b n00w02.b
+wire n00w01.value n00w02.v
+wire n00w00.b n00w03.b
+wire n00w02.result n00w03.d
+wire n00w01.value n00w03.v
+wire n00w00.then n00w04.in
+wire n00w03.result n00w04.value
+
+function v00x IsFinite
+	pure
+	returns bool
+	doc "True when no component is infinite or NaN."
+sheet body
+node n00x00 Entry
+node n00x01 This
+node n00x02 Math
+	set expr "v.X - v.X == 0.0 && v.Y - v.Y == 0.0"
+node n00x03 Return
+wire n00x01.value n00x02.v
+wire n00x00.then n00x03.in
+wire n00x02.result n00x03.value
+
+function v00y ApproxEquals
+	pure
+	returns bool
+	doc "True when every component is within `epsilon` of the other's (absolute)."
+param other Vec2d
+param epsilon double
+	default 0.00001
+sheet body
+node n00y00 Entry
+node n00y01 This
+node n00y02 Math
+	set expr "Abs(v.X - o.X) <= e && Abs(v.Y - o.Y) <= e"
+node n00y03 Return
+wire n00y00.epsilon n00y02.e
+wire n00y00.other n00y02.o
+wire n00y01.value n00y02.v
+wire n00y00.then n00y03.in
+wire n00y02.result n00y03.value
+
+function v00z Perpendicular
+	pure
+	returns Vec2d
+	doc "The vector turned a quarter left: (-Y, X)."
+sheet body
+node n00z00 Entry
+node n00z01 This
+node n00z02 Math
+	set expr "-v.Y"
+node n00z03 Math
+	set expr "v.X"
+node n00z04 Make Vec2d
+node n00z05 Return
+wire n00z01.value n00z02.v
+wire n00z01.value n00z03.v
+wire n00z02.result n00z04.X
+wire n00z03.result n00z04.Y
+wire n00z00.then n00z05.in
+wire n00z04.value n00z05.value
+
+function v010 Cross
+	pure
+	returns double
+	doc "The 2D cross product X * b.Y - Y * b.X (the Z of the 3D one): positive when `b` is to the left."
+param b Vec2d
+sheet body
+node n01000 Entry
+node n01001 This
+node n01002 Math
+	set expr "v.X * b.Y - v.Y * b.X"
+node n01003 Return
+wire n01000.b n01002.b
+wire n01001.value n01002.v
+wire n01000.then n01003.in
+wire n01002.result n01003.value
+
+function v011 Angle
+	pure
+	returns double
+	doc "The direction in radians, Atan2(Y, X): -PI to PI, 0 along +X."
+sheet body
+node n01100 Entry
+node n01101 This
+node n01102 Math
+	set expr "Atan2(v.Y, v.X)"
+node n01103 Return
+wire n01101.value n01102.v
+wire n01100.then n01103.in
+wire n01102.result n01103.value
+
+function v012 FromAngle
+	static
+	pure
+	returns Vec2d
+	doc "The unit vector at `angle` radians from +X: (Cos, Sin)."
+param angle double
+sheet body
+node n01200 Entry
+node n01201 Math
+	set expr "Cos(a)"
+node n01202 Math
+	set expr "Sin(a)"
+node n01203 Make Vec2d
+node n01204 Return
+wire n01200.angle n01201.a
+wire n01200.angle n01202.a
+wire n01201.result n01203.X
+wire n01202.result n01203.Y
+wire n01200.then n01204.in
+wire n01203.value n01204.value
+
+function v013 ToVector
+	pure
+	returns double2
+	doc "The components as a double2: the vector primitive for SIMD work."
+sheet body
+node n01300 Entry
+node n01301 This
+node n01302 Math
+	set expr "double2(v.X, v.Y)"
+node n01303 Return
+wire n01301.value n01302.v
+wire n01300.then n01303.in
+wire n01302.result n01303.value
+
+function v014 FromVector
+	static
+	pure
+	returns Vec2d
+	doc "The lanes of a double2 as a Vec2d."
+param value double2
+sheet body
+node n01400 Entry
+node n01401 Break double2
+node n01402 Make Vec2d
+node n01403 Return
+wire n01400.value n01401.value
+wire n01401.x n01402.X
+wire n01401.y n01402.Y
+wire n01400.then n01403.in
+wire n01402.value n01403.value

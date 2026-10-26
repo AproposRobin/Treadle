@@ -1,0 +1,132 @@
+# treadle 1
+type Condition class
+	namespace Core
+	sealed
+	doc "Lets threads wait until another thread says something changed. Wait with the Mutex held: it lets the Mutex go while waiting and holds it again when it wakes. A wait can end without a Signal, so wait in a loop that tests what you wait for. docs: Threads."
+
+field mHandle void*
+	access private
+
+ctor z0001
+	doc "A Condition nobody waits on."
+sheet body
+node a1 Entry
+node a2 Call Condition.rt_cond_new
+node a3 Set this.mHandle
+node a4 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.result a3.value
+wire a3.then a4.in
+
+dtor z0002
+	doc "Frees the Condition (no thread may still wait on it)."
+sheet body
+node b1 Entry
+node b2 Get this.mHandle
+node b3 Call Condition.rt_cond_free
+node b4 Return
+wire b2.value b3.cond
+wire b1.then b3.in
+wire b3.then b4.in
+
+function z0003 Wait
+	doc "Lets `mutex` go, waits for a Signal or Broadcast, holds `mutex` again (the calling thread must hold it)."
+param mutex Mutex
+sheet body
+node c1 Entry
+node c2 Get this.mHandle
+node c3 Call Mutex.Handle
+node c4 Call Condition.rt_cond_wait
+node c5 Return
+wire c1.then c3.in
+wire c1.mutex c3.receiver
+wire c2.value c4.cond
+wire c3.then c4.in
+wire c3.result c4.mutex
+wire c4.then c5.in
+
+function z0004 WaitFor
+	returns bool
+	doc "As Wait, for at most `milliseconds`: false when the time ran out first."
+param mutex Mutex
+param milliseconds int
+sheet body
+node d1 Entry
+node d2 Get this.mHandle
+node d3 Call Mutex.Handle
+node d4 Call Condition.rt_cond_wait_ms
+node d5 Operator !=
+	in b 0
+node d6 Return
+wire d1.then d3.in
+wire d1.mutex d3.receiver
+wire d2.value d4.cond
+wire d3.then d4.in
+wire d1.milliseconds d4.ms
+wire d3.result d4.mutex
+wire d4.result d5.a
+wire d4.then d6.in
+wire d5.result d6.value
+
+function z0005 Signal
+	doc "Wakes one waiting thread (none: nothing happens)."
+sheet body
+node e1 Entry
+node e2 Get this.mHandle
+node e3 Call Condition.rt_cond_signal
+node e4 Return
+wire e2.value e3.cond
+wire e1.then e3.in
+wire e3.then e4.in
+
+function z0006 Broadcast
+	doc "Wakes every waiting thread."
+sheet body
+node f1 Entry
+node f2 Get this.mHandle
+node f3 Call Condition.rt_cond_broadcast
+node f4 Return
+wire f2.value f3.cond
+wire f1.then f3.in
+wire f3.then f4.in
+
+function z0020 rt_cond_new
+	static
+	access private
+	returns void*
+	attr Import treadle_rt rt_cond_new
+
+function z0021 rt_cond_free
+	static
+	access private
+	attr Import treadle_rt rt_cond_free
+param cond void*
+
+function z0022 rt_cond_wait
+	static
+	access private
+	attr Import treadle_rt rt_cond_wait
+param cond void*
+param mutex void*
+
+function z0023 rt_cond_wait_ms
+	static
+	access private
+	returns int32
+	attr Import treadle_rt rt_cond_wait_ms
+param cond void*
+param mutex void*
+param ms int
+
+function z0024 rt_cond_signal
+	static
+	access private
+	attr Import treadle_rt rt_cond_signal
+param cond void*
+
+function z0025 rt_cond_broadcast
+	static
+	access private
+	attr Import treadle_rt rt_cond_broadcast
+param cond void*

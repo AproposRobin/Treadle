@@ -1,0 +1,11 @@
+== exit
+0
+== stdout
+sum 10 product 24 min 1 max 4
+pairwise 2
+float3 sum 6.5 product 9
+with nan min 1 max 4
+int sum 10 min -7 max 9 and 1 or -1 xor -10
+uint min 3 max 4294967289
+uint8x16 sum 128
+float8 sum 36 double2 sum 0.75

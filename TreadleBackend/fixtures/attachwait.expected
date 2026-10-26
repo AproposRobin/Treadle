@@ -1,0 +1,5 @@
+# No attach.hold in the fixture's folder: no wait.
+== exit
+0
+== stdout
+attached

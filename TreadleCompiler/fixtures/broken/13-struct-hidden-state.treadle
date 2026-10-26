@@ -1,0 +1,17 @@
+# treadle 1
+# expect n2 - T2241
+# expect n3 - T2245
+type StructHiddenState struct
+	namespace Broken
+	doc "A struct's function keeps no hidden state: the Gate needs a State Field (and so the Open Gate has nothing to open)."
+
+field mValue int
+
+function f1 Run
+	mutating
+sheet body
+node n1 Entry
+node n2 Gate
+node n3 GateOpen
+wire n1.then n2.in
+wire n2.done n3.in

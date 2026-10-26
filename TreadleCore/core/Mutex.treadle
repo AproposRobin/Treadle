@@ -1,0 +1,111 @@
+# treadle 1
+type Mutex class
+	namespace Core
+	sealed
+	doc "A lock one thread holds at a time: Lock waits for it, Unlock lets the next thread in. Not recursive (Debug stops on a second Lock by the same thread and on an Unlock by a thread that does not hold it). A Local LockGuard holds it for exactly the guard's region. docs: Threads."
+
+field mHandle void*
+	access private
+
+ctor x0001
+	doc "An unlocked Mutex."
+sheet body
+node a1 Entry
+node a2 Call Mutex.rt_mutex_new
+node a3 Set this.mHandle
+node a4 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.result a3.value
+wire a3.then a4.in
+
+dtor x0002
+	doc "Frees the Mutex (Debug: a fatal error while a thread holds it)."
+sheet body
+node b1 Entry
+node b2 Get this.mHandle
+node b3 Call Mutex.rt_mutex_free
+node b4 Return
+wire b1.then b3.in
+wire b2.value b3.mutex
+wire b3.then b4.in
+
+function x0003 Lock
+	doc "Waits until no other thread holds the Mutex, then holds it."
+sheet body
+node c1 Entry
+node c2 Get this.mHandle
+node c3 Call Mutex.rt_mutex_lock
+node c4 Return
+wire c1.then c3.in
+wire c2.value c3.mutex
+wire c3.then c4.in
+
+function x0004 Unlock
+	doc "Lets the Mutex go (the calling thread must hold it)."
+sheet body
+node d1 Entry
+node d2 Get this.mHandle
+node d3 Call Mutex.rt_mutex_unlock
+node d4 Return
+wire d1.then d3.in
+wire d2.value d3.mutex
+wire d3.then d4.in
+
+function x0005 TryLock
+	returns bool
+	doc "Holds the Mutex when no thread holds it (true), else returns false at once."
+sheet body
+node e1 Entry
+node e2 Get this.mHandle
+node e3 Call Mutex.rt_mutex_trylock
+node e4 Operator !=
+	in b 0
+node e5 Return
+wire e1.then e3.in
+wire e2.value e3.mutex
+wire e3.result e4.a
+wire e3.then e5.in
+wire e4.result e5.value
+
+function x0006 Handle
+	access internal
+	returns void*
+	doc "The runtime's mutex (Condition waits on it)."
+sheet body
+node f1 Entry
+node f2 Get this.mHandle
+node f3 Return
+wire f1.then f3.in
+wire f2.value f3.value
+
+function x0020 rt_mutex_new
+	static
+	access private
+	returns void*
+	attr Import treadle_rt rt_mutex_new
+
+function x0021 rt_mutex_free
+	static
+	access private
+	attr Import treadle_rt rt_mutex_free
+param mutex void*
+
+function x0022 rt_mutex_lock
+	static
+	access private
+	attr Import treadle_rt rt_mutex_lock
+param mutex void*
+
+function x0023 rt_mutex_unlock
+	static
+	access private
+	attr Import treadle_rt rt_mutex_unlock
+param mutex void*
+
+function x0024 rt_mutex_trylock
+	static
+	access private
+	returns int32
+	attr Import treadle_rt rt_mutex_trylock
+param mutex void*

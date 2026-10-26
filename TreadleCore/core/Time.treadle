@@ -1,0 +1,147 @@
+# treadle 1
+type Time class
+	namespace Core
+	static
+	doc "The clocks: Ticks and Frequency of the high-resolution clock (QueryPerformanceCounter on Windows; Stopwatch measures with it), Now and UtcNow as a calendar DateTime, Sleep."
+
+function t0001 Ticks
+	static
+	returns int64
+	doc "The high-resolution clock now, in ticks (only differences between two readings mean anything; Frequency per second)."
+local ticks int64
+sheet body
+node a1 Entry
+node a2 Get local:ticks
+node a3 Call C.crt.QueryPerformanceCounter
+node a4 Return
+wire a2.value a3.count
+wire a1.then a3.in
+wire a3.then a4.in
+wire a2.value a4.value
+
+function t0002 Frequency
+	static
+	returns int64
+	doc "Ticks per second."
+local perSecond int64
+sheet body
+node b1 Entry
+node b2 Get local:perSecond
+node b3 Call C.crt.QueryPerformanceFrequency
+node b4 Return
+wire b2.value b3.frequency
+wire b1.then b3.in
+wire b3.then b4.in
+wire b2.value b4.value
+
+function t0003 Now
+	static
+	returns DateTime
+	doc "The date and time now in local time (the system's time zone)."
+local year int64
+local month int64
+local day int64
+local hour int64
+local minute int64
+local second int64
+local ms int64
+sheet body
+node c01 Entry
+node c02 Get local:year
+node c03 Get local:month
+node c04 Get local:day
+node c05 Get local:hour
+node c06 Get local:minute
+node c07 Get local:second
+node c08 Get local:ms
+node c09 Call C.crt.rt_time_now
+	in utc 0
+node c10 Get local:year
+node c11 Get local:month
+node c12 Get local:day
+node c13 Get local:hour
+node c14 Get local:minute
+node c15 Get local:second
+node c16 Get local:ms
+node c17 Make DateTime
+	in IsUtc false
+node c18 Return
+wire c04.value c09.day
+wire c05.value c09.hour
+wire c01.then c09.in
+wire c06.value c09.minute
+wire c03.value c09.month
+wire c08.value c09.ms
+wire c07.value c09.second
+wire c02.value c09.year
+wire c12.value c17.Day
+wire c13.value c17.Hour
+wire c16.value c17.Millisecond
+wire c14.value c17.Minute
+wire c11.value c17.Month
+wire c15.value c17.Second
+wire c10.value c17.Year
+wire c09.then c18.in
+wire c17.value c18.value
+
+function t0004 UtcNow
+	static
+	returns DateTime
+	doc "The date and time now in UTC."
+local year int64
+local month int64
+local day int64
+local hour int64
+local minute int64
+local second int64
+local ms int64
+sheet body
+node d01 Entry
+node d02 Get local:year
+node d03 Get local:month
+node d04 Get local:day
+node d05 Get local:hour
+node d06 Get local:minute
+node d07 Get local:second
+node d08 Get local:ms
+node d09 Call C.crt.rt_time_now
+	in utc 1
+node d10 Get local:year
+node d11 Get local:month
+node d12 Get local:day
+node d13 Get local:hour
+node d14 Get local:minute
+node d15 Get local:second
+node d16 Get local:ms
+node d17 Make DateTime
+	in IsUtc true
+node d18 Return
+wire d04.value d09.day
+wire d05.value d09.hour
+wire d01.then d09.in
+wire d06.value d09.minute
+wire d03.value d09.month
+wire d08.value d09.ms
+wire d07.value d09.second
+wire d02.value d09.year
+wire d12.value d17.Day
+wire d13.value d17.Hour
+wire d16.value d17.Millisecond
+wire d14.value d17.Minute
+wire d11.value d17.Month
+wire d15.value d17.Second
+wire d10.value d17.Year
+wire d09.then d18.in
+wire d17.value d18.value
+
+function t0005 Sleep
+	static
+	doc "Pauses the program for at least `milliseconds` (not at all for 0 or less)."
+param milliseconds int
+sheet body
+node e01 Entry
+node e02 Call C.crt.rt_sleep
+node e03 Return
+wire e01.then e02.in
+wire e01.milliseconds e02.ms
+wire e02.then e03.in

@@ -1,0 +1,32 @@
+# treadle 1
+type Once class
+	namespace M2
+	static
+	doc "Do Once runs Once the first time; Reset Do Once lets it run again. Prints 0 and 2."
+
+function o0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 For
+	in start 0
+	in count 4
+node a3 Sequence
+	set count 2
+node a4 DoOnce
+node a5 Call Console.WriteLine(int)
+node a6 Operator ==
+	in b 1
+node a7 Branch
+node a8 ResetDoOnce
+node a9 Return
+wire a1.then a2.in
+wire a2.body a3.in
+wire a3.then0 a4.in
+wire a4.once a5.in
+wire a2.index a5.value
+wire a2.index a6.a
+wire a6.result a7.condition
+wire a3.then1 a7.in
+wire a7.true a8.in
+wire a2.done a9.in

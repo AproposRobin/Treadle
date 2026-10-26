@@ -1,0 +1,600 @@
+# treadle 1
+type MathAabbMain class
+	namespace Cx
+	static
+	doc "The core math library, aabb: every check compares the result with a reference computed in double precision by a separate C implementation (Gauss-Jordan inverse, Rodrigues rotations, the GLM conventions), within 1e-5 of the larger of 1 and the reference's size; each line is the check's name and true."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node n00000 Entry
+node n00001 Local String
+	set ctor ()
+node n00002 Get Core.AABB.Empty
+node n00003 Call Core.AABB.IsValid
+node n00004 Operator ==
+	in b false
+node n00005 Call String.Clear
+node n00006 Call String.Append(StringView)
+	in text "aabb.Empty "
+node n00007 Call String.Append(bool)
+node n00008 Call Console.WriteLine(StringView)
+node n00009 Get Core.AABB.Empty
+node n0000a Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0000b Call Core.AABB.Encapsulate
+node n0000c Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0000d Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0000e Make Core.AABB
+node n0000f Math
+	set expr "Abs(a.Min.X - b.Min.X) <= 0.000029999999242136255f && Abs(a.Min.Y - b.Min.Y) <= 0.000029999999242136255f && Abs(a.Min.Z - b.Min.Z) <= 0.000029999999242136255f && Abs(a.Max.X - b.Max.X) <= 0.000029999999242136255f && Abs(a.Max.Y - b.Max.Y) <= 0.000029999999242136255f && Abs(a.Max.Z - b.Max.Z) <= 0.000029999999242136255f"
+node n0000g Call String.Clear
+node n0000h Call String.Append(StringView)
+	in text "aabb.Empty.Encapsulate "
+node n0000i Call String.Append(bool)
+node n0000j Call Console.WriteLine(StringView)
+node n0000k Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0000l Make Core.Vec3
+	in X 0.5f
+	in Y 1.0f
+	in Z 2.0f
+node n0000m Call Core.AABB.FromCenterExtents
+node n0000n Make Core.Vec3
+	in X 0.5f
+	in Y 1.0f
+	in Z 1.0f
+node n0000o Make Core.Vec3
+	in X 1.5f
+	in Y 3.0f
+	in Z 5.0f
+node n0000p Make Core.AABB
+node n0000q Math
+	set expr "Abs(a.Min.X - b.Min.X) <= 0.00004999999873689376f && Abs(a.Min.Y - b.Min.Y) <= 0.00004999999873689376f && Abs(a.Min.Z - b.Min.Z) <= 0.00004999999873689376f && Abs(a.Max.X - b.Max.X) <= 0.00004999999873689376f && Abs(a.Max.Y - b.Max.Y) <= 0.00004999999873689376f && Abs(a.Max.Z - b.Max.Z) <= 0.00004999999873689376f"
+node n0000r Call String.Clear
+node n0000s Call String.Append(StringView)
+	in text "aabb.FromCenterExtents "
+node n0000t Call String.Append(bool)
+node n0000u Call Console.WriteLine(StringView)
+node n0000v Local Core.Vec3
+	set count
+	in count 4
+node n0000w Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0000x Call Arrays.Set
+	in index 0
+node n0000y Make Core.Vec3
+	in X -4.0f
+	in Y 5.0f
+	in Z 0.5f
+node n0000z Call Arrays.Set
+	in index 1
+node n00010 Make Core.Vec3
+	in X 2.0f
+	in Y -1.0f
+	in Z 7.0f
+node n00011 Call Arrays.Set
+	in index 2
+node n00012 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n00013 Call Arrays.Set
+	in index 3
+node n00014 Call Core.AABB.FromPoints
+node n00015 Make Core.Vec3
+	in X -4.0f
+	in Y -1.0f
+	in Z 0.0f
+node n00016 Make Core.Vec3
+	in X 2.0f
+	in Y 5.0f
+	in Z 7.0f
+node n00017 Make Core.AABB
+node n00018 Math
+	set expr "Abs(a.Min.X - b.Min.X) <= 0.00007000000186963007f && Abs(a.Min.Y - b.Min.Y) <= 0.00007000000186963007f && Abs(a.Min.Z - b.Min.Z) <= 0.00007000000186963007f && Abs(a.Max.X - b.Max.X) <= 0.00007000000186963007f && Abs(a.Max.Y - b.Max.Y) <= 0.00007000000186963007f && Abs(a.Max.Z - b.Max.Z) <= 0.00007000000186963007f"
+node n00019 Call String.Clear
+node n0001a Call String.Append(StringView)
+	in text "aabb.FromPoints "
+node n0001b Call String.Append(bool)
+node n0001c Call Console.WriteLine(StringView)
+node n0001d Make Core.Vec3
+	in X -1.0f
+	in Y 0.0f
+	in Z 2.0f
+node n0001e Make Core.Vec3
+	in X 3.0f
+	in Y 4.0f
+	in Z 5.0f
+node n0001f Make Core.AABB
+node n0001g Call Core.AABB.Center
+node n0001h Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.5f
+node n0001i Math
+	set expr "Abs(a.X - b.X) <= 0.000035000000934815034f && Abs(a.Y - b.Y) <= 0.000035000000934815034f && Abs(a.Z - b.Z) <= 0.000035000000934815034f"
+node n0001j Call String.Clear
+node n0001k Call String.Append(StringView)
+	in text "aabb.Center "
+node n0001l Call String.Append(bool)
+node n0001m Call Console.WriteLine(StringView)
+node n0001n Call Core.AABB.Extents
+node n0001o Make Core.Vec3
+	in X 2.0f
+	in Y 2.0f
+	in Z 1.5f
+node n0001p Math
+	set expr "Abs(a.X - b.X) <= 0.000019999999494757503f && Abs(a.Y - b.Y) <= 0.000019999999494757503f && Abs(a.Z - b.Z) <= 0.000019999999494757503f"
+node n0001q Call String.Clear
+node n0001r Call String.Append(StringView)
+	in text "aabb.Extents "
+node n0001s Call String.Append(bool)
+node n0001t Call Console.WriteLine(StringView)
+node n0001u Call Core.AABB.Size
+node n0001v Make Core.Vec3
+	in X 4.0f
+	in Y 4.0f
+	in Z 3.0f
+node n0001w Math
+	set expr "Abs(a.X - b.X) <= 0.000039999998989515007f && Abs(a.Y - b.Y) <= 0.000039999998989515007f && Abs(a.Z - b.Z) <= 0.000039999998989515007f"
+node n0001x Call String.Clear
+node n0001y Call String.Append(StringView)
+	in text "aabb.Size "
+node n0001z Call String.Append(bool)
+node n00020 Call Console.WriteLine(StringView)
+node n00021 Call Core.AABB.IsValid
+node n00022 Operator ==
+	in b true
+node n00023 Call String.Clear
+node n00024 Call String.Append(StringView)
+	in text "aabb.IsValid "
+node n00025 Call String.Append(bool)
+node n00026 Call Console.WriteLine(StringView)
+node n00027 Make Core.Vec3
+	in X 3.0f
+	in Y 0.0f
+	in Z 2.0f
+node n00028 Call Core.AABB.Contains
+node n00029 Operator ==
+	in b true
+node n0002a Call String.Clear
+node n0002b Call String.Append(StringView)
+	in text "aabb.Contains "
+node n0002c Call String.Append(bool)
+node n0002d Call Console.WriteLine(StringView)
+node n0002e Make Core.Vec3
+	in X 3.0f
+	in Y 0.0f
+	in Z 5.099999904632568f
+node n0002f Call Core.AABB.Contains
+node n0002g Operator ==
+	in b false
+node n0002h Call String.Clear
+node n0002i Call String.Append(StringView)
+	in text "aabb.Contains.out "
+node n0002j Call String.Append(bool)
+node n0002k Call Console.WriteLine(StringView)
+node n0002l Make Core.Vec3
+	in X 2.0f
+	in Y 3.0f
+	in Z 4.0f
+node n0002m Make Core.Vec3
+	in X 6.0f
+	in Y 6.0f
+	in Z 6.0f
+node n0002n Make Core.AABB
+node n0002o Call Core.AABB.Overlaps
+node n0002p Operator ==
+	in b true
+node n0002q Call String.Clear
+node n0002r Call String.Append(StringView)
+	in text "aabb.Overlaps "
+node n0002s Call String.Append(bool)
+node n0002t Call Console.WriteLine(StringView)
+node n0002u Make Core.Vec3
+	in X 3.0f
+	in Y 4.0f
+	in Z 5.0f
+node n0002v Make Core.Vec3
+	in X 9.0f
+	in Y 9.0f
+	in Z 9.0f
+node n0002w Make Core.AABB
+node n0002x Call Core.AABB.Overlaps
+node n0002y Operator ==
+	in b true
+node n0002z Call String.Clear
+node n00030 Call String.Append(StringView)
+	in text "aabb.Overlaps.touch "
+node n00031 Call String.Append(bool)
+node n00032 Call Console.WriteLine(StringView)
+node n00033 Make Core.Vec3
+	in X 3.5f
+	in Y 0.0f
+	in Z 2.0f
+node n00034 Make Core.Vec3
+	in X 9.0f
+	in Y 9.0f
+	in Z 9.0f
+node n00035 Make Core.AABB
+node n00036 Call Core.AABB.Overlaps
+node n00037 Operator ==
+	in b false
+node n00038 Call String.Clear
+node n00039 Call String.Append(StringView)
+	in text "aabb.Overlaps.no "
+node n0003a Call String.Append(bool)
+node n0003b Call Console.WriteLine(StringView)
+node n0003c Call Core.AABB.Union
+node n0003d Make Core.Vec3
+	in X -1.0f
+	in Y 0.0f
+	in Z 2.0f
+node n0003e Make Core.Vec3
+	in X 6.0f
+	in Y 6.0f
+	in Z 6.0f
+node n0003f Make Core.AABB
+node n0003g Math
+	set expr "Abs(a.Min.X - b.Min.X) <= 0.00005999999848427251f && Abs(a.Min.Y - b.Min.Y) <= 0.00005999999848427251f && Abs(a.Min.Z - b.Min.Z) <= 0.00005999999848427251f && Abs(a.Max.X - b.Max.X) <= 0.00005999999848427251f && Abs(a.Max.Y - b.Max.Y) <= 0.00005999999848427251f && Abs(a.Max.Z - b.Max.Z) <= 0.00005999999848427251f"
+node n0003h Call String.Clear
+node n0003i Call String.Append(StringView)
+	in text "aabb.Union "
+node n0003j Call String.Append(bool)
+node n0003k Call Console.WriteLine(StringView)
+node n0003l Make Core.Vec3
+	in X -3.0f
+	in Y 10.0f
+	in Z 4.0f
+node n0003m Call Core.AABB.Encapsulate
+node n0003n Make Core.Vec3
+	in X -3.0f
+	in Y 0.0f
+	in Z 2.0f
+node n0003o Make Core.Vec3
+	in X 3.0f
+	in Y 10.0f
+	in Z 5.0f
+node n0003p Make Core.AABB
+node n0003q Math
+	set expr "Abs(a.Min.X - b.Min.X) <= 0.00009999999747378752f && Abs(a.Min.Y - b.Min.Y) <= 0.00009999999747378752f && Abs(a.Min.Z - b.Min.Z) <= 0.00009999999747378752f && Abs(a.Max.X - b.Max.X) <= 0.00009999999747378752f && Abs(a.Max.Y - b.Max.Y) <= 0.00009999999747378752f && Abs(a.Max.Z - b.Max.Z) <= 0.00009999999747378752f"
+node n0003r Call String.Clear
+node n0003s Call String.Append(StringView)
+	in text "aabb.Encapsulate "
+node n0003t Call String.Append(bool)
+node n0003u Call Console.WriteLine(StringView)
+node n0003v Make Core.Vec3
+	in X -5.0f
+	in Y 2.0f
+	in Z 9.0f
+node n0003w Call Core.AABB.ClosestPoint
+node n0003x Make Core.Vec3
+	in X -1.0f
+	in Y 2.0f
+	in Z 5.0f
+node n0003y Math
+	set expr "Abs(a.X - b.X) <= 0.00004999999873689376f && Abs(a.Y - b.Y) <= 0.00004999999873689376f && Abs(a.Z - b.Z) <= 0.00004999999873689376f"
+node n0003z Call String.Clear
+node n00040 Call String.Append(StringView)
+	in text "aabb.ClosestPoint "
+node n00041 Call String.Append(bool)
+node n00042 Call Console.WriteLine(StringView)
+node n00043 Make Core.Vec3
+	in X 10.0f
+	in Y 0.0f
+	in Z -2.0f
+node n00044 Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n00045 Call Core.Quat.FromAxisAngle
+	in angle 0.7853981852531433f
+node n00046 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 1.0f
+node n00047 Call Core.Mat4.FromTRS
+node n00048 Call Core.AABB.Transformed
+node n00049 Make Core.Vec3
+	in X 10.707106590270996f
+	in Y 0.0f
+	in Z -2.707106828689575f
+node n0004a Make Core.Vec3
+	in X 15.656854629516602f
+	in Y 8.0f
+	in Z 2.242640733718872f
+node n0004b Make Core.AABB
+node n0004c Math
+	set expr "Abs(a.Min.X - b.Min.X) <= 0.0001565685379318893f && Abs(a.Min.Y - b.Min.Y) <= 0.0001565685379318893f && Abs(a.Min.Z - b.Min.Z) <= 0.0001565685379318893f && Abs(a.Max.X - b.Max.X) <= 0.0001565685379318893f && Abs(a.Max.Y - b.Max.Y) <= 0.0001565685379318893f && Abs(a.Max.Z - b.Max.Z) <= 0.0001565685379318893f"
+node n0004d Call String.Clear
+node n0004e Call String.Append(StringView)
+	in text "aabb.Transformed "
+node n0004f Call String.Append(bool)
+node n0004g Call Console.WriteLine(StringView)
+node n0004h Get Core.AABB.Empty
+node n0004i Get Core.Mat4.Identity
+node n0004j Call Core.AABB.Transformed
+node n0004k Call Core.AABB.IsValid
+node n0004l Operator ==
+	in b false
+node n0004m Call String.Clear
+node n0004n Call String.Append(StringView)
+	in text "aabb.Transformed.empty "
+node n0004o Call String.Append(bool)
+node n0004p Call Console.WriteLine(StringView)
+node n0004q Return
+	in value 0
+wire n00000.then n00001.in
+wire n00002.value n00003.receiver
+wire n00003.result n00004.a
+wire n00001.then n00005.in
+wire n00001.object n00005.receiver
+wire n00005.then n00006.in
+wire n00001.object n00006.receiver
+wire n00006.then n00007.in
+wire n00001.object n00007.receiver
+wire n00004.result n00007.value
+wire n00007.then n00008.in
+wire n00001.object n00008.text
+wire n0000a.value n0000b.point
+wire n00009.value n0000b.receiver
+wire n0000d.value n0000e.Max
+wire n0000c.value n0000e.Min
+wire n0000b.result n0000f.a
+wire n0000e.value n0000f.b
+wire n00008.then n0000g.in
+wire n00001.object n0000g.receiver
+wire n0000g.then n0000h.in
+wire n00001.object n0000h.receiver
+wire n0000h.then n0000i.in
+wire n00001.object n0000i.receiver
+wire n0000f.result n0000i.value
+wire n0000i.then n0000j.in
+wire n00001.object n0000j.text
+wire n0000k.value n0000m.center
+wire n0000l.value n0000m.extents
+wire n0000o.value n0000p.Max
+wire n0000n.value n0000p.Min
+wire n0000m.result n0000q.a
+wire n0000p.value n0000q.b
+wire n0000j.then n0000r.in
+wire n00001.object n0000r.receiver
+wire n0000r.then n0000s.in
+wire n00001.object n0000s.receiver
+wire n0000s.then n0000t.in
+wire n00001.object n0000t.receiver
+wire n0000q.result n0000t.value
+wire n0000t.then n0000u.in
+wire n00001.object n0000u.text
+wire n0000u.then n0000v.in
+wire n0000v.object n0000x.array
+wire n0000v.then n0000x.in
+wire n0000w.value n0000x.value
+wire n0000v.object n0000z.array
+wire n0000x.then n0000z.in
+wire n0000y.value n0000z.value
+wire n0000v.object n00011.array
+wire n0000z.then n00011.in
+wire n00010.value n00011.value
+wire n0000v.object n00013.array
+wire n00011.then n00013.in
+wire n00012.value n00013.value
+wire n0000v.object n00014.points
+wire n00016.value n00017.Max
+wire n00015.value n00017.Min
+wire n00014.result n00018.a
+wire n00017.value n00018.b
+wire n00013.then n00019.in
+wire n00001.object n00019.receiver
+wire n00019.then n0001a.in
+wire n00001.object n0001a.receiver
+wire n0001a.then n0001b.in
+wire n00001.object n0001b.receiver
+wire n00018.result n0001b.value
+wire n0001b.then n0001c.in
+wire n00001.object n0001c.text
+wire n0001e.value n0001f.Max
+wire n0001d.value n0001f.Min
+wire n0001f.value n0001g.receiver
+wire n0001g.result n0001i.a
+wire n0001h.value n0001i.b
+wire n0001c.then n0001j.in
+wire n00001.object n0001j.receiver
+wire n0001j.then n0001k.in
+wire n00001.object n0001k.receiver
+wire n0001k.then n0001l.in
+wire n00001.object n0001l.receiver
+wire n0001i.result n0001l.value
+wire n0001l.then n0001m.in
+wire n00001.object n0001m.text
+wire n0001f.value n0001n.receiver
+wire n0001n.result n0001p.a
+wire n0001o.value n0001p.b
+wire n0001m.then n0001q.in
+wire n00001.object n0001q.receiver
+wire n0001q.then n0001r.in
+wire n00001.object n0001r.receiver
+wire n0001r.then n0001s.in
+wire n00001.object n0001s.receiver
+wire n0001p.result n0001s.value
+wire n0001s.then n0001t.in
+wire n00001.object n0001t.text
+wire n0001f.value n0001u.receiver
+wire n0001u.result n0001w.a
+wire n0001v.value n0001w.b
+wire n0001t.then n0001x.in
+wire n00001.object n0001x.receiver
+wire n0001x.then n0001y.in
+wire n00001.object n0001y.receiver
+wire n0001y.then n0001z.in
+wire n00001.object n0001z.receiver
+wire n0001w.result n0001z.value
+wire n0001z.then n00020.in
+wire n00001.object n00020.text
+wire n0001f.value n00021.receiver
+wire n00021.result n00022.a
+wire n00020.then n00023.in
+wire n00001.object n00023.receiver
+wire n00023.then n00024.in
+wire n00001.object n00024.receiver
+wire n00024.then n00025.in
+wire n00001.object n00025.receiver
+wire n00022.result n00025.value
+wire n00025.then n00026.in
+wire n00001.object n00026.text
+wire n00027.value n00028.point
+wire n0001f.value n00028.receiver
+wire n00028.result n00029.a
+wire n00026.then n0002a.in
+wire n00001.object n0002a.receiver
+wire n0002a.then n0002b.in
+wire n00001.object n0002b.receiver
+wire n0002b.then n0002c.in
+wire n00001.object n0002c.receiver
+wire n00029.result n0002c.value
+wire n0002c.then n0002d.in
+wire n00001.object n0002d.text
+wire n0002e.value n0002f.point
+wire n0001f.value n0002f.receiver
+wire n0002f.result n0002g.a
+wire n0002d.then n0002h.in
+wire n00001.object n0002h.receiver
+wire n0002h.then n0002i.in
+wire n00001.object n0002i.receiver
+wire n0002i.then n0002j.in
+wire n00001.object n0002j.receiver
+wire n0002g.result n0002j.value
+wire n0002j.then n0002k.in
+wire n00001.object n0002k.text
+wire n0002m.value n0002n.Max
+wire n0002l.value n0002n.Min
+wire n0002n.value n0002o.other
+wire n0001f.value n0002o.receiver
+wire n0002o.result n0002p.a
+wire n0002k.then n0002q.in
+wire n00001.object n0002q.receiver
+wire n0002q.then n0002r.in
+wire n00001.object n0002r.receiver
+wire n0002r.then n0002s.in
+wire n00001.object n0002s.receiver
+wire n0002p.result n0002s.value
+wire n0002s.then n0002t.in
+wire n00001.object n0002t.text
+wire n0002v.value n0002w.Max
+wire n0002u.value n0002w.Min
+wire n0002w.value n0002x.other
+wire n0001f.value n0002x.receiver
+wire n0002x.result n0002y.a
+wire n0002t.then n0002z.in
+wire n00001.object n0002z.receiver
+wire n0002z.then n00030.in
+wire n00001.object n00030.receiver
+wire n00030.then n00031.in
+wire n00001.object n00031.receiver
+wire n0002y.result n00031.value
+wire n00031.then n00032.in
+wire n00001.object n00032.text
+wire n00034.value n00035.Max
+wire n00033.value n00035.Min
+wire n00035.value n00036.other
+wire n0001f.value n00036.receiver
+wire n00036.result n00037.a
+wire n00032.then n00038.in
+wire n00001.object n00038.receiver
+wire n00038.then n00039.in
+wire n00001.object n00039.receiver
+wire n00039.then n0003a.in
+wire n00001.object n0003a.receiver
+wire n00037.result n0003a.value
+wire n0003a.then n0003b.in
+wire n00001.object n0003b.text
+wire n0002n.value n0003c.other
+wire n0001f.value n0003c.receiver
+wire n0003e.value n0003f.Max
+wire n0003d.value n0003f.Min
+wire n0003c.result n0003g.a
+wire n0003f.value n0003g.b
+wire n0003b.then n0003h.in
+wire n00001.object n0003h.receiver
+wire n0003h.then n0003i.in
+wire n00001.object n0003i.receiver
+wire n0003i.then n0003j.in
+wire n00001.object n0003j.receiver
+wire n0003g.result n0003j.value
+wire n0003j.then n0003k.in
+wire n00001.object n0003k.text
+wire n0003l.value n0003m.point
+wire n0001f.value n0003m.receiver
+wire n0003o.value n0003p.Max
+wire n0003n.value n0003p.Min
+wire n0003m.result n0003q.a
+wire n0003p.value n0003q.b
+wire n0003k.then n0003r.in
+wire n00001.object n0003r.receiver
+wire n0003r.then n0003s.in
+wire n00001.object n0003s.receiver
+wire n0003s.then n0003t.in
+wire n00001.object n0003t.receiver
+wire n0003q.result n0003t.value
+wire n0003t.then n0003u.in
+wire n00001.object n0003u.text
+wire n0003v.value n0003w.point
+wire n0001f.value n0003w.receiver
+wire n0003w.result n0003y.a
+wire n0003x.value n0003y.b
+wire n0003u.then n0003z.in
+wire n00001.object n0003z.receiver
+wire n0003z.then n00040.in
+wire n00001.object n00040.receiver
+wire n00040.then n00041.in
+wire n00001.object n00041.receiver
+wire n0003y.result n00041.value
+wire n00041.then n00042.in
+wire n00001.object n00042.text
+wire n00044.value n00045.axis
+wire n00045.result n00047.rotation
+wire n00046.value n00047.scale
+wire n00043.value n00047.translation
+wire n00047.result n00048.m
+wire n0001f.value n00048.receiver
+wire n0004a.value n0004b.Max
+wire n00049.value n0004b.Min
+wire n00048.result n0004c.a
+wire n0004b.value n0004c.b
+wire n00042.then n0004d.in
+wire n00001.object n0004d.receiver
+wire n0004d.then n0004e.in
+wire n00001.object n0004e.receiver
+wire n0004e.then n0004f.in
+wire n00001.object n0004f.receiver
+wire n0004c.result n0004f.value
+wire n0004f.then n0004g.in
+wire n00001.object n0004g.text
+wire n0004i.value n0004j.m
+wire n0004h.value n0004j.receiver
+wire n0004j.result n0004k.receiver
+wire n0004k.result n0004l.a
+wire n0004g.then n0004m.in
+wire n00001.object n0004m.receiver
+wire n0004m.then n0004n.in
+wire n00001.object n0004n.receiver
+wire n0004n.then n0004o.in
+wire n00001.object n0004o.receiver
+wire n0004l.result n0004o.value
+wire n0004o.then n0004p.in
+wire n00001.object n0004p.text
+wire n0004p.then n0004q.in

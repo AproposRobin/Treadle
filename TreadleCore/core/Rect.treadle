@@ -1,0 +1,342 @@
+# treadle 1
+type Rect struct
+	namespace Core
+	attr CRepr
+	doc "A rectangle X, Y, Width, Height of floats (16 bytes): it holds the points from X up to but not including X + Width, the same for Y (Y down on a screen, up in a world: either works). Every function is Pure."
+
+field X float
+
+field Y float
+
+field Width float
+
+field Height float
+
+function r000 FromMinMax
+	static
+	pure
+	returns Rect
+	doc "The rectangle from `min` to `max`."
+param min Vec2
+param max Vec2
+sheet body
+node n00000 Entry
+node n00001 Math
+	set expr "a.X"
+node n00002 Math
+	set expr "a.Y"
+node n00003 Math
+	set expr "b.X - a.X"
+node n00004 Math
+	set expr "b.Y - a.Y"
+node n00005 Make Rect
+node n00006 Return
+wire n00000.min n00001.a
+wire n00000.min n00002.a
+wire n00000.min n00003.a
+wire n00000.max n00003.b
+wire n00000.min n00004.a
+wire n00000.max n00004.b
+wire n00004.result n00005.Height
+wire n00003.result n00005.Width
+wire n00001.result n00005.X
+wire n00002.result n00005.Y
+wire n00000.then n00006.in
+wire n00005.value n00006.value
+
+function r001 Min
+	pure
+	returns Vec2
+	doc "The corner (X, Y)."
+sheet body
+node n00100 Entry
+node n00101 This
+node n00102 Math
+	set expr "r.X"
+node n00103 Math
+	set expr "r.Y"
+node n00104 Make Vec2
+node n00105 Return
+wire n00101.value n00102.r
+wire n00101.value n00103.r
+wire n00102.result n00104.X
+wire n00103.result n00104.Y
+wire n00100.then n00105.in
+wire n00104.value n00105.value
+
+function r002 Max
+	pure
+	returns Vec2
+	doc "The corner (X + Width, Y + Height)."
+sheet body
+node n00200 Entry
+node n00201 This
+node n00202 Math
+	set expr "r.X + r.Width"
+node n00203 Math
+	set expr "r.Y + r.Height"
+node n00204 Make Vec2
+node n00205 Return
+wire n00201.value n00202.r
+wire n00201.value n00203.r
+wire n00202.result n00204.X
+wire n00203.result n00204.Y
+wire n00200.then n00205.in
+wire n00204.value n00205.value
+
+function r003 Center
+	pure
+	returns Vec2
+	doc "The middle point."
+sheet body
+node n00300 Entry
+node n00301 This
+node n00302 Math
+	set expr "r.X + r.Width * 0.5f"
+node n00303 Math
+	set expr "r.Y + r.Height * 0.5f"
+node n00304 Make Vec2
+node n00305 Return
+wire n00301.value n00302.r
+wire n00301.value n00303.r
+wire n00302.result n00304.X
+wire n00303.result n00304.Y
+wire n00300.then n00305.in
+wire n00304.value n00305.value
+
+function r004 Size
+	pure
+	returns Vec2
+	doc "(Width, Height)."
+sheet body
+node n00400 Entry
+node n00401 This
+node n00402 Math
+	set expr "r.Width"
+node n00403 Math
+	set expr "r.Height"
+node n00404 Make Vec2
+node n00405 Return
+wire n00401.value n00402.r
+wire n00401.value n00403.r
+wire n00402.result n00404.X
+wire n00403.result n00404.Y
+wire n00400.then n00405.in
+wire n00404.value n00405.value
+
+function r005 Contains
+	pure
+	returns bool
+	doc "True when the point is inside (the far edges are outside)."
+param point Vec2
+sheet body
+node n00500 Entry
+node n00501 This
+node n00502 Math
+	set expr "p.X >= r.X && p.X < r.X + r.Width && p.Y >= r.Y && p.Y < r.Y + r.Height"
+node n00503 Return
+wire n00500.point n00502.p
+wire n00501.value n00502.r
+wire n00500.then n00503.in
+wire n00502.result n00503.value
+
+function r006 Expanded
+	pure
+	returns Rect
+	doc "Grown by `amount` on every side (a negative amount shrinks it)."
+param amount float
+sheet body
+node n00600 Entry
+node n00601 This
+node n00602 Math
+	set expr "r.X - d"
+node n00603 Math
+	set expr "r.Y - d"
+node n00604 Math
+	set expr "r.Width + d * 2.0f"
+node n00605 Math
+	set expr "r.Height + d * 2.0f"
+node n00606 Make Rect
+node n00607 Return
+wire n00600.amount n00602.d
+wire n00601.value n00602.r
+wire n00600.amount n00603.d
+wire n00601.value n00603.r
+wire n00600.amount n00604.d
+wire n00601.value n00604.r
+wire n00600.amount n00605.d
+wire n00601.value n00605.r
+wire n00605.result n00606.Height
+wire n00604.result n00606.Width
+wire n00602.result n00606.X
+wire n00603.result n00606.Y
+wire n00600.then n00607.in
+wire n00606.value n00607.value
+
+function r007 Translated
+	pure
+	returns Rect
+	doc "Moved by `offset`."
+param offset Vec2
+sheet body
+node n00700 Entry
+node n00701 This
+node n00702 Math
+	set expr "r.X + o.X"
+node n00703 Math
+	set expr "r.Y + o.Y"
+node n00704 Math
+	set expr "r.Width"
+node n00705 Math
+	set expr "r.Height"
+node n00706 Make Rect
+node n00707 Return
+wire n00700.offset n00702.o
+wire n00701.value n00702.r
+wire n00700.offset n00703.o
+wire n00701.value n00703.r
+wire n00701.value n00704.r
+wire n00701.value n00705.r
+wire n00705.result n00706.Height
+wire n00704.result n00706.Width
+wire n00702.result n00706.X
+wire n00703.result n00706.Y
+wire n00700.then n00707.in
+wire n00706.value n00707.value
+
+function r008 Overlaps
+	pure
+	returns bool
+	doc "True when the two share some area (touching edges do not count)."
+param other Rect
+sheet body
+node n00800 Entry
+node n00801 This
+node n00802 Math
+	set expr "a.X < b.X + b.Width && b.X < a.X + a.Width && a.Y < b.Y + b.Height && b.Y < a.Y + a.Height"
+node n00803 Return
+wire n00801.value n00802.a
+wire n00800.other n00802.b
+wire n00800.then n00803.in
+wire n00802.result n00803.value
+
+function r009 Intersection
+	pure
+	returns Rect
+	doc "The area both cover; when they do not overlap, a rectangle of zero size."
+param other Rect
+sheet body
+node n00900 Entry
+node n00901 This
+node n00902 Math
+	set expr "Max(a.X, b.X)"
+node n00903 Math
+	set expr "Max(a.Y, b.Y)"
+node n00904 Math
+	set expr "Min(a.X + a.Width, b.X + b.Width)"
+node n00905 Math
+	set expr "Min(a.Y + a.Height, b.Y + b.Height)"
+node n00906 Math
+	set expr "x1 <= x0 || y1 <= y0"
+node n00907 Math
+	set expr "e ? 0.0f : x1 - x0"
+node n00908 Math
+	set expr "e ? 0.0f : y1 - y0"
+node n00909 Make Rect
+node n0090a Return
+wire n00901.value n00902.a
+wire n00900.other n00902.b
+wire n00901.value n00903.a
+wire n00900.other n00903.b
+wire n00901.value n00904.a
+wire n00900.other n00904.b
+wire n00901.value n00905.a
+wire n00900.other n00905.b
+wire n00902.result n00906.x0
+wire n00904.result n00906.x1
+wire n00903.result n00906.y0
+wire n00905.result n00906.y1
+wire n00906.result n00907.e
+wire n00902.result n00907.x0
+wire n00904.result n00907.x1
+wire n00906.result n00908.e
+wire n00903.result n00908.y0
+wire n00905.result n00908.y1
+wire n00908.result n00909.Height
+wire n00907.result n00909.Width
+wire n00902.result n00909.X
+wire n00903.result n00909.Y
+wire n00900.then n0090a.in
+wire n00909.value n0090a.value
+
+function r00a Union
+	pure
+	returns Rect
+	doc "The smallest rectangle that covers both."
+param other Rect
+sheet body
+node n00a00 Entry
+node n00a01 This
+node n00a02 Math
+	set expr "Min(a.X, b.X)"
+node n00a03 Math
+	set expr "Min(a.Y, b.Y)"
+node n00a04 Math
+	set expr "Max(a.X + a.Width, b.X + b.Width)"
+node n00a05 Math
+	set expr "Max(a.Y + a.Height, b.Y + b.Height)"
+node n00a06 Math
+	set expr "x1 - x0"
+node n00a07 Math
+	set expr "y1 - y0"
+node n00a08 Make Rect
+node n00a09 Return
+wire n00a01.value n00a02.a
+wire n00a00.other n00a02.b
+wire n00a01.value n00a03.a
+wire n00a00.other n00a03.b
+wire n00a01.value n00a04.a
+wire n00a00.other n00a04.b
+wire n00a01.value n00a05.a
+wire n00a00.other n00a05.b
+wire n00a02.result n00a06.x0
+wire n00a04.result n00a06.x1
+wire n00a03.result n00a07.y0
+wire n00a05.result n00a07.y1
+wire n00a07.result n00a08.Height
+wire n00a06.result n00a08.Width
+wire n00a02.result n00a08.X
+wire n00a03.result n00a08.Y
+wire n00a00.then n00a09.in
+wire n00a08.value n00a09.value
+
+function r00b IsEmpty
+	pure
+	returns bool
+	doc "True when the width or the height is zero or less."
+sheet body
+node n00b00 Entry
+node n00b01 This
+node n00b02 Math
+	set expr "r.Width <= 0.0f || r.Height <= 0.0f"
+node n00b03 Return
+wire n00b01.value n00b02.r
+wire n00b00.then n00b03.in
+wire n00b02.result n00b03.value
+
+operator r00c ==
+	static
+	pure
+	returns bool
+	doc "True when position and size are equal."
+param a Rect
+param b Rect
+sheet body
+node n00c00 Entry
+node n00c01 Math
+	set expr "a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height"
+node n00c02 Return
+wire n00c00.a n00c01.a
+wire n00c00.b n00c01.b
+wire n00c00.then n00c02.in
+wire n00c01.result n00c02.value

@@ -1,0 +1,183 @@
+# treadle 1
+type Query class
+	namespace Json
+	static
+	doc "Path lookups in a JsonValue: `a.b[2].c` names object members with dots and array elements with [index]."
+
+function m0001 Find
+	static
+	returns Option<Json.JsonValue>
+	doc "The value at `path` under `root`: Some(value) or None when a member is missing, an index is out of range, a step meets the wrong kind of value or the path is malformed. The value found is a view into `root` (root still owns it: do not Free it). An empty path gives the root."
+param root Json.JsonValue
+param path StringView
+local cur Json.JsonValue
+local pos int
+local start int
+local end int
+sheet body
+node a000 Entry
+node a001 Set local:cur
+node a002 Get local:cur
+node a003 Get local:pos
+node a004 Get StringView.Length
+node a005 Operator <
+node a006 While
+node a007 Index
+node a008 Cast int
+node a009 Operator ==
+	in b 46
+node a00a Branch
+node a00b Set local:pos
+	set op +=
+	in value 1
+node a00c Operator ==
+	in b 91
+node a00d Branch
+node a00e Operator -
+node a00f Call StringView.Substring
+node a00g Call StringView.IndexOf(char8)
+	in c 93
+node a00h Set local:end
+node a00i Get local:end
+node a00j Operator <
+	in b 2
+node a00k Branch
+node a00l MakeCase Option<Json.JsonValue>.None
+node a00m Return
+node a00n Operator +
+	in b 1
+node a00o Operator -
+	in b 1
+node a00p Call StringView.Substring
+node a00q Call Int.Parse
+node a00r ResultMatch
+node a00s IsCase Json.JsonValue.Array
+node a00t Branch
+node a00u Get List<Json.JsonValue>.Count
+node a00v Operator >=
+	in b 0
+node a00w Operator <
+node a00x Operator &&
+node a00y Branch
+node a00z Index
+node a010 Set local:cur
+node a011 Math
+	set expr "p+e+1"
+node a012 Set local:pos
+node a013 Set local:start
+node a014 Operator !=
+	in b 46
+node a015 Operator !=
+	in b 91
+node a016 Operator &&
+node a017 Operator &&
+node a018 While
+node a019 Set local:pos
+	set op +=
+	in value 1
+node a01a IsCase Json.JsonValue.Object
+node a01b Branch
+node a01c Get local:start
+node a01d Operator -
+node a01e Call StringView.Substring
+node a01f Local String
+	set ctor (StringView)
+node a01g Call Dictionary<String,Json.JsonValue>.TryGet
+node a01h Branch
+node a01i Set local:cur
+node a01j MakeCase Option<Json.JsonValue>.Some
+node a01k Return
+wire a000.then a001.in
+wire a000.root a001.value
+wire a000.path a004.receiver
+wire a003.value a005.a
+wire a004.value a005.b
+wire a005.result a006.condition
+wire a001.then a006.in
+wire a000.path a007.collection
+wire a003.value a007.index
+wire a007.value a008.value
+wire a008.result a009.a
+wire a009.result a00a.condition
+wire a006.body a00a.in
+wire a00a.true a00b.in
+wire a008.result a00c.a
+wire a00c.result a00d.condition
+wire a00a.false a00d.in
+wire a004.value a00e.a
+wire a003.value a00e.b
+wire a00e.result a00f.length
+wire a000.path a00f.receiver
+wire a003.value a00f.start
+wire a00f.result a00g.receiver
+wire a00d.true a00h.in
+wire a00g.result a00h.value
+wire a00i.value a00j.a
+wire a00j.result a00k.condition
+wire a00h.then a00k.in
+wire a00k.true a00m.in
+wire a00r.err a00m.in
+wire a00t.false a00m.in
+wire a00y.false a00m.in
+wire a01b.false a00m.in
+wire a01h.false a00m.in
+wire a00l.value a00m.value
+wire a003.value a00n.a
+wire a00i.value a00o.a
+wire a00o.result a00p.length
+wire a000.path a00p.receiver
+wire a00n.result a00p.start
+wire a00k.false a00q.in
+wire a00p.result a00q.text
+wire a00q.then a00r.in
+wire a00q.result a00r.result
+wire a002.value a00s.value
+wire a00s.result a00t.condition
+wire a00r.ok a00t.in
+wire a00s.items a00u.receiver
+wire a00r.value a00v.a
+wire a00r.value a00w.a
+wire a00u.value a00w.b
+wire a00v.result a00x.a
+wire a00w.result a00x.b
+wire a00x.result a00y.condition
+wire a00t.true a00y.in
+wire a00s.items a00z.collection
+wire a00r.value a00z.index
+wire a00y.true a010.in
+wire a00z.value a010.value
+wire a00i.value a011.e
+wire a003.value a011.p
+wire a010.then a012.in
+wire a011.result a012.value
+wire a00d.false a013.in
+wire a003.value a013.value
+wire a008.result a014.a
+wire a008.result a015.a
+wire a005.result a016.a
+wire a014.result a016.b
+wire a016.result a017.a
+wire a015.result a017.b
+wire a017.result a018.condition
+wire a013.then a018.in
+wire a018.body a019.in
+wire a002.value a01a.value
+wire a01a.result a01b.condition
+wire a018.done a01b.in
+wire a003.value a01d.a
+wire a01c.value a01d.b
+wire a01d.result a01e.length
+wire a000.path a01e.receiver
+wire a01c.value a01e.start
+wire a01b.true a01f.in
+wire a01e.result a01f.text
+wire a01f.then a01g.in
+wire a01f.object a01g.key
+wire a01a.members a01g.receiver
+wire a01g.result a01h.condition
+wire a01g.then a01h.in
+wire a01h.true a01i.in
+wire a01g.item a01i.value
+wire a002.value a01j.value
+wire a006.done a01k.in
+wire a01j.value a01k.value

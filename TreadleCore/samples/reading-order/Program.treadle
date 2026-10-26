@@ -1,0 +1,62 @@
+# treadle 1
+type Program class
+	namespace App
+	uses Game
+	static
+
+function m0001 Main
+	static
+	returns int
+param args String[]
+local total int
+sheet body
+node a0 Call String.Append(int)
+node a1 Entry
+node a2 Construct Game.Player
+	set ctor (String)
+	in name "Hero"
+node a3 DeferDelete
+node a4 For
+	in start 0
+	in count 3
+node a5 Call Game.Player.TakeDamage(int)
+	in amount 40
+node a6 Set local:total
+	set op +=
+node a7 Local String
+	set ctor ()
+node a8 Call String.Append(StringView)
+	in text "Health "
+node a9 Call C.libc.puts
+node b1 Branch
+node b2 Operator >
+	in b 0
+node b3 Get Game.Player.mHealth
+node b4 Return
+	in value 0
+node b5 Return
+	in value 1
+node b6 Call String.CStr()
+wire a8.then a0.in
+wire a7.object a0.receiver
+wire b3.value a0.value
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.object
+wire a3.then a4.in
+wire a4.body a5.in
+wire a2.object a5.receiver
+wire a5.then a6.in
+wire a4.index a6.value
+wire a6.then a7.in
+wire a7.then a8.in
+wire a7.object a8.receiver
+wire a0.then a9.in
+wire b6.result a9.s
+wire b2.result b1.condition
+wire a4.done b1.in
+wire b3.value b2.a
+wire a2.object b3.receiver
+wire b1.true b4.in
+wire b1.false b5.in
+wire a7.object b6.receiver

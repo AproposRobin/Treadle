@@ -1,0 +1,8 @@
+# Twice(21); Counter 0+5, 5+7; Dog.Speak through Animal: 4*100+2, and +3 through Apply; Square 5*5+1;
+# the Local delegate prints; closures: base + x with out = 2x by reference. Debug: no leaks.
+== exit
+0
+== stdout
+twice 42 add 5 12 speak 402 403 area 26
+show 9
+closure 1005 out 10 local closure 2008 out 16

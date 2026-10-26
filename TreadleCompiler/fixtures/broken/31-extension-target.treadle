@@ -1,0 +1,6 @@
+# treadle 1
+# expect - - T1070
+type AllocatorExt extension
+	namespace Broken
+	extends Core.IAllocator
+	doc "An interface cannot be extended."

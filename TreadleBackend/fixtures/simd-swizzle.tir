@@ -1,0 +1,69 @@
+# tir 1
+# Swizzle and Shuffle (SIMD-and-Vectors.md 1.4): vec.shuffle with one input (`v.zyx` makes a float3
+# of a float4, `v.xxxx` a splat of lane 0, `v.wzyx` reverses) and with two (`0 4 1 5` interleaves a
+# and b); a float3 widened to a float4 and a double2 swapped.
+program SimdSwizzle console
+entry Sz.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Sz.Program
+type Sz.Program class
+
+func Sz.Program.Show(float4) void static sheet "f1" display "Sz.Program.Show"
+	param v float4
+	block b0
+		%x = vec.get float %v 0
+		%y = vec.get float %v 1
+		%z = vec.get float %v 2
+		%w = vec.get float %v 3
+		%xd = cast double %x
+		%yd = cast double %y
+		%zd = cast double %z
+		%wd = cast double %w
+		%f = const char8* "(%g, %g, %g, %g)\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %xd %yd %zd %wd
+		ret
+
+func Sz.Program.Main() int static sheet "f2" display "Sz.Program.Main"
+	node a1 Entry
+	node a2 Swizzle
+	node a3 Shuffle
+	block b0
+		%v = const float4 1,2,3,4
+		%b = const float4 5,6,7,8
+		%zyx = vec.shuffle float3 %v poison 2 1 0 @a2
+		%x0 = vec.get float %zyx 0
+		%x1 = vec.get float %zyx 1
+		%x2 = vec.get float %zyx 2
+		%d0 = cast double %x0
+		%d1 = cast double %x1
+		%d2 = cast double %x2
+		%f = const char8* "zyx %g %g %g\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %d0 %d1 %d2
+		%xxxx = vec.shuffle float4 %v poison 0 0 0 0
+		call void Sz.Program.Show(float4) %xxxx
+		%wzyx = vec.shuffle float4 %v poison 3 2 1 0
+		call void Sz.Program.Show(float4) %wzyx
+		%mix = vec.shuffle float4 %v %b 0 4 1 5 @a3
+		call void Sz.Program.Show(float4) %mix
+		%hi = vec.shuffle float4 %v %b 2 3 6 7 @a3
+		call void Sz.Program.Show(float4) %hi
+		%xyzx = vec.shuffle float4 %zyx poison 0 1 2 0
+		call void Sz.Program.Show(float4) %xyzx
+		%dd = const double2 1.5,2.5
+		%sw = vec.shuffle double2 %dd poison 1 0
+		%s0 = vec.get double %sw 0
+		%s1 = vec.get double %sw 1
+		%f2 = const char8* "yx %g %g\n"
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %s0 %s1
+		%bytes = const uint8x16 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+		%rev = vec.shuffle uint8x16 %bytes poison 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+		%r0 = vec.get uint8 %rev 0
+		%r15 = vec.get uint8 %rev 15
+		%r0i = cast int32 %r0
+		%r15i = cast int32 %r15
+		%f3 = const char8* "bytes reversed %d %d\n"
+		%r3 = ccall int32 C.libc.printf(char8*,...) %f3 %r0i %r15i
+		%z = const int 0
+		ret %z

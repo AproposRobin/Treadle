@@ -1,0 +1,76 @@
+# tir 1
+# Casts between vectors of one lane count (SIMD-and-Vectors.md 1.3): each lane as the scalar Cast
+# converts it (float -> int truncates toward zero, int -> float, float <-> double, sign / zero
+# extension and truncation of integer lanes, a mask to 0 / 1 lanes and lanes to a mask), and
+# Reinterpret (vec.bitcast) between vectors of one size.
+program SimdConvert console
+entry Sv.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Sv.Program
+type Sv.Program class
+
+func Sv.Program.ShowI(int32x4) void static sheet "f1" display "Sv.Program.ShowI"
+	param v int32x4
+	block b0
+		%x = vec.get int32 %v 0
+		%y = vec.get int32 %v 1
+		%z = vec.get int32 %v 2
+		%w = vec.get int32 %v 3
+		%f = const char8* "(%d, %d, %d, %d)\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %x %y %z %w
+		ret
+
+func Sv.Program.Main() int static sheet "f2" display "Sv.Program.Main"
+	block b0
+		%v = const float4 1.7,-2.5,3.99,-0.5
+		%i = cast int32x4 %v
+		call void Sv.Program.ShowI(int32x4) %i
+		%back = cast float4 %i
+		%b0 = vec.get float %back 1
+		%b0d = cast double %b0
+		%d4 = cast double4 %v
+		%d1 = vec.get double %d4 2
+		%f4 = cast float4 %d4
+		%f42 = vec.get float %f4 2
+		%f42d = cast double %f42
+		%f = const char8* "back %g double %.7f float %.7f\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %b0d %d1 %f42d
+		%big = const int32x4 300,-1,65535,-129
+		%l = cast int64x4 %big
+		%l1 = vec.get int64 %l 1
+		%b8 = cast int8x4 %big
+		%b80 = vec.get int8 %b8 0
+		%b83 = vec.get int8 %b8 3
+		%b80i = cast int32 %b80
+		%b83i = cast int32 %b83
+		%u8 = const uint8x4 200,1,2,255
+		%w = cast int32x4 %u8
+		call void Sv.Program.ShowI(int32x4) %w
+		%f2 = const char8* "sext %lld trunc %d %d\n"
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %l1 %b80i %b83i
+		%m = const bool4 true,false,true,true
+		%mi = cast int32x4 %m
+		call void Sv.Program.ShowI(int32x4) %mi
+		%mm = cast bool4 %w
+		%mb = vec.bitmask uint %mm
+		%fz = const float4 0,1,-0,2
+		%fm = cast bool4 %fz
+		%fmb = vec.bitmask uint %fm
+		%mf = cast float4 %m
+		%mf0 = vec.get float %mf 0
+		%mf0d = cast double %mf0
+		%f3 = const char8* "masks %llu %llu %g\n"
+		%r3 = ccall int32 C.libc.printf(char8*,...) %f3 %mb %fmb %mf0d
+		%one = const float4 1
+		%bits = vec.bitcast uint32x4 %one
+		%bl = vec.get uint32 %bits 0
+		%dd = const double2 2
+		%as8 = vec.bitcast uint8x16 %dd
+		%byte7 = vec.get uint8 %as8 7
+		%byte7i = cast int32 %byte7
+		%f5 = const char8* "bits %u byte7 %d\n"
+		%r5 = ccall int32 C.libc.printf(char8*,...) %f5 %bl %byte7i
+		%z = const int 0
+		ret %z

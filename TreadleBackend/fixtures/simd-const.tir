@@ -1,0 +1,62 @@
+# tir 1
+# Vector constants (SIMD-and-Vectors.md 1.3, Compiler.md 4): `const T <lanes>` (lanes separated by
+# commas, one number splats, `true,false,...` for a mask, `zero`), a constant's read-only global
+# (`global ... const`, a float4 and a bool4 and a double3 in their memory form) and a constant array
+# of float4 (`T[N] const e0 e1 ...`).
+program SimdConst console
+entry Sc.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Sc.Program
+type Sc.Program class
+global Sc.Program.Up float4 const 0,1,0,0
+global Sc.Program.Mask bool4 const true,false,false,true
+global Sc.Program.Big double3 const 1.25,2.5,5
+global Sc.Program.Axes float4[3] const 1,0,0,0 0,1,0,0 0,0,1,0
+global Sc.Program.sState int32x4 1,2,3,4
+
+func Sc.Program.Main() int static sheet "f1" display "Sc.Program.Main"
+	block b0
+		%a = const float4 1.5,-2,0.25,8
+		%s = const float4 3
+		%z = const float4 zero
+		%as = binop float4 add %a %s
+		%az = binop float4 add %as %z
+		%l0 = vec.get float %az 0
+		%l3 = vec.get float %az 3
+		%l0d = cast double %l0
+		%l3d = cast double %l3
+		%m = const bool4 false,true,true,false
+		%mb = vec.bitmask uint %m
+		%hex = const int32x4 16,16,-1,0
+		%h0 = vec.get int32 %hex 0
+		%h2 = vec.get int32 %hex 2
+		%f = const char8* "%g %g mask %llu ints %d %d\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %l0d %l3d %mb %h0 %h2
+		%up = global.addr float4* Sc.Program.Up
+		%upv = load float4 %up
+		%upy = vec.get float %upv 1
+		%upyd = cast double %upy
+		%gm = global.addr bool4* Sc.Program.Mask
+		%gmv = load bool4 %gm
+		%gmb = vec.bitmask uint %gmv
+		%gb = global.addr double3* Sc.Program.Big
+		%gbv = load double3 %gb
+		%gb2 = vec.get double %gbv 2
+		%ax = global.addr float4[3]* Sc.Program.Axes
+		%two = const int 2
+		%axp = elem.addr float4* %ax %two
+		%axv = load float4 %axp
+		%axz = vec.get float %axv 2
+		%axzd = cast double %axz
+		%st = global.addr int32x4* Sc.Program.sState
+		%stv = load int32x4 %st
+		%stv2 = binop int32x4 add %stv %stv
+		store %st %stv2
+		%stv3 = load int32x4 %st
+		%st3 = vec.get int32 %stv3 3
+		%f2 = const char8* "globals %g %llu %g %g %d\n"
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %upyd %gmb %gb2 %axzd %st3
+		%ret = const int 0
+		ret %ret

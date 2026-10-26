@@ -1,0 +1,85 @@
+# treadle 1
+type Vec2Ext extension
+	namespace Breakout
+	extends Vec2
+	doc "Arithmetic on Vec2 as an extension (Language.md 4.4): the Node menu lists these under Vec2. All are Pure, so their calls are value nodes."
+
+function v0001 Plus
+	pure
+	returns Vec2
+	doc "This vector plus `other`."
+param other Vec2
+sheet body
+node a01 Entry
+node a02 Break Breakout.Vec2
+node a03 Get this.X
+node a04 Operator +
+node a05 Get this.Y
+node a06 Operator +
+node a07 Make Breakout.Vec2
+node a08 Return
+wire a01.other a02.value
+wire a03.value a04.a
+wire a02.X a04.b
+wire a05.value a06.a
+wire a02.Y a06.b
+wire a04.result a07.X
+wire a06.result a07.Y
+wire a01.then a08.in
+wire a07.value a08.value
+
+function v0002 Scaled
+	pure
+	returns Vec2
+	doc "This vector times `k`."
+param k float
+sheet body
+node b01 Entry
+node b02 Get this.X
+node b03 Operator *
+node b04 Get this.Y
+node b05 Operator *
+node b06 Make Breakout.Vec2
+node b07 Return
+wire b02.value b03.a
+wire b01.k b03.b
+wire b04.value b05.a
+wire b01.k b05.b
+wire b03.result b06.X
+wire b05.result b06.Y
+wire b01.then b07.in
+wire b06.value b07.value
+
+function v0003 FlippedX
+	pure
+	returns Vec2
+	doc "The vector with X negated: a bounce off a side wall."
+sheet body
+node c01 Entry
+node c02 Get this.X
+node c03 Get this.Y
+node c04 Operator neg
+node c05 Make Breakout.Vec2
+node c06 Return
+wire c02.value c04.a
+wire c04.result c05.X
+wire c03.value c05.Y
+wire c01.then c06.in
+wire c05.value c06.value
+
+function v0004 FlippedY
+	pure
+	returns Vec2
+	doc "The vector with Y negated: a bounce off the ceiling, the paddle or a brick."
+sheet body
+node d01 Entry
+node d02 Get this.X
+node d03 Get this.Y
+node d04 Operator neg
+node d05 Make Breakout.Vec2
+node d06 Return
+wire d03.value d04.a
+wire d02.value d05.X
+wire d04.result d05.Y
+wire d01.then d06.in
+wire d05.value d06.value

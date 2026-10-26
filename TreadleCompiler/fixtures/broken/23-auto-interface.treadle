@@ -1,0 +1,8 @@
+# treadle 1
+# expect - - T1033
+type AutoInterface interface
+	namespace Broken
+	doc "An interface property has no storage: it cannot be auto."
+
+property p1 Size int
+	auto

@@ -1,0 +1,15 @@
+# treadle 1
+# expect n2 allocator T2106
+type StructAllocator class
+	namespace Broken
+	static
+	doc "Only class objects are allocated through an allocator."
+
+function f1 Run
+	static
+param a IAllocator
+sheet body
+node n1 Entry
+node n2 Construct StringView
+wire n1.a n2.allocator
+wire n1.then n2.in

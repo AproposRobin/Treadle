@@ -1,0 +1,44 @@
+# treadle 1
+type MemMain class
+	namespace Mem
+	static
+	doc "Lifetimes: a Local in a loop, a Defer Delete in a Scope, a Construct and a Delete."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 For
+	in start 0
+	in count 2
+node a3 Local Mem.Node
+	set ctor (int)
+node a4 Call C.libc.puts
+	in s "pass"
+node a5 Scope
+node a6 Construct Mem.Node
+	set ctor (int)
+	in id 9
+node a7 DeferDelete
+node a8 Call C.libc.puts
+	in s "scope end"
+node a9 Construct Mem.Node
+	set ctor (int)
+	in id 5
+node b1 Delete
+node b2 Return
+	in value 0
+wire a1.then a2.in
+wire a2.body a3.in
+wire a2.index a3.id
+wire a3.then a4.in
+wire a2.done a5.in
+wire a5.body a6.in
+wire a6.then a7.in
+wire a6.object a7.object
+wire a7.then a8.in
+wire a5.done a9.in
+wire a9.then b1.in
+wire a9.object b1.object
+wire b1.then b2.in

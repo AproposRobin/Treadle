@@ -1,0 +1,1029 @@
+# treadle 1
+type sdl2 class
+	namespace C
+	static
+	doc "C declarations of the import set sdl2 (sdl2.cimport), written by the C header import. Do not edit: the import rewrites this file."
+
+function mdpxf SDL_CreateRenderer
+	static
+	returns SDL_Renderer*
+param window SDL_Window*
+param index int32
+param flags uint32
+
+function x69vf SDL_CreateWindow
+	static
+	returns SDL_Window*
+param title char8*
+param x int32
+param y int32
+param w int32
+param h int32
+param flags uint32
+
+function g471b SDL_Delay
+	static
+param ms uint32
+
+function pe2xd SDL_DestroyRenderer
+	static
+param renderer SDL_Renderer*
+
+function djpgp SDL_DestroyWindow
+	static
+param window SDL_Window*
+
+function vjwf4 SDL_GetError
+	static
+	returns char8*
+
+function fyt0q SDL_Init
+	static
+	returns int32
+param flags uint32
+
+function b5ktn SDL_Log
+	static
+	attr Variadic
+param fmt char8*
+
+function jzapv SDL_PollEvent
+	static
+	returns int32
+param event SDL_Event*
+
+function c9e9x SDL_Quit
+	static
+
+function p8ywc SDL_RenderClear
+	static
+	returns int32
+param renderer SDL_Renderer*
+
+function znxdf SDL_RenderDrawRect
+	static
+	returns int32
+param renderer SDL_Renderer*
+param rect SDL_Rect*
+
+function gfs1f SDL_RenderFillRect
+	static
+	returns int32
+param renderer SDL_Renderer*
+param rect SDL_Rect*
+
+function en4kh SDL_RenderPresent
+	static
+param renderer SDL_Renderer*
+
+function qvs36 SDL_SetMainReady
+	static
+
+function c4xfk SDL_SetRenderDrawColor
+	static
+	returns int32
+param renderer SDL_Renderer*
+param r uint8
+param g uint8
+param b uint8
+param a uint8
+cconst SDL_INIT_VIDEO uint32 32
+cconst SDL_WINDOWPOS_CENTERED_MASK uint32 805240832
+cenum SDL_EventType uint32
+	value SDL_FIRSTEVENT 0
+	value SDL_QUIT 256
+	value SDL_APP_TERMINATING 257
+	value SDL_APP_LOWMEMORY 258
+	value SDL_APP_WILLENTERBACKGROUND 259
+	value SDL_APP_DIDENTERBACKGROUND 260
+	value SDL_APP_WILLENTERFOREGROUND 261
+	value SDL_APP_DIDENTERFOREGROUND 262
+	value SDL_LOCALECHANGED 263
+	value SDL_DISPLAYEVENT 336
+	value SDL_WINDOWEVENT 512
+	value SDL_SYSWMEVENT 513
+	value SDL_KEYDOWN 768
+	value SDL_KEYUP 769
+	value SDL_TEXTEDITING 770
+	value SDL_TEXTINPUT 771
+	value SDL_KEYMAPCHANGED 772
+	value SDL_TEXTEDITING_EXT 773
+	value SDL_MOUSEMOTION 1024
+	value SDL_MOUSEBUTTONDOWN 1025
+	value SDL_MOUSEBUTTONUP 1026
+	value SDL_MOUSEWHEEL 1027
+	value SDL_JOYAXISMOTION 1536
+	value SDL_JOYBALLMOTION 1537
+	value SDL_JOYHATMOTION 1538
+	value SDL_JOYBUTTONDOWN 1539
+	value SDL_JOYBUTTONUP 1540
+	value SDL_JOYDEVICEADDED 1541
+	value SDL_JOYDEVICEREMOVED 1542
+	value SDL_JOYBATTERYUPDATED 1543
+	value SDL_CONTROLLERAXISMOTION 1616
+	value SDL_CONTROLLERBUTTONDOWN 1617
+	value SDL_CONTROLLERBUTTONUP 1618
+	value SDL_CONTROLLERDEVICEADDED 1619
+	value SDL_CONTROLLERDEVICEREMOVED 1620
+	value SDL_CONTROLLERDEVICEREMAPPED 1621
+	value SDL_CONTROLLERTOUCHPADDOWN 1622
+	value SDL_CONTROLLERTOUCHPADMOTION 1623
+	value SDL_CONTROLLERTOUCHPADUP 1624
+	value SDL_CONTROLLERSENSORUPDATE 1625
+	value SDL_CONTROLLERUPDATECOMPLETE_RESERVED_FOR_SDL3 1626
+	value SDL_CONTROLLERSTEAMHANDLEUPDATED 1627
+	value SDL_FINGERDOWN 1792
+	value SDL_FINGERUP 1793
+	value SDL_FINGERMOTION 1794
+	value SDL_DOLLARGESTURE 2048
+	value SDL_DOLLARRECORD 2049
+	value SDL_MULTIGESTURE 2050
+	value SDL_CLIPBOARDUPDATE 2304
+	value SDL_DROPFILE 4096
+	value SDL_DROPTEXT 4097
+	value SDL_DROPBEGIN 4098
+	value SDL_DROPCOMPLETE 4099
+	value SDL_AUDIODEVICEADDED 4352
+	value SDL_AUDIODEVICEREMOVED 4353
+	value SDL_SENSORUPDATE 4608
+	value SDL_RENDER_TARGETS_RESET 8192
+	value SDL_RENDER_DEVICE_RESET 8193
+	value SDL_POLLSENTINEL 32512
+	value SDL_USEREVENT 32768
+	value SDL_LASTEVENT 65535
+cenum SDL_JoystickPowerLevel int32
+	value SDL_JOYSTICK_POWER_UNKNOWN -1
+	value SDL_JOYSTICK_POWER_EMPTY 0
+	value SDL_JOYSTICK_POWER_LOW 1
+	value SDL_JOYSTICK_POWER_MEDIUM 2
+	value SDL_JOYSTICK_POWER_FULL 3
+	value SDL_JOYSTICK_POWER_WIRED 4
+	value SDL_JOYSTICK_POWER_MAX 5
+cenum SDL_KeyCode uint32
+	value SDLK_UNKNOWN 0
+	value SDLK_RETURN 13
+	value SDLK_ESCAPE 27
+	value SDLK_BACKSPACE 8
+	value SDLK_TAB 9
+	value SDLK_SPACE 32
+	value SDLK_EXCLAIM 33
+	value SDLK_QUOTEDBL 34
+	value SDLK_HASH 35
+	value SDLK_PERCENT 37
+	value SDLK_DOLLAR 36
+	value SDLK_AMPERSAND 38
+	value SDLK_QUOTE 39
+	value SDLK_LEFTPAREN 40
+	value SDLK_RIGHTPAREN 41
+	value SDLK_ASTERISK 42
+	value SDLK_PLUS 43
+	value SDLK_COMMA 44
+	value SDLK_MINUS 45
+	value SDLK_PERIOD 46
+	value SDLK_SLASH 47
+	value SDLK_0 48
+	value SDLK_1 49
+	value SDLK_2 50
+	value SDLK_3 51
+	value SDLK_4 52
+	value SDLK_5 53
+	value SDLK_6 54
+	value SDLK_7 55
+	value SDLK_8 56
+	value SDLK_9 57
+	value SDLK_COLON 58
+	value SDLK_SEMICOLON 59
+	value SDLK_LESS 60
+	value SDLK_EQUALS 61
+	value SDLK_GREATER 62
+	value SDLK_QUESTION 63
+	value SDLK_AT 64
+	value SDLK_LEFTBRACKET 91
+	value SDLK_BACKSLASH 92
+	value SDLK_RIGHTBRACKET 93
+	value SDLK_CARET 94
+	value SDLK_UNDERSCORE 95
+	value SDLK_BACKQUOTE 96
+	value SDLK_a 97
+	value SDLK_b 98
+	value SDLK_c 99
+	value SDLK_d 100
+	value SDLK_e 101
+	value SDLK_f 102
+	value SDLK_g 103
+	value SDLK_h 104
+	value SDLK_i 105
+	value SDLK_j 106
+	value SDLK_k 107
+	value SDLK_l 108
+	value SDLK_m 109
+	value SDLK_n 110
+	value SDLK_o 111
+	value SDLK_p 112
+	value SDLK_q 113
+	value SDLK_r 114
+	value SDLK_s 115
+	value SDLK_t 116
+	value SDLK_u 117
+	value SDLK_v 118
+	value SDLK_w 119
+	value SDLK_x 120
+	value SDLK_y 121
+	value SDLK_z 122
+	value SDLK_CAPSLOCK 1073741881
+	value SDLK_F1 1073741882
+	value SDLK_F2 1073741883
+	value SDLK_F3 1073741884
+	value SDLK_F4 1073741885
+	value SDLK_F5 1073741886
+	value SDLK_F6 1073741887
+	value SDLK_F7 1073741888
+	value SDLK_F8 1073741889
+	value SDLK_F9 1073741890
+	value SDLK_F10 1073741891
+	value SDLK_F11 1073741892
+	value SDLK_F12 1073741893
+	value SDLK_PRINTSCREEN 1073741894
+	value SDLK_SCROLLLOCK 1073741895
+	value SDLK_PAUSE 1073741896
+	value SDLK_INSERT 1073741897
+	value SDLK_HOME 1073741898
+	value SDLK_PAGEUP 1073741899
+	value SDLK_DELETE 127
+	value SDLK_END 1073741901
+	value SDLK_PAGEDOWN 1073741902
+	value SDLK_RIGHT 1073741903
+	value SDLK_LEFT 1073741904
+	value SDLK_DOWN 1073741905
+	value SDLK_UP 1073741906
+	value SDLK_NUMLOCKCLEAR 1073741907
+	value SDLK_KP_DIVIDE 1073741908
+	value SDLK_KP_MULTIPLY 1073741909
+	value SDLK_KP_MINUS 1073741910
+	value SDLK_KP_PLUS 1073741911
+	value SDLK_KP_ENTER 1073741912
+	value SDLK_KP_1 1073741913
+	value SDLK_KP_2 1073741914
+	value SDLK_KP_3 1073741915
+	value SDLK_KP_4 1073741916
+	value SDLK_KP_5 1073741917
+	value SDLK_KP_6 1073741918
+	value SDLK_KP_7 1073741919
+	value SDLK_KP_8 1073741920
+	value SDLK_KP_9 1073741921
+	value SDLK_KP_0 1073741922
+	value SDLK_KP_PERIOD 1073741923
+	value SDLK_APPLICATION 1073741925
+	value SDLK_POWER 1073741926
+	value SDLK_KP_EQUALS 1073741927
+	value SDLK_F13 1073741928
+	value SDLK_F14 1073741929
+	value SDLK_F15 1073741930
+	value SDLK_F16 1073741931
+	value SDLK_F17 1073741932
+	value SDLK_F18 1073741933
+	value SDLK_F19 1073741934
+	value SDLK_F20 1073741935
+	value SDLK_F21 1073741936
+	value SDLK_F22 1073741937
+	value SDLK_F23 1073741938
+	value SDLK_F24 1073741939
+	value SDLK_EXECUTE 1073741940
+	value SDLK_HELP 1073741941
+	value SDLK_MENU 1073741942
+	value SDLK_SELECT 1073741943
+	value SDLK_STOP 1073741944
+	value SDLK_AGAIN 1073741945
+	value SDLK_UNDO 1073741946
+	value SDLK_CUT 1073741947
+	value SDLK_COPY 1073741948
+	value SDLK_PASTE 1073741949
+	value SDLK_FIND 1073741950
+	value SDLK_MUTE 1073741951
+	value SDLK_VOLUMEUP 1073741952
+	value SDLK_VOLUMEDOWN 1073741953
+	value SDLK_KP_COMMA 1073741957
+	value SDLK_KP_EQUALSAS400 1073741958
+	value SDLK_ALTERASE 1073741977
+	value SDLK_SYSREQ 1073741978
+	value SDLK_CANCEL 1073741979
+	value SDLK_CLEAR 1073741980
+	value SDLK_PRIOR 1073741981
+	value SDLK_RETURN2 1073741982
+	value SDLK_SEPARATOR 1073741983
+	value SDLK_OUT 1073741984
+	value SDLK_OPER 1073741985
+	value SDLK_CLEARAGAIN 1073741986
+	value SDLK_CRSEL 1073741987
+	value SDLK_EXSEL 1073741988
+	value SDLK_KP_00 1073742000
+	value SDLK_KP_000 1073742001
+	value SDLK_THOUSANDSSEPARATOR 1073742002
+	value SDLK_DECIMALSEPARATOR 1073742003
+	value SDLK_CURRENCYUNIT 1073742004
+	value SDLK_CURRENCYSUBUNIT 1073742005
+	value SDLK_KP_LEFTPAREN 1073742006
+	value SDLK_KP_RIGHTPAREN 1073742007
+	value SDLK_KP_LEFTBRACE 1073742008
+	value SDLK_KP_RIGHTBRACE 1073742009
+	value SDLK_KP_TAB 1073742010
+	value SDLK_KP_BACKSPACE 1073742011
+	value SDLK_KP_A 1073742012
+	value SDLK_KP_B 1073742013
+	value SDLK_KP_C 1073742014
+	value SDLK_KP_D 1073742015
+	value SDLK_KP_E 1073742016
+	value SDLK_KP_F 1073742017
+	value SDLK_KP_XOR 1073742018
+	value SDLK_KP_POWER 1073742019
+	value SDLK_KP_PERCENT 1073742020
+	value SDLK_KP_LESS 1073742021
+	value SDLK_KP_GREATER 1073742022
+	value SDLK_KP_AMPERSAND 1073742023
+	value SDLK_KP_DBLAMPERSAND 1073742024
+	value SDLK_KP_VERTICALBAR 1073742025
+	value SDLK_KP_DBLVERTICALBAR 1073742026
+	value SDLK_KP_COLON 1073742027
+	value SDLK_KP_HASH 1073742028
+	value SDLK_KP_SPACE 1073742029
+	value SDLK_KP_AT 1073742030
+	value SDLK_KP_EXCLAM 1073742031
+	value SDLK_KP_MEMSTORE 1073742032
+	value SDLK_KP_MEMRECALL 1073742033
+	value SDLK_KP_MEMCLEAR 1073742034
+	value SDLK_KP_MEMADD 1073742035
+	value SDLK_KP_MEMSUBTRACT 1073742036
+	value SDLK_KP_MEMMULTIPLY 1073742037
+	value SDLK_KP_MEMDIVIDE 1073742038
+	value SDLK_KP_PLUSMINUS 1073742039
+	value SDLK_KP_CLEAR 1073742040
+	value SDLK_KP_CLEARENTRY 1073742041
+	value SDLK_KP_BINARY 1073742042
+	value SDLK_KP_OCTAL 1073742043
+	value SDLK_KP_DECIMAL 1073742044
+	value SDLK_KP_HEXADECIMAL 1073742045
+	value SDLK_LCTRL 1073742048
+	value SDLK_LSHIFT 1073742049
+	value SDLK_LALT 1073742050
+	value SDLK_LGUI 1073742051
+	value SDLK_RCTRL 1073742052
+	value SDLK_RSHIFT 1073742053
+	value SDLK_RALT 1073742054
+	value SDLK_RGUI 1073742055
+	value SDLK_MODE 1073742081
+	value SDLK_AUDIONEXT 1073742082
+	value SDLK_AUDIOPREV 1073742083
+	value SDLK_AUDIOSTOP 1073742084
+	value SDLK_AUDIOPLAY 1073742085
+	value SDLK_AUDIOMUTE 1073742086
+	value SDLK_MEDIASELECT 1073742087
+	value SDLK_WWW 1073742088
+	value SDLK_MAIL 1073742089
+	value SDLK_CALCULATOR 1073742090
+	value SDLK_COMPUTER 1073742091
+	value SDLK_AC_SEARCH 1073742092
+	value SDLK_AC_HOME 1073742093
+	value SDLK_AC_BACK 1073742094
+	value SDLK_AC_FORWARD 1073742095
+	value SDLK_AC_STOP 1073742096
+	value SDLK_AC_REFRESH 1073742097
+	value SDLK_AC_BOOKMARKS 1073742098
+	value SDLK_BRIGHTNESSDOWN 1073742099
+	value SDLK_BRIGHTNESSUP 1073742100
+	value SDLK_DISPLAYSWITCH 1073742101
+	value SDLK_KBDILLUMTOGGLE 1073742102
+	value SDLK_KBDILLUMDOWN 1073742103
+	value SDLK_KBDILLUMUP 1073742104
+	value SDLK_EJECT 1073742105
+	value SDLK_SLEEP 1073742106
+	value SDLK_APP1 1073742107
+	value SDLK_APP2 1073742108
+	value SDLK_AUDIOREWIND 1073742109
+	value SDLK_AUDIOFASTFORWARD 1073742110
+	value SDLK_SOFTLEFT 1073742111
+	value SDLK_SOFTRIGHT 1073742112
+	value SDLK_CALL 1073742113
+	value SDLK_ENDCALL 1073742114
+cenum SDL_RendererFlags uint32
+	value SDL_RENDERER_SOFTWARE 1
+	value SDL_RENDERER_ACCELERATED 2
+	value SDL_RENDERER_PRESENTVSYNC 4
+	value SDL_RENDERER_TARGETTEXTURE 8
+cenum SDL_Scancode uint32
+	value SDL_SCANCODE_UNKNOWN 0
+	value SDL_SCANCODE_A 4
+	value SDL_SCANCODE_B 5
+	value SDL_SCANCODE_C 6
+	value SDL_SCANCODE_D 7
+	value SDL_SCANCODE_E 8
+	value SDL_SCANCODE_F 9
+	value SDL_SCANCODE_G 10
+	value SDL_SCANCODE_H 11
+	value SDL_SCANCODE_I 12
+	value SDL_SCANCODE_J 13
+	value SDL_SCANCODE_K 14
+	value SDL_SCANCODE_L 15
+	value SDL_SCANCODE_M 16
+	value SDL_SCANCODE_N 17
+	value SDL_SCANCODE_O 18
+	value SDL_SCANCODE_P 19
+	value SDL_SCANCODE_Q 20
+	value SDL_SCANCODE_R 21
+	value SDL_SCANCODE_S 22
+	value SDL_SCANCODE_T 23
+	value SDL_SCANCODE_U 24
+	value SDL_SCANCODE_V 25
+	value SDL_SCANCODE_W 26
+	value SDL_SCANCODE_X 27
+	value SDL_SCANCODE_Y 28
+	value SDL_SCANCODE_Z 29
+	value SDL_SCANCODE_1 30
+	value SDL_SCANCODE_2 31
+	value SDL_SCANCODE_3 32
+	value SDL_SCANCODE_4 33
+	value SDL_SCANCODE_5 34
+	value SDL_SCANCODE_6 35
+	value SDL_SCANCODE_7 36
+	value SDL_SCANCODE_8 37
+	value SDL_SCANCODE_9 38
+	value SDL_SCANCODE_0 39
+	value SDL_SCANCODE_RETURN 40
+	value SDL_SCANCODE_ESCAPE 41
+	value SDL_SCANCODE_BACKSPACE 42
+	value SDL_SCANCODE_TAB 43
+	value SDL_SCANCODE_SPACE 44
+	value SDL_SCANCODE_MINUS 45
+	value SDL_SCANCODE_EQUALS 46
+	value SDL_SCANCODE_LEFTBRACKET 47
+	value SDL_SCANCODE_RIGHTBRACKET 48
+	value SDL_SCANCODE_BACKSLASH 49
+	value SDL_SCANCODE_NONUSHASH 50
+	value SDL_SCANCODE_SEMICOLON 51
+	value SDL_SCANCODE_APOSTROPHE 52
+	value SDL_SCANCODE_GRAVE 53
+	value SDL_SCANCODE_COMMA 54
+	value SDL_SCANCODE_PERIOD 55
+	value SDL_SCANCODE_SLASH 56
+	value SDL_SCANCODE_CAPSLOCK 57
+	value SDL_SCANCODE_F1 58
+	value SDL_SCANCODE_F2 59
+	value SDL_SCANCODE_F3 60
+	value SDL_SCANCODE_F4 61
+	value SDL_SCANCODE_F5 62
+	value SDL_SCANCODE_F6 63
+	value SDL_SCANCODE_F7 64
+	value SDL_SCANCODE_F8 65
+	value SDL_SCANCODE_F9 66
+	value SDL_SCANCODE_F10 67
+	value SDL_SCANCODE_F11 68
+	value SDL_SCANCODE_F12 69
+	value SDL_SCANCODE_PRINTSCREEN 70
+	value SDL_SCANCODE_SCROLLLOCK 71
+	value SDL_SCANCODE_PAUSE 72
+	value SDL_SCANCODE_INSERT 73
+	value SDL_SCANCODE_HOME 74
+	value SDL_SCANCODE_PAGEUP 75
+	value SDL_SCANCODE_DELETE 76
+	value SDL_SCANCODE_END 77
+	value SDL_SCANCODE_PAGEDOWN 78
+	value SDL_SCANCODE_RIGHT 79
+	value SDL_SCANCODE_LEFT 80
+	value SDL_SCANCODE_DOWN 81
+	value SDL_SCANCODE_UP 82
+	value SDL_SCANCODE_NUMLOCKCLEAR 83
+	value SDL_SCANCODE_KP_DIVIDE 84
+	value SDL_SCANCODE_KP_MULTIPLY 85
+	value SDL_SCANCODE_KP_MINUS 86
+	value SDL_SCANCODE_KP_PLUS 87
+	value SDL_SCANCODE_KP_ENTER 88
+	value SDL_SCANCODE_KP_1 89
+	value SDL_SCANCODE_KP_2 90
+	value SDL_SCANCODE_KP_3 91
+	value SDL_SCANCODE_KP_4 92
+	value SDL_SCANCODE_KP_5 93
+	value SDL_SCANCODE_KP_6 94
+	value SDL_SCANCODE_KP_7 95
+	value SDL_SCANCODE_KP_8 96
+	value SDL_SCANCODE_KP_9 97
+	value SDL_SCANCODE_KP_0 98
+	value SDL_SCANCODE_KP_PERIOD 99
+	value SDL_SCANCODE_NONUSBACKSLASH 100
+	value SDL_SCANCODE_APPLICATION 101
+	value SDL_SCANCODE_POWER 102
+	value SDL_SCANCODE_KP_EQUALS 103
+	value SDL_SCANCODE_F13 104
+	value SDL_SCANCODE_F14 105
+	value SDL_SCANCODE_F15 106
+	value SDL_SCANCODE_F16 107
+	value SDL_SCANCODE_F17 108
+	value SDL_SCANCODE_F18 109
+	value SDL_SCANCODE_F19 110
+	value SDL_SCANCODE_F20 111
+	value SDL_SCANCODE_F21 112
+	value SDL_SCANCODE_F22 113
+	value SDL_SCANCODE_F23 114
+	value SDL_SCANCODE_F24 115
+	value SDL_SCANCODE_EXECUTE 116
+	value SDL_SCANCODE_HELP 117
+	value SDL_SCANCODE_MENU 118
+	value SDL_SCANCODE_SELECT 119
+	value SDL_SCANCODE_STOP 120
+	value SDL_SCANCODE_AGAIN 121
+	value SDL_SCANCODE_UNDO 122
+	value SDL_SCANCODE_CUT 123
+	value SDL_SCANCODE_COPY 124
+	value SDL_SCANCODE_PASTE 125
+	value SDL_SCANCODE_FIND 126
+	value SDL_SCANCODE_MUTE 127
+	value SDL_SCANCODE_VOLUMEUP 128
+	value SDL_SCANCODE_VOLUMEDOWN 129
+	value SDL_SCANCODE_KP_COMMA 133
+	value SDL_SCANCODE_KP_EQUALSAS400 134
+	value SDL_SCANCODE_INTERNATIONAL1 135
+	value SDL_SCANCODE_INTERNATIONAL2 136
+	value SDL_SCANCODE_INTERNATIONAL3 137
+	value SDL_SCANCODE_INTERNATIONAL4 138
+	value SDL_SCANCODE_INTERNATIONAL5 139
+	value SDL_SCANCODE_INTERNATIONAL6 140
+	value SDL_SCANCODE_INTERNATIONAL7 141
+	value SDL_SCANCODE_INTERNATIONAL8 142
+	value SDL_SCANCODE_INTERNATIONAL9 143
+	value SDL_SCANCODE_LANG1 144
+	value SDL_SCANCODE_LANG2 145
+	value SDL_SCANCODE_LANG3 146
+	value SDL_SCANCODE_LANG4 147
+	value SDL_SCANCODE_LANG5 148
+	value SDL_SCANCODE_LANG6 149
+	value SDL_SCANCODE_LANG7 150
+	value SDL_SCANCODE_LANG8 151
+	value SDL_SCANCODE_LANG9 152
+	value SDL_SCANCODE_ALTERASE 153
+	value SDL_SCANCODE_SYSREQ 154
+	value SDL_SCANCODE_CANCEL 155
+	value SDL_SCANCODE_CLEAR 156
+	value SDL_SCANCODE_PRIOR 157
+	value SDL_SCANCODE_RETURN2 158
+	value SDL_SCANCODE_SEPARATOR 159
+	value SDL_SCANCODE_OUT 160
+	value SDL_SCANCODE_OPER 161
+	value SDL_SCANCODE_CLEARAGAIN 162
+	value SDL_SCANCODE_CRSEL 163
+	value SDL_SCANCODE_EXSEL 164
+	value SDL_SCANCODE_KP_00 176
+	value SDL_SCANCODE_KP_000 177
+	value SDL_SCANCODE_THOUSANDSSEPARATOR 178
+	value SDL_SCANCODE_DECIMALSEPARATOR 179
+	value SDL_SCANCODE_CURRENCYUNIT 180
+	value SDL_SCANCODE_CURRENCYSUBUNIT 181
+	value SDL_SCANCODE_KP_LEFTPAREN 182
+	value SDL_SCANCODE_KP_RIGHTPAREN 183
+	value SDL_SCANCODE_KP_LEFTBRACE 184
+	value SDL_SCANCODE_KP_RIGHTBRACE 185
+	value SDL_SCANCODE_KP_TAB 186
+	value SDL_SCANCODE_KP_BACKSPACE 187
+	value SDL_SCANCODE_KP_A 188
+	value SDL_SCANCODE_KP_B 189
+	value SDL_SCANCODE_KP_C 190
+	value SDL_SCANCODE_KP_D 191
+	value SDL_SCANCODE_KP_E 192
+	value SDL_SCANCODE_KP_F 193
+	value SDL_SCANCODE_KP_XOR 194
+	value SDL_SCANCODE_KP_POWER 195
+	value SDL_SCANCODE_KP_PERCENT 196
+	value SDL_SCANCODE_KP_LESS 197
+	value SDL_SCANCODE_KP_GREATER 198
+	value SDL_SCANCODE_KP_AMPERSAND 199
+	value SDL_SCANCODE_KP_DBLAMPERSAND 200
+	value SDL_SCANCODE_KP_VERTICALBAR 201
+	value SDL_SCANCODE_KP_DBLVERTICALBAR 202
+	value SDL_SCANCODE_KP_COLON 203
+	value SDL_SCANCODE_KP_HASH 204
+	value SDL_SCANCODE_KP_SPACE 205
+	value SDL_SCANCODE_KP_AT 206
+	value SDL_SCANCODE_KP_EXCLAM 207
+	value SDL_SCANCODE_KP_MEMSTORE 208
+	value SDL_SCANCODE_KP_MEMRECALL 209
+	value SDL_SCANCODE_KP_MEMCLEAR 210
+	value SDL_SCANCODE_KP_MEMADD 211
+	value SDL_SCANCODE_KP_MEMSUBTRACT 212
+	value SDL_SCANCODE_KP_MEMMULTIPLY 213
+	value SDL_SCANCODE_KP_MEMDIVIDE 214
+	value SDL_SCANCODE_KP_PLUSMINUS 215
+	value SDL_SCANCODE_KP_CLEAR 216
+	value SDL_SCANCODE_KP_CLEARENTRY 217
+	value SDL_SCANCODE_KP_BINARY 218
+	value SDL_SCANCODE_KP_OCTAL 219
+	value SDL_SCANCODE_KP_DECIMAL 220
+	value SDL_SCANCODE_KP_HEXADECIMAL 221
+	value SDL_SCANCODE_LCTRL 224
+	value SDL_SCANCODE_LSHIFT 225
+	value SDL_SCANCODE_LALT 226
+	value SDL_SCANCODE_LGUI 227
+	value SDL_SCANCODE_RCTRL 228
+	value SDL_SCANCODE_RSHIFT 229
+	value SDL_SCANCODE_RALT 230
+	value SDL_SCANCODE_RGUI 231
+	value SDL_SCANCODE_MODE 257
+	value SDL_SCANCODE_AUDIONEXT 258
+	value SDL_SCANCODE_AUDIOPREV 259
+	value SDL_SCANCODE_AUDIOSTOP 260
+	value SDL_SCANCODE_AUDIOPLAY 261
+	value SDL_SCANCODE_AUDIOMUTE 262
+	value SDL_SCANCODE_MEDIASELECT 263
+	value SDL_SCANCODE_WWW 264
+	value SDL_SCANCODE_MAIL 265
+	value SDL_SCANCODE_CALCULATOR 266
+	value SDL_SCANCODE_COMPUTER 267
+	value SDL_SCANCODE_AC_SEARCH 268
+	value SDL_SCANCODE_AC_HOME 269
+	value SDL_SCANCODE_AC_BACK 270
+	value SDL_SCANCODE_AC_FORWARD 271
+	value SDL_SCANCODE_AC_STOP 272
+	value SDL_SCANCODE_AC_REFRESH 273
+	value SDL_SCANCODE_AC_BOOKMARKS 274
+	value SDL_SCANCODE_BRIGHTNESSDOWN 275
+	value SDL_SCANCODE_BRIGHTNESSUP 276
+	value SDL_SCANCODE_DISPLAYSWITCH 277
+	value SDL_SCANCODE_KBDILLUMTOGGLE 278
+	value SDL_SCANCODE_KBDILLUMDOWN 279
+	value SDL_SCANCODE_KBDILLUMUP 280
+	value SDL_SCANCODE_EJECT 281
+	value SDL_SCANCODE_SLEEP 282
+	value SDL_SCANCODE_APP1 283
+	value SDL_SCANCODE_APP2 284
+	value SDL_SCANCODE_AUDIOREWIND 285
+	value SDL_SCANCODE_AUDIOFASTFORWARD 286
+	value SDL_SCANCODE_SOFTLEFT 287
+	value SDL_SCANCODE_SOFTRIGHT 288
+	value SDL_SCANCODE_CALL 289
+	value SDL_SCANCODE_ENDCALL 290
+	value SDL_NUM_SCANCODES 512
+cenum SDL_WindowFlags uint32
+	value SDL_WINDOW_FULLSCREEN 1
+	value SDL_WINDOW_OPENGL 2
+	value SDL_WINDOW_SHOWN 4
+	value SDL_WINDOW_HIDDEN 8
+	value SDL_WINDOW_BORDERLESS 16
+	value SDL_WINDOW_RESIZABLE 32
+	value SDL_WINDOW_MINIMIZED 64
+	value SDL_WINDOW_MAXIMIZED 128
+	value SDL_WINDOW_MOUSE_GRABBED 256
+	value SDL_WINDOW_INPUT_FOCUS 512
+	value SDL_WINDOW_MOUSE_FOCUS 1024
+	value SDL_WINDOW_FULLSCREEN_DESKTOP 4097
+	value SDL_WINDOW_FOREIGN 2048
+	value SDL_WINDOW_ALLOW_HIGHDPI 8192
+	value SDL_WINDOW_MOUSE_CAPTURE 16384
+	value SDL_WINDOW_ALWAYS_ON_TOP 32768
+	value SDL_WINDOW_SKIP_TASKBAR 65536
+	value SDL_WINDOW_UTILITY 131072
+	value SDL_WINDOW_TOOLTIP 262144
+	value SDL_WINDOW_POPUP_MENU 524288
+	value SDL_WINDOW_KEYBOARD_GRABBED 1048576
+	value SDL_WINDOW_VULKAN 268435456
+	value SDL_WINDOW_METAL 536870912
+	value SDL_WINDOW_INPUT_GRABBED 256
+cstruct SDL_AudioDeviceEvent
+	size 16
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which uint32 8
+	field iscapture uint8 12
+	field padding1 uint8 13
+	field padding2 uint8 14
+	field padding3 uint8 15
+cstruct SDL_CommonEvent
+	size 8
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+cstruct SDL_ControllerAxisEvent
+	size 20
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+	field axis uint8 12
+	field padding1 uint8 13
+	field padding2 uint8 14
+	field padding3 uint8 15
+	field value int16 16
+	field padding4 uint16 18
+cstruct SDL_ControllerButtonEvent
+	size 16
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+	field button uint8 12
+	field state uint8 13
+	field padding1 uint8 14
+	field padding2 uint8 15
+cstruct SDL_ControllerDeviceEvent
+	size 12
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+cstruct SDL_ControllerSensorEvent
+	size 40
+	align 8
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+	field sensor int32 12
+	field data float[3] 16
+	field timestamp_us uint64 32
+cstruct SDL_ControllerTouchpadEvent
+	size 32
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+	field touchpad int32 12
+	field finger int32 16
+	field x float 20
+	field y float 24
+	field pressure float 28
+cstruct SDL_DisplayEvent
+	size 20
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field display uint32 8
+	field event uint8 12
+	field padding1 uint8 13
+	field padding2 uint8 14
+	field padding3 uint8 15
+	field data1 int32 16
+cstruct SDL_DollarGestureEvent
+	size 40
+	align 8
+	field type uint32 0
+	field timestamp uint32 4
+	field touchId int64 8
+	field gestureId int64 16
+	field numFingers uint32 24
+	field error float 28
+	field x float 32
+	field y float 36
+cstruct SDL_DropEvent
+	size 24
+	align 8
+	field type uint32 0
+	field timestamp uint32 4
+	field file char8* 8
+	field windowID uint32 16
+cunion SDL_Event
+	size 56
+	align 8
+	field type uint32 0
+	field common SDL_CommonEvent 0
+	field display SDL_DisplayEvent 0
+	field window SDL_WindowEvent 0
+	field key SDL_KeyboardEvent 0
+	field edit SDL_TextEditingEvent 0
+	field editExt SDL_TextEditingExtEvent 0
+	field text SDL_TextInputEvent 0
+	field motion SDL_MouseMotionEvent 0
+	field button SDL_MouseButtonEvent 0
+	field wheel SDL_MouseWheelEvent 0
+	field jaxis SDL_JoyAxisEvent 0
+	field jball SDL_JoyBallEvent 0
+	field jhat SDL_JoyHatEvent 0
+	field jbutton SDL_JoyButtonEvent 0
+	field jdevice SDL_JoyDeviceEvent 0
+	field jbattery SDL_JoyBatteryEvent 0
+	field caxis SDL_ControllerAxisEvent 0
+	field cbutton SDL_ControllerButtonEvent 0
+	field cdevice SDL_ControllerDeviceEvent 0
+	field ctouchpad SDL_ControllerTouchpadEvent 0
+	field csensor SDL_ControllerSensorEvent 0
+	field adevice SDL_AudioDeviceEvent 0
+	field sensor SDL_SensorEvent 0
+	field quit SDL_QuitEvent 0
+	field user SDL_UserEvent 0
+	field syswm SDL_SysWMEvent 0
+	field tfinger SDL_TouchFingerEvent 0
+	field mgesture SDL_MultiGestureEvent 0
+	field dgesture SDL_DollarGestureEvent 0
+	field drop SDL_DropEvent 0
+	field padding uint8[56] 0
+cstruct SDL_JoyAxisEvent
+	size 20
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+	field axis uint8 12
+	field padding1 uint8 13
+	field padding2 uint8 14
+	field padding3 uint8 15
+	field value int16 16
+	field padding4 uint16 18
+cstruct SDL_JoyBallEvent
+	size 20
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+	field ball uint8 12
+	field padding1 uint8 13
+	field padding2 uint8 14
+	field padding3 uint8 15
+	field xrel int16 16
+	field yrel int16 18
+cstruct SDL_JoyBatteryEvent
+	size 16
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+	field level SDL_JoystickPowerLevel 12
+cstruct SDL_JoyButtonEvent
+	size 16
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+	field button uint8 12
+	field state uint8 13
+	field padding1 uint8 14
+	field padding2 uint8 15
+cstruct SDL_JoyDeviceEvent
+	size 12
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+cstruct SDL_JoyHatEvent
+	size 16
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+	field hat uint8 12
+	field value uint8 13
+	field padding1 uint8 14
+	field padding2 uint8 15
+cstruct SDL_KeyboardEvent
+	size 32
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field windowID uint32 8
+	field state uint8 12
+	field repeat uint8 13
+	field padding2 uint8 14
+	field padding3 uint8 15
+	field keysym SDL_Keysym 16
+cstruct SDL_Keysym
+	size 16
+	align 4
+	field scancode SDL_Scancode 0
+	field sym int32 4
+	field mod uint16 8
+	field unused uint32 12
+cstruct SDL_MouseButtonEvent
+	size 28
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field windowID uint32 8
+	field which uint32 12
+	field button uint8 16
+	field state uint8 17
+	field clicks uint8 18
+	field padding1 uint8 19
+	field x int32 20
+	field y int32 24
+cstruct SDL_MouseMotionEvent
+	size 36
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field windowID uint32 8
+	field which uint32 12
+	field state uint32 16
+	field x int32 20
+	field y int32 24
+	field xrel int32 28
+	field yrel int32 32
+cstruct SDL_MouseWheelEvent
+	size 44
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field windowID uint32 8
+	field which uint32 12
+	field x int32 16
+	field y int32 20
+	field direction uint32 24
+	field preciseX float 28
+	field preciseY float 32
+	field mouseX int32 36
+	field mouseY int32 40
+cstruct SDL_MultiGestureEvent
+	size 40
+	align 8
+	field type uint32 0
+	field timestamp uint32 4
+	field touchId int64 8
+	field dTheta float 16
+	field dDist float 20
+	field x float 24
+	field y float 28
+	field numFingers uint16 32
+	field padding uint16 34
+cstruct SDL_QuitEvent
+	size 8
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+cstruct SDL_Rect
+	size 16
+	align 4
+	field x int32 0
+	field y int32 4
+	field w int32 8
+	field h int32 12
+cstruct SDL_Renderer
+	opaque
+cstruct SDL_SensorEvent
+	size 48
+	align 8
+	field type uint32 0
+	field timestamp uint32 4
+	field which int32 8
+	field data float[6] 12
+	field timestamp_us uint64 40
+cstruct SDL_SysWMEvent
+	size 16
+	align 8
+	field type uint32 0
+	field timestamp uint32 4
+	field msg SDL_SysWMmsg* 8
+cstruct SDL_SysWMmsg
+	opaque
+cstruct SDL_TextEditingEvent
+	size 52
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field windowID uint32 8
+	field text char8[32] 12
+	field start int32 44
+	field length int32 48
+cstruct SDL_TextEditingExtEvent
+	size 32
+	align 8
+	field type uint32 0
+	field timestamp uint32 4
+	field windowID uint32 8
+	field text char8* 16
+	field start int32 24
+	field length int32 28
+cstruct SDL_TextInputEvent
+	size 44
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field windowID uint32 8
+	field text char8[32] 12
+cstruct SDL_TouchFingerEvent
+	size 48
+	align 8
+	field type uint32 0
+	field timestamp uint32 4
+	field touchId int64 8
+	field fingerId int64 16
+	field x float 24
+	field y float 28
+	field dx float 32
+	field dy float 36
+	field pressure float 40
+	field windowID uint32 44
+cstruct SDL_UserEvent
+	size 32
+	align 8
+	field type uint32 0
+	field timestamp uint32 4
+	field windowID uint32 8
+	field code int32 12
+	field data1 void* 16
+	field data2 void* 24
+cstruct SDL_Window
+	opaque
+cstruct SDL_WindowEvent
+	size 24
+	align 4
+	field type uint32 0
+	field timestamp uint32 4
+	field windowID uint32 8
+	field event uint8 12
+	field padding1 uint8 13
+	field padding2 uint8 14
+	field padding3 uint8 15
+	field data1 int32 16
+	field data2 int32 20

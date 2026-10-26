@@ -1,0 +1,58 @@
+# treadle 1
+type ThreadPool class
+	namespace Core
+	static
+	doc "The program's worker threads (one fewer than the machine's hardware threads, at least one; named `Pool <n>`), started on first use and ended when the program ends, after the work queued so far ran. Parallel uses them too. docs: Threads."
+
+function p0001 Run
+	static
+	doc "Queues one call of `work` on a worker and returns at once. The pool owns `work` and deletes it after it ran, so make it with Allocation construct (Debug stops on a Local one)."
+param work delegate:void()
+sheet body
+node a1 Entry
+node a2 Call ThreadPool.rt_pool_run
+node a3 Return
+wire a1.work a2.body
+wire a1.then a2.in
+wire a2.then a3.in
+
+function p0002 WaitAll
+	static
+	doc "Waits until every call queued with Run so far has run (do not call it from queued work: it would wait for itself)."
+sheet body
+node b1 Entry
+node b2 Call ThreadPool.rt_pool_wait
+node b3 Return
+wire b1.then b2.in
+wire b2.then b3.in
+
+function p0003 Size
+	static
+	returns int
+	doc "The number of worker threads (starts the pool)."
+sheet body
+node c1 Entry
+node c2 Call ThreadPool.rt_pool_size
+node c3 Cast int
+node c4 Return
+wire c1.then c2.in
+wire c2.result c3.value
+wire c2.then c4.in
+wire c3.result c4.value
+
+function p0020 rt_pool_run
+	static
+	access private
+	attr Import treadle_rt rt_pool_run
+param body delegate:void()
+
+function p0021 rt_pool_wait
+	static
+	access private
+	attr Import treadle_rt rt_pool_wait
+
+function p0022 rt_pool_size
+	static
+	access private
+	returns int32
+	attr Import treadle_rt rt_pool_size

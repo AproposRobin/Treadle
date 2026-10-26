@@ -1,0 +1,119 @@
+# tir 1
+# Delegate equality: `cmp eq` / `cmp ne` on delegate values compare the target and the function, so
+# two delegates of the same static function are equal, two of the same instance function are equal
+# when they are bound to the same object, and a closure (its own target) equals only itself. Null
+# equals null only.
+program DelegateEq console
+entry Dq.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Dq.Program
+type Dq.Counter class
+	field mTotal int
+type Dq.Lambda1 class
+	base Core.Delegate
+	field mBase int
+type Dq.Program class
+
+func Dq.Program.Twice(int) int static sheet "s1" display "Dq.Program.Twice"
+	param x int
+	node a1 Entry
+	node a2 Return
+	block b0
+		%two = const int 2 @a2
+		%r = binop int mul %x %two @a2
+		ret %r @a2
+
+func Dq.Program.Thrice(int) int static sheet "s2" display "Dq.Program.Thrice"
+	param x int
+	node a1 Entry
+	node a2 Return
+	block b0
+		%three = const int 3 @a2
+		%r = binop int mul %x %three @a2
+		ret %r @a2
+
+func Dq.Counter.Add(int) int sheet "s3" display "Dq.Counter.Add"
+	param x int
+	node a1 Entry
+	node a2 Return
+	block b0
+		%tp = field.addr int* %this mTotal @a2
+		%t = load int %tp @a2
+		%r = binop int add %t %x @a2
+		store %tp %r @a2
+		ret %r @a2
+
+func Dq.Lambda1.Invoke(int) int sheet "l1" display "Dq.Program.Main"
+	param x int
+	node l1 Entry
+	node l2 Return
+	block b0
+		%bp = field.addr int* %this mBase @l2
+		%b = load int %bp @l2
+		%r = binop int add %b %x @l2
+		ret %r @l2
+
+func Dq.Program.Main() int static sheet "m1" display "Dq.Program.Main"
+	node a1 Entry
+	node a2 Bind Dq.Program.Twice
+	node a3 Bind Dq.Counter.Add
+	node a4 Lambda
+	node a5 Operator ==
+	node a6 Call C.libc.printf
+	node a7 Delete
+	node a8 Return 0
+	block b0
+		%s1 = bind delegate int(int) Dq.Program.Twice(int) @a2
+		%s2 = bind delegate int(int) Dq.Program.Twice(int) @a2
+		%s3 = bind delegate int(int) Dq.Program.Thrice(int) @a2
+		%c1 = alloc Dq.Counter @a3
+		%c2 = alloc Dq.Counter @a3
+		%i1 = bind delegate int(int) Dq.Counter.Add(int) %c1 @a3
+		%i2 = bind delegate int(int) Dq.Counter.Add(int) %c1 @a3
+		%i3 = bind delegate int(int) Dq.Counter.Add(int) %c2 @a3
+		%l1 = alloc Dq.Lambda1 @a4
+		%k1 = const int 1 @a4
+		%lb1 = field.addr int* %l1 mBase @a4
+		store %lb1 %k1 @a4
+		%d1 = closure delegate int(int) %l1 Dq.Lambda1.Invoke(int) @a4
+		%l2 = alloc Dq.Lambda1 @a4
+		%lb2 = field.addr int* %l2 mBase @a4
+		store %lb2 %k1 @a4
+		%d2 = closure delegate int(int) %l2 Dq.Lambda1.Invoke(int) @a4
+		%nul = const delegate int(int) null @a5
+		%e1 = cmp bool eq %s1 %s2 @a5
+		%e2 = cmp bool eq %s1 %s3 @a5
+		%e3 = cmp bool eq %i1 %i2 @a5
+		%e4 = cmp bool eq %i1 %i3 @a5
+		%e5 = cmp bool eq %d1 %d2 @a5
+		%e6 = cmp bool eq %d1 %d1 @a5
+		%e7 = cmp bool eq %s1 %nul @a5
+		%e8 = cmp bool eq %nul %nul @a5
+		%e9 = cmp bool ne %s1 %i1 @a5
+		%e10 = cmp bool ne %i1 %i2 @a5
+		%x1 = cast int32 %e1 @a5
+		%x2 = cast int32 %e2 @a5
+		%x3 = cast int32 %e3 @a5
+		%x4 = cast int32 %e4 @a5
+		%x5 = cast int32 %e5 @a5
+		%x6 = cast int32 %e6 @a5
+		%x7 = cast int32 %e7 @a5
+		%x8 = cast int32 %e8 @a5
+		%x9 = cast int32 %e9 @a5
+		%x10 = cast int32 %e10 @a5
+		%f = const char8* "static %d %d instance %d %d closure %d %d null %d %d ne %d %d\n" @a6.format
+		%p = ccall int32 C.libc.printf(char8*,...) %f %x1 %x2 %x3 %x4 %x5 %x6 %x7 %x8 %x9 %x10 @a6
+		delete %s1 @a7
+		delete %s2 @a7
+		delete %s3 @a7
+		delete %i1 @a7
+		delete %i2 @a7
+		delete %i3 @a7
+		delete %d1 @a7
+		delete %d2 @a7
+		delete %c1 @a7
+		delete %c2 @a7
+		%z = const int 0 @a8
+		ret %z @a8

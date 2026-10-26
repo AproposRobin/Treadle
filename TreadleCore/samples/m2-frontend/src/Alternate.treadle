@@ -1,0 +1,30 @@
+# treadle 1
+type Alternate class
+	namespace M2
+	static
+	doc "Flip Flop runs A, then B, then A again; Is A says which one ran."
+
+function f0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 For
+	in start 0
+	in count 3
+node a3 FlipFlop
+node a4 Call Console.WriteLine(StringView)
+	in text "A"
+node a5 Call Console.WriteLine(StringView)
+	in text "B"
+node a6 Branch
+node a7 Call Console.WriteLine(StringView)
+	in text "A ran"
+node a8 Return
+wire a1.then a2.in
+wire a2.body a3.in
+wire a3.a a4.in
+wire a3.b a5.in
+wire a3.isA a6.condition
+wire a3.done a6.in
+wire a6.true a7.in
+wire a2.done a8.in

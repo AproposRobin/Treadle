@@ -1,0 +1,266 @@
+# treadle 1
+type Transform struct
+	namespace Core
+	attr CRepr
+	doc "A position, rotation and scale (40 bytes): scale first, then rotate, then move. parent * child places a child in its parent's space. Every function is Pure."
+
+field Translation Vec3
+
+field Rotation Quat
+
+field Scale Vec3
+
+property t000 Identity Transform
+	static
+	doc "No move, no rotation, scale 1."
+sheet get
+node n00000 Entry
+node n00001 Get Core.Vec3.Zero
+node n00002 Get Core.Quat.Identity
+node n00003 Get Core.Vec3.One
+node n00004 Make Transform
+node n00005 Return
+wire n00002.value n00004.Rotation
+wire n00003.value n00004.Scale
+wire n00001.value n00004.Translation
+wire n00000.then n00005.in
+wire n00004.value n00005.value
+
+function t001 ToMat4
+	pure
+	returns Mat4
+	doc "The same transform as a matrix (Translation * Rotation * Scale)."
+sheet body
+node n00100 Entry
+node n00101 This
+node n00102 Break Core.Transform
+node n00103 Call Core.Mat4.FromTRS
+node n00104 Return
+wire n00101.value n00102.value
+wire n00102.Rotation n00103.rotation
+wire n00102.Scale n00103.scale
+wire n00102.Translation n00103.translation
+wire n00100.then n00104.in
+wire n00103.result n00104.value
+
+function t002 TransformPoint
+	pure
+	returns Vec3
+	doc "The point scaled, rotated and moved."
+param point Vec3
+sheet body
+node n00200 Entry
+node n00201 This
+node n00202 Break Core.Transform
+node n00203 Operator *
+node n00204 Call Core.Quat.Rotate
+node n00205 Operator +
+node n00206 Return
+wire n00201.value n00202.value
+wire n00202.Scale n00203.a
+wire n00200.point n00203.b
+wire n00202.Rotation n00204.receiver
+wire n00203.result n00204.v
+wire n00202.Translation n00205.a
+wire n00204.result n00205.b
+wire n00200.then n00206.in
+wire n00205.result n00206.value
+
+function t003 TransformVector
+	pure
+	returns Vec3
+	doc "The direction scaled and rotated (not moved)."
+param vector Vec3
+sheet body
+node n00300 Entry
+node n00301 This
+node n00302 Break Core.Transform
+node n00303 Operator *
+node n00304 Call Core.Quat.Rotate
+node n00305 Return
+wire n00301.value n00302.value
+wire n00302.Scale n00303.a
+wire n00300.vector n00303.b
+wire n00302.Rotation n00304.receiver
+wire n00303.result n00304.v
+wire n00300.then n00305.in
+wire n00304.result n00305.value
+
+function t004 Inverse
+	pure
+	returns Transform
+	doc "The transform that undoes this one (exact for a uniform scale; a non-uniform scale with a rotation loses its shear). A zero scale component stays zero."
+sheet body
+node n00400 Entry
+node n00401 This
+node n00402 Break Core.Transform
+node n00403 Math
+	set expr "s.X != 0.0f ? 1.0f / s.X : 0.0f"
+node n00404 Math
+	set expr "s.Y != 0.0f ? 1.0f / s.Y : 0.0f"
+node n00405 Math
+	set expr "s.Z != 0.0f ? 1.0f / s.Z : 0.0f"
+node n00406 Make Vec3
+node n00407 Call Core.Quat.Inverse
+node n00408 Operator *
+node n00409 Call Core.Quat.Rotate
+node n0040a Operator neg
+node n0040b Make Transform
+node n0040c Return
+wire n00401.value n00402.value
+wire n00402.Scale n00403.s
+wire n00402.Scale n00404.s
+wire n00402.Scale n00405.s
+wire n00403.result n00406.X
+wire n00404.result n00406.Y
+wire n00405.result n00406.Z
+wire n00402.Rotation n00407.receiver
+wire n00406.value n00408.a
+wire n00402.Translation n00408.b
+wire n00407.result n00409.receiver
+wire n00408.result n00409.v
+wire n00409.result n0040a.a
+wire n00407.result n0040b.Rotation
+wire n00406.value n0040b.Scale
+wire n0040a.result n0040b.Translation
+wire n00400.then n0040c.in
+wire n0040b.value n0040c.value
+
+operator t005 *
+	static
+	pure
+	returns Transform
+	doc "The child placed in the parent's space: child first, then parent (a non-uniform parent scale with a rotation loses the shear)."
+param parent Transform
+param child Transform
+sheet body
+node n00500 Entry
+node n00501 Break Core.Transform
+node n00502 Break Core.Transform
+node n00503 Operator *
+node n00504 Call Core.Quat.Rotate
+node n00505 Operator +
+node n00506 Operator *
+node n00507 Operator *
+node n00508 Make Transform
+node n00509 Return
+wire n00500.parent n00501.value
+wire n00500.child n00502.value
+wire n00501.Scale n00503.a
+wire n00502.Translation n00503.b
+wire n00501.Rotation n00504.receiver
+wire n00503.result n00504.v
+wire n00501.Translation n00505.a
+wire n00504.result n00505.b
+wire n00501.Rotation n00506.a
+wire n00502.Rotation n00506.b
+wire n00501.Scale n00507.a
+wire n00502.Scale n00507.b
+wire n00506.result n00508.Rotation
+wire n00507.result n00508.Scale
+wire n00505.result n00508.Translation
+wire n00500.then n00509.in
+wire n00508.value n00509.value
+
+function t006 Compose
+	pure
+	returns Transform
+	doc "This (as the parent) * `child`: the child placed in this transform's space."
+param child Transform
+sheet body
+node n00600 Entry
+node n00601 This
+node n00602 Break Core.Transform
+node n00603 Break Core.Transform
+node n00604 Operator *
+node n00605 Call Core.Quat.Rotate
+node n00606 Operator +
+node n00607 Operator *
+node n00608 Operator *
+node n00609 Make Transform
+node n0060a Return
+wire n00601.value n00602.value
+wire n00600.child n00603.value
+wire n00602.Scale n00604.a
+wire n00603.Translation n00604.b
+wire n00602.Rotation n00605.receiver
+wire n00604.result n00605.v
+wire n00602.Translation n00606.a
+wire n00605.result n00606.b
+wire n00602.Rotation n00607.a
+wire n00603.Rotation n00607.b
+wire n00602.Scale n00608.a
+wire n00603.Scale n00608.b
+wire n00607.result n00609.Rotation
+wire n00608.result n00609.Scale
+wire n00606.result n00609.Translation
+wire n00600.then n0060a.in
+wire n00609.value n0060a.value
+
+function t007 Lerp
+	pure
+	returns Transform
+	doc "The transform `t` of the way to `to`: translation and scale straight, rotation by Slerp."
+param to Transform
+param t float
+sheet body
+node n00700 Entry
+node n00701 This
+node n00702 Break Core.Transform
+node n00703 Break Core.Transform
+node n00704 Call Core.Vec3.Lerp
+node n00705 Call Core.Quat.Slerp
+node n00706 Call Core.Vec3.Lerp
+node n00707 Make Transform
+node n00708 Return
+wire n00701.value n00702.value
+wire n00700.to n00703.value
+wire n00702.Translation n00704.receiver
+wire n00700.t n00704.t
+wire n00703.Translation n00704.to
+wire n00702.Rotation n00705.receiver
+wire n00700.t n00705.t
+wire n00703.Rotation n00705.to
+wire n00702.Scale n00706.receiver
+wire n00700.t n00706.t
+wire n00703.Scale n00706.to
+wire n00705.result n00707.Rotation
+wire n00706.result n00707.Scale
+wire n00704.result n00707.Translation
+wire n00700.then n00708.in
+wire n00707.value n00708.value
+
+function t008 ApproxEquals
+	pure
+	returns bool
+	doc "True when translation, rotation (q and -q alike) and scale are each within `epsilon` (absolute)."
+param other Transform
+param epsilon float
+	default 0.00001f
+sheet body
+node n00800 Entry
+node n00801 This
+node n00802 Break Core.Transform
+node n00803 Break Core.Transform
+node n00804 Call Core.Vec3.ApproxEquals
+node n00805 Call Core.Quat.ApproxEquals
+node n00806 Call Core.Vec3.ApproxEquals
+node n00807 Math
+	set expr "x && y && z"
+node n00808 Return
+wire n00801.value n00802.value
+wire n00800.other n00803.value
+wire n00800.epsilon n00804.epsilon
+wire n00803.Translation n00804.other
+wire n00802.Translation n00804.receiver
+wire n00800.epsilon n00805.epsilon
+wire n00803.Rotation n00805.other
+wire n00802.Rotation n00805.receiver
+wire n00800.epsilon n00806.epsilon
+wire n00803.Scale n00806.other
+wire n00802.Scale n00806.receiver
+wire n00804.result n00807.x
+wire n00805.result n00807.y
+wire n00806.result n00807.z
+wire n00800.then n00808.in
+wire n00807.result n00808.value

@@ -1,0 +1,33 @@
+# treadle 1
+type Counted class
+	namespace M2
+	static
+	doc "Do N runs Do the first N times with Counter 1..N; Reset Do N starts the count again. Prints 1 2 1 2."
+
+function n0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 For
+	in start 0
+	in count 5
+node a3 Sequence
+	set count 2
+node a4 DoN
+	in n 2
+node a5 Call Console.WriteLine(int)
+node a6 Operator ==
+	in b 2
+node a7 Branch
+node a8 ResetDoN
+node a9 Return
+wire a1.then a2.in
+wire a2.body a3.in
+wire a3.then0 a4.in
+wire a4.do a5.in
+wire a4.counter a5.value
+wire a2.index a6.a
+wire a6.result a7.condition
+wire a3.then1 a7.in
+wire a7.true a8.in
+wire a2.done a9.in

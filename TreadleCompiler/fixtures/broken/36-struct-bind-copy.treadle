@@ -1,0 +1,29 @@
+# treadle 1
+# expect n3 receiver T2218
+type StructBindCopy struct
+	namespace Broken
+	doc "Binding a function of a struct with a destructor to a value (not a variable) would copy it."
+
+dtor d1
+sheet body
+node a1 Entry
+node a2 Return
+wire a1.then a2.in
+
+function f1 Touch
+sheet body
+node b1 Entry
+node b2 Return
+wire b1.then b2.in
+
+function f2 Run
+	static
+sheet body
+node n1 Entry
+node n2 Make Broken.StructBindCopy
+node n3 Bind Broken.StructBindCopy.Touch
+	set alloc local
+node n4 Return
+wire n1.then n3.in
+wire n2.value n3.receiver
+wire n3.then n4.in

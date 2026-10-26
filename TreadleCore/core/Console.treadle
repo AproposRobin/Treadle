@@ -1,0 +1,308 @@
+# treadle 1
+type Console class
+	namespace Core
+	static
+	doc "Text output to the console and line input from it. Write has an overload per kind of value; WriteLine adds a line break."
+
+function c0001 WriteLine
+	static
+	attr Intrinsic Console.WriteLine(StringView)
+	doc "Writes the text and a line break."
+param text StringView
+
+function c0002 Write
+	static
+	attr Intrinsic Console.Write(StringView)
+	doc "Writes the text."
+param text StringView
+
+function c0003 WriteLine
+	static
+	doc "Writes a line break."
+sheet body
+node a1 Entry
+node a2 Call Console.WriteLine(StringView)
+	in text ""
+node a3 Return
+wire a1.then a2.in
+wire a2.then a3.in
+
+function c0004 Write
+	static
+	doc "Writes the String."
+param value String
+sheet body
+node b1 Entry
+node b2 Call Console.Write(StringView)
+node b3 Return
+wire b1.then b2.in
+wire b1.value b2.text
+wire b2.then b3.in
+
+function c0005 Write
+	static
+	doc "Writes the number in decimal."
+param value int
+sheet body
+node c1 Entry
+node c2 Local String
+node c3 Call String.Append(int)
+node c4 Call Console.Write(StringView)
+node c5 Return
+wire c1.then c2.in
+wire c2.then c3.in
+wire c2.object c3.receiver
+wire c1.value c3.value
+wire c3.then c4.in
+wire c2.object c4.text
+wire c4.then c5.in
+
+function c0007 Write
+	static
+	doc "Writes the number (up to 7 significant digits)."
+param value float
+sheet body
+node e1 Entry
+node e2 Local String
+node e3 Call String.Append(float)
+node e4 Call Console.Write(StringView)
+node e5 Return
+wire e1.then e2.in
+wire e2.then e3.in
+wire e2.object e3.receiver
+wire e1.value e3.value
+wire e3.then e4.in
+wire e2.object e4.text
+wire e4.then e5.in
+
+function c0008 Write
+	static
+	doc "Writes the number (up to 15 significant digits)."
+param value double
+sheet body
+node f1 Entry
+node f2 Local String
+node f3 Call String.Append(double)
+node f4 Call Console.Write(StringView)
+node f5 Return
+wire f1.then f2.in
+wire f2.then f3.in
+wire f2.object f3.receiver
+wire f1.value f3.value
+wire f3.then f4.in
+wire f2.object f4.text
+wire f4.then f5.in
+
+function c0009 Write
+	static
+	doc "Writes true or false."
+param value bool
+sheet body
+node g1 Entry
+node g2 Local String
+node g3 Call String.Append(bool)
+node g4 Call Console.Write(StringView)
+node g5 Return
+wire g1.then g2.in
+wire g2.then g3.in
+wire g2.object g3.receiver
+wire g1.value g3.value
+wire g3.then g4.in
+wire g2.object g4.text
+wire g4.then g5.in
+
+function c000a Write
+	static
+	doc "Writes the character."
+param value char8
+sheet body
+node h1 Entry
+node h2 Local String
+node h3 Call String.Append(char8)
+node h4 Call Console.Write(StringView)
+node h5 Return
+wire h1.then h2.in
+wire h2.then h3.in
+wire h2.object h3.receiver
+wire h1.value h3.value
+wire h3.then h4.in
+wire h2.object h4.text
+wire h4.then h5.in
+
+function c000b WriteLine
+	static
+	doc "Writes the String and a line break."
+param value String
+sheet body
+node i1 Entry
+node i2 Call Console.WriteLine(StringView)
+node i3 Return
+wire i1.then i2.in
+wire i1.value i2.text
+wire i2.then i3.in
+
+function c000c WriteLine
+	static
+	doc "Writes the number in decimal and a line break."
+param value int
+sheet body
+node j1 Entry
+node j2 Local String
+node j3 Call String.Append(int)
+node j4 Call Console.WriteLine(StringView)
+node j5 Return
+wire j1.then j2.in
+wire j2.then j3.in
+wire j2.object j3.receiver
+wire j1.value j3.value
+wire j3.then j4.in
+wire j2.object j4.text
+wire j4.then j5.in
+
+function c000e WriteLine
+	static
+	doc "Writes the number (up to 7 significant digits) and a line break."
+param value float
+sheet body
+node l1 Entry
+node l2 Local String
+node l3 Call String.Append(float)
+node l4 Call Console.WriteLine(StringView)
+node l5 Return
+wire l1.then l2.in
+wire l2.then l3.in
+wire l2.object l3.receiver
+wire l1.value l3.value
+wire l3.then l4.in
+wire l2.object l4.text
+wire l4.then l5.in
+
+function c000f WriteLine
+	static
+	doc "Writes the number (up to 15 significant digits) and a line break."
+param value double
+sheet body
+node m1 Entry
+node m2 Local String
+node m3 Call String.Append(double)
+node m4 Call Console.WriteLine(StringView)
+node m5 Return
+wire m1.then m2.in
+wire m2.then m3.in
+wire m2.object m3.receiver
+wire m1.value m3.value
+wire m3.then m4.in
+wire m2.object m4.text
+wire m4.then m5.in
+
+function c0010 WriteLine
+	static
+	doc "Writes true or false and a line break."
+param value bool
+sheet body
+node n1 Entry
+node n2 Local String
+node n3 Call String.Append(bool)
+node n4 Call Console.WriteLine(StringView)
+node n5 Return
+wire n1.then n2.in
+wire n2.then n3.in
+wire n2.object n3.receiver
+wire n1.value n3.value
+wire n3.then n4.in
+wire n2.object n4.text
+wire n4.then n5.in
+
+function c0011 WriteLine
+	static
+	doc "Writes the character and a line break."
+param value char8
+sheet body
+node o1 Entry
+node o2 Local String
+node o3 Call String.Append(char8)
+node o4 Call Console.WriteLine(StringView)
+node o5 Return
+wire o1.then o2.in
+wire o2.then o3.in
+wire o2.object o3.receiver
+wire o1.value o3.value
+wire o3.then o4.in
+wire o2.object o4.text
+wire o4.then o5.in
+
+function c0012 ReadLine
+	static
+	returns bool
+	doc "Reads one line from the console into the String (appended, without the line break). False at the end of the input when nothing was read."
+param into String
+local c int32
+local any bool
+sheet body
+node y1 Break
+node y2 Operator !=
+	in b 13
+node y3 Branch
+node y4 Cast char8
+node y5 Call String.Append(char8)
+node y6 Set local:any
+	in value true
+node y7 Get local:any
+node y8 Operator ||
+node y9 Return
+node z1 Entry
+node z2 While
+	in condition true
+node z3 Call C.crt.getchar
+node z4 Set local:c
+node z5 Get local:c
+node z6 Operator ==
+	in b -1
+node z7 Operator ==
+	in b 10
+node z8 Operator ||
+node z9 Branch
+wire z9.true y1.in
+wire z5.value y2.a
+wire y2.result y3.condition
+wire z9.false y3.in
+wire z5.value y4.value
+wire y3.true y5.in
+wire z1.into y5.receiver
+wire y4.result y5.value
+wire y5.then y6.in
+wire y7.value y8.a
+wire z7.result y8.b
+wire z2.done y9.in
+wire y8.result y9.value
+wire z1.then z2.in
+wire z2.body z3.in
+wire z3.then z4.in
+wire z3.result z4.value
+wire z5.value z6.a
+wire z5.value z7.a
+wire z6.result z8.a
+wire z7.result z8.b
+wire z8.result z9.condition
+wire z4.then z9.in
+
+function c0013 Error
+	static
+	attr Intrinsic Console.Error(StringView)
+	doc "Writes the text to the error output (stderr), after flushing what Write and WriteLine wrote."
+param text StringView
+
+function c0014 ErrorLine
+	static
+	doc "Writes the text and a line break to the error output (stderr)."
+param text StringView
+sheet body
+node ea Entry
+node eb Call Console.Error(StringView)
+node ec Call Console.Error(StringView)
+	in text "\n"
+node ed Return
+wire ea.then eb.in
+wire ea.text eb.text
+wire eb.then ec.in
+wire ec.then ed.in

@@ -1,0 +1,121 @@
+# treadle 1
+type Delegates class
+	namespace M2
+	static
+	doc "Bind Function and Invoke (Language.md 4.2): a static function on the heap, a member function in a Local delegate, a virtual and an interface function through their slots (one passed to a function), a function pointer in an Unsafe block. Run prints 42, 12, 403, 15, 16."
+
+function d0001 Twice
+	static
+	returns int
+param x int
+sheet body
+node a1 Entry
+node a2 Operator *
+	in b 2
+node a3 Return
+wire a1.x a2.a
+wire a1.then a3.in
+wire a2.result a3.value
+
+function d0002 Apply
+	static
+	returns int
+param fn IntFn
+param x int
+sheet body
+node b1 Entry
+node b2 Invoke
+node b3 Return
+wire b1.x b2.arg0
+wire b1.fn b2.delegate
+wire b1.then b2.in
+wire b2.then b3.in
+wire b2.result b3.value
+
+function d0003 Run
+	static
+sheet body
+node c1 Entry
+node c2 Bind M2.Delegates.Twice
+	set alloc construct
+node c3 Invoke
+	in arg0 21
+node c4 Call Console.WriteLine(int)
+node c5 Construct M2.Tally
+node c6 Bind M2.Tally.Add
+	set alloc local
+node c7 Invoke
+	in arg0 5
+node c8 Invoke
+	in arg0 7
+node c9 Call Console.WriteLine(int)
+node d1 Construct M2.Dog
+node d2 Set M2.Animal.mLegs
+	in value 4
+node d3 Bind M2.Animal.Speak
+	set alloc construct
+node d4 Call M2.Delegates.Apply
+	in x 3
+node d5 Call Console.WriteLine(int)
+node d6 Bind M2.IScale.Scale
+	set alloc construct
+node d7 Invoke
+	in arg0 5
+node d8 Call Console.WriteLine(int)
+node d9 Bind M2.Delegates.Twice
+node e1 Scope
+	unsafe
+node e2 Invoke
+	in arg0 8
+node e3 Call Console.WriteLine(int)
+node e4 Delete
+node e5 Delete
+node e6 Delete
+node e7 Delete
+node e8 Delete
+node e9 Return
+wire c1.then c2.in
+wire c2.value c3.delegate
+wire c2.then c3.in
+wire c3.then c4.in
+wire c3.result c4.value
+wire c4.then c5.in
+wire c5.then c6.in
+wire c5.object c6.receiver
+wire c6.value c7.delegate
+wire c6.then c7.in
+wire c6.value c8.delegate
+wire c7.then c8.in
+wire c8.then c9.in
+wire c8.result c9.value
+wire c9.then d1.in
+wire d1.then d2.in
+wire d1.object d2.receiver
+wire d2.then d3.in
+wire d1.object d3.receiver
+wire d3.value d4.fn
+wire d3.then d4.in
+wire d4.then d5.in
+wire d4.result d5.value
+wire d5.then d6.in
+wire d1.object d6.receiver
+wire d6.value d7.delegate
+wire d6.then d7.in
+wire d7.then d8.in
+wire d7.result d8.value
+wire d8.then e1.in
+wire d9.value e2.delegate
+wire e1.body e2.in
+wire e2.then e3.in
+wire e2.result e3.value
+wire e1.done e4.in
+wire c2.value e4.object
+wire e4.then e5.in
+wire d3.value e5.object
+wire e5.then e6.in
+wire d6.value e6.object
+wire e6.then e7.in
+wire d1.object e7.object
+wire e7.then e8.in
+wire c5.object e8.object
+wire e8.then e9.in

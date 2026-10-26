@@ -1,0 +1,16 @@
+# treadle 1
+# expect n2 - T2097
+type ConstructParam class
+	namespace Broken
+	generic T
+	doc "Construct T needs the new constraint on T."
+
+function f1 Make
+	returns T
+sheet body
+node n1 Entry
+node n2 Construct T
+node n3 Return
+wire n1.then n2.in
+wire n2.then n3.in
+wire n2.object n3.value

@@ -1,0 +1,31 @@
+# treadle 1
+type ParallelForEach class
+	namespace Core
+	generic T
+	access internal
+	sealed
+	doc "Parallel.ForEach's state: the span and the body, and Run(i), which Parallel.For calls per index."
+
+field mItems Span<T>
+	access internal
+
+field mBody delegate:void(T)
+	access internal
+
+function f0001 Run
+	access internal
+	doc "Calls the body with element `i`."
+param i int
+sheet body
+node a1 Entry
+node a2 Get this.mItems
+node a3 Index
+node a4 Get this.mBody
+node a5 Invoke
+node a6 Return
+wire a2.value a3.collection
+wire a1.i a3.index
+wire a3.value a5.arg0
+wire a4.value a5.delegate
+wire a1.then a5.in
+wire a5.then a6.in

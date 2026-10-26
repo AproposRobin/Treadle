@@ -1,0 +1,88 @@
+# treadle 1
+type CodePointEnumerator struct
+	namespace Core
+	doc "The code points of UTF-8 text for For Each (String.CodePoints(), StringView.CodePoints()): it is its own enumerator. Each element is a char32; a byte that starts no valid sequence gives U+FFFD. The text must live and not change while it is walked."
+
+field mText StringView
+	access internal
+
+field mNext int
+	access internal
+
+field mCurrent char32
+	access internal
+
+function p0001 MoveNext
+	mutating
+	returns bool
+	doc "Decodes the next code point; false at the end of the text."
+local cp int32
+sheet body
+node a01 Entry
+node a02 Get this.mText
+node a03 Break StringView
+node a04 Get this.mNext
+node a05 Operator >=
+node a06 Branch
+node a07 Return
+	in value false
+node a08 Get local:cp
+node a09 Call C.crt.rt_utf8_decode
+node a10 Get local:cp
+node a11 Cast char32
+node a12 Set this.mCurrent
+node a13 Set this.mNext
+	set op +=
+node a14 Return
+	in value true
+wire a02.value a03.value
+wire a04.value a05.a
+wire a03.Length a05.b
+wire a05.result a06.condition
+wire a01.then a06.in
+wire a06.true a07.in
+wire a08.value a09.cp
+wire a06.false a09.in
+wire a03.Length a09.n
+wire a04.value a09.pos
+wire a03.Ptr a09.text
+wire a10.value a11.value
+wire a09.then a12.in
+wire a11.result a12.value
+wire a12.then a13.in
+wire a09.result a13.value
+wire a13.then a14.in
+
+property p0002 Current char32
+	doc "The code point MoveNext decoded."
+sheet get
+node b01 Entry
+node b02 Get this.mCurrent
+node b03 Return
+wire b01.then b03.in
+wire b02.value b03.value
+
+property p0004 Offset int
+	doc "The byte position after the code point MoveNext decoded (its start is Offset minus its UTF-8 length)."
+sheet get
+node d01 Entry
+node d02 Get this.mNext
+node d03 Return
+wire d01.then d03.in
+wire d02.value d03.value
+
+function p0003 GetEnumerator
+	returns CodePointEnumerator
+	doc "The enumerator For Each uses: a copy of this one."
+sheet body
+node c01 Entry
+node c02 Get this.mText
+node c03 Get this.mNext
+node c04 Get this.mCurrent
+node c05 Make CodePointEnumerator
+node c06 Return
+wire c04.value c05.mCurrent
+wire c03.value c05.mNext
+wire c02.value c05.mText
+wire c01.then c06.in
+wire c05.value c06.value

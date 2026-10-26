@@ -1,0 +1,27 @@
+# treadle 1
+type PairDemo class
+	namespace App
+	static
+	doc "Uses the generic Pair: each argument list is its own instance."
+
+function p1a2b SwapTwice
+	static
+	pure
+	returns bool
+param a int
+param b float
+sheet body
+node c1 Entry
+node c2 Make Pair<int,float>
+node c3 Call Pair<int,float>.Swap()
+node c4 Call Pair<float,int>.Swap()
+node c5 Operator ==
+node c6 Return
+wire c1.a c2.First
+wire c1.b c2.Second
+wire c2.value c3.receiver
+wire c3.result c4.receiver
+wire c4.result c5.a
+wire c2.value c5.b
+wire c1.then c6.in
+wire c5.result c6.value

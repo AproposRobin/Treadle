@@ -1,0 +1,104 @@
+# treadle 1
+type Flash class
+	namespace Breakout
+	doc "A sound-less flash where a brick was destroyed: an outline that grows and fades over twelve steps. Flashes come from a Pool<Flash> and go back to it."
+
+field X int
+
+field Y int
+
+field W int
+
+field H int
+
+field Life int
+
+function f0001 Reset
+	doc "Starts the flash over the brick's rectangle."
+param brick Brick
+sheet body
+node a01 Entry
+node a02 Break Breakout.Brick
+node a03 Set this.X
+node a04 Set this.Y
+node a05 Set this.W
+node a06 Set this.H
+node a07 Set this.Life
+	in value 12
+node a08 Return
+wire a01.brick a02.value
+wire a01.then a03.in
+wire a02.X a03.value
+wire a03.then a04.in
+wire a02.Y a04.value
+wire a04.then a05.in
+wire a02.W a05.value
+wire a05.then a06.in
+wire a02.H a06.value
+wire a06.then a07.in
+wire a07.then a08.in
+
+function f0002 Tick
+	returns bool
+	doc "One step older; false when it has faded out."
+sheet body
+node b01 Entry
+node b02 Set this.Life
+	set op -=
+	in value 1
+node b03 Get this.Life
+node b04 Operator >
+	in b 0
+node b05 Return
+wire b01.then b02.in
+wire b03.value b04.a
+wire b02.then b05.in
+wire b04.result b05.value
+
+function f0003 Draw
+	doc "Draws the outline, larger and darker as it ages."
+param renderer C.SDL_Renderer*
+sheet body
+node c01 Entry
+node c02 Get this.Life
+node c03 Math
+	set expr "12 - l"
+node c04 Math
+	set expr "55 + l * 16"
+node c05 Call Breakout.Hud.Color
+node c06 Get this.X
+node c07 Math
+	set expr "x - g"
+node c08 Get this.Y
+node c09 Math
+	set expr "y - g"
+node c0a Get this.W
+node c0b Math
+	set expr "w + g * 2"
+node c0c Get this.H
+node c0d Math
+	set expr "h + g * 2"
+node c0e Call Breakout.Hud.Outline
+node c0f Return
+wire c02.value c03.l
+wire c02.value c04.l
+wire c04.result c05.b
+wire c04.result c05.g
+wire c01.then c05.in
+wire c04.result c05.r
+wire c01.renderer c05.renderer
+wire c03.result c07.g
+wire c06.value c07.x
+wire c03.result c09.g
+wire c08.value c09.y
+wire c03.result c0b.g
+wire c0a.value c0b.w
+wire c03.result c0d.g
+wire c0c.value c0d.h
+wire c0d.result c0e.h
+wire c05.then c0e.in
+wire c01.renderer c0e.renderer
+wire c0b.result c0e.w
+wire c07.result c0e.x
+wire c09.result c0e.y
+wire c0e.then c0f.in

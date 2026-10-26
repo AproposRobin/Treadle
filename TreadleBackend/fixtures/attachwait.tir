@@ -1,0 +1,37 @@
+# tir 1
+# A program the debugger attaches to: it waits while the file `attach.hold` is in its working folder
+# (none here, so it goes straight on), then prints. The backend self test starts it with the file
+# there, finds it among the running programs of its folder, attaches with a breakpoint on the puts
+# node a3, removes the file and expects the stop on a3, then the exit.
+program AttachWait console
+entry Aw.Program.Main()
+
+func C.libc.fopen(char8*,char8*) void* import "fopen"
+func C.libc.fclose(void*) int32 import "fclose"
+func C.libc.puts(char8*) int32 import "puts"
+
+unit Aw.Program
+type Aw.Program class
+
+func Aw.Program.Main() int static sheet "m1" display "Aw.Program.Main"
+	node a1 Entry
+	node a2 While
+	node a3 Call C.libc.puts
+	node a4 Return 0
+	block b0
+		br head @a1
+	block head
+		%n = const char8* "attach.hold" @a2
+		%m = const char8* "r" @a2
+		%f = ccall void* C.libc.fopen(char8*,char8*) %n %m @a2
+		%z = const void* null @a2
+		%c = cmp bool ne %f %z @a2
+		condbr %c held go @a2
+	block held
+		%r = ccall int32 C.libc.fclose(void*) %f @a2
+		br head @a2
+	block go
+		%t = const char8* "attached" @a3.text
+		%q = ccall int32 C.libc.puts(char8*) %t @a3
+		%zero = const int 0 @a4
+		ret %zero @a4

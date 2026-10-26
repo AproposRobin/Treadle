@@ -1,0 +1,12 @@
+# treadle 1
+# expect - - T1072
+type StringCtor extension
+	namespace Broken
+	extends Core.String
+	doc "Constructors stay in the type's own file."
+
+ctor c1
+sheet body
+node a1 Entry
+node a2 Return
+wire a1.then a2.in

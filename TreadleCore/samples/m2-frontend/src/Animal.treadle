@@ -1,0 +1,13 @@
+# treadle 1
+type Animal class
+	namespace M2
+	abstract
+	doc "An abstract base with a virtual function, bound through its slot by the delegates sample."
+
+field mLegs int
+
+function n0001 Speak
+	virtual
+	abstract
+	returns int
+param x int

@@ -1,0 +1,9 @@
+== exit
+0
+== stdout
+Pair<int> sum = 7
+Pair<double> sum = 3.75
+Max<int> = 7, Max<double> = 9.75
+Cell<int> holds 42
+Cell<int> holds 0
+Cell<double> holds 2.25

@@ -1,0 +1,7 @@
+== exit
+0
+== stdout
+alloc 16 (align 8)
+~Node 4
+free
+live 0 total 1

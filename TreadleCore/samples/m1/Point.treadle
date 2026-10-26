@@ -1,0 +1,22 @@
+# treadle 1
+type Point struct
+	namespace Zoo
+	doc "Two ints; Sum adds them."
+
+field X int
+
+field Y int
+
+function p0001 Sum
+	pure
+	returns int
+sheet body
+node a1 Entry
+node a2 Get this.X
+node a3 Get this.Y
+node a4 Operator +
+node a5 Return
+wire a2.value a4.a
+wire a3.value a4.b
+wire a1.then a5.in
+wire a4.result a5.value

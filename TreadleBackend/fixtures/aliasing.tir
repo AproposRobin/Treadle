@@ -1,0 +1,134 @@
+# tir 1
+# Alias facts the back end gives LLVM (Compiler.md 6, "Allocation attributes" and "Alias metadata"):
+# two Constructs are different memory (rt_alloc is noalias), a class's field accesses are tagged by
+# class and offset (a derived class's node holds its base's), a Treadle array's elements and length by
+# their types, and a byte written through a pointer may alias anything. Each step writes through one
+# view and reads through another, so a wrong tag shows as a stale value: Release must print what Debug
+# prints. Bump gets two different objects, then the same object twice.
+program Aliasing console
+entry Al.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Al.Acc
+type Al.Acc class
+	field mI int
+	field mD double
+
+unit Al.AccD
+type Al.AccD class
+	base Al.Acc
+	field mE int
+
+unit Al.Program
+type Al.Program class
+
+func Al.Program.Bump(Al.Acc,Al.Acc,int) void static sheet "f1" display "Al.Program.Bump"
+	param a Al.Acc
+	param b Al.Acc
+	param n int
+	slot si int loopvar node a2.index
+	node a1 Entry
+	node a2 For
+	node a3 Set a.mI
+	node a4 Set b.mD
+	node a5 Set b.mI
+	block b0
+		%z = const int 0 @a2.start
+		store.slot si %z @a2
+		br cond @a2
+	block cond
+		%i = load.slot int si @a2
+		%more = cmp bool lt %i %n @a2
+		condbr %more body done @a2
+	block body
+		%ap = field.addr int* %a mI @a3
+		%av = load int %ap @a3
+		%av2 = binop int add %av %i @a3
+		store %ap %av2 @a3
+		%bdp = field.addr double* %b mD @a4
+		%bd = load double %bdp @a4
+		%half = const double 0.5 @a4
+		%bd2 = binop double add %bd %half @a4
+		store %bdp %bd2 @a4
+		%bip = field.addr int* %b mI @a5
+		%bi = load int %bip @a5
+		%one = const int 1 @a5
+		%bi2 = binop int sub %bi %one @a5
+		store %bip %bi2 @a5
+		%inc = const int 1 @a2
+		%i2 = binop int add %i %inc @a2
+		store.slot si %i2 @a2
+		br cond @a2
+	block done
+		ret @a2
+
+func Al.Program.Main() int static sheet "m1" display "Al.Program.Main"
+	node a1 Entry
+	node a2 Construct Al.Acc
+	node a3 Call Al.Program.Bump
+	node a4 Call C.libc.printf
+	node a5 Construct Al.AccD
+	node a6 Set d.mI
+	node a7 Construct int[]
+	node a8 Set arr[0]
+	node a9 Delete
+	node b1 Return 0
+	block b0
+		%x = alloc Al.Acc @a2
+		%y = alloc Al.Acc @a2
+		%n = const int 1000 @a3
+		call void Al.Program.Bump(Al.Acc,Al.Acc,int) %x %y %n @a3
+		call void Al.Program.Bump(Al.Acc,Al.Acc,int) %x %x %n @a3
+		%xip = field.addr int* %x mI @a4
+		%xi = load int %xip @a4
+		%xdp = field.addr double* %x mD @a4
+		%xd = load double %xdp @a4
+		%yip = field.addr int* %y mI @a4
+		%yi = load int %yip @a4
+		%ydp = field.addr double* %y mD @a4
+		%yd = load double %ydp @a4
+		%f1 = const char8* "x %lld %.1f y %lld %.1f\n" @a4.format
+		%p1 = ccall int32 C.libc.printf(char8*,...) %f1 %xi %xd %yi %yd @a4
+		%d = alloc Al.AccD @a5
+		%dp = field.addr int* %d mI @a6
+		%five = const int 5 @a6
+		store %dp %five @a6
+		%ep = field.addr int* %d mE @a6
+		%nine = const int 9 @a6
+		store %ep %nine @a6
+		%db = cast Al.Acc %d @a6
+		%bp = field.addr int* %db mI @a6
+		%seven = const int 7 @a6
+		store %bp %seven @a6
+		%dv = load int %dp @a6
+		%ev = load int %ep @a6
+		%f2 = const char8* "derived %lld %lld\n" @a4.format
+		%p2 = ccall int32 C.libc.printf(char8*,...) %f2 %dv %ev @a4
+		%four = const int 4 @a7
+		%arr = alloc.array int[] %four @a7
+		%k0 = const int 0 @a8
+		%e0 = elem.addr int* %arr %k0 @a8
+		%v1 = const int 1 @a8
+		store %e0 %v1 @a8
+		%bytes = cast uint8* %arr @a8
+		%k16 = const int 16 @a8
+		%b0 = elem.addr uint8* %bytes %k16 @a8
+		%u2 = const uint8 2 @a8
+		store %b0 %u2 @a8
+		%e0v = load int %e0 @a8
+		%dbl = alloc.array double[] %four @a7
+		%e1 = elem.addr double* %dbl %k0 @a8
+		%h = const double 2.5 @a8
+		store %e1 %h @a8
+		%al = array.len int %arr @a8
+		%e1v = load double %e1 @a8
+		%f3 = const char8* "array %lld len %lld double %.1f\n" @a4.format
+		%p3 = ccall int32 C.libc.printf(char8*,...) %f3 %e0v %al %e1v @a4
+		delete %x @a9
+		delete %y @a9
+		delete %d @a9
+		delete %arr @a9
+		delete %dbl @a9
+		%r = const int 0 @b1.value
+		ret %r @b1

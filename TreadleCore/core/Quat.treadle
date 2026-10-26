@@ -1,0 +1,1300 @@
+# treadle 1
+type Quat struct
+	namespace Core
+	attr CRepr
+	doc "A rotation as a unit quaternion (X, Y, Z the vector part, W the real part; 16 bytes). a * b rotates by b first, then a. Every function is Pure."
+
+field X float
+
+field Y float
+
+field Z float
+
+field W float
+
+property q000 Identity Quat
+	static
+	doc "No rotation: (0, 0, 0, 1)."
+sheet get
+node n00000 Entry
+node n00001 Make Quat
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n00002 Return
+wire n00000.then n00002.in
+wire n00001.value n00002.value
+
+operator q001 *
+	static
+	pure
+	returns Quat
+	doc "The rotation b, then a (the Hamilton product)."
+param a Quat
+param b Quat
+sheet body
+node n00100 Entry
+node n00101 Math
+	set expr "a.W * b.X + a.X * b.W + a.Y * b.Z - a.Z * b.Y"
+node n00102 Math
+	set expr "a.W * b.Y - a.X * b.Z + a.Y * b.W + a.Z * b.X"
+node n00103 Math
+	set expr "a.W * b.Z + a.X * b.Y - a.Y * b.X + a.Z * b.W"
+node n00104 Math
+	set expr "a.W * b.W - a.X * b.X - a.Y * b.Y - a.Z * b.Z"
+node n00105 Make Quat
+node n00106 Return
+wire n00100.a n00101.a
+wire n00100.b n00101.b
+wire n00100.a n00102.a
+wire n00100.b n00102.b
+wire n00100.a n00103.a
+wire n00100.b n00103.b
+wire n00100.a n00104.a
+wire n00100.b n00104.b
+wire n00104.result n00105.W
+wire n00101.result n00105.X
+wire n00102.result n00105.Y
+wire n00103.result n00105.Z
+wire n00100.then n00106.in
+wire n00105.value n00106.value
+
+operator q002 ==
+	static
+	pure
+	returns bool
+	doc "True when every component is equal (exact; q and -q are the same rotation but not ==)."
+param a Quat
+param b Quat
+sheet body
+node n00200 Entry
+node n00201 Math
+	set expr "a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W"
+node n00202 Return
+wire n00200.a n00201.a
+wire n00200.b n00201.b
+wire n00200.then n00202.in
+wire n00201.result n00202.value
+
+operator q003 *
+	static
+	pure
+	returns Vec3
+	doc "The vector `v` rotated by `q`."
+param q Quat
+param v Vec3
+sheet body
+node n00300 Entry
+node n00301 Math
+	set expr "q.Y * v.Z - q.Z * v.Y"
+node n00302 Math
+	set expr "q.Z * v.X - q.X * v.Z"
+node n00303 Math
+	set expr "q.X * v.Y - q.Y * v.X"
+node n00304 Make Vec3
+node n00305 Math
+	set expr "q.Y * u.Z - q.Z * u.Y"
+node n00306 Math
+	set expr "q.Z * u.X - q.X * u.Z"
+node n00307 Math
+	set expr "q.X * u.Y - q.Y * u.X"
+node n00308 Math
+	set expr "v.X + (u.X * q.W + w) * 2.0f"
+node n00309 Math
+	set expr "v.Y + (u.Y * q.W + w) * 2.0f"
+node n0030a Math
+	set expr "v.Z + (u.Z * q.W + w) * 2.0f"
+node n0030b Make Vec3
+node n0030c Return
+wire n00300.q n00301.q
+wire n00300.v n00301.v
+wire n00300.q n00302.q
+wire n00300.v n00302.v
+wire n00300.q n00303.q
+wire n00300.v n00303.v
+wire n00301.result n00304.X
+wire n00302.result n00304.Y
+wire n00303.result n00304.Z
+wire n00300.q n00305.q
+wire n00304.value n00305.u
+wire n00300.q n00306.q
+wire n00304.value n00306.u
+wire n00300.q n00307.q
+wire n00304.value n00307.u
+wire n00300.q n00308.q
+wire n00304.value n00308.u
+wire n00300.v n00308.v
+wire n00305.result n00308.w
+wire n00300.q n00309.q
+wire n00304.value n00309.u
+wire n00300.v n00309.v
+wire n00306.result n00309.w
+wire n00300.q n0030a.q
+wire n00304.value n0030a.u
+wire n00300.v n0030a.v
+wire n00307.result n0030a.w
+wire n00308.result n0030b.X
+wire n00309.result n0030b.Y
+wire n0030a.result n0030b.Z
+wire n00300.then n0030c.in
+wire n0030b.value n0030c.value
+
+function q004 Multiply
+	pure
+	returns Quat
+	doc "This rotation after `b` (the operator `*`)."
+param b Quat
+sheet body
+node n00400 Entry
+node n00401 This
+node n00402 Math
+	set expr "a.W * b.X + a.X * b.W + a.Y * b.Z - a.Z * b.Y"
+node n00403 Math
+	set expr "a.W * b.Y - a.X * b.Z + a.Y * b.W + a.Z * b.X"
+node n00404 Math
+	set expr "a.W * b.Z + a.X * b.Y - a.Y * b.X + a.Z * b.W"
+node n00405 Math
+	set expr "a.W * b.W - a.X * b.X - a.Y * b.Y - a.Z * b.Z"
+node n00406 Make Quat
+node n00407 Return
+wire n00401.value n00402.a
+wire n00400.b n00402.b
+wire n00401.value n00403.a
+wire n00400.b n00403.b
+wire n00401.value n00404.a
+wire n00400.b n00404.b
+wire n00401.value n00405.a
+wire n00400.b n00405.b
+wire n00405.result n00406.W
+wire n00402.result n00406.X
+wire n00403.result n00406.Y
+wire n00404.result n00406.Z
+wire n00400.then n00407.in
+wire n00406.value n00407.value
+
+function q005 Rotate
+	pure
+	returns Vec3
+	doc "The vector `v` rotated by this quaternion."
+param v Vec3
+sheet body
+node n00500 Entry
+node n00501 This
+node n00502 Math
+	set expr "q.Y * v.Z - q.Z * v.Y"
+node n00503 Math
+	set expr "q.Z * v.X - q.X * v.Z"
+node n00504 Math
+	set expr "q.X * v.Y - q.Y * v.X"
+node n00505 Make Vec3
+node n00506 Math
+	set expr "q.Y * u.Z - q.Z * u.Y"
+node n00507 Math
+	set expr "q.Z * u.X - q.X * u.Z"
+node n00508 Math
+	set expr "q.X * u.Y - q.Y * u.X"
+node n00509 Math
+	set expr "v.X + (u.X * q.W + w) * 2.0f"
+node n0050a Math
+	set expr "v.Y + (u.Y * q.W + w) * 2.0f"
+node n0050b Math
+	set expr "v.Z + (u.Z * q.W + w) * 2.0f"
+node n0050c Make Vec3
+node n0050d Return
+wire n00501.value n00502.q
+wire n00500.v n00502.v
+wire n00501.value n00503.q
+wire n00500.v n00503.v
+wire n00501.value n00504.q
+wire n00500.v n00504.v
+wire n00502.result n00505.X
+wire n00503.result n00505.Y
+wire n00504.result n00505.Z
+wire n00501.value n00506.q
+wire n00505.value n00506.u
+wire n00501.value n00507.q
+wire n00505.value n00507.u
+wire n00501.value n00508.q
+wire n00505.value n00508.u
+wire n00501.value n00509.q
+wire n00505.value n00509.u
+wire n00500.v n00509.v
+wire n00506.result n00509.w
+wire n00501.value n0050a.q
+wire n00505.value n0050a.u
+wire n00500.v n0050a.v
+wire n00507.result n0050a.w
+wire n00501.value n0050b.q
+wire n00505.value n0050b.u
+wire n00500.v n0050b.v
+wire n00508.result n0050b.w
+wire n00509.result n0050c.X
+wire n0050a.result n0050c.Y
+wire n0050b.result n0050c.Z
+wire n00500.then n0050d.in
+wire n0050c.value n0050d.value
+
+function q006 FromAxisAngle
+	static
+	pure
+	returns Quat
+	doc "A rotation of `angle` radians about the unit vector `axis` (counter-clockwise looking down the axis)."
+param axis Vec3
+param angle float
+sheet body
+node n00600 Entry
+node n00601 Math
+	set expr "x * 0.5f"
+node n00602 Math
+	set expr "Sin(h)"
+node n00603 Math
+	set expr "a.X * s"
+node n00604 Math
+	set expr "a.Y * s"
+node n00605 Math
+	set expr "a.Z * s"
+node n00606 Math
+	set expr "Cos(h)"
+node n00607 Make Quat
+node n00608 Return
+wire n00600.angle n00601.x
+wire n00601.result n00602.h
+wire n00600.axis n00603.a
+wire n00602.result n00603.s
+wire n00600.axis n00604.a
+wire n00602.result n00604.s
+wire n00600.axis n00605.a
+wire n00602.result n00605.s
+wire n00601.result n00606.h
+wire n00606.result n00607.W
+wire n00603.result n00607.X
+wire n00604.result n00607.Y
+wire n00605.result n00607.Z
+wire n00600.then n00608.in
+wire n00607.value n00608.value
+
+function q007 FromEuler
+	static
+	pure
+	returns Quat
+	doc "Angles in radians applied roll about Z, then pitch about X, then yaw about Y."
+param pitch float
+param yaw float
+param roll float
+sheet body
+node n00700 Entry
+node n00701 Get Core.Vec3.UnitY
+node n00702 Call Core.Quat.FromAxisAngle
+node n00703 Get Core.Vec3.UnitX
+node n00704 Call Core.Quat.FromAxisAngle
+node n00705 Get Core.Vec3.UnitZ
+node n00706 Call Core.Quat.FromAxisAngle
+node n00707 Math
+	set expr "a.W * b.X + a.X * b.W + a.Y * b.Z - a.Z * b.Y"
+node n00708 Math
+	set expr "a.W * b.Y - a.X * b.Z + a.Y * b.W + a.Z * b.X"
+node n00709 Math
+	set expr "a.W * b.Z + a.X * b.Y - a.Y * b.X + a.Z * b.W"
+node n0070a Math
+	set expr "a.W * b.W - a.X * b.X - a.Y * b.Y - a.Z * b.Z"
+node n0070b Make Quat
+node n0070c Math
+	set expr "a.W * b.X + a.X * b.W + a.Y * b.Z - a.Z * b.Y"
+node n0070d Math
+	set expr "a.W * b.Y - a.X * b.Z + a.Y * b.W + a.Z * b.X"
+node n0070e Math
+	set expr "a.W * b.Z + a.X * b.Y - a.Y * b.X + a.Z * b.W"
+node n0070f Math
+	set expr "a.W * b.W - a.X * b.X - a.Y * b.Y - a.Z * b.Z"
+node n0070g Make Quat
+node n0070h Return
+wire n00700.yaw n00702.angle
+wire n00701.value n00702.axis
+wire n00700.pitch n00704.angle
+wire n00703.value n00704.axis
+wire n00700.roll n00706.angle
+wire n00705.value n00706.axis
+wire n00702.result n00707.a
+wire n00704.result n00707.b
+wire n00702.result n00708.a
+wire n00704.result n00708.b
+wire n00702.result n00709.a
+wire n00704.result n00709.b
+wire n00702.result n0070a.a
+wire n00704.result n0070a.b
+wire n0070a.result n0070b.W
+wire n00707.result n0070b.X
+wire n00708.result n0070b.Y
+wire n00709.result n0070b.Z
+wire n0070b.value n0070c.a
+wire n00706.result n0070c.b
+wire n0070b.value n0070d.a
+wire n00706.result n0070d.b
+wire n0070b.value n0070e.a
+wire n00706.result n0070e.b
+wire n0070b.value n0070f.a
+wire n00706.result n0070f.b
+wire n0070f.result n0070g.W
+wire n0070c.result n0070g.X
+wire n0070d.result n0070g.Y
+wire n0070e.result n0070g.Z
+wire n00700.then n0070h.in
+wire n0070g.value n0070h.value
+
+function q008 FromMat3
+	static
+	pure
+	returns Quat
+	doc "The rotation of a 3x3 rotation matrix (orthonormal, no scale)."
+param m Mat3
+sheet body
+node n00800 Entry
+node n00801 Math
+	set expr "m.C0.X + m.C1.Y + m.C2.Z"
+node n00802 Math
+	set expr "m.C0.X - m.C1.Y - m.C2.Z"
+node n00803 Math
+	set expr "m.C1.Y - m.C0.X - m.C2.Z"
+node n00804 Math
+	set expr "m.C2.Z - m.C0.X - m.C1.Y"
+node n00805 Math
+	set expr "x > w ? 1 : 0"
+node n00806 Math
+	set expr "x > w ? x : w"
+node n00807 Math
+	set expr "y > b ? 2 : i"
+node n00808 Math
+	set expr "y > b ? y : b"
+node n00809 Math
+	set expr "z > b ? 3 : i"
+node n0080a Math
+	set expr "z > b ? z : b"
+node n0080b Math
+	set expr "Sqrt(f + 1.0f) * 0.5f"
+node n0080c Math
+	set expr "0.25f / v"
+node n0080d Math
+	set expr "i == 0 ? (m.C1.Z - m.C2.Y) * k : i == 1 ? v : i == 2 ? (m.C0.Y + m.C1.X) * k : (m.C2.X + m.C0.Z) * k"
+node n0080e Math
+	set expr "i == 0 ? (m.C2.X - m.C0.Z) * k : i == 1 ? (m.C0.Y + m.C1.X) * k : i == 2 ? v : (m.C1.Z + m.C2.Y) * k"
+node n0080f Math
+	set expr "i == 0 ? (m.C0.Y - m.C1.X) * k : i == 1 ? (m.C2.X + m.C0.Z) * k : i == 2 ? (m.C1.Z + m.C2.Y) * k : v"
+node n0080g Math
+	set expr "i == 0 ? v : i == 1 ? (m.C1.Z - m.C2.Y) * k : i == 2 ? (m.C2.X - m.C0.Z) * k : (m.C0.Y - m.C1.X) * k"
+node n0080h Make Quat
+node n0080i Return
+wire n00800.m n00801.m
+wire n00800.m n00802.m
+wire n00800.m n00803.m
+wire n00800.m n00804.m
+wire n00801.result n00805.w
+wire n00802.result n00805.x
+wire n00801.result n00806.w
+wire n00802.result n00806.x
+wire n00806.result n00807.b
+wire n00805.result n00807.i
+wire n00803.result n00807.y
+wire n00806.result n00808.b
+wire n00803.result n00808.y
+wire n00808.result n00809.b
+wire n00807.result n00809.i
+wire n00804.result n00809.z
+wire n00808.result n0080a.b
+wire n00804.result n0080a.z
+wire n0080a.result n0080b.f
+wire n0080b.result n0080c.v
+wire n00809.result n0080d.i
+wire n0080c.result n0080d.k
+wire n00800.m n0080d.m
+wire n0080b.result n0080d.v
+wire n00809.result n0080e.i
+wire n0080c.result n0080e.k
+wire n00800.m n0080e.m
+wire n0080b.result n0080e.v
+wire n00809.result n0080f.i
+wire n0080c.result n0080f.k
+wire n00800.m n0080f.m
+wire n0080b.result n0080f.v
+wire n00809.result n0080g.i
+wire n0080c.result n0080g.k
+wire n00800.m n0080g.m
+wire n0080b.result n0080g.v
+wire n0080g.result n0080h.W
+wire n0080d.result n0080h.X
+wire n0080e.result n0080h.Y
+wire n0080f.result n0080h.Z
+wire n00800.then n0080i.in
+wire n0080h.value n0080i.value
+
+function q009 LookRotation
+	static
+	pure
+	returns Quat
+	doc "The rotation that turns -Z to `forward` and keeps Y as close to `up` as it can."
+param forward Vec3
+param up Vec3
+sheet body
+node n00900 Entry
+node n00901 Call Core.Vec3.Normalized
+node n00902 Call Core.Vec3.Scaled
+	in k -1.0f
+node n00903 Call Core.Vec3.Cross
+node n00904 Call Core.Vec3.Normalized
+node n00905 Call Core.Vec3.Cross
+node n00906 Make Mat3
+node n00907 Math
+	set expr "m.C0.X + m.C1.Y + m.C2.Z"
+node n00908 Math
+	set expr "m.C0.X - m.C1.Y - m.C2.Z"
+node n00909 Math
+	set expr "m.C1.Y - m.C0.X - m.C2.Z"
+node n0090a Math
+	set expr "m.C2.Z - m.C0.X - m.C1.Y"
+node n0090b Math
+	set expr "x > w ? 1 : 0"
+node n0090c Math
+	set expr "x > w ? x : w"
+node n0090d Math
+	set expr "y > b ? 2 : i"
+node n0090e Math
+	set expr "y > b ? y : b"
+node n0090f Math
+	set expr "z > b ? 3 : i"
+node n0090g Math
+	set expr "z > b ? z : b"
+node n0090h Math
+	set expr "Sqrt(f + 1.0f) * 0.5f"
+node n0090i Math
+	set expr "0.25f / v"
+node n0090j Math
+	set expr "i == 0 ? (m.C1.Z - m.C2.Y) * k : i == 1 ? v : i == 2 ? (m.C0.Y + m.C1.X) * k : (m.C2.X + m.C0.Z) * k"
+node n0090k Math
+	set expr "i == 0 ? (m.C2.X - m.C0.Z) * k : i == 1 ? (m.C0.Y + m.C1.X) * k : i == 2 ? v : (m.C1.Z + m.C2.Y) * k"
+node n0090l Math
+	set expr "i == 0 ? (m.C0.Y - m.C1.X) * k : i == 1 ? (m.C2.X + m.C0.Z) * k : i == 2 ? (m.C1.Z + m.C2.Y) * k : v"
+node n0090m Math
+	set expr "i == 0 ? v : i == 1 ? (m.C1.Z - m.C2.Y) * k : i == 2 ? (m.C2.X - m.C0.Z) * k : (m.C0.Y - m.C1.X) * k"
+node n0090n Make Quat
+node n0090o Return
+wire n00900.forward n00901.receiver
+wire n00901.result n00902.receiver
+wire n00902.result n00903.b
+wire n00900.up n00903.receiver
+wire n00903.result n00904.receiver
+wire n00904.result n00905.b
+wire n00902.result n00905.receiver
+wire n00904.result n00906.C0
+wire n00905.result n00906.C1
+wire n00902.result n00906.C2
+wire n00906.value n00907.m
+wire n00906.value n00908.m
+wire n00906.value n00909.m
+wire n00906.value n0090a.m
+wire n00907.result n0090b.w
+wire n00908.result n0090b.x
+wire n00907.result n0090c.w
+wire n00908.result n0090c.x
+wire n0090c.result n0090d.b
+wire n0090b.result n0090d.i
+wire n00909.result n0090d.y
+wire n0090c.result n0090e.b
+wire n00909.result n0090e.y
+wire n0090e.result n0090f.b
+wire n0090d.result n0090f.i
+wire n0090a.result n0090f.z
+wire n0090e.result n0090g.b
+wire n0090a.result n0090g.z
+wire n0090g.result n0090h.f
+wire n0090h.result n0090i.v
+wire n0090f.result n0090j.i
+wire n0090i.result n0090j.k
+wire n00906.value n0090j.m
+wire n0090h.result n0090j.v
+wire n0090f.result n0090k.i
+wire n0090i.result n0090k.k
+wire n00906.value n0090k.m
+wire n0090h.result n0090k.v
+wire n0090f.result n0090l.i
+wire n0090i.result n0090l.k
+wire n00906.value n0090l.m
+wire n0090h.result n0090l.v
+wire n0090f.result n0090m.i
+wire n0090i.result n0090m.k
+wire n00906.value n0090m.m
+wire n0090h.result n0090m.v
+wire n0090m.result n0090n.W
+wire n0090j.result n0090n.X
+wire n0090k.result n0090n.Y
+wire n0090l.result n0090n.Z
+wire n00900.then n0090o.in
+wire n0090n.value n0090o.value
+
+function q00a FromTo
+	static
+	pure
+	returns Quat
+	doc "The shortest rotation that turns the direction `from` to `to` (any length but zero); opposite directions turn half a turn about an axis perpendicular to `from`."
+param from Vec3
+param to Vec3
+sheet body
+node n00a00 Entry
+node n00a01 Call Core.Vec3.Normalized
+node n00a02 Call Core.Vec3.Normalized
+node n00a03 Call Core.Vec3.Dot
+node n00a04 Call Core.Vec3.Cross
+node n00a05 Math
+	set expr "Sqrt((1.0f + d) * 2.0f)"
+node n00a06 Math
+	set expr "c.X / s"
+node n00a07 Math
+	set expr "c.Y / s"
+node n00a08 Math
+	set expr "c.Z / s"
+node n00a09 Math
+	set expr "s * 0.5f"
+node n00a0a Make Quat
+node n00a0b Get Core.Vec3.UnitX
+node n00a0c Call Core.Vec3.Cross
+node n00a0d Get Core.Vec3.UnitY
+node n00a0e Call Core.Vec3.Cross
+node n00a0f Math
+	set expr "a.X * a.X + a.Y * a.Y + a.Z * a.Z > 0.000001f"
+node n00a0g Select
+node n00a0h Call Core.Vec3.Normalized
+node n00a0i Math
+	set expr "a.X"
+node n00a0j Math
+	set expr "a.Y"
+node n00a0k Math
+	set expr "a.Z"
+node n00a0l Make Quat
+	in W 0.0f
+node n00a0m Math
+	set expr "d < -0.999999f"
+node n00a0n Select
+node n00a0o Math
+	set expr "d > 0.999999f"
+node n00a0p Get Core.Quat.Identity
+node n00a0q Select
+node n00a0r Return
+wire n00a00.from n00a01.receiver
+wire n00a00.to n00a02.receiver
+wire n00a02.result n00a03.b
+wire n00a01.result n00a03.receiver
+wire n00a02.result n00a04.b
+wire n00a01.result n00a04.receiver
+wire n00a03.result n00a05.d
+wire n00a04.result n00a06.c
+wire n00a05.result n00a06.s
+wire n00a04.result n00a07.c
+wire n00a05.result n00a07.s
+wire n00a04.result n00a08.c
+wire n00a05.result n00a08.s
+wire n00a05.result n00a09.s
+wire n00a09.result n00a0a.W
+wire n00a06.result n00a0a.X
+wire n00a07.result n00a0a.Y
+wire n00a08.result n00a0a.Z
+wire n00a01.result n00a0c.b
+wire n00a0b.value n00a0c.receiver
+wire n00a01.result n00a0e.b
+wire n00a0d.value n00a0e.receiver
+wire n00a0c.result n00a0f.a
+wire n00a0f.result n00a0g.condition
+wire n00a0e.result n00a0g.false
+wire n00a0c.result n00a0g.true
+wire n00a0g.result n00a0h.receiver
+wire n00a0h.result n00a0i.a
+wire n00a0h.result n00a0j.a
+wire n00a0h.result n00a0k.a
+wire n00a0i.result n00a0l.X
+wire n00a0j.result n00a0l.Y
+wire n00a0k.result n00a0l.Z
+wire n00a03.result n00a0m.d
+wire n00a0m.result n00a0n.condition
+wire n00a0a.value n00a0n.false
+wire n00a0l.value n00a0n.true
+wire n00a03.result n00a0o.d
+wire n00a0o.result n00a0q.condition
+wire n00a0n.result n00a0q.false
+wire n00a0p.value n00a0q.true
+wire n00a00.then n00a0r.in
+wire n00a0q.result n00a0r.value
+
+function q00b Conjugate
+	pure
+	returns Quat
+	doc "The vector part negated: the inverse rotation of a unit quaternion."
+sheet body
+node n00b00 Entry
+node n00b01 This
+node n00b02 Math
+	set expr "-q.X"
+node n00b03 Math
+	set expr "-q.Y"
+node n00b04 Math
+	set expr "-q.Z"
+node n00b05 Math
+	set expr "q.W"
+node n00b06 Make Quat
+node n00b07 Return
+wire n00b01.value n00b02.q
+wire n00b01.value n00b03.q
+wire n00b01.value n00b04.q
+wire n00b01.value n00b05.q
+wire n00b05.result n00b06.W
+wire n00b02.result n00b06.X
+wire n00b03.result n00b06.Y
+wire n00b04.result n00b06.Z
+wire n00b00.then n00b07.in
+wire n00b06.value n00b07.value
+
+function q00c Inverse
+	pure
+	returns Quat
+	doc "The inverse: the conjugate divided by the squared length (zero stays zero)."
+sheet body
+node n00c00 Entry
+node n00c01 This
+node n00c02 Math
+	set expr "q.X * q.X + q.Y * q.Y + q.Z * q.Z + q.W * q.W"
+node n00c03 Math
+	set expr "d > 0.0f ? 1.0f / d : 0.0f"
+node n00c04 Math
+	set expr "-q.X * k"
+node n00c05 Math
+	set expr "-q.Y * k"
+node n00c06 Math
+	set expr "-q.Z * k"
+node n00c07 Math
+	set expr "q.W * k"
+node n00c08 Make Quat
+node n00c09 Return
+wire n00c01.value n00c02.q
+wire n00c02.result n00c03.d
+wire n00c03.result n00c04.k
+wire n00c01.value n00c04.q
+wire n00c03.result n00c05.k
+wire n00c01.value n00c05.q
+wire n00c03.result n00c06.k
+wire n00c01.value n00c06.q
+wire n00c03.result n00c07.k
+wire n00c01.value n00c07.q
+wire n00c07.result n00c08.W
+wire n00c04.result n00c08.X
+wire n00c05.result n00c08.Y
+wire n00c06.result n00c08.Z
+wire n00c00.then n00c09.in
+wire n00c08.value n00c09.value
+
+function q00d Dot
+	pure
+	returns float
+	doc "The dot product of the four components."
+param b Quat
+sheet body
+node n00d00 Entry
+node n00d01 This
+node n00d02 Math
+	set expr "q.X * b.X + q.Y * b.Y + q.Z * b.Z + q.W * b.W"
+node n00d03 Return
+wire n00d00.b n00d02.b
+wire n00d01.value n00d02.q
+wire n00d00.then n00d03.in
+wire n00d02.result n00d03.value
+
+function q00e Length
+	pure
+	returns float
+	doc "The length (1 for a rotation)."
+sheet body
+node n00e00 Entry
+node n00e01 This
+node n00e02 Math
+	set expr "Sqrt(q.X * q.X + q.Y * q.Y + q.Z * q.Z + q.W * q.W)"
+node n00e03 Return
+wire n00e01.value n00e02.q
+wire n00e00.then n00e03.in
+wire n00e02.result n00e03.value
+
+function q00f Normalized
+	pure
+	returns Quat
+	doc "Scaled to length 1; a zero quaternion gives Identity."
+sheet body
+node n00f00 Entry
+node n00f01 This
+node n00f02 Math
+	set expr "Sqrt(q.X * q.X + q.Y * q.Y + q.Z * q.Z + q.W * q.W)"
+node n00f03 Math
+	set expr "l > 0.0f ? 1.0f / l : 0.0f"
+node n00f04 Math
+	set expr "q.X * k"
+node n00f05 Math
+	set expr "q.Y * k"
+node n00f06 Math
+	set expr "q.Z * k"
+node n00f07 Math
+	set expr "q.W * k"
+node n00f08 Make Quat
+node n00f09 Math
+	set expr "l > 0.0f"
+node n00f0a Get Core.Quat.Identity
+node n00f0b Select
+node n00f0c Return
+wire n00f01.value n00f02.q
+wire n00f02.result n00f03.l
+wire n00f03.result n00f04.k
+wire n00f01.value n00f04.q
+wire n00f03.result n00f05.k
+wire n00f01.value n00f05.q
+wire n00f03.result n00f06.k
+wire n00f01.value n00f06.q
+wire n00f03.result n00f07.k
+wire n00f01.value n00f07.q
+wire n00f07.result n00f08.W
+wire n00f04.result n00f08.X
+wire n00f05.result n00f08.Y
+wire n00f06.result n00f08.Z
+wire n00f02.result n00f09.l
+wire n00f09.result n00f0b.condition
+wire n00f0a.value n00f0b.false
+wire n00f08.value n00f0b.true
+wire n00f00.then n00f0c.in
+wire n00f0b.result n00f0c.value
+
+function q00g Nlerp
+	pure
+	returns Quat
+	doc "The straight blend `t` of the way to `to` (the shorter way), normalized: cheaper than Slerp, not at an even speed."
+param to Quat
+param t float
+sheet body
+node n00g00 Entry
+node n00g01 This
+node n00g02 Math
+	set expr "a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W"
+node n00g03 Math
+	set expr "d < 0.0f ? -1.0f : 1.0f"
+node n00g04 Math
+	set expr "b.X * s"
+node n00g05 Math
+	set expr "b.Y * s"
+node n00g06 Math
+	set expr "b.Z * s"
+node n00g07 Math
+	set expr "b.W * s"
+node n00g08 Make Quat
+node n00g09 Math
+	set expr "a.X + (b.X - a.X) * t"
+node n00g0a Math
+	set expr "a.Y + (b.Y - a.Y) * t"
+node n00g0b Math
+	set expr "a.Z + (b.Z - a.Z) * t"
+node n00g0c Math
+	set expr "a.W + (b.W - a.W) * t"
+node n00g0d Make Quat
+node n00g0e Math
+	set expr "Sqrt(q.X * q.X + q.Y * q.Y + q.Z * q.Z + q.W * q.W)"
+node n00g0f Math
+	set expr "l > 0.0f ? 1.0f / l : 0.0f"
+node n00g0g Math
+	set expr "q.X * k"
+node n00g0h Math
+	set expr "q.Y * k"
+node n00g0i Math
+	set expr "q.Z * k"
+node n00g0j Math
+	set expr "q.W * k"
+node n00g0k Make Quat
+node n00g0l Math
+	set expr "l > 0.0f"
+node n00g0m Get Core.Quat.Identity
+node n00g0n Select
+node n00g0o Return
+wire n00g01.value n00g02.a
+wire n00g00.to n00g02.b
+wire n00g02.result n00g03.d
+wire n00g00.to n00g04.b
+wire n00g03.result n00g04.s
+wire n00g00.to n00g05.b
+wire n00g03.result n00g05.s
+wire n00g00.to n00g06.b
+wire n00g03.result n00g06.s
+wire n00g00.to n00g07.b
+wire n00g03.result n00g07.s
+wire n00g07.result n00g08.W
+wire n00g04.result n00g08.X
+wire n00g05.result n00g08.Y
+wire n00g06.result n00g08.Z
+wire n00g01.value n00g09.a
+wire n00g08.value n00g09.b
+wire n00g00.t n00g09.t
+wire n00g01.value n00g0a.a
+wire n00g08.value n00g0a.b
+wire n00g00.t n00g0a.t
+wire n00g01.value n00g0b.a
+wire n00g08.value n00g0b.b
+wire n00g00.t n00g0b.t
+wire n00g01.value n00g0c.a
+wire n00g08.value n00g0c.b
+wire n00g00.t n00g0c.t
+wire n00g0c.result n00g0d.W
+wire n00g09.result n00g0d.X
+wire n00g0a.result n00g0d.Y
+wire n00g0b.result n00g0d.Z
+wire n00g0d.value n00g0e.q
+wire n00g0e.result n00g0f.l
+wire n00g0f.result n00g0g.k
+wire n00g0d.value n00g0g.q
+wire n00g0f.result n00g0h.k
+wire n00g0d.value n00g0h.q
+wire n00g0f.result n00g0i.k
+wire n00g0d.value n00g0i.q
+wire n00g0f.result n00g0j.k
+wire n00g0d.value n00g0j.q
+wire n00g0j.result n00g0k.W
+wire n00g0g.result n00g0k.X
+wire n00g0h.result n00g0k.Y
+wire n00g0i.result n00g0k.Z
+wire n00g0e.result n00g0l.l
+wire n00g0l.result n00g0n.condition
+wire n00g0m.value n00g0n.false
+wire n00g0k.value n00g0n.true
+wire n00g00.then n00g0o.in
+wire n00g0n.result n00g0o.value
+
+function q00h Slerp
+	pure
+	returns Quat
+	doc "The rotation `t` of the way to `to` along the shortest arc at an even speed (spherical interpolation; very close rotations blend straight)."
+param to Quat
+param t float
+sheet body
+node n00h00 Entry
+node n00h01 This
+node n00h02 Math
+	set expr "a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W"
+node n00h03 Math
+	set expr "d < 0.0f ? -1.0f : 1.0f"
+node n00h04 Math
+	set expr "b.X * s"
+node n00h05 Math
+	set expr "b.Y * s"
+node n00h06 Math
+	set expr "b.Z * s"
+node n00h07 Math
+	set expr "b.W * s"
+node n00h08 Make Quat
+node n00h09 Math
+	set expr "d * s"
+node n00h0a Math
+	set expr "Acos(Min(c, 1.0f))"
+node n00h0b Math
+	set expr "Sin(x)"
+node n00h0c Math
+	set expr "c > 0.9995f ? 1.0f - t : Sin((1.0f - t) * x) / n"
+node n00h0d Math
+	set expr "c > 0.9995f ? t : Sin(t * x) / n"
+node n00h0e Math
+	set expr "a.X * k + b.X * j"
+node n00h0f Math
+	set expr "a.Y * k + b.Y * j"
+node n00h0g Math
+	set expr "a.Z * k + b.Z * j"
+node n00h0h Math
+	set expr "a.W * k + b.W * j"
+node n00h0i Make Quat
+node n00h0j Math
+	set expr "c > 0.9995f"
+node n00h0k Math
+	set expr "Sqrt(q.X * q.X + q.Y * q.Y + q.Z * q.Z + q.W * q.W)"
+node n00h0l Math
+	set expr "l > 0.0f ? 1.0f / l : 0.0f"
+node n00h0m Math
+	set expr "q.X * k"
+node n00h0n Math
+	set expr "q.Y * k"
+node n00h0o Math
+	set expr "q.Z * k"
+node n00h0p Math
+	set expr "q.W * k"
+node n00h0q Make Quat
+node n00h0r Math
+	set expr "l > 0.0f"
+node n00h0s Get Core.Quat.Identity
+node n00h0t Select
+node n00h0u Select
+node n00h0v Return
+wire n00h01.value n00h02.a
+wire n00h00.to n00h02.b
+wire n00h02.result n00h03.d
+wire n00h00.to n00h04.b
+wire n00h03.result n00h04.s
+wire n00h00.to n00h05.b
+wire n00h03.result n00h05.s
+wire n00h00.to n00h06.b
+wire n00h03.result n00h06.s
+wire n00h00.to n00h07.b
+wire n00h03.result n00h07.s
+wire n00h07.result n00h08.W
+wire n00h04.result n00h08.X
+wire n00h05.result n00h08.Y
+wire n00h06.result n00h08.Z
+wire n00h02.result n00h09.d
+wire n00h03.result n00h09.s
+wire n00h09.result n00h0a.c
+wire n00h0a.result n00h0b.x
+wire n00h09.result n00h0c.c
+wire n00h0b.result n00h0c.n
+wire n00h00.t n00h0c.t
+wire n00h0a.result n00h0c.x
+wire n00h09.result n00h0d.c
+wire n00h0b.result n00h0d.n
+wire n00h00.t n00h0d.t
+wire n00h0a.result n00h0d.x
+wire n00h01.value n00h0e.a
+wire n00h08.value n00h0e.b
+wire n00h0d.result n00h0e.j
+wire n00h0c.result n00h0e.k
+wire n00h01.value n00h0f.a
+wire n00h08.value n00h0f.b
+wire n00h0d.result n00h0f.j
+wire n00h0c.result n00h0f.k
+wire n00h01.value n00h0g.a
+wire n00h08.value n00h0g.b
+wire n00h0d.result n00h0g.j
+wire n00h0c.result n00h0g.k
+wire n00h01.value n00h0h.a
+wire n00h08.value n00h0h.b
+wire n00h0d.result n00h0h.j
+wire n00h0c.result n00h0h.k
+wire n00h0h.result n00h0i.W
+wire n00h0e.result n00h0i.X
+wire n00h0f.result n00h0i.Y
+wire n00h0g.result n00h0i.Z
+wire n00h09.result n00h0j.c
+wire n00h0i.value n00h0k.q
+wire n00h0k.result n00h0l.l
+wire n00h0l.result n00h0m.k
+wire n00h0i.value n00h0m.q
+wire n00h0l.result n00h0n.k
+wire n00h0i.value n00h0n.q
+wire n00h0l.result n00h0o.k
+wire n00h0i.value n00h0o.q
+wire n00h0l.result n00h0p.k
+wire n00h0i.value n00h0p.q
+wire n00h0p.result n00h0q.W
+wire n00h0m.result n00h0q.X
+wire n00h0n.result n00h0q.Y
+wire n00h0o.result n00h0q.Z
+wire n00h0k.result n00h0r.l
+wire n00h0r.result n00h0t.condition
+wire n00h0s.value n00h0t.false
+wire n00h0q.value n00h0t.true
+wire n00h0j.result n00h0u.condition
+wire n00h0i.value n00h0u.false
+wire n00h0t.result n00h0u.true
+wire n00h00.then n00h0v.in
+wire n00h0u.result n00h0v.value
+
+function q00i AngleTo
+	pure
+	returns float
+	doc "The angle in radians of the rotation from this one to `b` (unit quaternions), 0 to PI."
+param b Quat
+sheet body
+node n00i00 Entry
+node n00i01 This
+node n00i02 Math
+	set expr "2.0f * Acos(Min(Abs(q.X * b.X + q.Y * b.Y + q.Z * b.Z + q.W * b.W), 1.0f))"
+node n00i03 Return
+wire n00i00.b n00i02.b
+wire n00i01.value n00i02.q
+wire n00i00.then n00i03.in
+wire n00i02.result n00i03.value
+
+function q00j ToMat3
+	pure
+	returns Mat3
+	doc "The rotation as a 3x3 matrix (this must be a unit quaternion)."
+sheet body
+node n00j00 Entry
+node n00j01 This
+node n00j02 Math
+	set expr "q.X * q.X"
+node n00j03 Math
+	set expr "q.Y * q.Y"
+node n00j04 Math
+	set expr "q.Z * q.Z"
+node n00j05 Math
+	set expr "q.X * q.Z"
+node n00j06 Math
+	set expr "q.X * q.Y"
+node n00j07 Math
+	set expr "q.Y * q.Z"
+node n00j08 Math
+	set expr "q.W * q.X"
+node n00j09 Math
+	set expr "q.W * q.Y"
+node n00j0a Math
+	set expr "q.W * q.Z"
+node n00j0b Math
+	set expr "1.0f - 2.0f * (yy + zz)"
+node n00j0c Math
+	set expr "2.0f * (xy + wz)"
+node n00j0d Math
+	set expr "2.0f * (xz - wy)"
+node n00j0e Make Vec3
+node n00j0f Math
+	set expr "2.0f * (xy - wz)"
+node n00j0g Math
+	set expr "1.0f - 2.0f * (xx + zz)"
+node n00j0h Math
+	set expr "2.0f * (yz + wx)"
+node n00j0i Make Vec3
+node n00j0j Math
+	set expr "2.0f * (xz + wy)"
+node n00j0k Math
+	set expr "2.0f * (yz - wx)"
+node n00j0l Math
+	set expr "1.0f - 2.0f * (xx + yy)"
+node n00j0m Make Vec3
+node n00j0n Make Mat3
+node n00j0o Return
+wire n00j01.value n00j02.q
+wire n00j01.value n00j03.q
+wire n00j01.value n00j04.q
+wire n00j01.value n00j05.q
+wire n00j01.value n00j06.q
+wire n00j01.value n00j07.q
+wire n00j01.value n00j08.q
+wire n00j01.value n00j09.q
+wire n00j01.value n00j0a.q
+wire n00j03.result n00j0b.yy
+wire n00j04.result n00j0b.zz
+wire n00j0a.result n00j0c.wz
+wire n00j06.result n00j0c.xy
+wire n00j09.result n00j0d.wy
+wire n00j05.result n00j0d.xz
+wire n00j0b.result n00j0e.X
+wire n00j0c.result n00j0e.Y
+wire n00j0d.result n00j0e.Z
+wire n00j0a.result n00j0f.wz
+wire n00j06.result n00j0f.xy
+wire n00j02.result n00j0g.xx
+wire n00j04.result n00j0g.zz
+wire n00j08.result n00j0h.wx
+wire n00j07.result n00j0h.yz
+wire n00j0f.result n00j0i.X
+wire n00j0g.result n00j0i.Y
+wire n00j0h.result n00j0i.Z
+wire n00j09.result n00j0j.wy
+wire n00j05.result n00j0j.xz
+wire n00j08.result n00j0k.wx
+wire n00j07.result n00j0k.yz
+wire n00j02.result n00j0l.xx
+wire n00j03.result n00j0l.yy
+wire n00j0j.result n00j0m.X
+wire n00j0k.result n00j0m.Y
+wire n00j0l.result n00j0m.Z
+wire n00j0e.value n00j0n.C0
+wire n00j0i.value n00j0n.C1
+wire n00j0m.value n00j0n.C2
+wire n00j00.then n00j0o.in
+wire n00j0n.value n00j0o.value
+
+function q00k ToMat4
+	pure
+	returns Mat4
+	doc "The rotation as a 4x4 matrix (this must be a unit quaternion)."
+sheet body
+node n00k00 Entry
+node n00k01 This
+node n00k02 Math
+	set expr "q.X * q.X"
+node n00k03 Math
+	set expr "q.Y * q.Y"
+node n00k04 Math
+	set expr "q.Z * q.Z"
+node n00k05 Math
+	set expr "q.X * q.Z"
+node n00k06 Math
+	set expr "q.X * q.Y"
+node n00k07 Math
+	set expr "q.Y * q.Z"
+node n00k08 Math
+	set expr "q.W * q.X"
+node n00k09 Math
+	set expr "q.W * q.Y"
+node n00k0a Math
+	set expr "q.W * q.Z"
+node n00k0b Math
+	set expr "1.0f - 2.0f * (yy + zz)"
+node n00k0c Math
+	set expr "2.0f * (xy + wz)"
+node n00k0d Math
+	set expr "2.0f * (xz - wy)"
+node n00k0e Make Vec4
+	in W 0.0f
+node n00k0f Math
+	set expr "2.0f * (xy - wz)"
+node n00k0g Math
+	set expr "1.0f - 2.0f * (xx + zz)"
+node n00k0h Math
+	set expr "2.0f * (yz + wx)"
+node n00k0i Make Vec4
+	in W 0.0f
+node n00k0j Math
+	set expr "2.0f * (xz + wy)"
+node n00k0k Math
+	set expr "2.0f * (yz - wx)"
+node n00k0l Math
+	set expr "1.0f - 2.0f * (xx + yy)"
+node n00k0m Make Vec4
+	in W 0.0f
+node n00k0n Make Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n00k0o Make Mat4
+node n00k0p Return
+wire n00k01.value n00k02.q
+wire n00k01.value n00k03.q
+wire n00k01.value n00k04.q
+wire n00k01.value n00k05.q
+wire n00k01.value n00k06.q
+wire n00k01.value n00k07.q
+wire n00k01.value n00k08.q
+wire n00k01.value n00k09.q
+wire n00k01.value n00k0a.q
+wire n00k03.result n00k0b.yy
+wire n00k04.result n00k0b.zz
+wire n00k0a.result n00k0c.wz
+wire n00k06.result n00k0c.xy
+wire n00k09.result n00k0d.wy
+wire n00k05.result n00k0d.xz
+wire n00k0b.result n00k0e.X
+wire n00k0c.result n00k0e.Y
+wire n00k0d.result n00k0e.Z
+wire n00k0a.result n00k0f.wz
+wire n00k06.result n00k0f.xy
+wire n00k02.result n00k0g.xx
+wire n00k04.result n00k0g.zz
+wire n00k08.result n00k0h.wx
+wire n00k07.result n00k0h.yz
+wire n00k0f.result n00k0i.X
+wire n00k0g.result n00k0i.Y
+wire n00k0h.result n00k0i.Z
+wire n00k09.result n00k0j.wy
+wire n00k05.result n00k0j.xz
+wire n00k08.result n00k0k.wx
+wire n00k07.result n00k0k.yz
+wire n00k02.result n00k0l.xx
+wire n00k03.result n00k0l.yy
+wire n00k0j.result n00k0m.X
+wire n00k0k.result n00k0m.Y
+wire n00k0l.result n00k0m.Z
+wire n00k0e.value n00k0o.C0
+wire n00k0i.value n00k0o.C1
+wire n00k0m.value n00k0o.C2
+wire n00k0n.value n00k0o.C3
+wire n00k00.then n00k0p.in
+wire n00k0o.value n00k0p.value
+
+function q00l ToAxisAngle
+	pure
+	returns float
+	doc "The angle in radians (0 to 2 PI) and the unit `axis` of the rotation; no rotation gives the X axis."
+out axis Vec3
+sheet body
+node n00l00 Entry
+node n00l01 This
+node n00l02 Math
+	set expr "Clamp(q.W, -1.0f, 1.0f)"
+node n00l03 Math
+	set expr "Sqrt(1.0f - w * w)"
+node n00l04 Math
+	set expr "s < 0.000001f"
+node n00l05 Math
+	set expr "k ? 1.0f : q.X / s"
+node n00l06 Math
+	set expr "k ? 0.0f : q.Y / s"
+node n00l07 Math
+	set expr "k ? 0.0f : q.Z / s"
+node n00l08 Make Vec3
+node n00l09 Math
+	set expr "2.0f * Acos(w)"
+node n00l0a Return
+wire n00l01.value n00l02.q
+wire n00l02.result n00l03.w
+wire n00l03.result n00l04.s
+wire n00l04.result n00l05.k
+wire n00l01.value n00l05.q
+wire n00l03.result n00l05.s
+wire n00l04.result n00l06.k
+wire n00l01.value n00l06.q
+wire n00l03.result n00l06.s
+wire n00l04.result n00l07.k
+wire n00l01.value n00l07.q
+wire n00l03.result n00l07.s
+wire n00l05.result n00l08.X
+wire n00l06.result n00l08.Y
+wire n00l07.result n00l08.Z
+wire n00l02.result n00l09.w
+wire n00l08.value n00l0a.axis
+wire n00l00.then n00l0a.in
+wire n00l09.result n00l0a.value
+
+function q00m ToEuler
+	pure
+	returns Vec3
+	doc "The angles FromEuler takes, as (pitch, yaw, roll) in radians; pitch is -PI/2 to PI/2 (at the poles roll is 0)."
+sheet body
+node n00m00 Entry
+node n00m01 This
+node n00m02 Math
+	set expr "2.0f * (q.Y * q.Z - q.W * q.X)"
+node n00m03 Math
+	set expr "Abs(s) > 0.99999f"
+node n00m04 Math
+	set expr "Asin(Clamp(-s, -1.0f, 1.0f))"
+node n00m05 Math
+	set expr "p ? Atan2(-2.0f * (q.X * q.Z - q.W * q.Y), 1.0f - 2.0f * (q.Y * q.Y + q.Z * q.Z)) : Atan2(2.0f * (q.X * q.Z + q.W * q.Y), 1.0f - 2.0f * (q.X * q.X + q.Y * q.Y))"
+node n00m06 Math
+	set expr "p ? 0.0f : Atan2(2.0f * (q.X * q.Y + q.W * q.Z), 1.0f - 2.0f * (q.X * q.X + q.Z * q.Z))"
+node n00m07 Make Vec3
+node n00m08 Return
+wire n00m01.value n00m02.q
+wire n00m02.result n00m03.s
+wire n00m02.result n00m04.s
+wire n00m03.result n00m05.p
+wire n00m01.value n00m05.q
+wire n00m03.result n00m06.p
+wire n00m01.value n00m06.q
+wire n00m04.result n00m07.X
+wire n00m05.result n00m07.Y
+wire n00m06.result n00m07.Z
+wire n00m00.then n00m08.in
+wire n00m07.value n00m08.value
+
+function q00n ApproxEquals
+	pure
+	returns bool
+	doc "True when the components are within `epsilon` (absolute) of the other's or of their negation (q and -q are the same rotation)."
+param other Quat
+param epsilon float
+	default 0.00001f
+sheet body
+node n00n00 Entry
+node n00n01 This
+node n00n02 Math
+	set expr "(Abs(q.X - o.X) <= e && Abs(q.Y - o.Y) <= e && Abs(q.Z - o.Z) <= e && Abs(q.W - o.W) <= e) || (Abs(q.X + o.X) <= e && Abs(q.Y + o.Y) <= e && Abs(q.Z + o.Z) <= e && Abs(q.W + o.W) <= e)"
+node n00n03 Return
+wire n00n00.epsilon n00n02.e
+wire n00n00.other n00n02.o
+wire n00n01.value n00n02.q
+wire n00n00.then n00n03.in
+wire n00n02.result n00n03.value

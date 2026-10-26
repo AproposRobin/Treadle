@@ -1,0 +1,9 @@
+== args
+alpha
+beta
+== exit
+0
+== stdout
+2 args
+[alpha] 5 bytes
+[beta] 4 bytes

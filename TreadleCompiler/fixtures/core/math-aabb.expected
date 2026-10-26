@@ -1,0 +1,21 @@
+== exit
+0
+== stdout
+aabb.Empty true
+aabb.Empty.Encapsulate true
+aabb.FromCenterExtents true
+aabb.FromPoints true
+aabb.Center true
+aabb.Extents true
+aabb.Size true
+aabb.IsValid true
+aabb.Contains true
+aabb.Contains.out true
+aabb.Overlaps true
+aabb.Overlaps.touch true
+aabb.Overlaps.no true
+aabb.Union true
+aabb.Encapsulate true
+aabb.ClosestPoint true
+aabb.Transformed true
+aabb.Transformed.empty true

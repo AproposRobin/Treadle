@@ -1,0 +1,163 @@
+# treadle 1
+type Consts class
+	namespace M2
+	static
+	doc "Constants (Language.md 4.6): folded from other constants, enum cases, texts, Math functions and a C import set's constant; constants as pin literals; const arrays read as spans; a constant passed by `in`. Run prints 60, 605, 1099511627776, 65295, true, 0.7071067811865476, Treadle, true, 16384, 6.283185307179586, 28, 19, 3, green, 12."
+
+field Rows int
+	const
+	init 6
+
+field Cols int
+	const
+	init 10
+
+field Cells int
+	const
+	init Rows * Cols
+
+field Gap float
+	const
+	init 2.5f
+
+field Width float
+	const
+	init Cols * 60 + Gap * 2
+
+field Big int64
+	const
+	init 1 << 40
+
+field Mask uint32
+	const
+	init 0xFF << 8 | 0x0F
+
+field Wide bool
+	const
+	init Width > 600 && Rows % 2 == 0
+
+field Half double
+	const
+	init Sqrt(2.0) / 2
+
+field Title StringView
+	const
+	init "Treadle"
+
+field Mood Shade
+	const
+	init .Light
+
+field Lucky int
+	const
+	init C.cstd.RAND_MAX / 2 + 1
+
+field Widths int[]
+	const
+	elements 1, 2, Rows, Cols * 2 - 1
+
+field Names StringView[]
+	const
+	elements "red", "green", "blue"
+
+function k0001 Twice
+	static
+	pure
+	returns int
+	doc "Takes its input by `in` (a reference): a constant wired to it passes its read-only global."
+param x int
+	mode in
+sheet body
+node e1 Entry
+node e2 Math
+	set expr "x * 2"
+node e3 Return
+wire e1.x e2.x
+wire e1.then e3.in
+wire e2.result e3.value
+
+function k0002 Run
+	static
+local sum int
+sheet body
+node a1 Entry
+node a2 Call Console.WriteLine(int)
+	in value Cells
+node a3 Get M2.Consts.Width
+node a4 Call Console.WriteLine(float)
+node a5 Get M2.Consts.Big
+node a6 Call Console.WriteLine(int)
+node a7 Get M2.Consts.Mask
+node a8 Call Console.WriteLine(int)
+node a9 Get M2.Consts.Wide
+node b1 Call Console.WriteLine(bool)
+node b2 Get M2.Consts.Half
+node b3 Call Console.WriteLine(double)
+node b4 Get M2.Consts.Title
+node b5 Call Console.WriteLine(StringView)
+node b6 Get M2.Consts.Mood
+node b7 IsCase M2.Shade.Light
+node b8 Call Console.WriteLine(bool)
+node b9 Call Console.WriteLine(int)
+	in value M2.Consts.Lucky
+node c1 Get Core.Math.TwoPi
+node c2 Call Console.WriteLine(double)
+node c3 Get M2.Consts.Widths
+node c4 ForEach
+node c5 Set local:sum
+	set op +=
+node c6 Get local:sum
+node c7 Call Console.WriteLine(int)
+node c8 Get M2.Consts.Widths
+node c9 Index
+	in index 3
+node d1 Call Console.WriteLine(int)
+node d2 Get M2.Consts.Names
+node d3 Get Span<StringView>.Length
+node d4 Call Console.WriteLine(int)
+node d5 Get M2.Consts.Names
+node d6 Index
+	in index 1
+node d7 Call Console.WriteLine(StringView)
+node d8 Get M2.Consts.Rows
+node d9 Call M2.Consts.Twice
+node f1 Call Console.WriteLine(int)
+node f2 Return
+wire a1.then a2.in
+wire a2.then a4.in
+wire a3.value a4.value
+wire a4.then a6.in
+wire a5.value a6.value
+wire a6.then a8.in
+wire a7.value a8.value
+wire a8.then b1.in
+wire a9.value b1.value
+wire b1.then b3.in
+wire b2.value b3.value
+wire b3.then b5.in
+wire b4.value b5.text
+wire b6.value b7.value
+wire b5.then b8.in
+wire b7.result b8.value
+wire b8.then b9.in
+wire b9.then c2.in
+wire c1.value c2.value
+wire c3.value c4.collection
+wire c2.then c4.in
+wire c4.body c5.in
+wire c4.element c5.value
+wire c4.done c7.in
+wire c6.value c7.value
+wire c8.value c9.collection
+wire c7.then d1.in
+wire c9.value d1.value
+wire d2.value d3.receiver
+wire d1.then d4.in
+wire d3.value d4.value
+wire d5.value d6.collection
+wire d4.then d7.in
+wire d6.value d7.text
+wire d8.value d9.x
+wire d7.then f1.in
+wire d9.result f1.value
+wire f1.then f2.in

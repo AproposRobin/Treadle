@@ -1,0 +1,9 @@
+# The same lines in Debug (every Delete through the vtable) and Release (Leaf: no call, Noisy and Owner:
+# their complete destructors directly, Base: through the vtable, which runs Derived's); no leaks.
+== exit
+0
+== stdout
+leaf 41
+~Noisy 1
+~Noisy 2
+~Derived

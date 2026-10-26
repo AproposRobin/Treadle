@@ -1,0 +1,287 @@
+# treadle 1
+type CollectionsMain class
+	namespace Cx
+	static
+	doc "Core HashSet<T> (Add, Contains, Remove, Count, For Each), Queue<T> (Enqueue, Dequeue, Peek, Count, growing while wrapped), Stack<T> (Push, Pop, Peek), List<T> Remove / AddRange / FindIndex / Find with a Lambda, Dictionary Keys / Values, String.Join."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Local HashSet<int>
+node a3 Call HashSet<int>.Add
+	in value 3
+node a4 Call HashSet<int>.Add
+	in value 5
+node a5 Call HashSet<int>.Add
+	in value 3
+node a6 Call Console.WriteLine(bool)
+node a7 Get HashSet<int>.Count
+node a8 Call Console.WriteLine(int)
+node a9 Call HashSet<int>.Contains
+	in value 5
+node b1 Call Console.WriteLine(bool)
+node b2 Call HashSet<int>.Remove
+	in value 3
+node b3 Call HashSet<int>.Remove
+	in value 3
+node b4 Local String
+node b5 Call String.AppendF
+	in format "{0} {1} {2}"
+node b6 Get HashSet<int>.Count
+node b7 Call Console.WriteLine(String)
+node c1 Local HashSet<StringView>
+node c2 Call HashSet<StringView>.Add
+	in value "pear"
+node c3 Call HashSet<StringView>.Add
+	in value "fig"
+node c4 Call HashSet<StringView>.Add
+	in value "pear"
+node c5 Local List<StringView>
+node c6 ForEach
+node c7 Call List<StringView>.Add
+node c8 Call List<StringView>.Sort
+node c9 Lambda
+	set type delegate:int(StringView,StringView)
+	set alloc local
+	set inputs a b
+node d1 Call String.Join
+	in separator ","
+node d2 Call Console.WriteLine(String)
+node d3 Delete
+node e1 Local Queue<int>
+node e2 For
+	in start 0
+	in count 6
+node e3 Call Queue<int>.Enqueue
+node e4 Call Queue<int>.Dequeue
+node e5 Call Queue<int>.Dequeue
+node e6 For
+	in start 6
+	in count 6
+node e7 Call Queue<int>.Enqueue
+node e8 Local String
+node e9 Get Queue<int>.Count
+node f1 Operator >
+	in b 0
+node f2 While
+node f3 Call Queue<int>.Dequeue
+node f4 Call String.Append(int)
+node f5 Call String.Append(char8)
+	in value 32
+node f6 Call Queue<int>.Peek
+node f7 Call Console.WriteLine(int)
+node f8 Call Console.WriteLine(String)
+node g1 Local Stack<int>
+node g2 For
+	in start 0
+	in count 6
+node g3 Call Stack<int>.Push
+node g4 Call Stack<int>.Pop
+node g5 Call Stack<int>.Peek
+node g6 Get Stack<int>.Count
+node g7 Local String
+node g8 Call String.AppendF
+	in format "{0} {1} {2}"
+node g9 Call Console.WriteLine(String)
+node h1 Local List<int>
+node h2 For
+	in start 1
+	in count 5
+node h3 Call List<int>.Add
+node h4 Call List<int>.AddRange
+node h5 Call List<int>.Remove
+	in value 3
+node h6 Lambda
+	set type delegate:bool(int)
+	set alloc local
+	set inputs x
+node h7 Call List<int>.FindIndex
+node h8 Call List<int>.Find
+node h9 Get List<int>.Count
+node i1 Local String
+node i2 Call String.AppendF
+	in format "{0} {1} {2} {3}"
+node i3 Call Console.WriteLine(String)
+node j1 Local Dictionary<int,int>
+node j2 Call Dictionary<int,int>.SetItem
+	in key 1
+	in value 10
+node j3 Call Dictionary<int,int>.SetItem
+	in key 2
+	in value 20
+node j4 Call Dictionary<int,int>.SetItem
+	in key 3
+	in value 30
+node j5 Call Dictionary<int,int>.Keys
+node j6 ForEach
+node j7 Call Console.Write(int)
+node j8 Call Dictionary<int,int>.Values
+node j9 ForEach
+node k1 Call Console.Write(int)
+node k2 Call Console.WriteLine()
+node k3 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.receiver
+wire a3.then a4.in
+wire a2.object a4.receiver
+wire a4.then a5.in
+wire a2.object a5.receiver
+wire a5.then a6.in
+wire a5.result a6.value
+wire a2.object a7.receiver
+wire a6.then a8.in
+wire a7.value a8.value
+wire a2.object a9.receiver
+wire a8.then b1.in
+wire a9.result b1.value
+wire b1.then b2.in
+wire a2.object b2.receiver
+wire b2.then b3.in
+wire a2.object b3.receiver
+wire b3.then b4.in
+wire b2.result b5.arg0
+wire b3.result b5.arg1
+wire b6.value b5.arg2
+wire b4.then b5.in
+wire b4.object b5.receiver
+wire a2.object b6.receiver
+wire b5.then b7.in
+wire b4.object b7.value
+wire b7.then c1.in
+wire c1.then c2.in
+wire c1.object c2.receiver
+wire c2.then c3.in
+wire c1.object c3.receiver
+wire c3.then c4.in
+wire c1.object c4.receiver
+wire c4.then c5.in
+wire c1.object c6.collection
+wire c5.then c6.in
+wire c6.body c7.in
+wire c5.object c7.receiver
+wire c6.element c7.value
+wire c9.value c8.comparer
+wire c9.then c8.in
+wire c5.object c8.receiver
+wire c6.done c9.in
+wire c8.then d1.in
+wire c5.object d1.parts
+wire d1.then d2.in
+wire d1.result d2.value
+wire d2.then d3.in
+wire d1.result d3.object
+wire d3.then e1.in
+wire e1.then e2.in
+wire e2.body e3.in
+wire e1.object e3.receiver
+wire e2.index e3.value
+wire e2.done e4.in
+wire e1.object e4.receiver
+wire e4.then e5.in
+wire e1.object e5.receiver
+wire e5.then e6.in
+wire e6.body e7.in
+wire e1.object e7.receiver
+wire e6.index e7.value
+wire e6.done e8.in
+wire e1.object e9.receiver
+wire e9.value f1.a
+wire f1.result f2.condition
+wire f7.then f2.in
+wire f2.body f3.in
+wire e1.object f3.receiver
+wire f3.then f4.in
+wire e8.object f4.receiver
+wire f3.result f4.value
+wire f4.then f5.in
+wire e8.object f5.receiver
+wire e1.object f6.receiver
+wire e8.then f7.in
+wire f6.result f7.value
+wire f2.done f8.in
+wire e8.object f8.value
+wire f8.then g1.in
+wire g1.then g2.in
+wire g2.body g3.in
+wire g1.object g3.receiver
+wire g2.index g3.value
+wire g2.done g4.in
+wire g1.object g4.receiver
+wire g1.object g5.receiver
+wire g1.object g6.receiver
+wire g4.then g7.in
+wire g4.result g8.arg0
+wire g5.result g8.arg1
+wire g6.value g8.arg2
+wire g7.then g8.in
+wire g7.object g8.receiver
+wire g8.then g9.in
+wire g7.object g9.value
+wire g9.then h1.in
+wire h1.then h2.in
+wire h2.body h3.in
+wire h1.object h3.receiver
+wire h2.index h3.value
+wire h2.done h4.in
+wire h1.object h4.other
+wire h1.object h4.receiver
+wire h4.then h5.in
+wire h1.object h5.receiver
+wire h5.then h6.in
+wire h6.then h7.in
+wire h6.value h7.match
+wire h1.object h7.receiver
+wire h7.then h8.in
+wire h6.value h8.match
+wire h1.object h8.receiver
+wire h1.object h9.receiver
+wire h8.then i1.in
+wire h9.value i2.arg0
+wire h5.result i2.arg1
+wire h7.result i2.arg2
+wire h8.item i2.arg3
+wire i1.then i2.in
+wire i1.object i2.receiver
+wire i2.then i3.in
+wire i1.object i3.value
+wire i3.then j1.in
+wire j1.then j2.in
+wire j1.object j2.receiver
+wire j2.then j3.in
+wire j1.object j3.receiver
+wire j3.then j4.in
+wire j1.object j4.receiver
+wire j4.then j5.in
+wire j1.object j5.receiver
+wire j5.result j6.collection
+wire j5.then j6.in
+wire j6.body j7.in
+wire j6.element j7.value
+wire j6.done j8.in
+wire j1.object j8.receiver
+wire j8.result j9.collection
+wire j8.then j9.in
+wire j9.body k1.in
+wire j9.element k1.value
+wire j9.done k2.in
+wire k2.then k3.in
+sheet lambda:c9
+node l1 Entry
+node l2 Call StringView.CompareTo
+node l3 Return
+wire l1.b l2.other
+wire l1.a l2.receiver
+wire l1.then l3.in
+wire l2.result l3.value
+sheet lambda:h6
+node n1 Entry
+node n2 Operator >
+	in b 3
+node n3 Return
+wire n1.x n2.a
+wire n1.then n3.in
+wire n2.result n3.value

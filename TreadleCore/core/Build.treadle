@@ -1,0 +1,21 @@
+# treadle 1
+type Build class
+	namespace Core
+	static
+	doc "What the project's config defines (the project file's `config` section, `define NAME` or `define NAME=value`): constants of the build, the same in every run of it (an optimised build drops the arm of a Branch the config never takes)."
+
+function b0001 IsDefined
+	static
+	pure
+	returns bool
+	attr Intrinsic Build.IsDefined
+	doc "True when the config being built has `define <name>`. The name is a text typed on the node (a constant), not a wire."
+param name StringView
+
+function b0002 Value
+	static
+	pure
+	returns StringView
+	attr Intrinsic Build.Value
+	doc "The value of `define <name>=<value>` in the config being built; empty for a bare `define <name>` or a name it does not define."
+param name StringView

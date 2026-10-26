@@ -1,0 +1,24 @@
+# treadle 1
+type Hash class
+	namespace Core
+	static
+	doc "Hashing and equality for any type, as the generic collections need them: numbers, characters, bools and simple enums by value; String, StringView and other IHashable / IEquatable types through their GetHashCode and Equals; other objects by identity."
+
+function h0001 Get
+	static
+	pure
+	returns int
+	generic T
+	attr Intrinsic Hash.Get
+	doc "The hash code of the value."
+param value T
+
+function h0002 Equal
+	static
+	pure
+	returns bool
+	generic T
+	attr Intrinsic Hash.Equal
+	doc "Whether the two values are equal (same text for strings)."
+param a T
+param b T

@@ -1,0 +1,6 @@
+# cimport 1
+import libc
+	header stdio.h
+	lib msvcrt
+	only printf
+	category "C / libc"

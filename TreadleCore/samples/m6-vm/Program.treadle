@@ -1,0 +1,758 @@
+# treadle 1
+type Program class
+	namespace Mini
+	static
+	doc "A small stack-based bytecode virtual machine for a tiny scripting language: lexer, parser, compiler, VM and disassembler. With no arguments it runs a built-in demo script; with a file name it runs that script; --disasm [file] prints the bytecode; --bench times fib(27) and a 10,000,000-iteration loop; --selftest runs the built-in test scripts and prints selftest ok or the first failure."
+
+field sTraceCount int
+	static
+	doc "How many times the trace subscriber was called."
+
+field sSteps int
+	static
+	doc "Instructions the last run executed."
+
+field sCodeSize int
+	static
+	doc "Instructions the last compile made."
+
+function m0001 CountStep
+	static
+	doc "The trace subscriber: counts the instructions it is told about."
+param index int
+param opcode int
+sheet body
+node x00000 Entry
+node x00001 Set this.sTraceCount
+	set op +=
+	in value 1
+node x00002 Return
+wire x00000.then x00001.in
+wire x00001.then x00002.in
+
+function m0002 Run
+	static
+	returns int
+	doc "Lexes, parses and compiles `source`, then runs it (or, with `disasm`, appends the bytecode listing instead of running). What the script prints goes to `output`, and so does an error, as `error: line L, column C: message`. Gives 0 when it ran, 1 for an error before running, 2 for a runtime error. With `trace`, a subscriber on the Vm's OnTrace event counts the instructions (sTraceCount)."
+param source StringView
+param output String
+param trace bool
+param disasm bool
+local root Mini.Ast
+sheet body
+node x01000 Entry
+node x01001 Local List<Mini.Token>
+node x01002 Local Mini.Lexer
+node x01003 Call Mini.Lexer.Tokenize
+node x01004 ResultMatch
+node x01005 Call String.Append(StringView)
+	in text "error: "
+node x01006 Call Mini.ScriptError.Describe
+node x01007 Call String.Append(char8)
+	in value 10
+node x01008 Return
+	in value 1
+node x01009 Local Mini.Parser
+node x0100a Call Mini.Parser.ParseProgram
+node x0100b ResultMatch
+node x0100c Set local:root
+node x0100d Call String.Append(StringView)
+	in text "error: "
+node x0100e Call Mini.ScriptError.Describe
+node x0100f Call String.Append(char8)
+	in value 10
+node x0100g Return
+	in value 1
+node x0100h Defer
+node x0100i Get local:root
+node x0100j Call Mini.Ast.Free
+node x0100k Local Mini.Chunk
+node x0100l Local Mini.Vm
+node x0100m Get Mini.Vm.mNatives
+node x0100n Local Mini.Compiler
+node x0100o Get local:root
+node x0100p Call Mini.Compiler.CompileProgram
+node x0100q ResultMatch
+node x0100r Set this.sCodeSize
+node x0100s Call String.Append(StringView)
+	in text "error: "
+node x0100t Call Mini.ScriptError.Describe
+node x0100u Call String.Append(char8)
+	in value 10
+node x0100v Return
+	in value 1
+node x0100w Branch
+node x0100x Call Mini.Disassembler.Disassemble
+node x0100y Return
+	in value 0
+node x0100z Branch
+node x01010 Set this.sTraceCount
+	in value 0
+node x01011 Bind Mini.Program.CountStep
+	set alloc construct
+node x01012 Call Mini.Vm.OnTrace.Add
+node x01013 Set Mini.Vm.mTrace
+	in value true
+node x01014 Call Mini.Vm.Run
+node x01015 Get Mini.Vm.mSteps
+node x01016 Set this.sSteps
+node x01017 ResultMatch
+node x01018 Call String.Append(StringView)
+	in text "error: "
+node x01019 Call Mini.ScriptError.Describe
+node x0101a Call String.Append(char8)
+	in value 10
+node x0101b Return
+	in value 2
+node x0101c Return
+	in value 0
+wire x01000.then x01001.in
+wire x01001.then x01002.in
+wire x01000.source x01002.text
+wire x01002.then x01003.in
+wire x01001.object x01003.into
+wire x01002.object x01003.receiver
+wire x01003.then x01004.in
+wire x01003.result x01004.result
+wire x01004.err x01005.in
+wire x01000.output x01005.receiver
+wire x01005.then x01006.in
+wire x01000.output x01006.into
+wire x01004.error x01006.receiver
+wire x01006.then x01007.in
+wire x01000.output x01007.receiver
+wire x01007.then x01008.in
+wire x01004.done x01009.in
+wire x01001.object x01009.tokens
+wire x01009.then x0100a.in
+wire x01009.object x0100a.receiver
+wire x0100a.then x0100b.in
+wire x0100a.result x0100b.result
+wire x0100b.ok x0100c.in
+wire x0100b.value x0100c.value
+wire x0100b.err x0100d.in
+wire x01000.output x0100d.receiver
+wire x0100d.then x0100e.in
+wire x01000.output x0100e.into
+wire x0100b.error x0100e.receiver
+wire x0100e.then x0100f.in
+wire x01000.output x0100f.receiver
+wire x0100f.then x0100g.in
+wire x0100b.done x0100h.in
+wire x0100h.deferred x0100j.in
+wire x0100i.value x0100j.node
+wire x0100h.done x0100k.in
+wire x0100k.object x0100l.chunk
+wire x0100k.then x0100l.in
+wire x01000.output x0100l.output
+wire x0100l.object x0100m.receiver
+wire x0100k.object x0100n.chunk
+wire x0100l.then x0100n.in
+wire x0100m.value x0100n.natives
+wire x0100n.then x0100p.in
+wire x0100n.object x0100p.receiver
+wire x0100o.value x0100p.root
+wire x0100p.then x0100q.in
+wire x0100p.result x0100q.result
+wire x0100q.ok x0100r.in
+wire x0100q.value x0100r.value
+wire x0100q.err x0100s.in
+wire x01000.output x0100s.receiver
+wire x0100s.then x0100t.in
+wire x01000.output x0100t.into
+wire x0100q.error x0100t.receiver
+wire x0100t.then x0100u.in
+wire x01000.output x0100u.receiver
+wire x0100u.then x0100v.in
+wire x01000.disasm x0100w.condition
+wire x0100q.done x0100w.in
+wire x0100k.object x0100x.chunk
+wire x0100w.true x0100x.in
+wire x01000.output x0100x.into
+wire x0100x.then x0100y.in
+wire x01000.trace x0100z.condition
+wire x0100w.false x0100z.in
+wire x0100z.true x01010.in
+wire x01010.then x01011.in
+wire x01011.value x01012.handler
+wire x01011.then x01012.in
+wire x0100l.object x01012.receiver
+wire x01012.then x01013.in
+wire x0100l.object x01013.receiver
+wire x0100z.false x01014.in
+wire x01013.then x01014.in
+wire x0100l.object x01014.receiver
+wire x0100l.object x01015.receiver
+wire x01014.then x01016.in
+wire x01015.value x01016.value
+wire x01016.then x01017.in
+wire x01014.result x01017.result
+wire x01017.err x01018.in
+wire x01000.output x01018.receiver
+wire x01018.then x01019.in
+wire x01000.output x01019.into
+wire x01017.error x01019.receiver
+wire x01019.then x0101a.in
+wire x01000.output x0101a.receiver
+wire x0101a.then x0101b.in
+wire x01017.done x0101c.in
+
+function m0003 Demo
+	static
+	pure
+	returns StringView
+	doc "The built-in demo script."
+sheet body
+node x02000 Entry
+node x02001 Return
+	in value "# The demo script: run with no arguments, or disassembled by --disasm.\nfn fib(n) {\n  if n < 2 { return n; }\n  return fib(n - 1) + fib(n - 2);\n}\nfn apply(f, x) { return f(x); }\nfn square(x) { return x * x; }\nlet i = 0;\nwhile i < 10 {\n  print(\"fib(\" + str(i) + \") =\", fib(i), \"square:\", apply(square, i));\n  i = i + 1;\n}\nprint(\"done after\", i, \"rounds;\", 7 / 2, 7.0 / 2, 7 % 3 == 1 && !false);\n"
+wire x02000.then x02001.in
+
+function m0004 RunAndPrint
+	static
+	returns int
+	doc "Runs (or disassembles) a script and prints what it printed; gives Run's code."
+param source StringView
+param disasm bool
+local code int
+sheet body
+node x03000 Entry
+node x03001 Local String
+node x03002 Call this.Run
+	in trace false
+node x03003 Set local:code
+node x03004 Call Console.Write(String)
+node x03005 Get local:code
+node x03006 Return
+wire x03000.then x03001.in
+wire x03000.disasm x03002.disasm
+wire x03001.then x03002.in
+wire x03001.object x03002.output
+wire x03000.source x03002.source
+wire x03002.then x03003.in
+wire x03002.result x03003.value
+wire x03003.then x03004.in
+wire x03001.object x03004.value
+wire x03004.then x03006.in
+wire x03005.value x03006.value
+
+function m0005 RunFile
+	static
+	returns int
+	doc "Reads a script file and runs or disassembles it; 3 when it cannot be read."
+param path StringView
+param disasm bool
+sheet body
+node x04000 Entry
+node x04001 Local String
+node x04002 Call File.ReadAllText
+node x04003 Operator !
+node x04004 Branch
+node x04005 Local String
+node x04006 Call String.AppendF
+	in format "cannot read {0}"
+node x04007 Call Console.ErrorLine
+node x04008 Return
+	in value 3
+node x04009 Call this.RunAndPrint
+node x0400a Return
+wire x04000.then x04001.in
+wire x04001.then x04002.in
+wire x04001.object x04002.into
+wire x04000.path x04002.path
+wire x04002.result x04003.a
+wire x04003.result x04004.condition
+wire x04002.then x04004.in
+wire x04004.true x04005.in
+wire x04000.path x04006.arg0
+wire x04005.then x04006.in
+wire x04005.object x04006.receiver
+wire x04006.then x04007.in
+wire x04005.object x04007.text
+wire x04007.then x04008.in
+wire x04000.disasm x04009.disasm
+wire x04004.false x04009.in
+wire x04001.object x04009.source
+wire x04009.then x0400a.in
+wire x04009.result x0400a.value
+
+function m0006 Check
+	static
+	returns bool
+	doc "Runs one test script and compares what it printed with `expected`; prints the difference and gives false when they differ."
+param name StringView
+param source StringView
+param expected StringView
+sheet body
+node x05000 Entry
+node x05001 Local String
+node x05002 Call this.Run
+	in trace false
+	in disasm false
+node x05003 Call String.Equals
+node x05004 Branch
+node x05005 Return
+	in value true
+node x05006 Local String
+node x05007 Call String.AppendF
+	in format "selftest failed: {0}\n--- got:\n{1}--- expected:\n{2}"
+node x05008 Call Console.Write(String)
+node x05009 Return
+	in value false
+wire x05000.then x05001.in
+wire x05001.then x05002.in
+wire x05001.object x05002.output
+wire x05000.source x05002.source
+wire x05000.expected x05003.other
+wire x05001.object x05003.receiver
+wire x05003.result x05004.condition
+wire x05002.then x05004.in
+wire x05004.true x05005.in
+wire x05004.false x05006.in
+wire x05000.name x05007.arg0
+wire x05001.object x05007.arg1
+wire x05000.expected x05007.arg2
+wire x05006.then x05007.in
+wire x05006.object x05007.receiver
+wire x05007.then x05008.in
+wire x05006.object x05008.value
+wire x05008.then x05009.in
+
+function m0007 CheckTrace
+	static
+	returns bool
+	doc "The trace test: a script of 8 instructions run with a subscriber on OnTrace, which must be called once per instruction."
+sheet body
+node x06000 Entry
+node x06001 Local String
+node x06002 Call this.Run
+	in source "let x = 1 + 2;\nprint(x);\n"
+	in trace true
+	in disasm false
+node x06003 Call String.Equals
+	in other "3\n"
+node x06004 Get this.sTraceCount
+node x06005 Get this.sSteps
+node x06006 Operator ==
+node x06007 Operator &&
+node x06008 Get this.sTraceCount
+node x06009 Operator ==
+	in b 8
+node x0600a Operator &&
+node x0600b Branch
+node x0600c Return
+	in value true
+node x0600d Local String
+node x0600e Get this.sTraceCount
+node x0600f Get this.sSteps
+node x0600g Call String.AppendF
+	in format "selftest failed: trace count: {0} calls, {1} instructions, output {2}"
+node x0600h Call Console.WriteLine(String)
+node x0600i Return
+	in value false
+wire x06000.then x06001.in
+wire x06001.then x06002.in
+wire x06001.object x06002.output
+wire x06001.object x06003.receiver
+wire x06004.value x06006.a
+wire x06005.value x06006.b
+wire x06003.result x06007.a
+wire x06006.result x06007.b
+wire x06008.value x06009.a
+wire x06007.result x0600a.a
+wire x06009.result x0600a.b
+wire x0600a.result x0600b.condition
+wire x06002.then x0600b.in
+wire x0600b.true x0600c.in
+wire x0600b.false x0600d.in
+wire x0600e.value x0600g.arg0
+wire x0600f.value x0600g.arg1
+wire x06001.object x0600g.arg2
+wire x0600d.then x0600g.in
+wire x0600d.object x0600g.receiver
+wire x0600g.then x0600h.in
+wire x0600d.object x0600h.value
+wire x0600h.then x0600i.in
+
+function m0008 CheckLarge
+	static
+	returns bool
+	doc "The large test: a generated script of 12,500 assignments (50,000 instructions and more), which must compile and count to 12500."
+sheet body
+node x07000 Entry
+node x07001 Local String
+node x07002 Call String.Append(StringView)
+	in text "let x = 0;\n"
+node x07003 For
+	in start 0
+	in count 12500
+node x07004 Call String.Append(StringView)
+	in text "x = x + 1;\n"
+node x07005 Call String.Append(StringView)
+	in text "print(x);\n"
+node x07006 Local String
+node x07007 Call this.Run
+	in trace false
+	in disasm false
+node x07008 Call String.Equals
+	in other "12500\n"
+node x07009 Get this.sCodeSize
+node x0700a Operator >=
+	in b 50000
+node x0700b Operator &&
+node x0700c Branch
+node x0700d Return
+	in value true
+node x0700e Local String
+node x0700f Get this.sCodeSize
+node x0700g Call String.AppendF
+	in format "selftest failed: large script: {0} instructions, output {1}"
+node x0700h Call Console.WriteLine(String)
+node x0700i Return
+	in value false
+wire x07000.then x07001.in
+wire x07001.then x07002.in
+wire x07001.object x07002.receiver
+wire x07002.then x07003.in
+wire x07003.body x07004.in
+wire x07001.object x07004.receiver
+wire x07003.done x07005.in
+wire x07001.object x07005.receiver
+wire x07005.then x07006.in
+wire x07006.then x07007.in
+wire x07006.object x07007.output
+wire x07001.object x07007.source
+wire x07006.object x07008.receiver
+wire x07009.value x0700a.a
+wire x07008.result x0700b.a
+wire x0700a.result x0700b.b
+wire x0700b.result x0700c.condition
+wire x07007.then x0700c.in
+wire x0700c.true x0700d.in
+wire x0700c.false x0700e.in
+wire x0700f.value x0700g.arg0
+wire x07006.object x0700g.arg1
+wire x0700e.then x0700g.in
+wire x0700e.object x0700g.receiver
+wire x0700g.then x0700h.in
+wire x0700e.object x0700h.value
+wire x0700h.then x0700i.in
+
+function m0009 SelfTest
+	static
+	returns int
+	doc "Runs the 13 test scripts; prints selftest ok and gives 0, or prints the first failure and gives 1."
+sheet body
+node x08000 Entry
+node x08001 Call this.Check
+	in name "arithmetic"
+	in source "print(1 + 2 * 3, 10 - 4 - 3, 7 / 2, 7 % 3, -5 + 2, 7.0 / 2.0, 2 * (3 + 4));\n"
+	in expected "7 3 3 1 -3 3.5 14\n"
+node x08002 Operator !
+node x08003 Branch
+node x08004 Return
+	in value 1
+node x08005 Call this.Check
+	in name "precedence"
+	in source "print(1 + 2 == 3, 2 < 1 || 3 >= 3 && !false, 1 < 2 == true, !(1 == 1), -2 * -3);\n"
+	in expected "true true true false 6\n"
+node x08006 Operator !
+node x08007 Branch
+node x08008 Return
+	in value 1
+node x08009 Call this.Check
+	in name "strings"
+	in source "let s = \"ab\" + \"cd\";\nprint(s, len(s), str(42) + \"!\", \"n=\" + 5, s == \"abcd\", s != \"ab\");\n"
+	in expected "abcd 4 42! n=5 true true\n"
+node x0800a Operator !
+node x0800b Branch
+node x0800c Return
+	in value 1
+node x0800d Call this.Check
+	in name "locals and globals"
+	in source "let g = 10;\nfn f(x) { let g = x * 2; return g + 1; }\nprint(f(5), g);\ng = g + 1;\nprint(g);\n"
+	in expected "11 10\n11\n"
+node x0800e Operator !
+node x0800f Branch
+node x0800g Return
+	in value 1
+node x0800h Call this.Check
+	in name "if and while"
+	in source "let i = 0;\nlet s = 0;\nwhile i < 10 {\n  i = i + 1;\n  if i % 2 == 0 { s = s + i; } else if i == 5 { s = s + 100; } else { s = s - 1; }\n}\nprint(i, s);\n"
+	in expected "10 126\n"
+node x0800i Operator !
+node x0800j Branch
+node x0800k Return
+	in value 1
+node x0800l Call this.Check
+	in name "functions and recursion"
+	in source "fn fib(n) { if n < 2 { return n; } return fib(n - 1) + fib(n - 2); }\nfn fact(n) { if n <= 1 { return 1; } return n * fact(n - 1); }\nfn nothing() { }\nprint(fib(15), fact(10), nothing());\n"
+	in expected "610 3628800 nil\n"
+node x0800m Operator !
+node x0800n Branch
+node x0800o Return
+	in value 1
+node x0800p Call this.Check
+	in name "functions as values"
+	in source "fn twice(f, x) { return f(f(x)); }\nfn inc(x) { return x + 1; }\nfn sq(x) { return x * x; }\nlet h = sq;\nprint(twice(inc, 5), twice(sq, 3), h(7), twice);\n"
+	in expected "7 81 49 <fn 0>\n"
+node x0800q Operator !
+node x0800r Branch
+node x0800s Return
+	in value 1
+node x0800t Call this.Check
+	in name "runtime error: operands"
+	in source "let a = 1;\nprint(a + \"x\");\nprint(a * \"x\");\nprint(\"not reached\");\n"
+	in expected "1x\nerror: line 3, column 9: operands must be numbers\n"
+node x0800u Operator !
+node x0800v Branch
+node x0800w Return
+	in value 1
+node x0800x Call this.Check
+	in name "runtime error: names and calls"
+	in source "fn f() {\n  return y + 1;\n}\nprint(f());\n"
+	in expected "error: line 2, column 10: undefined variable 'y'\n"
+node x0800y Operator !
+node x0800z Branch
+node x08010 Return
+	in value 1
+node x08011 Call this.Check
+	in name "lexer error"
+	in source "let a = 3;\nlet b = a $ 2;\n"
+	in expected "error: line 2, column 11: unexpected character '$'\n"
+node x08012 Operator !
+node x08013 Branch
+node x08014 Return
+	in value 1
+node x08015 Call this.Check
+	in name "parser error"
+	in source "let x = (1 + 2;\n"
+	in expected "error: line 1, column 15: expected ')'\n"
+node x08016 Operator !
+node x08017 Branch
+node x08018 Return
+	in value 1
+node x08019 Call this.CheckTrace
+node x0801a Operator !
+node x0801b Branch
+node x0801c Return
+	in value 1
+node x0801d Call this.CheckLarge
+node x0801e Operator !
+node x0801f Branch
+node x0801g Return
+	in value 1
+node x0801h Call Console.WriteLine(StringView)
+	in text "selftest ok"
+node x0801i Return
+	in value 0
+wire x08000.then x08001.in
+wire x08001.result x08002.a
+wire x08002.result x08003.condition
+wire x08001.then x08003.in
+wire x08003.true x08004.in
+wire x08003.false x08005.in
+wire x08005.result x08006.a
+wire x08006.result x08007.condition
+wire x08005.then x08007.in
+wire x08007.true x08008.in
+wire x08007.false x08009.in
+wire x08009.result x0800a.a
+wire x0800a.result x0800b.condition
+wire x08009.then x0800b.in
+wire x0800b.true x0800c.in
+wire x0800b.false x0800d.in
+wire x0800d.result x0800e.a
+wire x0800e.result x0800f.condition
+wire x0800d.then x0800f.in
+wire x0800f.true x0800g.in
+wire x0800f.false x0800h.in
+wire x0800h.result x0800i.a
+wire x0800i.result x0800j.condition
+wire x0800h.then x0800j.in
+wire x0800j.true x0800k.in
+wire x0800j.false x0800l.in
+wire x0800l.result x0800m.a
+wire x0800m.result x0800n.condition
+wire x0800l.then x0800n.in
+wire x0800n.true x0800o.in
+wire x0800n.false x0800p.in
+wire x0800p.result x0800q.a
+wire x0800q.result x0800r.condition
+wire x0800p.then x0800r.in
+wire x0800r.true x0800s.in
+wire x0800r.false x0800t.in
+wire x0800t.result x0800u.a
+wire x0800u.result x0800v.condition
+wire x0800t.then x0800v.in
+wire x0800v.true x0800w.in
+wire x0800v.false x0800x.in
+wire x0800x.result x0800y.a
+wire x0800y.result x0800z.condition
+wire x0800x.then x0800z.in
+wire x0800z.true x08010.in
+wire x0800z.false x08011.in
+wire x08011.result x08012.a
+wire x08012.result x08013.condition
+wire x08011.then x08013.in
+wire x08013.true x08014.in
+wire x08013.false x08015.in
+wire x08015.result x08016.a
+wire x08016.result x08017.condition
+wire x08015.then x08017.in
+wire x08017.true x08018.in
+wire x08017.false x08019.in
+wire x08019.result x0801a.a
+wire x0801a.result x0801b.condition
+wire x08019.then x0801b.in
+wire x0801b.true x0801c.in
+wire x0801b.false x0801d.in
+wire x0801d.result x0801e.a
+wire x0801e.result x0801f.condition
+wire x0801d.then x0801f.in
+wire x0801f.true x0801g.in
+wire x0801f.false x0801h.in
+wire x0801h.then x0801i.in
+
+function m0010 Time
+	static
+	doc "Runs one benchmark script and prints its result and how long it took."
+param name StringView
+param source StringView
+sheet body
+node x09000 Entry
+node x09001 Local String
+node x09002 Local Stopwatch
+	set ctor (bool)
+	in startNow true
+node x09003 Call this.Run
+	in trace false
+	in disasm false
+node x09004 Call Stopwatch.Stop
+node x09005 Call Stopwatch.ElapsedMilliseconds
+node x09006 Local String
+node x09007 Cast int
+node x09008 Call String.View
+node x09009 Call StringView.Trim
+node x0900a Get this.sSteps
+node x0900b Call String.AppendF
+	in format "{0}: {1} ms (result {2}, {3} instructions run)"
+node x0900c Call Console.WriteLine(String)
+node x0900d Return
+wire x09000.then x09001.in
+wire x09001.then x09002.in
+wire x09002.then x09003.in
+wire x09001.object x09003.output
+wire x09000.source x09003.source
+wire x09003.then x09004.in
+wire x09002.object x09004.receiver
+wire x09004.then x09005.in
+wire x09002.object x09005.receiver
+wire x09005.then x09006.in
+wire x09005.result x09007.value
+wire x09001.object x09008.receiver
+wire x09008.result x09009.receiver
+wire x09000.name x0900b.arg0
+wire x09007.result x0900b.arg1
+wire x09009.result x0900b.arg2
+wire x0900a.value x0900b.arg3
+wire x09006.then x0900b.in
+wire x09006.object x0900b.receiver
+wire x0900b.then x0900c.in
+wire x09006.object x0900c.value
+wire x0900c.then x0900d.in
+
+function m0011 Bench
+	static
+	returns int
+	doc "Times fib(27), recursive, and a loop of 10,000,000 iterations in the VM."
+sheet body
+node x0a000 Entry
+node x0a001 Call this.Time
+	in name "fib(27)"
+	in source "fn fib(n) { if n < 2 { return n; } return fib(n - 1) + fib(n - 2); }\nprint(fib(27));\n"
+node x0a002 Call this.Time
+	in name "loop 10M"
+	in source "fn count(n) {\n  let i = 0;\n  let sum = 0;\n  while i < n { sum = sum + i; i = i + 1; }\n  return sum;\n}\nprint(count(10000000));\n"
+node x0a003 Return
+	in value 0
+wire x0a000.then x0a001.in
+wire x0a001.then x0a002.in
+wire x0a002.then x0a003.in
+
+function m0012 Main
+	static
+	returns int
+	doc "No arguments: the demo script. A file name: that script. --disasm [file], --bench, --selftest."
+param args String[]
+sheet body
+node x0b000 Entry
+node x0b001 Get String[].Length
+node x0b002 Operator ==
+	in b 0
+node x0b003 Branch
+node x0b004 Call this.Demo
+node x0b005 Call this.RunAndPrint
+	in disasm false
+node x0b006 Return
+node x0b007 Index
+	in index 0
+node x0b008 Switch
+	case --selftest
+	case --bench
+	case --disasm
+node x0b009 Call this.SelfTest
+node x0b00a Return
+node x0b00b Call this.Bench
+node x0b00c Return
+node x0b00d Operator >
+	in b 1
+node x0b00e Branch
+node x0b00f Index
+	in index 1
+node x0b00g Call this.RunFile
+	in disasm true
+node x0b00h Return
+node x0b00i Call this.Demo
+node x0b00j Call this.RunAndPrint
+	in disasm true
+node x0b00k Return
+node x0b00l Index
+	in index 0
+node x0b00m Call this.RunFile
+	in disasm false
+node x0b00n Return
+wire x0b000.args x0b001.receiver
+wire x0b001.value x0b002.a
+wire x0b002.result x0b003.condition
+wire x0b000.then x0b003.in
+wire x0b003.true x0b005.in
+wire x0b004.result x0b005.source
+wire x0b005.then x0b006.in
+wire x0b005.result x0b006.value
+wire x0b000.args x0b007.collection
+wire x0b003.false x0b008.in
+wire x0b007.value x0b008.value
+wire x0b008.case:--selftest x0b009.in
+wire x0b009.then x0b00a.in
+wire x0b009.result x0b00a.value
+wire x0b008.case:--bench x0b00b.in
+wire x0b00b.then x0b00c.in
+wire x0b00b.result x0b00c.value
+wire x0b001.value x0b00d.a
+wire x0b00d.result x0b00e.condition
+wire x0b008.case:--disasm x0b00e.in
+wire x0b000.args x0b00f.collection
+wire x0b00e.true x0b00g.in
+wire x0b00f.value x0b00g.path
+wire x0b00g.then x0b00h.in
+wire x0b00g.result x0b00h.value
+wire x0b00e.false x0b00j.in
+wire x0b00i.result x0b00j.source
+wire x0b00j.then x0b00k.in
+wire x0b00j.result x0b00k.value
+wire x0b000.args x0b00l.collection
+wire x0b008.done x0b00m.in
+wire x0b00l.value x0b00m.path
+wire x0b00m.then x0b00n.in
+wire x0b00m.result x0b00n.value

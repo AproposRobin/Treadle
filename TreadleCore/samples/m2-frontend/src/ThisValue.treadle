@@ -1,0 +1,130 @@
+# treadle 1
+type ThisValue struct
+	namespace M2
+	doc "This of a struct is the receiver's place: an input that takes the struct by value gets a copy (Dot, Return), a ref input gets the place itself (Grow). Run prints 25, 3, 4 and 5."
+
+field mX int
+
+field mY int
+
+function t0001 Dot
+	static
+	pure
+	returns int
+	doc "a.x * b.x + a.y * b.y."
+param a ThisValue
+param b ThisValue
+sheet body
+node a1 Entry
+node a2 Math
+	set expr "a.mX * b.mX + a.mY * b.mY"
+node a3 Return
+wire a1.a a2.a
+wire a1.b a2.b
+wire a1.then a3.in
+wire a2.result a3.value
+
+function t0002 Grow
+	static
+	doc "Adds 1 to both fields of the struct the caller passes by ref."
+param p ThisValue
+	mode ref
+sheet body
+node b1 Entry
+node b2 Break M2.ThisValue
+node b3 Make M2.ThisValue
+node b4 Math
+	set expr "x + 1"
+node b5 Math
+	set expr "y + 1"
+node b6 Set param:p
+node b7 Return
+wire b1.p b2.value
+wire b4.result b3.mX
+wire b5.result b3.mY
+wire b2.mX b4.x
+wire b2.mY b5.y
+wire b1.then b6.in
+wire b3.value b6.value
+wire b6.then b7.in
+
+function t0003 SelfDot
+	pure
+	returns int
+	doc "Dot of this with itself: This by value into both inputs."
+sheet body
+node c1 Entry
+node c2 This
+node c3 Call M2.ThisValue.Dot
+node c4 Return
+wire c2.value c3.a
+wire c2.value c3.b
+wire c1.then c4.in
+wire c3.result c4.value
+
+function t0004 Copied
+	pure
+	returns ThisValue
+	doc "A copy of this."
+sheet body
+node d1 Entry
+node d2 This
+node d3 Return
+wire d1.then d3.in
+wire d2.value d3.value
+
+function t0005 GrowSelf
+	mutating
+	doc "Grow on this by ref: the receiver's place changes."
+sheet body
+node e1 Entry
+node e2 This
+node e3 Call M2.ThisValue.Grow
+node e4 Return
+wire e1.then e3.in
+wire e2.value e3.p
+wire e3.then e4.in
+
+function t0006 Run
+	static
+local v ThisValue
+sheet body
+node f1 Entry
+node f10 Call Console.WriteLine(int)
+node f11 Get local:v
+node f12 Call M2.ThisValue.GrowSelf
+node f13 Get local:v
+node f14 Break M2.ThisValue
+node f15 Call Console.WriteLine(int)
+node f16 Get local:v
+node f17 Break M2.ThisValue
+node f18 Call Console.WriteLine(int)
+node f19 Return
+node f2 Make M2.ThisValue
+	in mX 3
+	in mY 4
+node f3 Set local:v
+node f4 Get local:v
+node f5 Call M2.ThisValue.SelfDot
+node f6 Call Console.WriteLine(int)
+node f7 Get local:v
+node f8 Call M2.ThisValue.Copied
+node f9 Break M2.ThisValue
+wire f6.then f10.in
+wire f9.mX f10.value
+wire f10.then f12.in
+wire f11.value f12.receiver
+wire f13.value f14.value
+wire f12.then f15.in
+wire f14.mX f15.value
+wire f16.value f17.value
+wire f15.then f18.in
+wire f17.mY f18.value
+wire f18.then f19.in
+wire f1.then f3.in
+wire f2.value f3.value
+wire f4.value f5.receiver
+wire f3.then f6.in
+wire f5.result f6.value
+wire f7.value f8.receiver
+wire f8.result f9.value

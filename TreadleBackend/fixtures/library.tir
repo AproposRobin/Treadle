@@ -1,0 +1,64 @@
+# tir 1
+# kind library: a DLL (Linux: lib<name>.so) with no entry, exporting its [Export] functions under
+# their C names and treadle_init / treadle_shutdown, nothing else. library.host.c, compiled by the
+# same clang against the import library (or the .so), calls treadle_init (the static constructor sets
+# sBase), the two exports (a scalar one and one taking and returning an 8-byte struct, the C ABI),
+# then treadle_shutdown: in Debug the leak report names the object kl_keep made and returns 1.
+program Library library
+
+unit Kl.Lib
+type Kl.P2 struct
+	field x int32
+	field y int32
+type Kl.Box class
+	field mValue int32
+type Kl.Lib class
+
+global Kl.Lib.sBase int32
+
+func Kl.Lib.$sctor() void sctor sheet "s1" display "Kl.Lib.$sctor"
+	node a1 Entry
+	node a2 Set this.sBase
+	block b0
+		%v = const int32 100 @a2.value
+		%g = global.addr int32* Kl.Lib.sBase @a2
+		store %g %v @a2
+		ret @a2
+
+func Kl.Lib.Add(int32,int32) int32 static export "kl_add" sheet "f1" display "Kl.Lib.Add"
+	param a int32
+	param b int32
+	node a1 Entry
+	node a2 Add
+	block b0
+		%g = global.addr int32* Kl.Lib.sBase @a2
+		%base = load int32 %g @a2
+		%s1 = binop int32 add %a %b @a2
+		%s = binop int32 add %s1 %base @a2
+		ret %s @a2
+
+func Kl.Lib.Flip(Kl.P2,int32) Kl.P2 static export "kl_flip" sheet "f2" display "Kl.Lib.Flip"
+	param p Kl.P2
+	param k int32
+	node a1 Entry
+	node a2 Make Kl.P2
+	block b0
+		%x = extract int32 %p 0 @a2
+		%y = extract int32 %p 1 @a2
+		%yk = binop int32 mul %y %k @a2
+		%r = make Kl.P2 %yk %x @a2
+		ret %r @a2
+
+func Kl.Lib.Keep() void static export "kl_keep" sheet "f3" display "Kl.Lib.Keep"
+	node a1 Entry
+	node a2 Construct Kl.Box
+	block b0
+		%o = alloc Kl.Box @a2
+		ret @a2
+
+func Kl.Lib.Hidden() int32 static sheet "f4" display "Kl.Lib.Hidden"
+	node a1 Entry
+	node a2 Return
+	block b0
+		%z = const int32 7 @a2
+		ret %z @a2

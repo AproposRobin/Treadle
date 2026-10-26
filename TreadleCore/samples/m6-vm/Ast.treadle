@@ -1,0 +1,159 @@
+# treadle 1
+type Ast enum
+	namespace Mini
+	doc "One node of the syntax tree. A node owns its `kids` List (and a Func its `params` List), and through them its children: Free(node) deletes all of it, children first. Texts and names are views of the script, so the script must live as long as the tree. pos is line * 65536 + column."
+
+case Int
+	payload value int
+	doc "A whole-number literal."
+
+case Float
+	payload value double
+	doc "A number literal with a fraction."
+
+case Str
+	payload text StringView
+	doc "A text literal."
+
+case Bool
+	payload value bool
+	doc "true or false."
+
+case Name
+	payload text StringView
+	payload pos int
+	doc "A variable or function name."
+
+case Unary
+	payload op int
+	payload pos int
+	payload kids List<Mini.Ast>
+	doc "- or ! (op 45 or 33) on kids[0]."
+
+case Binary
+	payload op int
+	payload pos int
+	payload kids List<Mini.Ast>
+	doc "kids[0] op kids[1]; op is the token code (43 for +, 256 for ==, ...)."
+
+case Call
+	payload pos int
+	payload kids List<Mini.Ast>
+	doc "A call: kids[0] is the function, the rest are the arguments."
+
+case Let
+	payload name StringView
+	payload pos int
+	payload kids List<Mini.Ast>
+	doc "let name = kids[0];"
+
+case Assign
+	payload name StringView
+	payload pos int
+	payload kids List<Mini.Ast>
+	doc "name = kids[0];"
+
+case If
+	payload kids List<Mini.Ast>
+	doc "if kids[0] kids[1] (else kids[2])."
+
+case While
+	payload kids List<Mini.Ast>
+	doc "while kids[0] kids[1]."
+
+case Block
+	payload kids List<Mini.Ast>
+	doc "{ statements }, also the whole script."
+
+case Func
+	payload name StringView
+	payload pos int
+	payload params List<StringView>
+	payload kids List<Mini.Ast>
+	doc "fn name(params) kids[0]."
+
+case Return
+	payload pos int
+	payload kids List<Mini.Ast>
+	doc "return; or return kids[0];"
+
+case Expr
+	payload kids List<Mini.Ast>
+	doc "An expression used as a statement: kids[0];."
+
+function m0001 FreeAll
+	static
+	doc "Frees every node of `list`, then the List itself."
+param list List<Mini.Ast>
+sheet body
+node x00000 Entry
+node x00001 ForEach
+node x00002 Call Mini.Ast.Free
+node x00003 Delete
+node x00004 Return
+wire x00000.list x00001.collection
+wire x00000.then x00001.in
+wire x00001.body x00002.in
+wire x00001.element x00002.node
+wire x00001.done x00003.in
+wire x00000.list x00003.object
+wire x00003.then x00004.in
+
+function m0002 Free
+	static
+	doc "Deletes what `node` owns: its kids (each freed first) and, for a Func, its parameter list. Literals and names own nothing. Call it once, on the owner (the root)."
+param node Mini.Ast
+sheet body
+node x01000 Entry
+node x01001 Switch
+	case Unary
+	case Binary
+	case Call
+	case Let
+	case Assign
+	case If
+	case While
+	case Block
+	case Return
+	case Expr
+	case Func
+node x01002 Call Mini.Ast.FreeAll
+node x01003 Call Mini.Ast.FreeAll
+node x01004 Call Mini.Ast.FreeAll
+node x01005 Call Mini.Ast.FreeAll
+node x01006 Call Mini.Ast.FreeAll
+node x01007 Call Mini.Ast.FreeAll
+node x01008 Call Mini.Ast.FreeAll
+node x01009 Call Mini.Ast.FreeAll
+node x0100a Call Mini.Ast.FreeAll
+node x0100b Call Mini.Ast.FreeAll
+node x0100c Call Mini.Ast.FreeAll
+node x0100d Delete
+node x0100e Return
+wire x01000.then x01001.in
+wire x01000.node x01001.value
+wire x01001.case:Unary x01002.in
+wire x01001.case:Unary.kids x01002.list
+wire x01001.case:Binary x01003.in
+wire x01001.case:Binary.kids x01003.list
+wire x01001.case:Call x01004.in
+wire x01001.case:Call.kids x01004.list
+wire x01001.case:Let x01005.in
+wire x01001.case:Let.kids x01005.list
+wire x01001.case:Assign x01006.in
+wire x01001.case:Assign.kids x01006.list
+wire x01001.case:If x01007.in
+wire x01001.case:If.kids x01007.list
+wire x01001.case:While x01008.in
+wire x01001.case:While.kids x01008.list
+wire x01001.case:Block x01009.in
+wire x01001.case:Block.kids x01009.list
+wire x01001.case:Return x0100a.in
+wire x01001.case:Return.kids x0100a.list
+wire x01001.case:Expr x0100b.in
+wire x01001.case:Expr.kids x0100b.list
+wire x01001.case:Func x0100c.in
+wire x01001.case:Func.kids x0100c.list
+wire x0100c.then x0100d.in
+wire x01001.case:Func.params x0100d.object
+wire x01001.done x0100e.in

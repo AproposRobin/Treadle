@@ -1,0 +1,5 @@
+# treadle 1
+type ClickHandler delegate
+	namespace M2
+	signature void(int)
+	doc "The handlers of Button.OnClick: an int in, nothing out."

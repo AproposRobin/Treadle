@@ -1,0 +1,58 @@
+# treadle 1
+type ArgsMain class
+	namespace Cx
+	static
+	doc "Core Environment: ArgCount and GetArg give the same command line as Main(String[] args)."
+
+function m1 Main
+	static
+	returns int
+param args String[]
+sheet body
+node a1 Entry
+node a2 Call Environment.ArgCount
+node a3 Call Console.WriteLine(int)
+node a4 Get String[].Length
+node a5 Operator ==
+node a6 Call Console.WriteLine(bool)
+node a7 For
+	in start 0
+node a8 Call Environment.GetArg
+node a9 Index
+node b1 Call String.Equals
+node b2 Call Console.Write(StringView)
+node b3 Call Console.Write(StringView)
+	in text " "
+node b4 Call Console.WriteLine(bool)
+node b5 Call Environment.GetArg
+	in index 99
+node b6 Call StringView.IsEmpty
+node b7 Call Console.WriteLine(bool)
+node b8 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.result a3.value
+wire a1.args a4.receiver
+wire a4.value a5.a
+wire a2.result a5.b
+wire a3.then a6.in
+wire a5.result a6.value
+wire a2.result a7.count
+wire a6.then a7.in
+wire a7.body a8.in
+wire a7.index a8.index
+wire a1.args a9.collection
+wire a7.index a9.index
+wire a8.result b1.other
+wire a9.value b1.receiver
+wire a8.then b2.in
+wire a8.result b2.text
+wire b2.then b3.in
+wire b3.then b4.in
+wire b1.result b4.value
+wire a7.done b5.in
+wire b5.result b6.receiver
+wire b5.then b7.in
+wire b6.result b7.value
+wire b7.then b8.in

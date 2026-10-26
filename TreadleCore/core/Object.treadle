@@ -1,0 +1,4 @@
+# treadle 1
+type Object class
+	namespace Core
+	doc "The base of every class."

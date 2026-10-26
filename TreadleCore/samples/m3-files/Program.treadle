@@ -1,0 +1,195 @@
+# treadle 1
+type Program class
+	namespace M3Files
+	static
+	doc "Milestone 3, files: counts the words of the command line (or of a built-in sentence when there are none) through a Queue, keeps their first-seen order with a HashSet, writes the counts to m3-files-out/counts.txt, reads the file back line by line, lists the folder, then removes both."
+
+function m0001 Main
+	static
+	returns int
+	doc "Words into a Queue<StringView>; each one taken off the queue is counted in a Dictionary and, the first time a HashSet sees it, added to the order list. The report goes to a file through File.WriteAllText and comes back through File.ReadLines; Directory.GetFiles lists the folder."
+param args String[]
+sheet body
+node a1 Entry
+node a2 Local String
+node a3 Get String[].Length
+node a4 Operator ==
+	in b 0
+node a5 Branch
+node a6 Call String.Append(StringView)
+	in text "the quick brown fox jumps over the lazy dog and the fox naps"
+node a7 ForEach
+node a8 Call String.Append(StringView)
+node a9 Call String.Append(char8)
+	in value 32
+node b1 Local List<StringView>
+node b2 Call String.Split
+	in separator 32
+	in skipEmpty true
+node b3 Local Queue<StringView>
+node b4 ForEach
+node b5 Call Queue<StringView>.Enqueue
+node b6 Local Dictionary<StringView,int>
+node b7 Local HashSet<StringView>
+node b8 Local List<StringView>
+node b9 Get Queue<StringView>.Count
+node c1 Operator >
+	in b 0
+node c2 While
+node c3 Call Queue<StringView>.Dequeue
+node c4 Call Dictionary<StringView,int>.TryGet
+node c5 Operator +
+	in b 1
+node c6 Call Dictionary<StringView,int>.SetItem
+node c7 Call HashSet<StringView>.Add
+node c8 Branch
+node c9 Call List<StringView>.Add
+node d1 Call Directory.Create
+	in path "m3-files-out"
+node d2 Local String
+node d3 ForEach
+node d4 Index
+node d5 Call String.AppendF
+	in format "{0} {1}\n"
+node d6 Call File.WriteAllText
+	in path "m3-files-out/counts.txt"
+node d7 Local List<String>
+node d8 Call File.ReadLines
+	in path "m3-files-out/counts.txt"
+node d9 Local String
+node e1 Get List<StringView>.Count
+node e2 Get List<StringView>.Count
+node e3 Get List<String>.Count
+node e4 Call String.AppendF
+	in format "{0} words, {1} different, {2} lines read back"
+node e5 Call Console.WriteLine(String)
+node e6 ForEach
+node e7 Call Console.Write(StringView)
+	in text "  "
+node e8 Call Console.WriteLine(String)
+node e9 Local List<String>
+node f1 Call Directory.GetFiles
+	in path "m3-files-out"
+node f2 ForEach
+node f3 Local String
+node f4 Call String.AppendF
+	in format "m3-files-out: {0}"
+node f5 Call Console.WriteLine(String)
+node f6 Call File.Delete
+	in path "m3-files-out/counts.txt"
+node f7 Call Directory.Delete
+	in path "m3-files-out"
+node f8 Local String
+node f9 Call String.AppendF
+	in format "removed: {0} {1}"
+node g1 Call Console.WriteLine(String)
+node g2 Call List<String>.DeleteAll
+node g3 Call List<String>.DeleteAll
+node g4 Return
+	in value 0
+wire a1.then a2.in
+wire a1.args a3.receiver
+wire a3.value a4.a
+wire a4.result a5.condition
+wire a2.then a5.in
+wire a5.true a6.in
+wire a2.object a6.receiver
+wire a1.args a7.collection
+wire a5.false a7.in
+wire a7.body a8.in
+wire a2.object a8.receiver
+wire a7.element a8.text
+wire a8.then a9.in
+wire a2.object a9.receiver
+wire a6.then b1.in
+wire a7.done b1.in
+wire b1.then b2.in
+wire b1.object b2.into
+wire a2.object b2.receiver
+wire b2.then b3.in
+wire b1.object b4.collection
+wire b3.then b4.in
+wire b4.body b5.in
+wire b3.object b5.receiver
+wire b4.element b5.value
+wire b4.done b6.in
+wire b6.then b7.in
+wire b7.then b8.in
+wire b3.object b9.receiver
+wire b9.value c1.a
+wire c1.result c2.condition
+wire b8.then c2.in
+wire c2.body c3.in
+wire b3.object c3.receiver
+wire c3.then c4.in
+wire c3.result c4.key
+wire b6.object c4.receiver
+wire c4.item c5.a
+wire c4.then c6.in
+wire c3.result c6.key
+wire b6.object c6.receiver
+wire c5.result c6.value
+wire c6.then c7.in
+wire b7.object c7.receiver
+wire c3.result c7.value
+wire c7.result c8.condition
+wire c7.then c8.in
+wire c8.true c9.in
+wire b8.object c9.receiver
+wire c3.result c9.value
+wire c2.done d1.in
+wire d1.then d2.in
+wire b8.object d3.collection
+wire d2.then d3.in
+wire b6.object d4.collection
+wire d3.element d4.index
+wire d3.element d5.arg0
+wire d4.value d5.arg1
+wire d3.body d5.in
+wire d2.object d5.receiver
+wire d3.done d6.in
+wire d2.object d6.text
+wire d6.then d7.in
+wire d7.then d8.in
+wire d7.object d8.into
+wire d8.then d9.in
+wire b1.object e1.receiver
+wire b8.object e2.receiver
+wire d7.object e3.receiver
+wire e1.value e4.arg0
+wire e2.value e4.arg1
+wire e3.value e4.arg2
+wire d9.then e4.in
+wire d9.object e4.receiver
+wire e4.then e5.in
+wire d9.object e5.value
+wire d7.object e6.collection
+wire e5.then e6.in
+wire e6.body e7.in
+wire e7.then e8.in
+wire e6.element e8.value
+wire e6.done e9.in
+wire e9.then f1.in
+wire e9.object f1.into
+wire e9.object f2.collection
+wire f1.then f2.in
+wire f2.body f3.in
+wire f2.element f4.arg0
+wire f3.then f4.in
+wire f3.object f4.receiver
+wire f4.then f5.in
+wire f3.object f5.value
+wire f2.done f6.in
+wire f6.then f7.in
+wire f7.then f8.in
+wire f6.result f9.arg0
+wire f7.result f9.arg1
+wire f8.then f9.in
+wire f8.object f9.receiver
+wire f9.then g1.in
+wire f8.object g1.value
+wire g1.then g2.in
+wire d7.object g2.receiver
+wire g2.then g3.in
+wire e9.object g3.receiver
+wire g3.then g4.in

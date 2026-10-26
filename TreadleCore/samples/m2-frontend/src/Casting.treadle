@@ -1,0 +1,48 @@
+# treadle 1
+type Casting class
+	namespace M2
+	static
+	doc "A checked Cast To runs Succeeded with the object as the type, or Failed when it is not one. Prints 5, then not a Word."
+
+function k0001 Describe
+	static
+param thing Object
+sheet body
+node a1 Entry
+node a2 Cast Lib.Word
+	set checked
+node a3 Get Lib.Word.Size
+node a4 Call Console.WriteLine(int)
+node a5 Call Console.WriteLine(StringView)
+	in text "not a Word"
+node a6 Return
+wire a1.then a2.in
+wire a1.thing a2.value
+wire a2.result a3.receiver
+wire a2.then a4.in
+wire a3.value a4.value
+wire a2.failed a5.in
+wire a4.then a6.in
+
+function k0002 Run
+	static
+sheet body
+node b1 Entry
+node b2 Construct Lib.Word
+node b3 Call M2.Casting.Describe
+node b4 Construct M2.Counter
+node b5 Call M2.Casting.Describe
+node b6 Delete
+node b7 Delete
+node b8 Return
+wire b1.then b2.in
+wire b2.then b3.in
+wire b2.object b3.thing
+wire b3.then b4.in
+wire b4.then b5.in
+wire b4.object b5.thing
+wire b5.then b6.in
+wire b2.object b6.object
+wire b6.then b7.in
+wire b4.object b7.object
+wire b7.then b8.in

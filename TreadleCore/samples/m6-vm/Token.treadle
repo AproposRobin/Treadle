@@ -1,0 +1,45 @@
+# treadle 1
+type Token struct
+	namespace Mini
+	doc "One token of a script: its kind and where it starts. Pos packs the position as line * 65536 + column (both 1-based)."
+
+field Kind Mini.TokenKind
+
+field Pos int
+
+function m0001 IsSym
+	pure
+	returns bool
+	doc "True when the token is the symbol or keyword with this code."
+param code int
+sheet body
+node x00000 Entry
+node x00001 Get this.Kind
+node x00002 IsCase Mini.TokenKind.Sym
+node x00003 Operator ==
+node x00004 Operator &&
+node x00005 Return
+wire x00001.value x00002.value
+wire x00002.code x00003.a
+wire x00000.code x00003.b
+wire x00002.result x00004.a
+wire x00003.result x00004.b
+wire x00000.then x00005.in
+wire x00004.result x00005.value
+
+function m0002 SymCode
+	pure
+	returns int
+	doc "The code of a Sym token, or -1 for any other kind."
+sheet body
+node x01000 Entry
+node x01001 Get this.Kind
+node x01002 IsCase Mini.TokenKind.Sym
+node x01003 Select
+	in false -1
+node x01004 Return
+wire x01001.value x01002.value
+wire x01002.result x01003.condition
+wire x01002.code x01003.true
+wire x01000.then x01004.in
+wire x01003.result x01004.value

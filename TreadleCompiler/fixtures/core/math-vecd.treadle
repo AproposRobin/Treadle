@@ -1,0 +1,3601 @@
+# treadle 1
+type MathVecdMain class
+	namespace Cx
+	static
+	doc "The core math library, vecd: every check compares the result with a reference computed in double precision by a separate C implementation (Gauss-Jordan inverse, Rodrigues rotations, the GLM conventions), within 1e-5 of the larger of 1 and the reference's size; each line is the check's name and true."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node n00000 Entry
+node n00001 Local String
+	set ctor ()
+node n00002 Get Core.Vec2d.Zero
+node n00003 Make Core.Vec2d
+	in X 0.0
+	in Y 0.0
+node n00004 Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9"
+node n00005 Call String.Clear
+node n00006 Call String.Append(StringView)
+	in text "vec2d.Zero "
+node n00007 Call String.Append(bool)
+node n00008 Call Console.WriteLine(StringView)
+node n00009 Get Core.Vec2d.One
+node n0000a Make Core.Vec2d
+	in X 1.0
+	in Y 1.0
+node n0000b Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9"
+node n0000c Call String.Clear
+node n0000d Call String.Append(StringView)
+	in text "vec2d.One "
+node n0000e Call String.Append(bool)
+node n0000f Call Console.WriteLine(StringView)
+node n0000g Get Core.Vec2d.UnitX
+node n0000h Make Core.Vec2d
+	in X 1.0
+	in Y 0.0
+node n0000i Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9"
+node n0000j Call String.Clear
+node n0000k Call String.Append(StringView)
+	in text "vec2d.UnitX "
+node n0000l Call String.Append(bool)
+node n0000m Call Console.WriteLine(StringView)
+node n0000n Get Core.Vec2d.UnitY
+node n0000o Make Core.Vec2d
+	in X 0.0
+	in Y 1.0
+node n0000p Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9"
+node n0000q Call String.Clear
+node n0000r Call String.Append(StringView)
+	in text "vec2d.UnitY "
+node n0000s Call String.Append(bool)
+node n0000t Call Console.WriteLine(StringView)
+node n0000u Make Core.Vec2d
+	in X 1.5
+	in Y -2.0
+node n0000v Make Core.Vec2d
+	in X 4.0
+	in Y 0.25
+node n0000w Operator +
+node n0000x Make Core.Vec2d
+	in X 5.5
+	in Y -1.75
+node n0000y Math
+	set expr "Abs(a.X - b.X) <= 5.5000000000000004e-9 && Abs(a.Y - b.Y) <= 5.5000000000000004e-9"
+node n0000z Call String.Clear
+node n00010 Call String.Append(StringView)
+	in text "vec2d.add "
+node n00011 Call String.Append(bool)
+node n00012 Call Console.WriteLine(StringView)
+node n00013 Operator -
+node n00014 Make Core.Vec2d
+	in X -2.5
+	in Y -2.25
+node n00015 Math
+	set expr "Abs(a.X - b.X) <= 2.5e-9 && Abs(a.Y - b.Y) <= 2.5e-9"
+node n00016 Call String.Clear
+node n00017 Call String.Append(StringView)
+	in text "vec2d.sub "
+node n00018 Call String.Append(bool)
+node n00019 Call Console.WriteLine(StringView)
+node n0001a Operator *
+node n0001b Make Core.Vec2d
+	in X 6.0
+	in Y -0.5
+node n0001c Math
+	set expr "Abs(a.X - b.X) <= 6.000000000000001e-9 && Abs(a.Y - b.Y) <= 6.000000000000001e-9"
+node n0001d Call String.Clear
+node n0001e Call String.Append(StringView)
+	in text "vec2d.mul "
+node n0001f Call String.Append(bool)
+node n0001g Call Console.WriteLine(StringView)
+node n0001h Operator /
+node n0001i Make Core.Vec2d
+	in X 0.375
+	in Y -8.0
+node n0001j Math
+	set expr "Abs(a.X - b.X) <= 8.0e-9 && Abs(a.Y - b.Y) <= 8.0e-9"
+node n0001k Call String.Clear
+node n0001l Call String.Append(StringView)
+	in text "vec2d.div "
+node n0001m Call String.Append(bool)
+node n0001n Call Console.WriteLine(StringView)
+node n0001o Operator neg
+node n0001p Make Core.Vec2d
+	in X -1.5
+	in Y 2.0
+node n0001q Math
+	set expr "Abs(a.X - b.X) <= 2.0e-9 && Abs(a.Y - b.Y) <= 2.0e-9"
+node n0001r Call String.Clear
+node n0001s Call String.Append(StringView)
+	in text "vec2d.neg "
+node n0001t Call String.Append(bool)
+node n0001u Call Console.WriteLine(StringView)
+node n0001v Make Core.Vec2d
+	in X 1.5
+	in Y -2.0
+node n0001w Operator ==
+node n0001x Operator ==
+	in b true
+node n0001y Call String.Clear
+node n0001z Call String.Append(StringView)
+	in text "vec2d.eq "
+node n00020 Call String.Append(bool)
+node n00021 Call Console.WriteLine(StringView)
+node n00022 Operator ==
+node n00023 Operator ==
+	in b false
+node n00024 Call String.Clear
+node n00025 Call String.Append(StringView)
+	in text "vec2d.eq.false "
+node n00026 Call String.Append(bool)
+node n00027 Call Console.WriteLine(StringView)
+node n00028 Operator !=
+node n00029 Operator ==
+	in b true
+node n0002a Call String.Clear
+node n0002b Call String.Append(StringView)
+	in text "vec2d.ne "
+node n0002c Call String.Append(bool)
+node n0002d Call Console.WriteLine(StringView)
+node n0002e Operator !=
+node n0002f Operator ==
+	in b false
+node n0002g Call String.Clear
+node n0002h Call String.Append(StringView)
+	in text "vec2d.ne.false "
+node n0002i Call String.Append(bool)
+node n0002j Call Console.WriteLine(StringView)
+node n0002k Call Core.Vec2d.Scaled
+	in k 2.5
+node n0002l Make Core.Vec2d
+	in X 3.75
+	in Y -5.0
+node n0002m Math
+	set expr "Abs(a.X - b.X) <= 5.0e-9 && Abs(a.Y - b.Y) <= 5.0e-9"
+node n0002n Call String.Clear
+node n0002o Call String.Append(StringView)
+	in text "vec2d.Scaled "
+node n0002p Call String.Append(bool)
+node n0002q Call Console.WriteLine(StringView)
+node n0002r Operator *
+	in b 2.5
+node n0002s Make Core.Vec2d
+	in X 3.75
+	in Y -5.0
+node n0002t Math
+	set expr "Abs(a.X - b.X) <= 5.0e-9 && Abs(a.Y - b.Y) <= 5.0e-9"
+node n0002u Call String.Clear
+node n0002v Call String.Append(StringView)
+	in text "vec2d.mul.scalar "
+node n0002w Call String.Append(bool)
+node n0002x Call Console.WriteLine(StringView)
+node n0002y Operator *
+	in a -3.0
+node n0002z Make Core.Vec2d
+	in X -4.5
+	in Y 6.0
+node n00030 Math
+	set expr "Abs(a.X - b.X) <= 6.000000000000001e-9 && Abs(a.Y - b.Y) <= 6.000000000000001e-9"
+node n00031 Call String.Clear
+node n00032 Call String.Append(StringView)
+	in text "vec2d.mul.scalar.left "
+node n00033 Call String.Append(bool)
+node n00034 Call Console.WriteLine(StringView)
+node n00035 Operator /
+	in b 4.0
+node n00036 Make Core.Vec2d
+	in X 0.375
+	in Y -0.5
+node n00037 Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9"
+node n00038 Call String.Clear
+node n00039 Call String.Append(StringView)
+	in text "vec2d.div.scalar "
+node n0003a Call String.Append(bool)
+node n0003b Call Console.WriteLine(StringView)
+node n0003c Call Core.Vec2d.Length
+node n0003d Operator *
+node n0003e Make Core.Vec2d
+	in X 6.0117073282055244
+	in Y -8.0156097709407
+node n0003f Math
+	set expr "Abs(a.X - b.X) <= 8.0156097709407e-9 && Abs(a.Y - b.Y) <= 8.0156097709407e-9"
+node n0003g Call String.Clear
+node n0003h Call String.Append(StringView)
+	in text "vec2d.mul.scalar.wired "
+node n0003i Call String.Append(bool)
+node n0003j Call Console.WriteLine(StringView)
+node n0003k Math
+	set expr "v * 2.0 - w / 4 + v * w"
+node n0003l Make Core.Vec2d
+	in X 8.0
+	in Y -4.5625
+node n0003m Math
+	set expr "Abs(a.X - b.X) <= 8.0e-9 && Abs(a.Y - b.Y) <= 8.0e-9"
+node n0003n Call String.Clear
+node n0003o Call String.Append(StringView)
+	in text "vec2d.math "
+node n0003p Call String.Append(bool)
+node n0003q Call Console.WriteLine(StringView)
+node n0003r Call Core.Vec2d.Dot
+node n0003s Math
+	set expr "Abs(a - b) <= 5.5000000000000004e-9"
+	in b 5.5
+node n0003t Call String.Clear
+node n0003u Call String.Append(StringView)
+	in text "vec2d.Dot "
+node n0003v Call String.Append(bool)
+node n0003w Call Console.WriteLine(StringView)
+node n0003x Call Core.Vec2d.LengthSquared
+node n0003y Math
+	set expr "Abs(a - b) <= 6.2500000000000005e-9"
+	in b 6.25
+node n0003z Call String.Clear
+node n00040 Call String.Append(StringView)
+	in text "vec2d.LengthSquared "
+node n00041 Call String.Append(bool)
+node n00042 Call Console.WriteLine(StringView)
+node n00043 Call Core.Vec2d.Length
+node n00044 Math
+	set expr "Abs(a - b) <= 2.5e-9"
+	in b 2.5
+node n00045 Call String.Clear
+node n00046 Call String.Append(StringView)
+	in text "vec2d.Length "
+node n00047 Call String.Append(bool)
+node n00048 Call Console.WriteLine(StringView)
+node n00049 Call Core.Vec2d.DistanceSquared
+node n0004a Math
+	set expr "Abs(a - b) <= 1.1312500000000001e-8"
+	in b 11.3125
+node n0004b Call String.Clear
+node n0004c Call String.Append(StringView)
+	in text "vec2d.DistanceSquared "
+node n0004d Call String.Append(bool)
+node n0004e Call Console.WriteLine(StringView)
+node n0004f Call Core.Vec2d.Distance
+node n0004g Math
+	set expr "Abs(a - b) <= 3.3634060117684277e-9"
+	in b 3.3634060117684275
+node n0004h Call String.Clear
+node n0004i Call String.Append(StringView)
+	in text "vec2d.Distance "
+node n0004j Call String.Append(bool)
+node n0004k Call Console.WriteLine(StringView)
+node n0004l Call Core.Vec2d.Normalized
+node n0004m Make Core.Vec2d
+	in X 0.9980525784828885
+	in Y 0.06237828615518053
+node n0004n Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9"
+node n0004o Call String.Clear
+node n0004p Call String.Append(StringView)
+	in text "vec2d.Normalized "
+node n0004q Call String.Append(bool)
+node n0004r Call Console.WriteLine(StringView)
+node n0004s Make Core.Vec2d
+	in X 0.0
+	in Y 0.0
+node n0004t Call Core.Vec2d.Normalized
+node n0004u Make Core.Vec2d
+	in X 0.0
+	in Y 0.0
+node n0004v Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9"
+node n0004w Call String.Clear
+node n0004x Call String.Append(StringView)
+	in text "vec2d.Normalized.zero "
+node n0004y Call String.Append(bool)
+node n0004z Call Console.WriteLine(StringView)
+node n00050 Call Core.Vec2d.Lerp
+	in t 0.25
+node n00051 Make Core.Vec2d
+	in X 2.125
+	in Y -1.4375
+node n00052 Math
+	set expr "Abs(a.X - b.X) <= 2.125e-9 && Abs(a.Y - b.Y) <= 2.125e-9"
+node n00053 Call String.Clear
+node n00054 Call String.Append(StringView)
+	in text "vec2d.Lerp "
+node n00055 Call String.Append(bool)
+node n00056 Call Console.WriteLine(StringView)
+node n00057 Call Core.Vec2d.Min
+node n00058 Make Core.Vec2d
+	in X 1.5
+	in Y -2.0
+node n00059 Math
+	set expr "Abs(a.X - b.X) <= 2.0e-9 && Abs(a.Y - b.Y) <= 2.0e-9"
+node n0005a Call String.Clear
+node n0005b Call String.Append(StringView)
+	in text "vec2d.Min "
+node n0005c Call String.Append(bool)
+node n0005d Call Console.WriteLine(StringView)
+node n0005e Call Core.Vec2d.Max
+node n0005f Make Core.Vec2d
+	in X 4.0
+	in Y 0.25
+node n0005g Math
+	set expr "Abs(a.X - b.X) <= 4.0e-9 && Abs(a.Y - b.Y) <= 4.0e-9"
+node n0005h Call String.Clear
+node n0005i Call String.Append(StringView)
+	in text "vec2d.Max "
+node n0005j Call String.Append(bool)
+node n0005k Call Console.WriteLine(StringView)
+node n0005l Make Core.Vec2d
+	in X -1.0
+	in Y -1.0
+node n0005m Make Core.Vec2d
+	in X 1.0
+	in Y 1.0
+node n0005n Call Core.Vec2d.Clamp
+node n0005o Make Core.Vec2d
+	in X 1.0
+	in Y -1.0
+node n0005p Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9"
+node n0005q Call String.Clear
+node n0005r Call String.Append(StringView)
+	in text "vec2d.Clamp "
+node n0005s Call String.Append(bool)
+node n0005t Call Console.WriteLine(StringView)
+node n0005u Make Core.Vec2d
+	in X 2.5
+	in Y -2.5
+node n0005v Call Core.Vec2d.Abs
+node n0005w Make Core.Vec2d
+	in X 2.5
+	in Y 2.5
+node n0005x Math
+	set expr "Abs(a.X - b.X) <= 2.5e-9 && Abs(a.Y - b.Y) <= 2.5e-9"
+node n0005y Call String.Clear
+node n0005z Call String.Append(StringView)
+	in text "vec2d.Abs "
+node n00060 Call String.Append(bool)
+node n00061 Call Console.WriteLine(StringView)
+node n00062 Call Core.Vec2d.Floor
+node n00063 Make Core.Vec2d
+	in X 2.0
+	in Y -3.0
+node n00064 Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9"
+node n00065 Call String.Clear
+node n00066 Call String.Append(StringView)
+	in text "vec2d.Floor "
+node n00067 Call String.Append(bool)
+node n00068 Call Console.WriteLine(StringView)
+node n00069 Call Core.Vec2d.Ceil
+node n0006a Make Core.Vec2d
+	in X 3.0
+	in Y -2.0
+node n0006b Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9"
+node n0006c Call String.Clear
+node n0006d Call String.Append(StringView)
+	in text "vec2d.Ceil "
+node n0006e Call String.Append(bool)
+node n0006f Call Console.WriteLine(StringView)
+node n0006g Call Core.Vec2d.Round
+node n0006h Make Core.Vec2d
+	in X 3.0
+	in Y -3.0
+node n0006i Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9"
+node n0006j Call String.Clear
+node n0006k Call String.Append(StringView)
+	in text "vec2d.Round "
+node n0006l Call String.Append(bool)
+node n0006m Call Console.WriteLine(StringView)
+node n0006n Make Core.Vec2d
+	in X 0.0
+	in Y 1.0
+node n0006o Call Core.Vec2d.Reflect
+node n0006p Make Core.Vec2d
+	in X 1.5
+	in Y 2.0
+node n0006q Math
+	set expr "Abs(a.X - b.X) <= 2.0e-9 && Abs(a.Y - b.Y) <= 2.0e-9"
+node n0006r Call String.Clear
+node n0006s Call String.Append(StringView)
+	in text "vec2d.Reflect "
+node n0006t Call String.Append(bool)
+node n0006u Call Console.WriteLine(StringView)
+node n0006v Call Core.Vec2d.ProjectOnto
+node n0006w Make Core.Vec2d
+	in X 1.3696498054474708
+	in Y 0.08560311284046693
+node n0006x Math
+	set expr "Abs(a.X - b.X) <= 1.369649805447471e-9 && Abs(a.Y - b.Y) <= 1.369649805447471e-9"
+node n0006y Call String.Clear
+node n0006z Call String.Append(StringView)
+	in text "vec2d.ProjectOnto "
+node n00070 Call String.Append(bool)
+node n00071 Call Console.WriteLine(StringView)
+node n00072 Call Core.Vec2d.ProjectOnto
+node n00073 Make Core.Vec2d
+	in X 0.0
+	in Y 0.0
+node n00074 Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9"
+node n00075 Call String.Clear
+node n00076 Call String.Append(StringView)
+	in text "vec2d.ProjectOnto.zero "
+node n00077 Call String.Append(bool)
+node n00078 Call Console.WriteLine(StringView)
+node n00079 Call Core.Vec2d.AngleTo
+node n0007a Math
+	set expr "Abs(a - b) <= 1.0e-9"
+	in b 0.9897140279975697
+node n0007b Call String.Clear
+node n0007c Call String.Append(StringView)
+	in text "vec2d.AngleTo "
+node n0007d Call String.Append(bool)
+node n0007e Call Console.WriteLine(StringView)
+node n0007f Call Core.Vec2d.AngleTo
+node n0007g Math
+	set expr "Abs(a - b) <= 1.0e-9"
+	in b 0.0
+node n0007h Call String.Clear
+node n0007i Call String.Append(StringView)
+	in text "vec2d.AngleTo.zero "
+node n0007j Call String.Append(bool)
+node n0007k Call Console.WriteLine(StringView)
+node n0007l Call Core.Vec2d.IsFinite
+node n0007m Operator ==
+	in b true
+node n0007n Call String.Clear
+node n0007o Call String.Append(StringView)
+	in text "vec2d.IsFinite "
+node n0007p Call String.Append(bool)
+node n0007q Call Console.WriteLine(StringView)
+node n0007r Operator /
+node n0007s Call Core.Vec2d.IsFinite
+node n0007t Operator ==
+	in b false
+node n0007u Call String.Clear
+node n0007v Call String.Append(StringView)
+	in text "vec2d.IsFinite.inf "
+node n0007w Call String.Append(bool)
+node n0007x Call Console.WriteLine(StringView)
+node n0007y Make Core.Vec2d
+	in X 1.500001
+	in Y -2.000001
+node n0007z Call Core.Vec2d.ApproxEquals
+node n00080 Operator ==
+	in b true
+node n00081 Call String.Clear
+node n00082 Call String.Append(StringView)
+	in text "vec2d.ApproxEquals "
+node n00083 Call String.Append(bool)
+node n00084 Call Console.WriteLine(StringView)
+node n00085 Make Core.Vec2d
+	in X 1.5001
+	in Y -2.0
+node n00086 Call Core.Vec2d.ApproxEquals
+node n00087 Operator ==
+	in b false
+node n00088 Call String.Clear
+node n00089 Call String.Append(StringView)
+	in text "vec2d.ApproxEquals.false "
+node n0008a Call String.Append(bool)
+node n0008b Call Console.WriteLine(StringView)
+node n0008c Make Core.Vec2d
+	in X 1.5001
+	in Y -2.0
+node n0008d Call Core.Vec2d.ApproxEquals
+	in epsilon 0.001
+node n0008e Operator ==
+	in b true
+node n0008f Call String.Clear
+node n0008g Call String.Append(StringView)
+	in text "vec2d.ApproxEquals.eps "
+node n0008h Call String.Append(bool)
+node n0008i Call Console.WriteLine(StringView)
+node n0008j Call Core.Vec2d.ToVector
+node n0008k Call Core.Vec2d.FromVector
+node n0008l Operator ==
+node n0008m Operator ==
+	in b true
+node n0008n Call String.Clear
+node n0008o Call String.Append(StringView)
+	in text "vec2d.ToVector.round "
+node n0008p Call String.Append(bool)
+node n0008q Call Console.WriteLine(StringView)
+node n0008r Call Core.Vec2d.ToVector
+node n0008s Math
+	set expr "p.x * 1.0 + p.y * 2.0"
+node n0008t Math
+	set expr "Abs(a - b) <= 2.5e-9"
+	in b -2.5
+node n0008u Call String.Clear
+node n0008v Call String.Append(StringView)
+	in text "vec2d.ToVector.lanes "
+node n0008w Call String.Append(bool)
+node n0008x Call Console.WriteLine(StringView)
+node n0008y Call Core.Vec2d.Perpendicular
+node n0008z Make Core.Vec2d
+	in X 2.0
+	in Y 1.5
+node n00090 Math
+	set expr "Abs(a.X - b.X) <= 2.0e-9 && Abs(a.Y - b.Y) <= 2.0e-9"
+node n00091 Call String.Clear
+node n00092 Call String.Append(StringView)
+	in text "vec2d.Perpendicular "
+node n00093 Call String.Append(bool)
+node n00094 Call Console.WriteLine(StringView)
+node n00095 Call Core.Vec2d.Cross
+node n00096 Math
+	set expr "Abs(a - b) <= 8.375e-9"
+	in b 8.375
+node n00097 Call String.Clear
+node n00098 Call String.Append(StringView)
+	in text "vec2d.Cross "
+node n00099 Call String.Append(bool)
+node n0009a Call Console.WriteLine(StringView)
+node n0009b Call Core.Vec2d.Angle
+node n0009c Math
+	set expr "Abs(a - b) <= 1.0e-9"
+	in b -0.9272952180016122
+node n0009d Call String.Clear
+node n0009e Call String.Append(StringView)
+	in text "vec2d.Angle "
+node n0009f Call String.Append(bool)
+node n0009g Call Console.WriteLine(StringView)
+node n0009h Call Core.Vec2d.FromAngle
+	in angle 2.0
+node n0009i Make Core.Vec2d
+	in X -0.4161468365471424
+	in Y 0.9092974268256817
+node n0009j Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9"
+node n0009k Call String.Clear
+node n0009l Call String.Append(StringView)
+	in text "vec2d.FromAngle "
+node n0009m Call String.Append(bool)
+node n0009n Call Console.WriteLine(StringView)
+node n0009o Get Core.Vec3d.Zero
+node n0009p Make Core.Vec3d
+	in X 0.0
+	in Y 0.0
+	in Z 0.0
+node n0009q Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9"
+node n0009r Call String.Clear
+node n0009s Call String.Append(StringView)
+	in text "vec3d.Zero "
+node n0009t Call String.Append(bool)
+node n0009u Call Console.WriteLine(StringView)
+node n0009v Get Core.Vec3d.One
+node n0009w Make Core.Vec3d
+	in X 1.0
+	in Y 1.0
+	in Z 1.0
+node n0009x Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9"
+node n0009y Call String.Clear
+node n0009z Call String.Append(StringView)
+	in text "vec3d.One "
+node n000a0 Call String.Append(bool)
+node n000a1 Call Console.WriteLine(StringView)
+node n000a2 Get Core.Vec3d.UnitX
+node n000a3 Make Core.Vec3d
+	in X 1.0
+	in Y 0.0
+	in Z 0.0
+node n000a4 Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9"
+node n000a5 Call String.Clear
+node n000a6 Call String.Append(StringView)
+	in text "vec3d.UnitX "
+node n000a7 Call String.Append(bool)
+node n000a8 Call Console.WriteLine(StringView)
+node n000a9 Get Core.Vec3d.UnitY
+node n000aa Make Core.Vec3d
+	in X 0.0
+	in Y 1.0
+	in Z 0.0
+node n000ab Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9"
+node n000ac Call String.Clear
+node n000ad Call String.Append(StringView)
+	in text "vec3d.UnitY "
+node n000ae Call String.Append(bool)
+node n000af Call Console.WriteLine(StringView)
+node n000ag Get Core.Vec3d.UnitZ
+node n000ah Make Core.Vec3d
+	in X 0.0
+	in Y 0.0
+	in Z 1.0
+node n000ai Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9"
+node n000aj Call String.Clear
+node n000ak Call String.Append(StringView)
+	in text "vec3d.UnitZ "
+node n000al Call String.Append(bool)
+node n000am Call Console.WriteLine(StringView)
+node n000an Make Core.Vec3d
+	in X 1.5
+	in Y -2.0
+	in Z 3.0
+node n000ao Make Core.Vec3d
+	in X 4.0
+	in Y 0.25
+	in Z -6.0
+node n000ap Operator +
+node n000aq Make Core.Vec3d
+	in X 5.5
+	in Y -1.75
+	in Z -3.0
+node n000ar Math
+	set expr "Abs(a.X - b.X) <= 5.5000000000000004e-9 && Abs(a.Y - b.Y) <= 5.5000000000000004e-9 && Abs(a.Z - b.Z) <= 5.5000000000000004e-9"
+node n000as Call String.Clear
+node n000at Call String.Append(StringView)
+	in text "vec3d.add "
+node n000au Call String.Append(bool)
+node n000av Call Console.WriteLine(StringView)
+node n000aw Operator -
+node n000ax Make Core.Vec3d
+	in X -2.5
+	in Y -2.25
+	in Z 9.0
+node n000ay Math
+	set expr "Abs(a.X - b.X) <= 9.000000000000001e-9 && Abs(a.Y - b.Y) <= 9.000000000000001e-9 && Abs(a.Z - b.Z) <= 9.000000000000001e-9"
+node n000az Call String.Clear
+node n000b0 Call String.Append(StringView)
+	in text "vec3d.sub "
+node n000b1 Call String.Append(bool)
+node n000b2 Call Console.WriteLine(StringView)
+node n000b3 Operator *
+node n000b4 Make Core.Vec3d
+	in X 6.0
+	in Y -0.5
+	in Z -18.0
+node n000b5 Math
+	set expr "Abs(a.X - b.X) <= 1.8000000000000002e-8 && Abs(a.Y - b.Y) <= 1.8000000000000002e-8 && Abs(a.Z - b.Z) <= 1.8000000000000002e-8"
+node n000b6 Call String.Clear
+node n000b7 Call String.Append(StringView)
+	in text "vec3d.mul "
+node n000b8 Call String.Append(bool)
+node n000b9 Call Console.WriteLine(StringView)
+node n000ba Operator /
+node n000bb Make Core.Vec3d
+	in X 0.375
+	in Y -8.0
+	in Z -0.5
+node n000bc Math
+	set expr "Abs(a.X - b.X) <= 8.0e-9 && Abs(a.Y - b.Y) <= 8.0e-9 && Abs(a.Z - b.Z) <= 8.0e-9"
+node n000bd Call String.Clear
+node n000be Call String.Append(StringView)
+	in text "vec3d.div "
+node n000bf Call String.Append(bool)
+node n000bg Call Console.WriteLine(StringView)
+node n000bh Operator neg
+node n000bi Make Core.Vec3d
+	in X -1.5
+	in Y 2.0
+	in Z -3.0
+node n000bj Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9"
+node n000bk Call String.Clear
+node n000bl Call String.Append(StringView)
+	in text "vec3d.neg "
+node n000bm Call String.Append(bool)
+node n000bn Call Console.WriteLine(StringView)
+node n000bo Make Core.Vec3d
+	in X 1.5
+	in Y -2.0
+	in Z 3.0
+node n000bp Operator ==
+node n000bq Operator ==
+	in b true
+node n000br Call String.Clear
+node n000bs Call String.Append(StringView)
+	in text "vec3d.eq "
+node n000bt Call String.Append(bool)
+node n000bu Call Console.WriteLine(StringView)
+node n000bv Operator ==
+node n000bw Operator ==
+	in b false
+node n000bx Call String.Clear
+node n000by Call String.Append(StringView)
+	in text "vec3d.eq.false "
+node n000bz Call String.Append(bool)
+node n000c0 Call Console.WriteLine(StringView)
+node n000c1 Operator !=
+node n000c2 Operator ==
+	in b true
+node n000c3 Call String.Clear
+node n000c4 Call String.Append(StringView)
+	in text "vec3d.ne "
+node n000c5 Call String.Append(bool)
+node n000c6 Call Console.WriteLine(StringView)
+node n000c7 Operator !=
+node n000c8 Operator ==
+	in b false
+node n000c9 Call String.Clear
+node n000ca Call String.Append(StringView)
+	in text "vec3d.ne.false "
+node n000cb Call String.Append(bool)
+node n000cc Call Console.WriteLine(StringView)
+node n000cd Call Core.Vec3d.Scaled
+	in k 2.5
+node n000ce Make Core.Vec3d
+	in X 3.75
+	in Y -5.0
+	in Z 7.5
+node n000cf Math
+	set expr "Abs(a.X - b.X) <= 7.500000000000001e-9 && Abs(a.Y - b.Y) <= 7.500000000000001e-9 && Abs(a.Z - b.Z) <= 7.500000000000001e-9"
+node n000cg Call String.Clear
+node n000ch Call String.Append(StringView)
+	in text "vec3d.Scaled "
+node n000ci Call String.Append(bool)
+node n000cj Call Console.WriteLine(StringView)
+node n000ck Operator *
+	in b 2.5
+node n000cl Make Core.Vec3d
+	in X 3.75
+	in Y -5.0
+	in Z 7.5
+node n000cm Math
+	set expr "Abs(a.X - b.X) <= 7.500000000000001e-9 && Abs(a.Y - b.Y) <= 7.500000000000001e-9 && Abs(a.Z - b.Z) <= 7.500000000000001e-9"
+node n000cn Call String.Clear
+node n000co Call String.Append(StringView)
+	in text "vec3d.mul.scalar "
+node n000cp Call String.Append(bool)
+node n000cq Call Console.WriteLine(StringView)
+node n000cr Operator *
+	in a -3.0
+node n000cs Make Core.Vec3d
+	in X -4.5
+	in Y 6.0
+	in Z -9.0
+node n000ct Math
+	set expr "Abs(a.X - b.X) <= 9.000000000000001e-9 && Abs(a.Y - b.Y) <= 9.000000000000001e-9 && Abs(a.Z - b.Z) <= 9.000000000000001e-9"
+node n000cu Call String.Clear
+node n000cv Call String.Append(StringView)
+	in text "vec3d.mul.scalar.left "
+node n000cw Call String.Append(bool)
+node n000cx Call Console.WriteLine(StringView)
+node n000cy Operator /
+	in b 4.0
+node n000cz Make Core.Vec3d
+	in X 0.375
+	in Y -0.5
+	in Z 0.75
+node n000d0 Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9"
+node n000d1 Call String.Clear
+node n000d2 Call String.Append(StringView)
+	in text "vec3d.div.scalar "
+node n000d3 Call String.Append(bool)
+node n000d4 Call Console.WriteLine(StringView)
+node n000d5 Call Core.Vec3d.Length
+node n000d6 Operator *
+node n000d7 Make Core.Vec3d
+	in X 10.823152267246359
+	in Y -14.430869689661812
+	in Z 21.646304534492717
+node n000d8 Math
+	set expr "Abs(a.X - b.X) <= 2.164630453449272e-8 && Abs(a.Y - b.Y) <= 2.164630453449272e-8 && Abs(a.Z - b.Z) <= 2.164630453449272e-8"
+node n000d9 Call String.Clear
+node n000da Call String.Append(StringView)
+	in text "vec3d.mul.scalar.wired "
+node n000db Call String.Append(bool)
+node n000dc Call Console.WriteLine(StringView)
+node n000dd Math
+	set expr "v * 2.0 - w / 4 + v * w"
+node n000de Make Core.Vec3d
+	in X 8.0
+	in Y -4.5625
+	in Z -10.5
+node n000df Math
+	set expr "Abs(a.X - b.X) <= 1.0500000000000001e-8 && Abs(a.Y - b.Y) <= 1.0500000000000001e-8 && Abs(a.Z - b.Z) <= 1.0500000000000001e-8"
+node n000dg Call String.Clear
+node n000dh Call String.Append(StringView)
+	in text "vec3d.math "
+node n000di Call String.Append(bool)
+node n000dj Call Console.WriteLine(StringView)
+node n000dk Call Core.Vec3d.Dot
+node n000dl Math
+	set expr "Abs(a - b) <= 1.2500000000000001e-8"
+	in b -12.5
+node n000dm Call String.Clear
+node n000dn Call String.Append(StringView)
+	in text "vec3d.Dot "
+node n000do Call String.Append(bool)
+node n000dp Call Console.WriteLine(StringView)
+node n000dq Call Core.Vec3d.LengthSquared
+node n000dr Math
+	set expr "Abs(a - b) <= 1.525e-8"
+	in b 15.25
+node n000ds Call String.Clear
+node n000dt Call String.Append(StringView)
+	in text "vec3d.LengthSquared "
+node n000du Call String.Append(bool)
+node n000dv Call Console.WriteLine(StringView)
+node n000dw Call Core.Vec3d.Length
+node n000dx Math
+	set expr "Abs(a - b) <= 3.905124837953327e-9"
+	in b 3.905124837953327
+node n000dy Call String.Clear
+node n000dz Call String.Append(StringView)
+	in text "vec3d.Length "
+node n000e0 Call String.Append(bool)
+node n000e1 Call Console.WriteLine(StringView)
+node n000e2 Call Core.Vec3d.DistanceSquared
+node n000e3 Math
+	set expr "Abs(a - b) <= 9.23125e-8"
+	in b 92.3125
+node n000e4 Call String.Clear
+node n000e5 Call String.Append(StringView)
+	in text "vec3d.DistanceSquared "
+node n000e6 Call String.Append(bool)
+node n000e7 Call Console.WriteLine(StringView)
+node n000e8 Call Core.Vec3d.Distance
+node n000e9 Math
+	set expr "Abs(a - b) <= 9.607939425287818e-9"
+	in b 9.607939425287817
+node n000ea Call String.Clear
+node n000eb Call String.Append(StringView)
+	in text "vec3d.Distance "
+node n000ec Call String.Append(bool)
+node n000ed Call Console.WriteLine(StringView)
+node n000ee Call Core.Vec3d.Normalized
+node n000ef Make Core.Vec3d
+	in X 0.5543671429401896
+	in Y 0.03464794643376185
+	in Z -0.8315507144102845
+node n000eg Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9"
+node n000eh Call String.Clear
+node n000ei Call String.Append(StringView)
+	in text "vec3d.Normalized "
+node n000ej Call String.Append(bool)
+node n000ek Call Console.WriteLine(StringView)
+node n000el Make Core.Vec3d
+	in X 0.0
+	in Y 0.0
+	in Z 0.0
+node n000em Call Core.Vec3d.Normalized
+node n000en Make Core.Vec3d
+	in X 0.0
+	in Y 0.0
+	in Z 0.0
+node n000eo Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9"
+node n000ep Call String.Clear
+node n000eq Call String.Append(StringView)
+	in text "vec3d.Normalized.zero "
+node n000er Call String.Append(bool)
+node n000es Call Console.WriteLine(StringView)
+node n000et Call Core.Vec3d.Lerp
+	in t 0.25
+node n000eu Make Core.Vec3d
+	in X 2.125
+	in Y -1.4375
+	in Z 0.75
+node n000ev Math
+	set expr "Abs(a.X - b.X) <= 2.125e-9 && Abs(a.Y - b.Y) <= 2.125e-9 && Abs(a.Z - b.Z) <= 2.125e-9"
+node n000ew Call String.Clear
+node n000ex Call String.Append(StringView)
+	in text "vec3d.Lerp "
+node n000ey Call String.Append(bool)
+node n000ez Call Console.WriteLine(StringView)
+node n000f0 Call Core.Vec3d.Min
+node n000f1 Make Core.Vec3d
+	in X 1.5
+	in Y -2.0
+	in Z -6.0
+node n000f2 Math
+	set expr "Abs(a.X - b.X) <= 6.000000000000001e-9 && Abs(a.Y - b.Y) <= 6.000000000000001e-9 && Abs(a.Z - b.Z) <= 6.000000000000001e-9"
+node n000f3 Call String.Clear
+node n000f4 Call String.Append(StringView)
+	in text "vec3d.Min "
+node n000f5 Call String.Append(bool)
+node n000f6 Call Console.WriteLine(StringView)
+node n000f7 Call Core.Vec3d.Max
+node n000f8 Make Core.Vec3d
+	in X 4.0
+	in Y 0.25
+	in Z 3.0
+node n000f9 Math
+	set expr "Abs(a.X - b.X) <= 4.0e-9 && Abs(a.Y - b.Y) <= 4.0e-9 && Abs(a.Z - b.Z) <= 4.0e-9"
+node n000fa Call String.Clear
+node n000fb Call String.Append(StringView)
+	in text "vec3d.Max "
+node n000fc Call String.Append(bool)
+node n000fd Call Console.WriteLine(StringView)
+node n000fe Make Core.Vec3d
+	in X -1.0
+	in Y -1.0
+	in Z -1.0
+node n000ff Make Core.Vec3d
+	in X 1.0
+	in Y 1.0
+	in Z 1.0
+node n000fg Call Core.Vec3d.Clamp
+node n000fh Make Core.Vec3d
+	in X 1.0
+	in Y -1.0
+	in Z 1.0
+node n000fi Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9"
+node n000fj Call String.Clear
+node n000fk Call String.Append(StringView)
+	in text "vec3d.Clamp "
+node n000fl Call String.Append(bool)
+node n000fm Call Console.WriteLine(StringView)
+node n000fn Make Core.Vec3d
+	in X 2.5
+	in Y -2.5
+	in Z 0.4
+node n000fo Call Core.Vec3d.Abs
+node n000fp Make Core.Vec3d
+	in X 2.5
+	in Y 2.5
+	in Z 0.4
+node n000fq Math
+	set expr "Abs(a.X - b.X) <= 2.5e-9 && Abs(a.Y - b.Y) <= 2.5e-9 && Abs(a.Z - b.Z) <= 2.5e-9"
+node n000fr Call String.Clear
+node n000fs Call String.Append(StringView)
+	in text "vec3d.Abs "
+node n000ft Call String.Append(bool)
+node n000fu Call Console.WriteLine(StringView)
+node n000fv Call Core.Vec3d.Floor
+node n000fw Make Core.Vec3d
+	in X 2.0
+	in Y -3.0
+	in Z 0.0
+node n000fx Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9"
+node n000fy Call String.Clear
+node n000fz Call String.Append(StringView)
+	in text "vec3d.Floor "
+node n000g0 Call String.Append(bool)
+node n000g1 Call Console.WriteLine(StringView)
+node n000g2 Call Core.Vec3d.Ceil
+node n000g3 Make Core.Vec3d
+	in X 3.0
+	in Y -2.0
+	in Z 1.0
+node n000g4 Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9"
+node n000g5 Call String.Clear
+node n000g6 Call String.Append(StringView)
+	in text "vec3d.Ceil "
+node n000g7 Call String.Append(bool)
+node n000g8 Call Console.WriteLine(StringView)
+node n000g9 Call Core.Vec3d.Round
+node n000ga Make Core.Vec3d
+	in X 3.0
+	in Y -3.0
+	in Z 0.0
+node n000gb Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9"
+node n000gc Call String.Clear
+node n000gd Call String.Append(StringView)
+	in text "vec3d.Round "
+node n000ge Call String.Append(bool)
+node n000gf Call Console.WriteLine(StringView)
+node n000gg Make Core.Vec3d
+	in X 0.0
+	in Y 1.0
+	in Z 0.0
+node n000gh Call Core.Vec3d.Reflect
+node n000gi Make Core.Vec3d
+	in X 1.5
+	in Y 2.0
+	in Z 3.0
+node n000gj Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9"
+node n000gk Call String.Clear
+node n000gl Call String.Append(StringView)
+	in text "vec3d.Reflect "
+node n000gm Call String.Append(bool)
+node n000gn Call Console.WriteLine(StringView)
+node n000go Call Core.Vec3d.ProjectOnto
+node n000gp Make Core.Vec3d
+	in X -0.9603841536614646
+	in Y -0.060024009603841535
+	in Z 1.440576230492197
+node n000gq Math
+	set expr "Abs(a.X - b.X) <= 1.440576230492197e-9 && Abs(a.Y - b.Y) <= 1.440576230492197e-9 && Abs(a.Z - b.Z) <= 1.440576230492197e-9"
+node n000gr Call String.Clear
+node n000gs Call String.Append(StringView)
+	in text "vec3d.ProjectOnto "
+node n000gt Call String.Append(bool)
+node n000gu Call Console.WriteLine(StringView)
+node n000gv Call Core.Vec3d.ProjectOnto
+node n000gw Make Core.Vec3d
+	in X 0.0
+	in Y 0.0
+	in Z 0.0
+node n000gx Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9"
+node n000gy Call String.Clear
+node n000gz Call String.Append(StringView)
+	in text "vec3d.ProjectOnto.zero "
+node n000h0 Call String.Append(bool)
+node n000h1 Call Console.WriteLine(StringView)
+node n000h2 Call Core.Vec3d.AngleTo
+node n000h3 Math
+	set expr "Abs(a - b) <= 2.0304318595998e-9"
+	in b 2.0304318595998
+node n000h4 Call String.Clear
+node n000h5 Call String.Append(StringView)
+	in text "vec3d.AngleTo "
+node n000h6 Call String.Append(bool)
+node n000h7 Call Console.WriteLine(StringView)
+node n000h8 Call Core.Vec3d.AngleTo
+node n000h9 Math
+	set expr "Abs(a - b) <= 1.0e-9"
+	in b 0.0
+node n000ha Call String.Clear
+node n000hb Call String.Append(StringView)
+	in text "vec3d.AngleTo.zero "
+node n000hc Call String.Append(bool)
+node n000hd Call Console.WriteLine(StringView)
+node n000he Call Core.Vec3d.IsFinite
+node n000hf Operator ==
+	in b true
+node n000hg Call String.Clear
+node n000hh Call String.Append(StringView)
+	in text "vec3d.IsFinite "
+node n000hi Call String.Append(bool)
+node n000hj Call Console.WriteLine(StringView)
+node n000hk Operator /
+node n000hl Call Core.Vec3d.IsFinite
+node n000hm Operator ==
+	in b false
+node n000hn Call String.Clear
+node n000ho Call String.Append(StringView)
+	in text "vec3d.IsFinite.inf "
+node n000hp Call String.Append(bool)
+node n000hq Call Console.WriteLine(StringView)
+node n000hr Make Core.Vec3d
+	in X 1.500001
+	in Y -2.000001
+	in Z 3.000001
+node n000hs Call Core.Vec3d.ApproxEquals
+node n000ht Operator ==
+	in b true
+node n000hu Call String.Clear
+node n000hv Call String.Append(StringView)
+	in text "vec3d.ApproxEquals "
+node n000hw Call String.Append(bool)
+node n000hx Call Console.WriteLine(StringView)
+node n000hy Make Core.Vec3d
+	in X 1.5001
+	in Y -2.0
+	in Z 3.0
+node n000hz Call Core.Vec3d.ApproxEquals
+node n000i0 Operator ==
+	in b false
+node n000i1 Call String.Clear
+node n000i2 Call String.Append(StringView)
+	in text "vec3d.ApproxEquals.false "
+node n000i3 Call String.Append(bool)
+node n000i4 Call Console.WriteLine(StringView)
+node n000i5 Make Core.Vec3d
+	in X 1.5001
+	in Y -2.0
+	in Z 3.0
+node n000i6 Call Core.Vec3d.ApproxEquals
+	in epsilon 0.001
+node n000i7 Operator ==
+	in b true
+node n000i8 Call String.Clear
+node n000i9 Call String.Append(StringView)
+	in text "vec3d.ApproxEquals.eps "
+node n000ia Call String.Append(bool)
+node n000ib Call Console.WriteLine(StringView)
+node n000ic Call Core.Vec3d.ToVector
+node n000id Call Core.Vec3d.FromVector
+node n000ie Operator ==
+node n000if Operator ==
+	in b true
+node n000ig Call String.Clear
+node n000ih Call String.Append(StringView)
+	in text "vec3d.ToVector.round "
+node n000ii Call String.Append(bool)
+node n000ij Call Console.WriteLine(StringView)
+node n000ik Call Core.Vec3d.ToVector
+node n000il Math
+	set expr "p.x * 1.0 + p.y * 2.0 + p.z * 3.0"
+node n000im Math
+	set expr "Abs(a - b) <= 6.5e-9"
+	in b 6.5
+node n000in Call String.Clear
+node n000io Call String.Append(StringView)
+	in text "vec3d.ToVector.lanes "
+node n000ip Call String.Append(bool)
+node n000iq Call Console.WriteLine(StringView)
+node n000ir Call Core.Vec3d.Cross
+node n000is Make Core.Vec3d
+	in X 11.25
+	in Y 21.0
+	in Z 8.375
+node n000it Math
+	set expr "Abs(a.X - b.X) <= 2.1000000000000003e-8 && Abs(a.Y - b.Y) <= 2.1000000000000003e-8 && Abs(a.Z - b.Z) <= 2.1000000000000003e-8"
+node n000iu Call String.Clear
+node n000iv Call String.Append(StringView)
+	in text "vec3d.Cross "
+node n000iw Call String.Append(bool)
+node n000ix Call Console.WriteLine(StringView)
+node n000iy Call Core.Vec3d.XY
+node n000iz Make Core.Vec2d
+	in X 1.5
+	in Y -2.0
+node n000j0 Math
+	set expr "Abs(a.X - b.X) <= 2.0e-9 && Abs(a.Y - b.Y) <= 2.0e-9"
+node n000j1 Call String.Clear
+node n000j2 Call String.Append(StringView)
+	in text "vec3d.XY "
+node n000j3 Call String.Append(bool)
+node n000j4 Call Console.WriteLine(StringView)
+node n000j5 Get Core.Vec4d.Zero
+node n000j6 Make Core.Vec4d
+	in X 0.0
+	in Y 0.0
+	in Z 0.0
+	in W 0.0
+node n000j7 Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000j8 Call String.Clear
+node n000j9 Call String.Append(StringView)
+	in text "vec4d.Zero "
+node n000ja Call String.Append(bool)
+node n000jb Call Console.WriteLine(StringView)
+node n000jc Get Core.Vec4d.One
+node n000jd Make Core.Vec4d
+	in X 1.0
+	in Y 1.0
+	in Z 1.0
+	in W 1.0
+node n000je Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000jf Call String.Clear
+node n000jg Call String.Append(StringView)
+	in text "vec4d.One "
+node n000jh Call String.Append(bool)
+node n000ji Call Console.WriteLine(StringView)
+node n000jj Get Core.Vec4d.UnitX
+node n000jk Make Core.Vec4d
+	in X 1.0
+	in Y 0.0
+	in Z 0.0
+	in W 0.0
+node n000jl Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000jm Call String.Clear
+node n000jn Call String.Append(StringView)
+	in text "vec4d.UnitX "
+node n000jo Call String.Append(bool)
+node n000jp Call Console.WriteLine(StringView)
+node n000jq Get Core.Vec4d.UnitY
+node n000jr Make Core.Vec4d
+	in X 0.0
+	in Y 1.0
+	in Z 0.0
+	in W 0.0
+node n000js Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000jt Call String.Clear
+node n000ju Call String.Append(StringView)
+	in text "vec4d.UnitY "
+node n000jv Call String.Append(bool)
+node n000jw Call Console.WriteLine(StringView)
+node n000jx Get Core.Vec4d.UnitZ
+node n000jy Make Core.Vec4d
+	in X 0.0
+	in Y 0.0
+	in Z 1.0
+	in W 0.0
+node n000jz Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000k0 Call String.Clear
+node n000k1 Call String.Append(StringView)
+	in text "vec4d.UnitZ "
+node n000k2 Call String.Append(bool)
+node n000k3 Call Console.WriteLine(StringView)
+node n000k4 Get Core.Vec4d.UnitW
+node n000k5 Make Core.Vec4d
+	in X 0.0
+	in Y 0.0
+	in Z 0.0
+	in W 1.0
+node n000k6 Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000k7 Call String.Clear
+node n000k8 Call String.Append(StringView)
+	in text "vec4d.UnitW "
+node n000k9 Call String.Append(bool)
+node n000ka Call Console.WriteLine(StringView)
+node n000kb Make Core.Vec4d
+	in X 1.5
+	in Y -2.0
+	in Z 3.0
+	in W 0.5
+node n000kc Make Core.Vec4d
+	in X 4.0
+	in Y 0.25
+	in Z -6.0
+	in W 2.0
+node n000kd Operator +
+node n000ke Make Core.Vec4d
+	in X 5.5
+	in Y -1.75
+	in Z -3.0
+	in W 2.5
+node n000kf Math
+	set expr "Abs(a.X - b.X) <= 5.5000000000000004e-9 && Abs(a.Y - b.Y) <= 5.5000000000000004e-9 && Abs(a.Z - b.Z) <= 5.5000000000000004e-9 && Abs(a.W - b.W) <= 5.5000000000000004e-9"
+node n000kg Call String.Clear
+node n000kh Call String.Append(StringView)
+	in text "vec4d.add "
+node n000ki Call String.Append(bool)
+node n000kj Call Console.WriteLine(StringView)
+node n000kk Operator -
+node n000kl Make Core.Vec4d
+	in X -2.5
+	in Y -2.25
+	in Z 9.0
+	in W -1.5
+node n000km Math
+	set expr "Abs(a.X - b.X) <= 9.000000000000001e-9 && Abs(a.Y - b.Y) <= 9.000000000000001e-9 && Abs(a.Z - b.Z) <= 9.000000000000001e-9 && Abs(a.W - b.W) <= 9.000000000000001e-9"
+node n000kn Call String.Clear
+node n000ko Call String.Append(StringView)
+	in text "vec4d.sub "
+node n000kp Call String.Append(bool)
+node n000kq Call Console.WriteLine(StringView)
+node n000kr Operator *
+node n000ks Make Core.Vec4d
+	in X 6.0
+	in Y -0.5
+	in Z -18.0
+	in W 1.0
+node n000kt Math
+	set expr "Abs(a.X - b.X) <= 1.8000000000000002e-8 && Abs(a.Y - b.Y) <= 1.8000000000000002e-8 && Abs(a.Z - b.Z) <= 1.8000000000000002e-8 && Abs(a.W - b.W) <= 1.8000000000000002e-8"
+node n000ku Call String.Clear
+node n000kv Call String.Append(StringView)
+	in text "vec4d.mul "
+node n000kw Call String.Append(bool)
+node n000kx Call Console.WriteLine(StringView)
+node n000ky Operator /
+node n000kz Make Core.Vec4d
+	in X 0.375
+	in Y -8.0
+	in Z -0.5
+	in W 0.25
+node n000l0 Math
+	set expr "Abs(a.X - b.X) <= 8.0e-9 && Abs(a.Y - b.Y) <= 8.0e-9 && Abs(a.Z - b.Z) <= 8.0e-9 && Abs(a.W - b.W) <= 8.0e-9"
+node n000l1 Call String.Clear
+node n000l2 Call String.Append(StringView)
+	in text "vec4d.div "
+node n000l3 Call String.Append(bool)
+node n000l4 Call Console.WriteLine(StringView)
+node n000l5 Operator neg
+node n000l6 Make Core.Vec4d
+	in X -1.5
+	in Y 2.0
+	in Z -3.0
+	in W -0.5
+node n000l7 Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9 && Abs(a.W - b.W) <= 3.0000000000000004e-9"
+node n000l8 Call String.Clear
+node n000l9 Call String.Append(StringView)
+	in text "vec4d.neg "
+node n000la Call String.Append(bool)
+node n000lb Call Console.WriteLine(StringView)
+node n000lc Make Core.Vec4d
+	in X 1.5
+	in Y -2.0
+	in Z 3.0
+	in W 0.5
+node n000ld Operator ==
+node n000le Operator ==
+	in b true
+node n000lf Call String.Clear
+node n000lg Call String.Append(StringView)
+	in text "vec4d.eq "
+node n000lh Call String.Append(bool)
+node n000li Call Console.WriteLine(StringView)
+node n000lj Operator ==
+node n000lk Operator ==
+	in b false
+node n000ll Call String.Clear
+node n000lm Call String.Append(StringView)
+	in text "vec4d.eq.false "
+node n000ln Call String.Append(bool)
+node n000lo Call Console.WriteLine(StringView)
+node n000lp Operator !=
+node n000lq Operator ==
+	in b true
+node n000lr Call String.Clear
+node n000ls Call String.Append(StringView)
+	in text "vec4d.ne "
+node n000lt Call String.Append(bool)
+node n000lu Call Console.WriteLine(StringView)
+node n000lv Operator !=
+node n000lw Operator ==
+	in b false
+node n000lx Call String.Clear
+node n000ly Call String.Append(StringView)
+	in text "vec4d.ne.false "
+node n000lz Call String.Append(bool)
+node n000m0 Call Console.WriteLine(StringView)
+node n000m1 Call Core.Vec4d.Scaled
+	in k 2.5
+node n000m2 Make Core.Vec4d
+	in X 3.75
+	in Y -5.0
+	in Z 7.5
+	in W 1.25
+node n000m3 Math
+	set expr "Abs(a.X - b.X) <= 7.500000000000001e-9 && Abs(a.Y - b.Y) <= 7.500000000000001e-9 && Abs(a.Z - b.Z) <= 7.500000000000001e-9 && Abs(a.W - b.W) <= 7.500000000000001e-9"
+node n000m4 Call String.Clear
+node n000m5 Call String.Append(StringView)
+	in text "vec4d.Scaled "
+node n000m6 Call String.Append(bool)
+node n000m7 Call Console.WriteLine(StringView)
+node n000m8 Operator *
+	in b 2.5
+node n000m9 Make Core.Vec4d
+	in X 3.75
+	in Y -5.0
+	in Z 7.5
+	in W 1.25
+node n000ma Math
+	set expr "Abs(a.X - b.X) <= 7.500000000000001e-9 && Abs(a.Y - b.Y) <= 7.500000000000001e-9 && Abs(a.Z - b.Z) <= 7.500000000000001e-9 && Abs(a.W - b.W) <= 7.500000000000001e-9"
+node n000mb Call String.Clear
+node n000mc Call String.Append(StringView)
+	in text "vec4d.mul.scalar "
+node n000md Call String.Append(bool)
+node n000me Call Console.WriteLine(StringView)
+node n000mf Operator *
+	in a -3.0
+node n000mg Make Core.Vec4d
+	in X -4.5
+	in Y 6.0
+	in Z -9.0
+	in W -1.5
+node n000mh Math
+	set expr "Abs(a.X - b.X) <= 9.000000000000001e-9 && Abs(a.Y - b.Y) <= 9.000000000000001e-9 && Abs(a.Z - b.Z) <= 9.000000000000001e-9 && Abs(a.W - b.W) <= 9.000000000000001e-9"
+node n000mi Call String.Clear
+node n000mj Call String.Append(StringView)
+	in text "vec4d.mul.scalar.left "
+node n000mk Call String.Append(bool)
+node n000ml Call Console.WriteLine(StringView)
+node n000mm Operator /
+	in b 4.0
+node n000mn Make Core.Vec4d
+	in X 0.375
+	in Y -0.5
+	in Z 0.75
+	in W 0.125
+node n000mo Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000mp Call String.Clear
+node n000mq Call String.Append(StringView)
+	in text "vec4d.div.scalar "
+node n000mr Call String.Append(bool)
+node n000ms Call Console.WriteLine(StringView)
+node n000mt Call Core.Vec4d.Length
+node n000mu Operator *
+node n000mv Make Core.Vec4d
+	in X 11.231234348903953
+	in Y -14.974979131871937
+	in Z 22.462468697807907
+	in W 3.743744782967984
+node n000mw Math
+	set expr "Abs(a.X - b.X) <= 2.2462468697807907e-8 && Abs(a.Y - b.Y) <= 2.2462468697807907e-8 && Abs(a.Z - b.Z) <= 2.2462468697807907e-8 && Abs(a.W - b.W) <= 2.2462468697807907e-8"
+node n000mx Call String.Clear
+node n000my Call String.Append(StringView)
+	in text "vec4d.mul.scalar.wired "
+node n000mz Call String.Append(bool)
+node n000n0 Call Console.WriteLine(StringView)
+node n000n1 Math
+	set expr "v * 2.0 - w / 4 + v * w"
+node n000n2 Make Core.Vec4d
+	in X 8.0
+	in Y -4.5625
+	in Z -10.5
+	in W 1.5
+node n000n3 Math
+	set expr "Abs(a.X - b.X) <= 1.0500000000000001e-8 && Abs(a.Y - b.Y) <= 1.0500000000000001e-8 && Abs(a.Z - b.Z) <= 1.0500000000000001e-8 && Abs(a.W - b.W) <= 1.0500000000000001e-8"
+node n000n4 Call String.Clear
+node n000n5 Call String.Append(StringView)
+	in text "vec4d.math "
+node n000n6 Call String.Append(bool)
+node n000n7 Call Console.WriteLine(StringView)
+node n000n8 Call Core.Vec4d.Dot
+node n000n9 Math
+	set expr "Abs(a - b) <= 1.15e-8"
+	in b -11.5
+node n000na Call String.Clear
+node n000nb Call String.Append(StringView)
+	in text "vec4d.Dot "
+node n000nc Call String.Append(bool)
+node n000nd Call Console.WriteLine(StringView)
+node n000ne Call Core.Vec4d.LengthSquared
+node n000nf Math
+	set expr "Abs(a - b) <= 1.55e-8"
+	in b 15.5
+node n000ng Call String.Clear
+node n000nh Call String.Append(StringView)
+	in text "vec4d.LengthSquared "
+node n000ni Call String.Append(bool)
+node n000nj Call Console.WriteLine(StringView)
+node n000nk Call Core.Vec4d.Length
+node n000nl Math
+	set expr "Abs(a - b) <= 3.937003937005906e-9"
+	in b 3.9370039370059056
+node n000nm Call String.Clear
+node n000nn Call String.Append(StringView)
+	in text "vec4d.Length "
+node n000no Call String.Append(bool)
+node n000np Call Console.WriteLine(StringView)
+node n000nq Call Core.Vec4d.DistanceSquared
+node n000nr Math
+	set expr "Abs(a - b) <= 9.456250000000001e-8"
+	in b 94.5625
+node n000ns Call String.Clear
+node n000nt Call String.Append(StringView)
+	in text "vec4d.DistanceSquared "
+node n000nu Call String.Append(bool)
+node n000nv Call Console.WriteLine(StringView)
+node n000nw Call Core.Vec4d.Distance
+node n000nx Math
+	set expr "Abs(a - b) <= 9.724325169388363e-9"
+	in b 9.724325169388361
+node n000ny Call String.Clear
+node n000nz Call String.Append(StringView)
+	in text "vec4d.Distance "
+node n000o0 Call String.Append(bool)
+node n000o1 Call Console.WriteLine(StringView)
+node n000o2 Call Core.Vec4d.Normalized
+node n000o3 Make Core.Vec4d
+	in X 0.5342244506353423
+	in Y 0.033389028164708894
+	in Z -0.8013366759530134
+	in W 0.26711222531767115
+node n000o4 Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000o5 Call String.Clear
+node n000o6 Call String.Append(StringView)
+	in text "vec4d.Normalized "
+node n000o7 Call String.Append(bool)
+node n000o8 Call Console.WriteLine(StringView)
+node n000o9 Make Core.Vec4d
+	in X 0.0
+	in Y 0.0
+	in Z 0.0
+	in W 0.0
+node n000oa Call Core.Vec4d.Normalized
+node n000ob Make Core.Vec4d
+	in X 0.0
+	in Y 0.0
+	in Z 0.0
+	in W 0.0
+node n000oc Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000od Call String.Clear
+node n000oe Call String.Append(StringView)
+	in text "vec4d.Normalized.zero "
+node n000of Call String.Append(bool)
+node n000og Call Console.WriteLine(StringView)
+node n000oh Call Core.Vec4d.Lerp
+	in t 0.25
+node n000oi Make Core.Vec4d
+	in X 2.125
+	in Y -1.4375
+	in Z 0.75
+	in W 0.875
+node n000oj Math
+	set expr "Abs(a.X - b.X) <= 2.125e-9 && Abs(a.Y - b.Y) <= 2.125e-9 && Abs(a.Z - b.Z) <= 2.125e-9 && Abs(a.W - b.W) <= 2.125e-9"
+node n000ok Call String.Clear
+node n000ol Call String.Append(StringView)
+	in text "vec4d.Lerp "
+node n000om Call String.Append(bool)
+node n000on Call Console.WriteLine(StringView)
+node n000oo Call Core.Vec4d.Min
+node n000op Make Core.Vec4d
+	in X 1.5
+	in Y -2.0
+	in Z -6.0
+	in W 0.5
+node n000oq Math
+	set expr "Abs(a.X - b.X) <= 6.000000000000001e-9 && Abs(a.Y - b.Y) <= 6.000000000000001e-9 && Abs(a.Z - b.Z) <= 6.000000000000001e-9 && Abs(a.W - b.W) <= 6.000000000000001e-9"
+node n000or Call String.Clear
+node n000os Call String.Append(StringView)
+	in text "vec4d.Min "
+node n000ot Call String.Append(bool)
+node n000ou Call Console.WriteLine(StringView)
+node n000ov Call Core.Vec4d.Max
+node n000ow Make Core.Vec4d
+	in X 4.0
+	in Y 0.25
+	in Z 3.0
+	in W 2.0
+node n000ox Math
+	set expr "Abs(a.X - b.X) <= 4.0e-9 && Abs(a.Y - b.Y) <= 4.0e-9 && Abs(a.Z - b.Z) <= 4.0e-9 && Abs(a.W - b.W) <= 4.0e-9"
+node n000oy Call String.Clear
+node n000oz Call String.Append(StringView)
+	in text "vec4d.Max "
+node n000p0 Call String.Append(bool)
+node n000p1 Call Console.WriteLine(StringView)
+node n000p2 Make Core.Vec4d
+	in X -1.0
+	in Y -1.0
+	in Z -1.0
+	in W -1.0
+node n000p3 Make Core.Vec4d
+	in X 1.0
+	in Y 1.0
+	in Z 1.0
+	in W 1.0
+node n000p4 Call Core.Vec4d.Clamp
+node n000p5 Make Core.Vec4d
+	in X 1.0
+	in Y -1.0
+	in Z 1.0
+	in W 0.5
+node n000p6 Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000p7 Call String.Clear
+node n000p8 Call String.Append(StringView)
+	in text "vec4d.Clamp "
+node n000p9 Call String.Append(bool)
+node n000pa Call Console.WriteLine(StringView)
+node n000pb Make Core.Vec4d
+	in X 2.5
+	in Y -2.5
+	in Z 0.4
+	in W -1.6
+node n000pc Call Core.Vec4d.Abs
+node n000pd Make Core.Vec4d
+	in X 2.5
+	in Y 2.5
+	in Z 0.4
+	in W 1.6
+node n000pe Math
+	set expr "Abs(a.X - b.X) <= 2.5e-9 && Abs(a.Y - b.Y) <= 2.5e-9 && Abs(a.Z - b.Z) <= 2.5e-9 && Abs(a.W - b.W) <= 2.5e-9"
+node n000pf Call String.Clear
+node n000pg Call String.Append(StringView)
+	in text "vec4d.Abs "
+node n000ph Call String.Append(bool)
+node n000pi Call Console.WriteLine(StringView)
+node n000pj Call Core.Vec4d.Floor
+node n000pk Make Core.Vec4d
+	in X 2.0
+	in Y -3.0
+	in Z 0.0
+	in W -2.0
+node n000pl Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9 && Abs(a.W - b.W) <= 3.0000000000000004e-9"
+node n000pm Call String.Clear
+node n000pn Call String.Append(StringView)
+	in text "vec4d.Floor "
+node n000po Call String.Append(bool)
+node n000pp Call Console.WriteLine(StringView)
+node n000pq Call Core.Vec4d.Ceil
+node n000pr Make Core.Vec4d
+	in X 3.0
+	in Y -2.0
+	in Z 1.0
+	in W -1.0
+node n000ps Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9 && Abs(a.W - b.W) <= 3.0000000000000004e-9"
+node n000pt Call String.Clear
+node n000pu Call String.Append(StringView)
+	in text "vec4d.Ceil "
+node n000pv Call String.Append(bool)
+node n000pw Call Console.WriteLine(StringView)
+node n000px Call Core.Vec4d.Round
+node n000py Make Core.Vec4d
+	in X 3.0
+	in Y -3.0
+	in Z 0.0
+	in W -2.0
+node n000pz Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9 && Abs(a.W - b.W) <= 3.0000000000000004e-9"
+node n000q0 Call String.Clear
+node n000q1 Call String.Append(StringView)
+	in text "vec4d.Round "
+node n000q2 Call String.Append(bool)
+node n000q3 Call Console.WriteLine(StringView)
+node n000q4 Make Core.Vec4d
+	in X 0.0
+	in Y 1.0
+	in Z 0.0
+	in W 0.0
+node n000q5 Call Core.Vec4d.Reflect
+node n000q6 Make Core.Vec4d
+	in X 1.5
+	in Y 2.0
+	in Z 3.0
+	in W 0.5
+node n000q7 Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9 && Abs(a.W - b.W) <= 3.0000000000000004e-9"
+node n000q8 Call String.Clear
+node n000q9 Call String.Append(StringView)
+	in text "vec4d.Reflect "
+node n000qa Call String.Append(bool)
+node n000qb Call Console.WriteLine(StringView)
+node n000qc Call Core.Vec4d.ProjectOnto
+node n000qd Make Core.Vec4d
+	in X -0.8205128205128205
+	in Y -0.05128205128205128
+	in Z 1.2307692307692308
+	in W -0.41025641025641024
+node n000qe Math
+	set expr "Abs(a.X - b.X) <= 1.230769230769231e-9 && Abs(a.Y - b.Y) <= 1.230769230769231e-9 && Abs(a.Z - b.Z) <= 1.230769230769231e-9 && Abs(a.W - b.W) <= 1.230769230769231e-9"
+node n000qf Call String.Clear
+node n000qg Call String.Append(StringView)
+	in text "vec4d.ProjectOnto "
+node n000qh Call String.Append(bool)
+node n000qi Call Console.WriteLine(StringView)
+node n000qj Call Core.Vec4d.ProjectOnto
+node n000qk Make Core.Vec4d
+	in X 0.0
+	in Y 0.0
+	in Z 0.0
+	in W 0.0
+node n000ql Math
+	set expr "Abs(a.X - b.X) <= 1.0e-9 && Abs(a.Y - b.Y) <= 1.0e-9 && Abs(a.Z - b.Z) <= 1.0e-9 && Abs(a.W - b.W) <= 1.0e-9"
+node n000qm Call String.Clear
+node n000qn Call String.Append(StringView)
+	in text "vec4d.ProjectOnto.zero "
+node n000qo Call String.Append(bool)
+node n000qp Call Console.WriteLine(StringView)
+node n000qq Call Core.Vec4d.AngleTo
+node n000qr Math
+	set expr "Abs(a - b) <= 1.971555847912326e-9"
+	in b 1.971555847912326
+node n000qs Call String.Clear
+node n000qt Call String.Append(StringView)
+	in text "vec4d.AngleTo "
+node n000qu Call String.Append(bool)
+node n000qv Call Console.WriteLine(StringView)
+node n000qw Call Core.Vec4d.AngleTo
+node n000qx Math
+	set expr "Abs(a - b) <= 1.0e-9"
+	in b 0.0
+node n000qy Call String.Clear
+node n000qz Call String.Append(StringView)
+	in text "vec4d.AngleTo.zero "
+node n000r0 Call String.Append(bool)
+node n000r1 Call Console.WriteLine(StringView)
+node n000r2 Call Core.Vec4d.IsFinite
+node n000r3 Operator ==
+	in b true
+node n000r4 Call String.Clear
+node n000r5 Call String.Append(StringView)
+	in text "vec4d.IsFinite "
+node n000r6 Call String.Append(bool)
+node n000r7 Call Console.WriteLine(StringView)
+node n000r8 Operator /
+node n000r9 Call Core.Vec4d.IsFinite
+node n000ra Operator ==
+	in b false
+node n000rb Call String.Clear
+node n000rc Call String.Append(StringView)
+	in text "vec4d.IsFinite.inf "
+node n000rd Call String.Append(bool)
+node n000re Call Console.WriteLine(StringView)
+node n000rf Make Core.Vec4d
+	in X 1.500001
+	in Y -2.000001
+	in Z 3.000001
+	in W 0.500001
+node n000rg Call Core.Vec4d.ApproxEquals
+node n000rh Operator ==
+	in b true
+node n000ri Call String.Clear
+node n000rj Call String.Append(StringView)
+	in text "vec4d.ApproxEquals "
+node n000rk Call String.Append(bool)
+node n000rl Call Console.WriteLine(StringView)
+node n000rm Make Core.Vec4d
+	in X 1.5001
+	in Y -2.0
+	in Z 3.0
+	in W 0.5
+node n000rn Call Core.Vec4d.ApproxEquals
+node n000ro Operator ==
+	in b false
+node n000rp Call String.Clear
+node n000rq Call String.Append(StringView)
+	in text "vec4d.ApproxEquals.false "
+node n000rr Call String.Append(bool)
+node n000rs Call Console.WriteLine(StringView)
+node n000rt Make Core.Vec4d
+	in X 1.5001
+	in Y -2.0
+	in Z 3.0
+	in W 0.5
+node n000ru Call Core.Vec4d.ApproxEquals
+	in epsilon 0.001
+node n000rv Operator ==
+	in b true
+node n000rw Call String.Clear
+node n000rx Call String.Append(StringView)
+	in text "vec4d.ApproxEquals.eps "
+node n000ry Call String.Append(bool)
+node n000rz Call Console.WriteLine(StringView)
+node n000s0 Call Core.Vec4d.ToVector
+node n000s1 Call Core.Vec4d.FromVector
+node n000s2 Operator ==
+node n000s3 Operator ==
+	in b true
+node n000s4 Call String.Clear
+node n000s5 Call String.Append(StringView)
+	in text "vec4d.ToVector.round "
+node n000s6 Call String.Append(bool)
+node n000s7 Call Console.WriteLine(StringView)
+node n000s8 Call Core.Vec4d.ToVector
+node n000s9 Math
+	set expr "p.x * 1.0 + p.y * 2.0 + p.z * 3.0 + p.w * 4.0"
+node n000sa Math
+	set expr "Abs(a - b) <= 8.5e-9"
+	in b 8.5
+node n000sb Call String.Clear
+node n000sc Call String.Append(StringView)
+	in text "vec4d.ToVector.lanes "
+node n000sd Call String.Append(bool)
+node n000se Call Console.WriteLine(StringView)
+node n000sf Call Core.Vec4d.XYZ
+node n000sg Make Core.Vec3d
+	in X 1.5
+	in Y -2.0
+	in Z 3.0
+node n000sh Math
+	set expr "Abs(a.X - b.X) <= 3.0000000000000004e-9 && Abs(a.Y - b.Y) <= 3.0000000000000004e-9 && Abs(a.Z - b.Z) <= 3.0000000000000004e-9"
+node n000si Call String.Clear
+node n000sj Call String.Append(StringView)
+	in text "vec4d.XYZ "
+node n000sk Call String.Append(bool)
+node n000sl Call Console.WriteLine(StringView)
+node n000sm Make Core.Vec3d
+	in X 7.0
+	in Y 8.0
+	in Z 9.0
+node n000sn Call Core.Vec4d.FromVec3
+	in w -1.0
+node n000so Make Core.Vec4d
+	in X 7.0
+	in Y 8.0
+	in Z 9.0
+	in W -1.0
+node n000sp Math
+	set expr "Abs(a.X - b.X) <= 9.000000000000001e-9 && Abs(a.Y - b.Y) <= 9.000000000000001e-9 && Abs(a.Z - b.Z) <= 9.000000000000001e-9 && Abs(a.W - b.W) <= 9.000000000000001e-9"
+node n000sq Call String.Clear
+node n000sr Call String.Append(StringView)
+	in text "vec4d.FromVec3 "
+node n000ss Call String.Append(bool)
+node n000st Call Console.WriteLine(StringView)
+node n000su Return
+	in value 0
+wire n00000.then n00001.in
+wire n00002.value n00004.a
+wire n00003.value n00004.b
+wire n00001.then n00005.in
+wire n00001.object n00005.receiver
+wire n00005.then n00006.in
+wire n00001.object n00006.receiver
+wire n00006.then n00007.in
+wire n00001.object n00007.receiver
+wire n00004.result n00007.value
+wire n00007.then n00008.in
+wire n00001.object n00008.text
+wire n00009.value n0000b.a
+wire n0000a.value n0000b.b
+wire n00008.then n0000c.in
+wire n00001.object n0000c.receiver
+wire n0000c.then n0000d.in
+wire n00001.object n0000d.receiver
+wire n0000d.then n0000e.in
+wire n00001.object n0000e.receiver
+wire n0000b.result n0000e.value
+wire n0000e.then n0000f.in
+wire n00001.object n0000f.text
+wire n0000g.value n0000i.a
+wire n0000h.value n0000i.b
+wire n0000f.then n0000j.in
+wire n00001.object n0000j.receiver
+wire n0000j.then n0000k.in
+wire n00001.object n0000k.receiver
+wire n0000k.then n0000l.in
+wire n00001.object n0000l.receiver
+wire n0000i.result n0000l.value
+wire n0000l.then n0000m.in
+wire n00001.object n0000m.text
+wire n0000n.value n0000p.a
+wire n0000o.value n0000p.b
+wire n0000m.then n0000q.in
+wire n00001.object n0000q.receiver
+wire n0000q.then n0000r.in
+wire n00001.object n0000r.receiver
+wire n0000r.then n0000s.in
+wire n00001.object n0000s.receiver
+wire n0000p.result n0000s.value
+wire n0000s.then n0000t.in
+wire n00001.object n0000t.text
+wire n0000u.value n0000w.a
+wire n0000v.value n0000w.b
+wire n0000w.result n0000y.a
+wire n0000x.value n0000y.b
+wire n0000t.then n0000z.in
+wire n00001.object n0000z.receiver
+wire n0000z.then n00010.in
+wire n00001.object n00010.receiver
+wire n00010.then n00011.in
+wire n00001.object n00011.receiver
+wire n0000y.result n00011.value
+wire n00011.then n00012.in
+wire n00001.object n00012.text
+wire n0000u.value n00013.a
+wire n0000v.value n00013.b
+wire n00013.result n00015.a
+wire n00014.value n00015.b
+wire n00012.then n00016.in
+wire n00001.object n00016.receiver
+wire n00016.then n00017.in
+wire n00001.object n00017.receiver
+wire n00017.then n00018.in
+wire n00001.object n00018.receiver
+wire n00015.result n00018.value
+wire n00018.then n00019.in
+wire n00001.object n00019.text
+wire n0000u.value n0001a.a
+wire n0000v.value n0001a.b
+wire n0001a.result n0001c.a
+wire n0001b.value n0001c.b
+wire n00019.then n0001d.in
+wire n00001.object n0001d.receiver
+wire n0001d.then n0001e.in
+wire n00001.object n0001e.receiver
+wire n0001e.then n0001f.in
+wire n00001.object n0001f.receiver
+wire n0001c.result n0001f.value
+wire n0001f.then n0001g.in
+wire n00001.object n0001g.text
+wire n0000u.value n0001h.a
+wire n0000v.value n0001h.b
+wire n0001h.result n0001j.a
+wire n0001i.value n0001j.b
+wire n0001g.then n0001k.in
+wire n00001.object n0001k.receiver
+wire n0001k.then n0001l.in
+wire n00001.object n0001l.receiver
+wire n0001l.then n0001m.in
+wire n00001.object n0001m.receiver
+wire n0001j.result n0001m.value
+wire n0001m.then n0001n.in
+wire n00001.object n0001n.text
+wire n0000u.value n0001o.a
+wire n0001o.result n0001q.a
+wire n0001p.value n0001q.b
+wire n0001n.then n0001r.in
+wire n00001.object n0001r.receiver
+wire n0001r.then n0001s.in
+wire n00001.object n0001s.receiver
+wire n0001s.then n0001t.in
+wire n00001.object n0001t.receiver
+wire n0001q.result n0001t.value
+wire n0001t.then n0001u.in
+wire n00001.object n0001u.text
+wire n0000u.value n0001w.a
+wire n0001v.value n0001w.b
+wire n0001w.result n0001x.a
+wire n0001u.then n0001y.in
+wire n00001.object n0001y.receiver
+wire n0001y.then n0001z.in
+wire n00001.object n0001z.receiver
+wire n0001z.then n00020.in
+wire n00001.object n00020.receiver
+wire n0001x.result n00020.value
+wire n00020.then n00021.in
+wire n00001.object n00021.text
+wire n0000u.value n00022.a
+wire n0000v.value n00022.b
+wire n00022.result n00023.a
+wire n00021.then n00024.in
+wire n00001.object n00024.receiver
+wire n00024.then n00025.in
+wire n00001.object n00025.receiver
+wire n00025.then n00026.in
+wire n00001.object n00026.receiver
+wire n00023.result n00026.value
+wire n00026.then n00027.in
+wire n00001.object n00027.text
+wire n0000u.value n00028.a
+wire n0000v.value n00028.b
+wire n00028.result n00029.a
+wire n00027.then n0002a.in
+wire n00001.object n0002a.receiver
+wire n0002a.then n0002b.in
+wire n00001.object n0002b.receiver
+wire n0002b.then n0002c.in
+wire n00001.object n0002c.receiver
+wire n00029.result n0002c.value
+wire n0002c.then n0002d.in
+wire n00001.object n0002d.text
+wire n0000u.value n0002e.a
+wire n0000u.value n0002e.b
+wire n0002e.result n0002f.a
+wire n0002d.then n0002g.in
+wire n00001.object n0002g.receiver
+wire n0002g.then n0002h.in
+wire n00001.object n0002h.receiver
+wire n0002h.then n0002i.in
+wire n00001.object n0002i.receiver
+wire n0002f.result n0002i.value
+wire n0002i.then n0002j.in
+wire n00001.object n0002j.text
+wire n0000u.value n0002k.receiver
+wire n0002k.result n0002m.a
+wire n0002l.value n0002m.b
+wire n0002j.then n0002n.in
+wire n00001.object n0002n.receiver
+wire n0002n.then n0002o.in
+wire n00001.object n0002o.receiver
+wire n0002o.then n0002p.in
+wire n00001.object n0002p.receiver
+wire n0002m.result n0002p.value
+wire n0002p.then n0002q.in
+wire n00001.object n0002q.text
+wire n0000u.value n0002r.a
+wire n0002r.result n0002t.a
+wire n0002s.value n0002t.b
+wire n0002q.then n0002u.in
+wire n00001.object n0002u.receiver
+wire n0002u.then n0002v.in
+wire n00001.object n0002v.receiver
+wire n0002v.then n0002w.in
+wire n00001.object n0002w.receiver
+wire n0002t.result n0002w.value
+wire n0002w.then n0002x.in
+wire n00001.object n0002x.text
+wire n0000u.value n0002y.b
+wire n0002y.result n00030.a
+wire n0002z.value n00030.b
+wire n0002x.then n00031.in
+wire n00001.object n00031.receiver
+wire n00031.then n00032.in
+wire n00001.object n00032.receiver
+wire n00032.then n00033.in
+wire n00001.object n00033.receiver
+wire n00030.result n00033.value
+wire n00033.then n00034.in
+wire n00001.object n00034.text
+wire n0000u.value n00035.a
+wire n00035.result n00037.a
+wire n00036.value n00037.b
+wire n00034.then n00038.in
+wire n00001.object n00038.receiver
+wire n00038.then n00039.in
+wire n00001.object n00039.receiver
+wire n00039.then n0003a.in
+wire n00001.object n0003a.receiver
+wire n00037.result n0003a.value
+wire n0003a.then n0003b.in
+wire n00001.object n0003b.text
+wire n0000v.value n0003c.receiver
+wire n0003c.result n0003d.a
+wire n0000u.value n0003d.b
+wire n0003d.result n0003f.a
+wire n0003e.value n0003f.b
+wire n0003b.then n0003g.in
+wire n00001.object n0003g.receiver
+wire n0003g.then n0003h.in
+wire n00001.object n0003h.receiver
+wire n0003h.then n0003i.in
+wire n00001.object n0003i.receiver
+wire n0003f.result n0003i.value
+wire n0003i.then n0003j.in
+wire n00001.object n0003j.text
+wire n0000u.value n0003k.v
+wire n0000v.value n0003k.w
+wire n0003k.result n0003m.a
+wire n0003l.value n0003m.b
+wire n0003j.then n0003n.in
+wire n00001.object n0003n.receiver
+wire n0003n.then n0003o.in
+wire n00001.object n0003o.receiver
+wire n0003o.then n0003p.in
+wire n00001.object n0003p.receiver
+wire n0003m.result n0003p.value
+wire n0003p.then n0003q.in
+wire n00001.object n0003q.text
+wire n0000v.value n0003r.b
+wire n0000u.value n0003r.receiver
+wire n0003r.result n0003s.a
+wire n0003q.then n0003t.in
+wire n00001.object n0003t.receiver
+wire n0003t.then n0003u.in
+wire n00001.object n0003u.receiver
+wire n0003u.then n0003v.in
+wire n00001.object n0003v.receiver
+wire n0003s.result n0003v.value
+wire n0003v.then n0003w.in
+wire n00001.object n0003w.text
+wire n0000u.value n0003x.receiver
+wire n0003x.result n0003y.a
+wire n0003w.then n0003z.in
+wire n00001.object n0003z.receiver
+wire n0003z.then n00040.in
+wire n00001.object n00040.receiver
+wire n00040.then n00041.in
+wire n00001.object n00041.receiver
+wire n0003y.result n00041.value
+wire n00041.then n00042.in
+wire n00001.object n00042.text
+wire n0000u.value n00043.receiver
+wire n00043.result n00044.a
+wire n00042.then n00045.in
+wire n00001.object n00045.receiver
+wire n00045.then n00046.in
+wire n00001.object n00046.receiver
+wire n00046.then n00047.in
+wire n00001.object n00047.receiver
+wire n00044.result n00047.value
+wire n00047.then n00048.in
+wire n00001.object n00048.text
+wire n0000v.value n00049.b
+wire n0000u.value n00049.receiver
+wire n00049.result n0004a.a
+wire n00048.then n0004b.in
+wire n00001.object n0004b.receiver
+wire n0004b.then n0004c.in
+wire n00001.object n0004c.receiver
+wire n0004c.then n0004d.in
+wire n00001.object n0004d.receiver
+wire n0004a.result n0004d.value
+wire n0004d.then n0004e.in
+wire n00001.object n0004e.text
+wire n0000v.value n0004f.b
+wire n0000u.value n0004f.receiver
+wire n0004f.result n0004g.a
+wire n0004e.then n0004h.in
+wire n00001.object n0004h.receiver
+wire n0004h.then n0004i.in
+wire n00001.object n0004i.receiver
+wire n0004i.then n0004j.in
+wire n00001.object n0004j.receiver
+wire n0004g.result n0004j.value
+wire n0004j.then n0004k.in
+wire n00001.object n0004k.text
+wire n0000v.value n0004l.receiver
+wire n0004l.result n0004n.a
+wire n0004m.value n0004n.b
+wire n0004k.then n0004o.in
+wire n00001.object n0004o.receiver
+wire n0004o.then n0004p.in
+wire n00001.object n0004p.receiver
+wire n0004p.then n0004q.in
+wire n00001.object n0004q.receiver
+wire n0004n.result n0004q.value
+wire n0004q.then n0004r.in
+wire n00001.object n0004r.text
+wire n0004s.value n0004t.receiver
+wire n0004t.result n0004v.a
+wire n0004u.value n0004v.b
+wire n0004r.then n0004w.in
+wire n00001.object n0004w.receiver
+wire n0004w.then n0004x.in
+wire n00001.object n0004x.receiver
+wire n0004x.then n0004y.in
+wire n00001.object n0004y.receiver
+wire n0004v.result n0004y.value
+wire n0004y.then n0004z.in
+wire n00001.object n0004z.text
+wire n0000u.value n00050.receiver
+wire n0000v.value n00050.to
+wire n00050.result n00052.a
+wire n00051.value n00052.b
+wire n0004z.then n00053.in
+wire n00001.object n00053.receiver
+wire n00053.then n00054.in
+wire n00001.object n00054.receiver
+wire n00054.then n00055.in
+wire n00001.object n00055.receiver
+wire n00052.result n00055.value
+wire n00055.then n00056.in
+wire n00001.object n00056.text
+wire n0000v.value n00057.b
+wire n0000u.value n00057.receiver
+wire n00057.result n00059.a
+wire n00058.value n00059.b
+wire n00056.then n0005a.in
+wire n00001.object n0005a.receiver
+wire n0005a.then n0005b.in
+wire n00001.object n0005b.receiver
+wire n0005b.then n0005c.in
+wire n00001.object n0005c.receiver
+wire n00059.result n0005c.value
+wire n0005c.then n0005d.in
+wire n00001.object n0005d.text
+wire n0000v.value n0005e.b
+wire n0000u.value n0005e.receiver
+wire n0005e.result n0005g.a
+wire n0005f.value n0005g.b
+wire n0005d.then n0005h.in
+wire n00001.object n0005h.receiver
+wire n0005h.then n0005i.in
+wire n00001.object n0005i.receiver
+wire n0005i.then n0005j.in
+wire n00001.object n0005j.receiver
+wire n0005g.result n0005j.value
+wire n0005j.then n0005k.in
+wire n00001.object n0005k.text
+wire n0005m.value n0005n.hi
+wire n0005l.value n0005n.lo
+wire n0000u.value n0005n.receiver
+wire n0005n.result n0005p.a
+wire n0005o.value n0005p.b
+wire n0005k.then n0005q.in
+wire n00001.object n0005q.receiver
+wire n0005q.then n0005r.in
+wire n00001.object n0005r.receiver
+wire n0005r.then n0005s.in
+wire n00001.object n0005s.receiver
+wire n0005p.result n0005s.value
+wire n0005s.then n0005t.in
+wire n00001.object n0005t.text
+wire n0005u.value n0005v.receiver
+wire n0005v.result n0005x.a
+wire n0005w.value n0005x.b
+wire n0005t.then n0005y.in
+wire n00001.object n0005y.receiver
+wire n0005y.then n0005z.in
+wire n00001.object n0005z.receiver
+wire n0005z.then n00060.in
+wire n00001.object n00060.receiver
+wire n0005x.result n00060.value
+wire n00060.then n00061.in
+wire n00001.object n00061.text
+wire n0005u.value n00062.receiver
+wire n00062.result n00064.a
+wire n00063.value n00064.b
+wire n00061.then n00065.in
+wire n00001.object n00065.receiver
+wire n00065.then n00066.in
+wire n00001.object n00066.receiver
+wire n00066.then n00067.in
+wire n00001.object n00067.receiver
+wire n00064.result n00067.value
+wire n00067.then n00068.in
+wire n00001.object n00068.text
+wire n0005u.value n00069.receiver
+wire n00069.result n0006b.a
+wire n0006a.value n0006b.b
+wire n00068.then n0006c.in
+wire n00001.object n0006c.receiver
+wire n0006c.then n0006d.in
+wire n00001.object n0006d.receiver
+wire n0006d.then n0006e.in
+wire n00001.object n0006e.receiver
+wire n0006b.result n0006e.value
+wire n0006e.then n0006f.in
+wire n00001.object n0006f.text
+wire n0005u.value n0006g.receiver
+wire n0006g.result n0006i.a
+wire n0006h.value n0006i.b
+wire n0006f.then n0006j.in
+wire n00001.object n0006j.receiver
+wire n0006j.then n0006k.in
+wire n00001.object n0006k.receiver
+wire n0006k.then n0006l.in
+wire n00001.object n0006l.receiver
+wire n0006i.result n0006l.value
+wire n0006l.then n0006m.in
+wire n00001.object n0006m.text
+wire n0006n.value n0006o.normal
+wire n0000u.value n0006o.receiver
+wire n0006o.result n0006q.a
+wire n0006p.value n0006q.b
+wire n0006m.then n0006r.in
+wire n00001.object n0006r.receiver
+wire n0006r.then n0006s.in
+wire n00001.object n0006s.receiver
+wire n0006s.then n0006t.in
+wire n00001.object n0006t.receiver
+wire n0006q.result n0006t.value
+wire n0006t.then n0006u.in
+wire n00001.object n0006u.text
+wire n0000v.value n0006v.b
+wire n0000u.value n0006v.receiver
+wire n0006v.result n0006x.a
+wire n0006w.value n0006x.b
+wire n0006u.then n0006y.in
+wire n00001.object n0006y.receiver
+wire n0006y.then n0006z.in
+wire n00001.object n0006z.receiver
+wire n0006z.then n00070.in
+wire n00001.object n00070.receiver
+wire n0006x.result n00070.value
+wire n00070.then n00071.in
+wire n00001.object n00071.text
+wire n0004s.value n00072.b
+wire n0000u.value n00072.receiver
+wire n00072.result n00074.a
+wire n00073.value n00074.b
+wire n00071.then n00075.in
+wire n00001.object n00075.receiver
+wire n00075.then n00076.in
+wire n00001.object n00076.receiver
+wire n00076.then n00077.in
+wire n00001.object n00077.receiver
+wire n00074.result n00077.value
+wire n00077.then n00078.in
+wire n00001.object n00078.text
+wire n0000v.value n00079.b
+wire n0000u.value n00079.receiver
+wire n00079.result n0007a.a
+wire n00078.then n0007b.in
+wire n00001.object n0007b.receiver
+wire n0007b.then n0007c.in
+wire n00001.object n0007c.receiver
+wire n0007c.then n0007d.in
+wire n00001.object n0007d.receiver
+wire n0007a.result n0007d.value
+wire n0007d.then n0007e.in
+wire n00001.object n0007e.text
+wire n0004s.value n0007f.b
+wire n0000u.value n0007f.receiver
+wire n0007f.result n0007g.a
+wire n0007e.then n0007h.in
+wire n00001.object n0007h.receiver
+wire n0007h.then n0007i.in
+wire n00001.object n0007i.receiver
+wire n0007i.then n0007j.in
+wire n00001.object n0007j.receiver
+wire n0007g.result n0007j.value
+wire n0007j.then n0007k.in
+wire n00001.object n0007k.text
+wire n0000u.value n0007l.receiver
+wire n0007l.result n0007m.a
+wire n0007k.then n0007n.in
+wire n00001.object n0007n.receiver
+wire n0007n.then n0007o.in
+wire n00001.object n0007o.receiver
+wire n0007o.then n0007p.in
+wire n00001.object n0007p.receiver
+wire n0007m.result n0007p.value
+wire n0007p.then n0007q.in
+wire n00001.object n0007q.text
+wire n0000u.value n0007r.a
+wire n0004s.value n0007r.b
+wire n0007r.result n0007s.receiver
+wire n0007s.result n0007t.a
+wire n0007q.then n0007u.in
+wire n00001.object n0007u.receiver
+wire n0007u.then n0007v.in
+wire n00001.object n0007v.receiver
+wire n0007v.then n0007w.in
+wire n00001.object n0007w.receiver
+wire n0007t.result n0007w.value
+wire n0007w.then n0007x.in
+wire n00001.object n0007x.text
+wire n0007y.value n0007z.other
+wire n0000u.value n0007z.receiver
+wire n0007z.result n00080.a
+wire n0007x.then n00081.in
+wire n00001.object n00081.receiver
+wire n00081.then n00082.in
+wire n00001.object n00082.receiver
+wire n00082.then n00083.in
+wire n00001.object n00083.receiver
+wire n00080.result n00083.value
+wire n00083.then n00084.in
+wire n00001.object n00084.text
+wire n00085.value n00086.other
+wire n0000u.value n00086.receiver
+wire n00086.result n00087.a
+wire n00084.then n00088.in
+wire n00001.object n00088.receiver
+wire n00088.then n00089.in
+wire n00001.object n00089.receiver
+wire n00089.then n0008a.in
+wire n00001.object n0008a.receiver
+wire n00087.result n0008a.value
+wire n0008a.then n0008b.in
+wire n00001.object n0008b.text
+wire n0008c.value n0008d.other
+wire n0000u.value n0008d.receiver
+wire n0008d.result n0008e.a
+wire n0008b.then n0008f.in
+wire n00001.object n0008f.receiver
+wire n0008f.then n0008g.in
+wire n00001.object n0008g.receiver
+wire n0008g.then n0008h.in
+wire n00001.object n0008h.receiver
+wire n0008e.result n0008h.value
+wire n0008h.then n0008i.in
+wire n00001.object n0008i.text
+wire n0000u.value n0008j.receiver
+wire n0008j.result n0008k.value
+wire n0008k.result n0008l.a
+wire n0000u.value n0008l.b
+wire n0008l.result n0008m.a
+wire n0008i.then n0008n.in
+wire n00001.object n0008n.receiver
+wire n0008n.then n0008o.in
+wire n00001.object n0008o.receiver
+wire n0008o.then n0008p.in
+wire n00001.object n0008p.receiver
+wire n0008m.result n0008p.value
+wire n0008p.then n0008q.in
+wire n00001.object n0008q.text
+wire n0000u.value n0008r.receiver
+wire n0008r.result n0008s.p
+wire n0008s.result n0008t.a
+wire n0008q.then n0008u.in
+wire n00001.object n0008u.receiver
+wire n0008u.then n0008v.in
+wire n00001.object n0008v.receiver
+wire n0008v.then n0008w.in
+wire n00001.object n0008w.receiver
+wire n0008t.result n0008w.value
+wire n0008w.then n0008x.in
+wire n00001.object n0008x.text
+wire n0000u.value n0008y.receiver
+wire n0008y.result n00090.a
+wire n0008z.value n00090.b
+wire n0008x.then n00091.in
+wire n00001.object n00091.receiver
+wire n00091.then n00092.in
+wire n00001.object n00092.receiver
+wire n00092.then n00093.in
+wire n00001.object n00093.receiver
+wire n00090.result n00093.value
+wire n00093.then n00094.in
+wire n00001.object n00094.text
+wire n0000v.value n00095.b
+wire n0000u.value n00095.receiver
+wire n00095.result n00096.a
+wire n00094.then n00097.in
+wire n00001.object n00097.receiver
+wire n00097.then n00098.in
+wire n00001.object n00098.receiver
+wire n00098.then n00099.in
+wire n00001.object n00099.receiver
+wire n00096.result n00099.value
+wire n00099.then n0009a.in
+wire n00001.object n0009a.text
+wire n0000u.value n0009b.receiver
+wire n0009b.result n0009c.a
+wire n0009a.then n0009d.in
+wire n00001.object n0009d.receiver
+wire n0009d.then n0009e.in
+wire n00001.object n0009e.receiver
+wire n0009e.then n0009f.in
+wire n00001.object n0009f.receiver
+wire n0009c.result n0009f.value
+wire n0009f.then n0009g.in
+wire n00001.object n0009g.text
+wire n0009h.result n0009j.a
+wire n0009i.value n0009j.b
+wire n0009g.then n0009k.in
+wire n00001.object n0009k.receiver
+wire n0009k.then n0009l.in
+wire n00001.object n0009l.receiver
+wire n0009l.then n0009m.in
+wire n00001.object n0009m.receiver
+wire n0009j.result n0009m.value
+wire n0009m.then n0009n.in
+wire n00001.object n0009n.text
+wire n0009o.value n0009q.a
+wire n0009p.value n0009q.b
+wire n0009n.then n0009r.in
+wire n00001.object n0009r.receiver
+wire n0009r.then n0009s.in
+wire n00001.object n0009s.receiver
+wire n0009s.then n0009t.in
+wire n00001.object n0009t.receiver
+wire n0009q.result n0009t.value
+wire n0009t.then n0009u.in
+wire n00001.object n0009u.text
+wire n0009v.value n0009x.a
+wire n0009w.value n0009x.b
+wire n0009u.then n0009y.in
+wire n00001.object n0009y.receiver
+wire n0009y.then n0009z.in
+wire n00001.object n0009z.receiver
+wire n0009z.then n000a0.in
+wire n00001.object n000a0.receiver
+wire n0009x.result n000a0.value
+wire n000a0.then n000a1.in
+wire n00001.object n000a1.text
+wire n000a2.value n000a4.a
+wire n000a3.value n000a4.b
+wire n000a1.then n000a5.in
+wire n00001.object n000a5.receiver
+wire n000a5.then n000a6.in
+wire n00001.object n000a6.receiver
+wire n000a6.then n000a7.in
+wire n00001.object n000a7.receiver
+wire n000a4.result n000a7.value
+wire n000a7.then n000a8.in
+wire n00001.object n000a8.text
+wire n000a9.value n000ab.a
+wire n000aa.value n000ab.b
+wire n000a8.then n000ac.in
+wire n00001.object n000ac.receiver
+wire n000ac.then n000ad.in
+wire n00001.object n000ad.receiver
+wire n000ad.then n000ae.in
+wire n00001.object n000ae.receiver
+wire n000ab.result n000ae.value
+wire n000ae.then n000af.in
+wire n00001.object n000af.text
+wire n000ag.value n000ai.a
+wire n000ah.value n000ai.b
+wire n000af.then n000aj.in
+wire n00001.object n000aj.receiver
+wire n000aj.then n000ak.in
+wire n00001.object n000ak.receiver
+wire n000ak.then n000al.in
+wire n00001.object n000al.receiver
+wire n000ai.result n000al.value
+wire n000al.then n000am.in
+wire n00001.object n000am.text
+wire n000an.value n000ap.a
+wire n000ao.value n000ap.b
+wire n000ap.result n000ar.a
+wire n000aq.value n000ar.b
+wire n000am.then n000as.in
+wire n00001.object n000as.receiver
+wire n000as.then n000at.in
+wire n00001.object n000at.receiver
+wire n000at.then n000au.in
+wire n00001.object n000au.receiver
+wire n000ar.result n000au.value
+wire n000au.then n000av.in
+wire n00001.object n000av.text
+wire n000an.value n000aw.a
+wire n000ao.value n000aw.b
+wire n000aw.result n000ay.a
+wire n000ax.value n000ay.b
+wire n000av.then n000az.in
+wire n00001.object n000az.receiver
+wire n000az.then n000b0.in
+wire n00001.object n000b0.receiver
+wire n000b0.then n000b1.in
+wire n00001.object n000b1.receiver
+wire n000ay.result n000b1.value
+wire n000b1.then n000b2.in
+wire n00001.object n000b2.text
+wire n000an.value n000b3.a
+wire n000ao.value n000b3.b
+wire n000b3.result n000b5.a
+wire n000b4.value n000b5.b
+wire n000b2.then n000b6.in
+wire n00001.object n000b6.receiver
+wire n000b6.then n000b7.in
+wire n00001.object n000b7.receiver
+wire n000b7.then n000b8.in
+wire n00001.object n000b8.receiver
+wire n000b5.result n000b8.value
+wire n000b8.then n000b9.in
+wire n00001.object n000b9.text
+wire n000an.value n000ba.a
+wire n000ao.value n000ba.b
+wire n000ba.result n000bc.a
+wire n000bb.value n000bc.b
+wire n000b9.then n000bd.in
+wire n00001.object n000bd.receiver
+wire n000bd.then n000be.in
+wire n00001.object n000be.receiver
+wire n000be.then n000bf.in
+wire n00001.object n000bf.receiver
+wire n000bc.result n000bf.value
+wire n000bf.then n000bg.in
+wire n00001.object n000bg.text
+wire n000an.value n000bh.a
+wire n000bh.result n000bj.a
+wire n000bi.value n000bj.b
+wire n000bg.then n000bk.in
+wire n00001.object n000bk.receiver
+wire n000bk.then n000bl.in
+wire n00001.object n000bl.receiver
+wire n000bl.then n000bm.in
+wire n00001.object n000bm.receiver
+wire n000bj.result n000bm.value
+wire n000bm.then n000bn.in
+wire n00001.object n000bn.text
+wire n000an.value n000bp.a
+wire n000bo.value n000bp.b
+wire n000bp.result n000bq.a
+wire n000bn.then n000br.in
+wire n00001.object n000br.receiver
+wire n000br.then n000bs.in
+wire n00001.object n000bs.receiver
+wire n000bs.then n000bt.in
+wire n00001.object n000bt.receiver
+wire n000bq.result n000bt.value
+wire n000bt.then n000bu.in
+wire n00001.object n000bu.text
+wire n000an.value n000bv.a
+wire n000ao.value n000bv.b
+wire n000bv.result n000bw.a
+wire n000bu.then n000bx.in
+wire n00001.object n000bx.receiver
+wire n000bx.then n000by.in
+wire n00001.object n000by.receiver
+wire n000by.then n000bz.in
+wire n00001.object n000bz.receiver
+wire n000bw.result n000bz.value
+wire n000bz.then n000c0.in
+wire n00001.object n000c0.text
+wire n000an.value n000c1.a
+wire n000ao.value n000c1.b
+wire n000c1.result n000c2.a
+wire n000c0.then n000c3.in
+wire n00001.object n000c3.receiver
+wire n000c3.then n000c4.in
+wire n00001.object n000c4.receiver
+wire n000c4.then n000c5.in
+wire n00001.object n000c5.receiver
+wire n000c2.result n000c5.value
+wire n000c5.then n000c6.in
+wire n00001.object n000c6.text
+wire n000an.value n000c7.a
+wire n000an.value n000c7.b
+wire n000c7.result n000c8.a
+wire n000c6.then n000c9.in
+wire n00001.object n000c9.receiver
+wire n000c9.then n000ca.in
+wire n00001.object n000ca.receiver
+wire n000ca.then n000cb.in
+wire n00001.object n000cb.receiver
+wire n000c8.result n000cb.value
+wire n000cb.then n000cc.in
+wire n00001.object n000cc.text
+wire n000an.value n000cd.receiver
+wire n000cd.result n000cf.a
+wire n000ce.value n000cf.b
+wire n000cc.then n000cg.in
+wire n00001.object n000cg.receiver
+wire n000cg.then n000ch.in
+wire n00001.object n000ch.receiver
+wire n000ch.then n000ci.in
+wire n00001.object n000ci.receiver
+wire n000cf.result n000ci.value
+wire n000ci.then n000cj.in
+wire n00001.object n000cj.text
+wire n000an.value n000ck.a
+wire n000ck.result n000cm.a
+wire n000cl.value n000cm.b
+wire n000cj.then n000cn.in
+wire n00001.object n000cn.receiver
+wire n000cn.then n000co.in
+wire n00001.object n000co.receiver
+wire n000co.then n000cp.in
+wire n00001.object n000cp.receiver
+wire n000cm.result n000cp.value
+wire n000cp.then n000cq.in
+wire n00001.object n000cq.text
+wire n000an.value n000cr.b
+wire n000cr.result n000ct.a
+wire n000cs.value n000ct.b
+wire n000cq.then n000cu.in
+wire n00001.object n000cu.receiver
+wire n000cu.then n000cv.in
+wire n00001.object n000cv.receiver
+wire n000cv.then n000cw.in
+wire n00001.object n000cw.receiver
+wire n000ct.result n000cw.value
+wire n000cw.then n000cx.in
+wire n00001.object n000cx.text
+wire n000an.value n000cy.a
+wire n000cy.result n000d0.a
+wire n000cz.value n000d0.b
+wire n000cx.then n000d1.in
+wire n00001.object n000d1.receiver
+wire n000d1.then n000d2.in
+wire n00001.object n000d2.receiver
+wire n000d2.then n000d3.in
+wire n00001.object n000d3.receiver
+wire n000d0.result n000d3.value
+wire n000d3.then n000d4.in
+wire n00001.object n000d4.text
+wire n000ao.value n000d5.receiver
+wire n000d5.result n000d6.a
+wire n000an.value n000d6.b
+wire n000d6.result n000d8.a
+wire n000d7.value n000d8.b
+wire n000d4.then n000d9.in
+wire n00001.object n000d9.receiver
+wire n000d9.then n000da.in
+wire n00001.object n000da.receiver
+wire n000da.then n000db.in
+wire n00001.object n000db.receiver
+wire n000d8.result n000db.value
+wire n000db.then n000dc.in
+wire n00001.object n000dc.text
+wire n000an.value n000dd.v
+wire n000ao.value n000dd.w
+wire n000dd.result n000df.a
+wire n000de.value n000df.b
+wire n000dc.then n000dg.in
+wire n00001.object n000dg.receiver
+wire n000dg.then n000dh.in
+wire n00001.object n000dh.receiver
+wire n000dh.then n000di.in
+wire n00001.object n000di.receiver
+wire n000df.result n000di.value
+wire n000di.then n000dj.in
+wire n00001.object n000dj.text
+wire n000ao.value n000dk.b
+wire n000an.value n000dk.receiver
+wire n000dk.result n000dl.a
+wire n000dj.then n000dm.in
+wire n00001.object n000dm.receiver
+wire n000dm.then n000dn.in
+wire n00001.object n000dn.receiver
+wire n000dn.then n000do.in
+wire n00001.object n000do.receiver
+wire n000dl.result n000do.value
+wire n000do.then n000dp.in
+wire n00001.object n000dp.text
+wire n000an.value n000dq.receiver
+wire n000dq.result n000dr.a
+wire n000dp.then n000ds.in
+wire n00001.object n000ds.receiver
+wire n000ds.then n000dt.in
+wire n00001.object n000dt.receiver
+wire n000dt.then n000du.in
+wire n00001.object n000du.receiver
+wire n000dr.result n000du.value
+wire n000du.then n000dv.in
+wire n00001.object n000dv.text
+wire n000an.value n000dw.receiver
+wire n000dw.result n000dx.a
+wire n000dv.then n000dy.in
+wire n00001.object n000dy.receiver
+wire n000dy.then n000dz.in
+wire n00001.object n000dz.receiver
+wire n000dz.then n000e0.in
+wire n00001.object n000e0.receiver
+wire n000dx.result n000e0.value
+wire n000e0.then n000e1.in
+wire n00001.object n000e1.text
+wire n000ao.value n000e2.b
+wire n000an.value n000e2.receiver
+wire n000e2.result n000e3.a
+wire n000e1.then n000e4.in
+wire n00001.object n000e4.receiver
+wire n000e4.then n000e5.in
+wire n00001.object n000e5.receiver
+wire n000e5.then n000e6.in
+wire n00001.object n000e6.receiver
+wire n000e3.result n000e6.value
+wire n000e6.then n000e7.in
+wire n00001.object n000e7.text
+wire n000ao.value n000e8.b
+wire n000an.value n000e8.receiver
+wire n000e8.result n000e9.a
+wire n000e7.then n000ea.in
+wire n00001.object n000ea.receiver
+wire n000ea.then n000eb.in
+wire n00001.object n000eb.receiver
+wire n000eb.then n000ec.in
+wire n00001.object n000ec.receiver
+wire n000e9.result n000ec.value
+wire n000ec.then n000ed.in
+wire n00001.object n000ed.text
+wire n000ao.value n000ee.receiver
+wire n000ee.result n000eg.a
+wire n000ef.value n000eg.b
+wire n000ed.then n000eh.in
+wire n00001.object n000eh.receiver
+wire n000eh.then n000ei.in
+wire n00001.object n000ei.receiver
+wire n000ei.then n000ej.in
+wire n00001.object n000ej.receiver
+wire n000eg.result n000ej.value
+wire n000ej.then n000ek.in
+wire n00001.object n000ek.text
+wire n000el.value n000em.receiver
+wire n000em.result n000eo.a
+wire n000en.value n000eo.b
+wire n000ek.then n000ep.in
+wire n00001.object n000ep.receiver
+wire n000ep.then n000eq.in
+wire n00001.object n000eq.receiver
+wire n000eq.then n000er.in
+wire n00001.object n000er.receiver
+wire n000eo.result n000er.value
+wire n000er.then n000es.in
+wire n00001.object n000es.text
+wire n000an.value n000et.receiver
+wire n000ao.value n000et.to
+wire n000et.result n000ev.a
+wire n000eu.value n000ev.b
+wire n000es.then n000ew.in
+wire n00001.object n000ew.receiver
+wire n000ew.then n000ex.in
+wire n00001.object n000ex.receiver
+wire n000ex.then n000ey.in
+wire n00001.object n000ey.receiver
+wire n000ev.result n000ey.value
+wire n000ey.then n000ez.in
+wire n00001.object n000ez.text
+wire n000ao.value n000f0.b
+wire n000an.value n000f0.receiver
+wire n000f0.result n000f2.a
+wire n000f1.value n000f2.b
+wire n000ez.then n000f3.in
+wire n00001.object n000f3.receiver
+wire n000f3.then n000f4.in
+wire n00001.object n000f4.receiver
+wire n000f4.then n000f5.in
+wire n00001.object n000f5.receiver
+wire n000f2.result n000f5.value
+wire n000f5.then n000f6.in
+wire n00001.object n000f6.text
+wire n000ao.value n000f7.b
+wire n000an.value n000f7.receiver
+wire n000f7.result n000f9.a
+wire n000f8.value n000f9.b
+wire n000f6.then n000fa.in
+wire n00001.object n000fa.receiver
+wire n000fa.then n000fb.in
+wire n00001.object n000fb.receiver
+wire n000fb.then n000fc.in
+wire n00001.object n000fc.receiver
+wire n000f9.result n000fc.value
+wire n000fc.then n000fd.in
+wire n00001.object n000fd.text
+wire n000ff.value n000fg.hi
+wire n000fe.value n000fg.lo
+wire n000an.value n000fg.receiver
+wire n000fg.result n000fi.a
+wire n000fh.value n000fi.b
+wire n000fd.then n000fj.in
+wire n00001.object n000fj.receiver
+wire n000fj.then n000fk.in
+wire n00001.object n000fk.receiver
+wire n000fk.then n000fl.in
+wire n00001.object n000fl.receiver
+wire n000fi.result n000fl.value
+wire n000fl.then n000fm.in
+wire n00001.object n000fm.text
+wire n000fn.value n000fo.receiver
+wire n000fo.result n000fq.a
+wire n000fp.value n000fq.b
+wire n000fm.then n000fr.in
+wire n00001.object n000fr.receiver
+wire n000fr.then n000fs.in
+wire n00001.object n000fs.receiver
+wire n000fs.then n000ft.in
+wire n00001.object n000ft.receiver
+wire n000fq.result n000ft.value
+wire n000ft.then n000fu.in
+wire n00001.object n000fu.text
+wire n000fn.value n000fv.receiver
+wire n000fv.result n000fx.a
+wire n000fw.value n000fx.b
+wire n000fu.then n000fy.in
+wire n00001.object n000fy.receiver
+wire n000fy.then n000fz.in
+wire n00001.object n000fz.receiver
+wire n000fz.then n000g0.in
+wire n00001.object n000g0.receiver
+wire n000fx.result n000g0.value
+wire n000g0.then n000g1.in
+wire n00001.object n000g1.text
+wire n000fn.value n000g2.receiver
+wire n000g2.result n000g4.a
+wire n000g3.value n000g4.b
+wire n000g1.then n000g5.in
+wire n00001.object n000g5.receiver
+wire n000g5.then n000g6.in
+wire n00001.object n000g6.receiver
+wire n000g6.then n000g7.in
+wire n00001.object n000g7.receiver
+wire n000g4.result n000g7.value
+wire n000g7.then n000g8.in
+wire n00001.object n000g8.text
+wire n000fn.value n000g9.receiver
+wire n000g9.result n000gb.a
+wire n000ga.value n000gb.b
+wire n000g8.then n000gc.in
+wire n00001.object n000gc.receiver
+wire n000gc.then n000gd.in
+wire n00001.object n000gd.receiver
+wire n000gd.then n000ge.in
+wire n00001.object n000ge.receiver
+wire n000gb.result n000ge.value
+wire n000ge.then n000gf.in
+wire n00001.object n000gf.text
+wire n000gg.value n000gh.normal
+wire n000an.value n000gh.receiver
+wire n000gh.result n000gj.a
+wire n000gi.value n000gj.b
+wire n000gf.then n000gk.in
+wire n00001.object n000gk.receiver
+wire n000gk.then n000gl.in
+wire n00001.object n000gl.receiver
+wire n000gl.then n000gm.in
+wire n00001.object n000gm.receiver
+wire n000gj.result n000gm.value
+wire n000gm.then n000gn.in
+wire n00001.object n000gn.text
+wire n000ao.value n000go.b
+wire n000an.value n000go.receiver
+wire n000go.result n000gq.a
+wire n000gp.value n000gq.b
+wire n000gn.then n000gr.in
+wire n00001.object n000gr.receiver
+wire n000gr.then n000gs.in
+wire n00001.object n000gs.receiver
+wire n000gs.then n000gt.in
+wire n00001.object n000gt.receiver
+wire n000gq.result n000gt.value
+wire n000gt.then n000gu.in
+wire n00001.object n000gu.text
+wire n000el.value n000gv.b
+wire n000an.value n000gv.receiver
+wire n000gv.result n000gx.a
+wire n000gw.value n000gx.b
+wire n000gu.then n000gy.in
+wire n00001.object n000gy.receiver
+wire n000gy.then n000gz.in
+wire n00001.object n000gz.receiver
+wire n000gz.then n000h0.in
+wire n00001.object n000h0.receiver
+wire n000gx.result n000h0.value
+wire n000h0.then n000h1.in
+wire n00001.object n000h1.text
+wire n000ao.value n000h2.b
+wire n000an.value n000h2.receiver
+wire n000h2.result n000h3.a
+wire n000h1.then n000h4.in
+wire n00001.object n000h4.receiver
+wire n000h4.then n000h5.in
+wire n00001.object n000h5.receiver
+wire n000h5.then n000h6.in
+wire n00001.object n000h6.receiver
+wire n000h3.result n000h6.value
+wire n000h6.then n000h7.in
+wire n00001.object n000h7.text
+wire n000el.value n000h8.b
+wire n000an.value n000h8.receiver
+wire n000h8.result n000h9.a
+wire n000h7.then n000ha.in
+wire n00001.object n000ha.receiver
+wire n000ha.then n000hb.in
+wire n00001.object n000hb.receiver
+wire n000hb.then n000hc.in
+wire n00001.object n000hc.receiver
+wire n000h9.result n000hc.value
+wire n000hc.then n000hd.in
+wire n00001.object n000hd.text
+wire n000an.value n000he.receiver
+wire n000he.result n000hf.a
+wire n000hd.then n000hg.in
+wire n00001.object n000hg.receiver
+wire n000hg.then n000hh.in
+wire n00001.object n000hh.receiver
+wire n000hh.then n000hi.in
+wire n00001.object n000hi.receiver
+wire n000hf.result n000hi.value
+wire n000hi.then n000hj.in
+wire n00001.object n000hj.text
+wire n000an.value n000hk.a
+wire n000el.value n000hk.b
+wire n000hk.result n000hl.receiver
+wire n000hl.result n000hm.a
+wire n000hj.then n000hn.in
+wire n00001.object n000hn.receiver
+wire n000hn.then n000ho.in
+wire n00001.object n000ho.receiver
+wire n000ho.then n000hp.in
+wire n00001.object n000hp.receiver
+wire n000hm.result n000hp.value
+wire n000hp.then n000hq.in
+wire n00001.object n000hq.text
+wire n000hr.value n000hs.other
+wire n000an.value n000hs.receiver
+wire n000hs.result n000ht.a
+wire n000hq.then n000hu.in
+wire n00001.object n000hu.receiver
+wire n000hu.then n000hv.in
+wire n00001.object n000hv.receiver
+wire n000hv.then n000hw.in
+wire n00001.object n000hw.receiver
+wire n000ht.result n000hw.value
+wire n000hw.then n000hx.in
+wire n00001.object n000hx.text
+wire n000hy.value n000hz.other
+wire n000an.value n000hz.receiver
+wire n000hz.result n000i0.a
+wire n000hx.then n000i1.in
+wire n00001.object n000i1.receiver
+wire n000i1.then n000i2.in
+wire n00001.object n000i2.receiver
+wire n000i2.then n000i3.in
+wire n00001.object n000i3.receiver
+wire n000i0.result n000i3.value
+wire n000i3.then n000i4.in
+wire n00001.object n000i4.text
+wire n000i5.value n000i6.other
+wire n000an.value n000i6.receiver
+wire n000i6.result n000i7.a
+wire n000i4.then n000i8.in
+wire n00001.object n000i8.receiver
+wire n000i8.then n000i9.in
+wire n00001.object n000i9.receiver
+wire n000i9.then n000ia.in
+wire n00001.object n000ia.receiver
+wire n000i7.result n000ia.value
+wire n000ia.then n000ib.in
+wire n00001.object n000ib.text
+wire n000an.value n000ic.receiver
+wire n000ic.result n000id.value
+wire n000id.result n000ie.a
+wire n000an.value n000ie.b
+wire n000ie.result n000if.a
+wire n000ib.then n000ig.in
+wire n00001.object n000ig.receiver
+wire n000ig.then n000ih.in
+wire n00001.object n000ih.receiver
+wire n000ih.then n000ii.in
+wire n00001.object n000ii.receiver
+wire n000if.result n000ii.value
+wire n000ii.then n000ij.in
+wire n00001.object n000ij.text
+wire n000an.value n000ik.receiver
+wire n000ik.result n000il.p
+wire n000il.result n000im.a
+wire n000ij.then n000in.in
+wire n00001.object n000in.receiver
+wire n000in.then n000io.in
+wire n00001.object n000io.receiver
+wire n000io.then n000ip.in
+wire n00001.object n000ip.receiver
+wire n000im.result n000ip.value
+wire n000ip.then n000iq.in
+wire n00001.object n000iq.text
+wire n000ao.value n000ir.b
+wire n000an.value n000ir.receiver
+wire n000ir.result n000it.a
+wire n000is.value n000it.b
+wire n000iq.then n000iu.in
+wire n00001.object n000iu.receiver
+wire n000iu.then n000iv.in
+wire n00001.object n000iv.receiver
+wire n000iv.then n000iw.in
+wire n00001.object n000iw.receiver
+wire n000it.result n000iw.value
+wire n000iw.then n000ix.in
+wire n00001.object n000ix.text
+wire n000an.value n000iy.receiver
+wire n000iy.result n000j0.a
+wire n000iz.value n000j0.b
+wire n000ix.then n000j1.in
+wire n00001.object n000j1.receiver
+wire n000j1.then n000j2.in
+wire n00001.object n000j2.receiver
+wire n000j2.then n000j3.in
+wire n00001.object n000j3.receiver
+wire n000j0.result n000j3.value
+wire n000j3.then n000j4.in
+wire n00001.object n000j4.text
+wire n000j5.value n000j7.a
+wire n000j6.value n000j7.b
+wire n000j4.then n000j8.in
+wire n00001.object n000j8.receiver
+wire n000j8.then n000j9.in
+wire n00001.object n000j9.receiver
+wire n000j9.then n000ja.in
+wire n00001.object n000ja.receiver
+wire n000j7.result n000ja.value
+wire n000ja.then n000jb.in
+wire n00001.object n000jb.text
+wire n000jc.value n000je.a
+wire n000jd.value n000je.b
+wire n000jb.then n000jf.in
+wire n00001.object n000jf.receiver
+wire n000jf.then n000jg.in
+wire n00001.object n000jg.receiver
+wire n000jg.then n000jh.in
+wire n00001.object n000jh.receiver
+wire n000je.result n000jh.value
+wire n000jh.then n000ji.in
+wire n00001.object n000ji.text
+wire n000jj.value n000jl.a
+wire n000jk.value n000jl.b
+wire n000ji.then n000jm.in
+wire n00001.object n000jm.receiver
+wire n000jm.then n000jn.in
+wire n00001.object n000jn.receiver
+wire n000jn.then n000jo.in
+wire n00001.object n000jo.receiver
+wire n000jl.result n000jo.value
+wire n000jo.then n000jp.in
+wire n00001.object n000jp.text
+wire n000jq.value n000js.a
+wire n000jr.value n000js.b
+wire n000jp.then n000jt.in
+wire n00001.object n000jt.receiver
+wire n000jt.then n000ju.in
+wire n00001.object n000ju.receiver
+wire n000ju.then n000jv.in
+wire n00001.object n000jv.receiver
+wire n000js.result n000jv.value
+wire n000jv.then n000jw.in
+wire n00001.object n000jw.text
+wire n000jx.value n000jz.a
+wire n000jy.value n000jz.b
+wire n000jw.then n000k0.in
+wire n00001.object n000k0.receiver
+wire n000k0.then n000k1.in
+wire n00001.object n000k1.receiver
+wire n000k1.then n000k2.in
+wire n00001.object n000k2.receiver
+wire n000jz.result n000k2.value
+wire n000k2.then n000k3.in
+wire n00001.object n000k3.text
+wire n000k4.value n000k6.a
+wire n000k5.value n000k6.b
+wire n000k3.then n000k7.in
+wire n00001.object n000k7.receiver
+wire n000k7.then n000k8.in
+wire n00001.object n000k8.receiver
+wire n000k8.then n000k9.in
+wire n00001.object n000k9.receiver
+wire n000k6.result n000k9.value
+wire n000k9.then n000ka.in
+wire n00001.object n000ka.text
+wire n000kb.value n000kd.a
+wire n000kc.value n000kd.b
+wire n000kd.result n000kf.a
+wire n000ke.value n000kf.b
+wire n000ka.then n000kg.in
+wire n00001.object n000kg.receiver
+wire n000kg.then n000kh.in
+wire n00001.object n000kh.receiver
+wire n000kh.then n000ki.in
+wire n00001.object n000ki.receiver
+wire n000kf.result n000ki.value
+wire n000ki.then n000kj.in
+wire n00001.object n000kj.text
+wire n000kb.value n000kk.a
+wire n000kc.value n000kk.b
+wire n000kk.result n000km.a
+wire n000kl.value n000km.b
+wire n000kj.then n000kn.in
+wire n00001.object n000kn.receiver
+wire n000kn.then n000ko.in
+wire n00001.object n000ko.receiver
+wire n000ko.then n000kp.in
+wire n00001.object n000kp.receiver
+wire n000km.result n000kp.value
+wire n000kp.then n000kq.in
+wire n00001.object n000kq.text
+wire n000kb.value n000kr.a
+wire n000kc.value n000kr.b
+wire n000kr.result n000kt.a
+wire n000ks.value n000kt.b
+wire n000kq.then n000ku.in
+wire n00001.object n000ku.receiver
+wire n000ku.then n000kv.in
+wire n00001.object n000kv.receiver
+wire n000kv.then n000kw.in
+wire n00001.object n000kw.receiver
+wire n000kt.result n000kw.value
+wire n000kw.then n000kx.in
+wire n00001.object n000kx.text
+wire n000kb.value n000ky.a
+wire n000kc.value n000ky.b
+wire n000ky.result n000l0.a
+wire n000kz.value n000l0.b
+wire n000kx.then n000l1.in
+wire n00001.object n000l1.receiver
+wire n000l1.then n000l2.in
+wire n00001.object n000l2.receiver
+wire n000l2.then n000l3.in
+wire n00001.object n000l3.receiver
+wire n000l0.result n000l3.value
+wire n000l3.then n000l4.in
+wire n00001.object n000l4.text
+wire n000kb.value n000l5.a
+wire n000l5.result n000l7.a
+wire n000l6.value n000l7.b
+wire n000l4.then n000l8.in
+wire n00001.object n000l8.receiver
+wire n000l8.then n000l9.in
+wire n00001.object n000l9.receiver
+wire n000l9.then n000la.in
+wire n00001.object n000la.receiver
+wire n000l7.result n000la.value
+wire n000la.then n000lb.in
+wire n00001.object n000lb.text
+wire n000kb.value n000ld.a
+wire n000lc.value n000ld.b
+wire n000ld.result n000le.a
+wire n000lb.then n000lf.in
+wire n00001.object n000lf.receiver
+wire n000lf.then n000lg.in
+wire n00001.object n000lg.receiver
+wire n000lg.then n000lh.in
+wire n00001.object n000lh.receiver
+wire n000le.result n000lh.value
+wire n000lh.then n000li.in
+wire n00001.object n000li.text
+wire n000kb.value n000lj.a
+wire n000kc.value n000lj.b
+wire n000lj.result n000lk.a
+wire n000li.then n000ll.in
+wire n00001.object n000ll.receiver
+wire n000ll.then n000lm.in
+wire n00001.object n000lm.receiver
+wire n000lm.then n000ln.in
+wire n00001.object n000ln.receiver
+wire n000lk.result n000ln.value
+wire n000ln.then n000lo.in
+wire n00001.object n000lo.text
+wire n000kb.value n000lp.a
+wire n000kc.value n000lp.b
+wire n000lp.result n000lq.a
+wire n000lo.then n000lr.in
+wire n00001.object n000lr.receiver
+wire n000lr.then n000ls.in
+wire n00001.object n000ls.receiver
+wire n000ls.then n000lt.in
+wire n00001.object n000lt.receiver
+wire n000lq.result n000lt.value
+wire n000lt.then n000lu.in
+wire n00001.object n000lu.text
+wire n000kb.value n000lv.a
+wire n000kb.value n000lv.b
+wire n000lv.result n000lw.a
+wire n000lu.then n000lx.in
+wire n00001.object n000lx.receiver
+wire n000lx.then n000ly.in
+wire n00001.object n000ly.receiver
+wire n000ly.then n000lz.in
+wire n00001.object n000lz.receiver
+wire n000lw.result n000lz.value
+wire n000lz.then n000m0.in
+wire n00001.object n000m0.text
+wire n000kb.value n000m1.receiver
+wire n000m1.result n000m3.a
+wire n000m2.value n000m3.b
+wire n000m0.then n000m4.in
+wire n00001.object n000m4.receiver
+wire n000m4.then n000m5.in
+wire n00001.object n000m5.receiver
+wire n000m5.then n000m6.in
+wire n00001.object n000m6.receiver
+wire n000m3.result n000m6.value
+wire n000m6.then n000m7.in
+wire n00001.object n000m7.text
+wire n000kb.value n000m8.a
+wire n000m8.result n000ma.a
+wire n000m9.value n000ma.b
+wire n000m7.then n000mb.in
+wire n00001.object n000mb.receiver
+wire n000mb.then n000mc.in
+wire n00001.object n000mc.receiver
+wire n000mc.then n000md.in
+wire n00001.object n000md.receiver
+wire n000ma.result n000md.value
+wire n000md.then n000me.in
+wire n00001.object n000me.text
+wire n000kb.value n000mf.b
+wire n000mf.result n000mh.a
+wire n000mg.value n000mh.b
+wire n000me.then n000mi.in
+wire n00001.object n000mi.receiver
+wire n000mi.then n000mj.in
+wire n00001.object n000mj.receiver
+wire n000mj.then n000mk.in
+wire n00001.object n000mk.receiver
+wire n000mh.result n000mk.value
+wire n000mk.then n000ml.in
+wire n00001.object n000ml.text
+wire n000kb.value n000mm.a
+wire n000mm.result n000mo.a
+wire n000mn.value n000mo.b
+wire n000ml.then n000mp.in
+wire n00001.object n000mp.receiver
+wire n000mp.then n000mq.in
+wire n00001.object n000mq.receiver
+wire n000mq.then n000mr.in
+wire n00001.object n000mr.receiver
+wire n000mo.result n000mr.value
+wire n000mr.then n000ms.in
+wire n00001.object n000ms.text
+wire n000kc.value n000mt.receiver
+wire n000mt.result n000mu.a
+wire n000kb.value n000mu.b
+wire n000mu.result n000mw.a
+wire n000mv.value n000mw.b
+wire n000ms.then n000mx.in
+wire n00001.object n000mx.receiver
+wire n000mx.then n000my.in
+wire n00001.object n000my.receiver
+wire n000my.then n000mz.in
+wire n00001.object n000mz.receiver
+wire n000mw.result n000mz.value
+wire n000mz.then n000n0.in
+wire n00001.object n000n0.text
+wire n000kb.value n000n1.v
+wire n000kc.value n000n1.w
+wire n000n1.result n000n3.a
+wire n000n2.value n000n3.b
+wire n000n0.then n000n4.in
+wire n00001.object n000n4.receiver
+wire n000n4.then n000n5.in
+wire n00001.object n000n5.receiver
+wire n000n5.then n000n6.in
+wire n00001.object n000n6.receiver
+wire n000n3.result n000n6.value
+wire n000n6.then n000n7.in
+wire n00001.object n000n7.text
+wire n000kc.value n000n8.b
+wire n000kb.value n000n8.receiver
+wire n000n8.result n000n9.a
+wire n000n7.then n000na.in
+wire n00001.object n000na.receiver
+wire n000na.then n000nb.in
+wire n00001.object n000nb.receiver
+wire n000nb.then n000nc.in
+wire n00001.object n000nc.receiver
+wire n000n9.result n000nc.value
+wire n000nc.then n000nd.in
+wire n00001.object n000nd.text
+wire n000kb.value n000ne.receiver
+wire n000ne.result n000nf.a
+wire n000nd.then n000ng.in
+wire n00001.object n000ng.receiver
+wire n000ng.then n000nh.in
+wire n00001.object n000nh.receiver
+wire n000nh.then n000ni.in
+wire n00001.object n000ni.receiver
+wire n000nf.result n000ni.value
+wire n000ni.then n000nj.in
+wire n00001.object n000nj.text
+wire n000kb.value n000nk.receiver
+wire n000nk.result n000nl.a
+wire n000nj.then n000nm.in
+wire n00001.object n000nm.receiver
+wire n000nm.then n000nn.in
+wire n00001.object n000nn.receiver
+wire n000nn.then n000no.in
+wire n00001.object n000no.receiver
+wire n000nl.result n000no.value
+wire n000no.then n000np.in
+wire n00001.object n000np.text
+wire n000kc.value n000nq.b
+wire n000kb.value n000nq.receiver
+wire n000nq.result n000nr.a
+wire n000np.then n000ns.in
+wire n00001.object n000ns.receiver
+wire n000ns.then n000nt.in
+wire n00001.object n000nt.receiver
+wire n000nt.then n000nu.in
+wire n00001.object n000nu.receiver
+wire n000nr.result n000nu.value
+wire n000nu.then n000nv.in
+wire n00001.object n000nv.text
+wire n000kc.value n000nw.b
+wire n000kb.value n000nw.receiver
+wire n000nw.result n000nx.a
+wire n000nv.then n000ny.in
+wire n00001.object n000ny.receiver
+wire n000ny.then n000nz.in
+wire n00001.object n000nz.receiver
+wire n000nz.then n000o0.in
+wire n00001.object n000o0.receiver
+wire n000nx.result n000o0.value
+wire n000o0.then n000o1.in
+wire n00001.object n000o1.text
+wire n000kc.value n000o2.receiver
+wire n000o2.result n000o4.a
+wire n000o3.value n000o4.b
+wire n000o1.then n000o5.in
+wire n00001.object n000o5.receiver
+wire n000o5.then n000o6.in
+wire n00001.object n000o6.receiver
+wire n000o6.then n000o7.in
+wire n00001.object n000o7.receiver
+wire n000o4.result n000o7.value
+wire n000o7.then n000o8.in
+wire n00001.object n000o8.text
+wire n000o9.value n000oa.receiver
+wire n000oa.result n000oc.a
+wire n000ob.value n000oc.b
+wire n000o8.then n000od.in
+wire n00001.object n000od.receiver
+wire n000od.then n000oe.in
+wire n00001.object n000oe.receiver
+wire n000oe.then n000of.in
+wire n00001.object n000of.receiver
+wire n000oc.result n000of.value
+wire n000of.then n000og.in
+wire n00001.object n000og.text
+wire n000kb.value n000oh.receiver
+wire n000kc.value n000oh.to
+wire n000oh.result n000oj.a
+wire n000oi.value n000oj.b
+wire n000og.then n000ok.in
+wire n00001.object n000ok.receiver
+wire n000ok.then n000ol.in
+wire n00001.object n000ol.receiver
+wire n000ol.then n000om.in
+wire n00001.object n000om.receiver
+wire n000oj.result n000om.value
+wire n000om.then n000on.in
+wire n00001.object n000on.text
+wire n000kc.value n000oo.b
+wire n000kb.value n000oo.receiver
+wire n000oo.result n000oq.a
+wire n000op.value n000oq.b
+wire n000on.then n000or.in
+wire n00001.object n000or.receiver
+wire n000or.then n000os.in
+wire n00001.object n000os.receiver
+wire n000os.then n000ot.in
+wire n00001.object n000ot.receiver
+wire n000oq.result n000ot.value
+wire n000ot.then n000ou.in
+wire n00001.object n000ou.text
+wire n000kc.value n000ov.b
+wire n000kb.value n000ov.receiver
+wire n000ov.result n000ox.a
+wire n000ow.value n000ox.b
+wire n000ou.then n000oy.in
+wire n00001.object n000oy.receiver
+wire n000oy.then n000oz.in
+wire n00001.object n000oz.receiver
+wire n000oz.then n000p0.in
+wire n00001.object n000p0.receiver
+wire n000ox.result n000p0.value
+wire n000p0.then n000p1.in
+wire n00001.object n000p1.text
+wire n000p3.value n000p4.hi
+wire n000p2.value n000p4.lo
+wire n000kb.value n000p4.receiver
+wire n000p4.result n000p6.a
+wire n000p5.value n000p6.b
+wire n000p1.then n000p7.in
+wire n00001.object n000p7.receiver
+wire n000p7.then n000p8.in
+wire n00001.object n000p8.receiver
+wire n000p8.then n000p9.in
+wire n00001.object n000p9.receiver
+wire n000p6.result n000p9.value
+wire n000p9.then n000pa.in
+wire n00001.object n000pa.text
+wire n000pb.value n000pc.receiver
+wire n000pc.result n000pe.a
+wire n000pd.value n000pe.b
+wire n000pa.then n000pf.in
+wire n00001.object n000pf.receiver
+wire n000pf.then n000pg.in
+wire n00001.object n000pg.receiver
+wire n000pg.then n000ph.in
+wire n00001.object n000ph.receiver
+wire n000pe.result n000ph.value
+wire n000ph.then n000pi.in
+wire n00001.object n000pi.text
+wire n000pb.value n000pj.receiver
+wire n000pj.result n000pl.a
+wire n000pk.value n000pl.b
+wire n000pi.then n000pm.in
+wire n00001.object n000pm.receiver
+wire n000pm.then n000pn.in
+wire n00001.object n000pn.receiver
+wire n000pn.then n000po.in
+wire n00001.object n000po.receiver
+wire n000pl.result n000po.value
+wire n000po.then n000pp.in
+wire n00001.object n000pp.text
+wire n000pb.value n000pq.receiver
+wire n000pq.result n000ps.a
+wire n000pr.value n000ps.b
+wire n000pp.then n000pt.in
+wire n00001.object n000pt.receiver
+wire n000pt.then n000pu.in
+wire n00001.object n000pu.receiver
+wire n000pu.then n000pv.in
+wire n00001.object n000pv.receiver
+wire n000ps.result n000pv.value
+wire n000pv.then n000pw.in
+wire n00001.object n000pw.text
+wire n000pb.value n000px.receiver
+wire n000px.result n000pz.a
+wire n000py.value n000pz.b
+wire n000pw.then n000q0.in
+wire n00001.object n000q0.receiver
+wire n000q0.then n000q1.in
+wire n00001.object n000q1.receiver
+wire n000q1.then n000q2.in
+wire n00001.object n000q2.receiver
+wire n000pz.result n000q2.value
+wire n000q2.then n000q3.in
+wire n00001.object n000q3.text
+wire n000q4.value n000q5.normal
+wire n000kb.value n000q5.receiver
+wire n000q5.result n000q7.a
+wire n000q6.value n000q7.b
+wire n000q3.then n000q8.in
+wire n00001.object n000q8.receiver
+wire n000q8.then n000q9.in
+wire n00001.object n000q9.receiver
+wire n000q9.then n000qa.in
+wire n00001.object n000qa.receiver
+wire n000q7.result n000qa.value
+wire n000qa.then n000qb.in
+wire n00001.object n000qb.text
+wire n000kc.value n000qc.b
+wire n000kb.value n000qc.receiver
+wire n000qc.result n000qe.a
+wire n000qd.value n000qe.b
+wire n000qb.then n000qf.in
+wire n00001.object n000qf.receiver
+wire n000qf.then n000qg.in
+wire n00001.object n000qg.receiver
+wire n000qg.then n000qh.in
+wire n00001.object n000qh.receiver
+wire n000qe.result n000qh.value
+wire n000qh.then n000qi.in
+wire n00001.object n000qi.text
+wire n000o9.value n000qj.b
+wire n000kb.value n000qj.receiver
+wire n000qj.result n000ql.a
+wire n000qk.value n000ql.b
+wire n000qi.then n000qm.in
+wire n00001.object n000qm.receiver
+wire n000qm.then n000qn.in
+wire n00001.object n000qn.receiver
+wire n000qn.then n000qo.in
+wire n00001.object n000qo.receiver
+wire n000ql.result n000qo.value
+wire n000qo.then n000qp.in
+wire n00001.object n000qp.text
+wire n000kc.value n000qq.b
+wire n000kb.value n000qq.receiver
+wire n000qq.result n000qr.a
+wire n000qp.then n000qs.in
+wire n00001.object n000qs.receiver
+wire n000qs.then n000qt.in
+wire n00001.object n000qt.receiver
+wire n000qt.then n000qu.in
+wire n00001.object n000qu.receiver
+wire n000qr.result n000qu.value
+wire n000qu.then n000qv.in
+wire n00001.object n000qv.text
+wire n000o9.value n000qw.b
+wire n000kb.value n000qw.receiver
+wire n000qw.result n000qx.a
+wire n000qv.then n000qy.in
+wire n00001.object n000qy.receiver
+wire n000qy.then n000qz.in
+wire n00001.object n000qz.receiver
+wire n000qz.then n000r0.in
+wire n00001.object n000r0.receiver
+wire n000qx.result n000r0.value
+wire n000r0.then n000r1.in
+wire n00001.object n000r1.text
+wire n000kb.value n000r2.receiver
+wire n000r2.result n000r3.a
+wire n000r1.then n000r4.in
+wire n00001.object n000r4.receiver
+wire n000r4.then n000r5.in
+wire n00001.object n000r5.receiver
+wire n000r5.then n000r6.in
+wire n00001.object n000r6.receiver
+wire n000r3.result n000r6.value
+wire n000r6.then n000r7.in
+wire n00001.object n000r7.text
+wire n000kb.value n000r8.a
+wire n000o9.value n000r8.b
+wire n000r8.result n000r9.receiver
+wire n000r9.result n000ra.a
+wire n000r7.then n000rb.in
+wire n00001.object n000rb.receiver
+wire n000rb.then n000rc.in
+wire n00001.object n000rc.receiver
+wire n000rc.then n000rd.in
+wire n00001.object n000rd.receiver
+wire n000ra.result n000rd.value
+wire n000rd.then n000re.in
+wire n00001.object n000re.text
+wire n000rf.value n000rg.other
+wire n000kb.value n000rg.receiver
+wire n000rg.result n000rh.a
+wire n000re.then n000ri.in
+wire n00001.object n000ri.receiver
+wire n000ri.then n000rj.in
+wire n00001.object n000rj.receiver
+wire n000rj.then n000rk.in
+wire n00001.object n000rk.receiver
+wire n000rh.result n000rk.value
+wire n000rk.then n000rl.in
+wire n00001.object n000rl.text
+wire n000rm.value n000rn.other
+wire n000kb.value n000rn.receiver
+wire n000rn.result n000ro.a
+wire n000rl.then n000rp.in
+wire n00001.object n000rp.receiver
+wire n000rp.then n000rq.in
+wire n00001.object n000rq.receiver
+wire n000rq.then n000rr.in
+wire n00001.object n000rr.receiver
+wire n000ro.result n000rr.value
+wire n000rr.then n000rs.in
+wire n00001.object n000rs.text
+wire n000rt.value n000ru.other
+wire n000kb.value n000ru.receiver
+wire n000ru.result n000rv.a
+wire n000rs.then n000rw.in
+wire n00001.object n000rw.receiver
+wire n000rw.then n000rx.in
+wire n00001.object n000rx.receiver
+wire n000rx.then n000ry.in
+wire n00001.object n000ry.receiver
+wire n000rv.result n000ry.value
+wire n000ry.then n000rz.in
+wire n00001.object n000rz.text
+wire n000kb.value n000s0.receiver
+wire n000s0.result n000s1.value
+wire n000s1.result n000s2.a
+wire n000kb.value n000s2.b
+wire n000s2.result n000s3.a
+wire n000rz.then n000s4.in
+wire n00001.object n000s4.receiver
+wire n000s4.then n000s5.in
+wire n00001.object n000s5.receiver
+wire n000s5.then n000s6.in
+wire n00001.object n000s6.receiver
+wire n000s3.result n000s6.value
+wire n000s6.then n000s7.in
+wire n00001.object n000s7.text
+wire n000kb.value n000s8.receiver
+wire n000s8.result n000s9.p
+wire n000s9.result n000sa.a
+wire n000s7.then n000sb.in
+wire n00001.object n000sb.receiver
+wire n000sb.then n000sc.in
+wire n00001.object n000sc.receiver
+wire n000sc.then n000sd.in
+wire n00001.object n000sd.receiver
+wire n000sa.result n000sd.value
+wire n000sd.then n000se.in
+wire n00001.object n000se.text
+wire n000kb.value n000sf.receiver
+wire n000sf.result n000sh.a
+wire n000sg.value n000sh.b
+wire n000se.then n000si.in
+wire n00001.object n000si.receiver
+wire n000si.then n000sj.in
+wire n00001.object n000sj.receiver
+wire n000sj.then n000sk.in
+wire n00001.object n000sk.receiver
+wire n000sh.result n000sk.value
+wire n000sk.then n000sl.in
+wire n00001.object n000sl.text
+wire n000sm.value n000sn.v
+wire n000sn.result n000sp.a
+wire n000so.value n000sp.b
+wire n000sl.then n000sq.in
+wire n00001.object n000sq.receiver
+wire n000sq.then n000sr.in
+wire n00001.object n000sr.receiver
+wire n000sr.then n000ss.in
+wire n00001.object n000ss.receiver
+wire n000sp.result n000ss.value
+wire n000ss.then n000st.in
+wire n00001.object n000st.text
+wire n000st.then n000su.in

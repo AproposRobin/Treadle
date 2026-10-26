@@ -1,0 +1,47 @@
+# treadle 1
+type ListEnumerator struct
+	namespace Core
+	generic T
+	doc "Walks a List for For Each (the enumerator protocol: MoveNext, then Current)."
+
+field mList List<T>
+	access internal
+
+field mIndex int
+	access internal
+
+function e0001 MoveNext
+	mutating
+	returns bool
+	doc "Steps to the next element; false after the last."
+sheet body
+node a1 Entry
+node a2 Set this.mIndex
+	set op +=
+	in value 1
+node a3 Get this.mIndex
+node a4 Get this.mList
+node a5 Get List<T>.mCount
+node a6 Operator <
+node a7 Return
+wire a1.then a2.in
+wire a4.value a5.receiver
+wire a3.value a6.a
+wire a5.value a6.b
+wire a2.then a7.in
+wire a6.result a7.value
+
+property e0002 Current T
+	doc "The element MoveNext stepped to."
+sheet get
+node b1 Entry
+node b2 Get this.mList
+node b3 Get List<T>.mItems
+node b4 Get this.mIndex
+node b5 Index
+node b6 Return
+wire b2.value b3.receiver
+wire b3.value b5.collection
+wire b4.value b5.index
+wire b1.then b6.in
+wire b5.value b6.value

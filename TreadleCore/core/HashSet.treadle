@@ -1,0 +1,181 @@
+# treadle 1
+type HashSet class
+	namespace Core
+	generic T IHashable
+	doc "A set of distinct values (a Dictionary underneath: hashing and equality through Hash.Get / Hash.Equal, so Strings and StringViews compare by text). The set owns its storage, not what the values refer to. For Each walks the values in slot order."
+
+field mDict Dictionary<T,bool>
+	access internal
+	owner owned
+
+ctor h0001
+	doc "An empty set."
+sheet body
+node a1 Entry
+node a2 Construct Dictionary<T,bool>
+node a3 Set this.mDict
+node a4 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value
+wire a3.then a4.in
+
+property h0002 Count int
+	doc "The number of values."
+sheet get
+node b1 Entry
+node b2 Get this.mDict
+node b3 Get Dictionary<T,bool>.Count
+node b4 Return
+wire b2.value b3.receiver
+wire b1.then b4.in
+wire b3.value b4.value
+
+function h0003 Add
+	returns bool
+	doc "Adds the value; false (and nothing changed) when it is there already."
+param value T
+sheet body
+node c1 Entry
+node c2 Get this.mDict
+node c3 Call Dictionary<T,bool>.TryAdd
+	in value true
+node c4 Return
+wire c1.then c3.in
+wire c1.value c3.key
+wire c2.value c3.receiver
+wire c3.then c4.in
+wire c3.result c4.value
+
+function h0004 Contains
+	pure
+	returns bool
+	doc "True when the value is in the set."
+param value T
+sheet body
+node d1 Entry
+node d2 Get this.mDict
+node d3 Call Dictionary<T,bool>.ContainsKey
+node d4 Return
+wire d1.value d3.key
+wire d2.value d3.receiver
+wire d1.then d4.in
+wire d3.result d4.value
+
+function h0005 Remove
+	returns bool
+	doc "Removes the value (a struct that has a destructor is destroyed); false when it was not there."
+param value T
+sheet body
+node e1 Entry
+node e2 Get this.mDict
+node e3 Call Dictionary<T,bool>.Remove
+node e4 Return
+wire e1.then e3.in
+wire e1.value e3.key
+wire e2.value e3.receiver
+wire e3.then e4.in
+wire e3.result e4.value
+
+function h0006 Clear
+	doc "Removes every value (structs that have a destructor are destroyed; objects are not deleted)."
+sheet body
+node f1 Entry
+node f2 Get this.mDict
+node f3 Call Dictionary<T,bool>.Clear
+node f4 Return
+wire f1.then f3.in
+wire f2.value f3.receiver
+wire f3.then f4.in
+
+function h0007 GetEnumerator
+	returns DictionaryKeys<T,bool>
+	doc "The enumerator For Each uses: the values in slot order."
+sheet body
+node g1 Entry
+node g2 Get this.mDict
+node g3 Call Dictionary<T,bool>.Keys
+node g4 Return
+wire g1.then g3.in
+wire g2.value g3.receiver
+wire g3.then g4.in
+wire g3.result g4.value
+
+function h0008 DeleteAll
+	generic T delete
+	doc "Deletes every value object, then empties the set (for a set that owns its objects)."
+sheet body
+node k1 Entry
+node k2 Get this.mDict
+node k3 Call Dictionary<T,bool>.DeleteKeys
+node k4 Call Dictionary<T,bool>.Clear
+node k5 Return
+wire k1.then k3.in
+wire k2.value k3.receiver
+wire k3.then k4.in
+wire k2.value k4.receiver
+wire k4.then k5.in
+
+function h0009 Union
+	doc "Adds every value of `other` that is not in this set (copies, as List.AddRange copies: for a struct with a destructor both sets would own them)."
+param other HashSet<T>
+sheet body
+node u01 Entry
+node u02 ForEach
+node u03 Call this.Add
+node u04 Return
+wire u01.other u02.collection
+wire u01.then u02.in
+wire u02.body u03.in
+wire u02.element u03.value
+wire u02.done u04.in
+
+function h000a Intersect
+	doc "Keeps only the values that are also in `other`; the others are removed (a struct that has a destructor is destroyed)."
+param other HashSet<T>
+sheet body
+node i01 Entry
+node i02 This
+node i03 Local List<T>
+node i04 ForEach
+node i05 Call HashSet<T>.Contains
+node i06 Operator !
+node i07 Branch
+node i08 Call List<T>.Add
+node i09 ForEach
+node i10 Call this.Remove
+node i11 Set List<T>.mCount
+	in value 0
+node i12 Return
+wire i01.then i03.in
+wire i02.value i04.collection
+wire i03.then i04.in
+wire i01.other i05.receiver
+wire i04.element i05.value
+wire i05.result i06.a
+wire i06.result i07.condition
+wire i04.body i07.in
+wire i07.true i08.in
+wire i03.object i08.receiver
+wire i04.element i08.value
+wire i03.object i09.collection
+wire i04.done i09.in
+wire i09.body i10.in
+wire i09.element i10.value
+wire i09.done i11.in
+wire i03.object i11.receiver
+wire i11.then i12.in
+
+function h000b Except
+	doc "Removes every value that is in `other` (a struct that has a destructor is destroyed)."
+param other HashSet<T>
+sheet body
+node x01 Entry
+node x02 ForEach
+node x03 Call this.Remove
+node x04 Return
+wire x01.other x02.collection
+wire x01.then x02.in
+wire x02.body x03.in
+wire x02.element x03.value
+wire x02.done x04.in

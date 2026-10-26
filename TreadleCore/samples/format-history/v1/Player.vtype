@@ -1,0 +1,75 @@
+# vtype 1
+type Player class
+	namespace Game
+	uses Game.Core
+	base Actor
+	implements IDamageable
+	doc "The player character."
+
+field mHealth int
+	init 100
+	doc "Hit points; the player dies at 0."
+
+field mName String
+	owner owned
+
+field sCount int
+	static
+	access internal
+
+property q7k2m Name String
+	access public
+sheet get
+node a1 Entry
+node a2 Return
+node a3 Get this.mName
+wire a1.then a2.in
+wire a3.value a2.value
+
+ctor c4x9p
+	chain base
+param name String
+sheet body
+node b1 Entry
+node b2 ChainCtor base
+	in level 1
+node b3 Set this.mName
+node b4 Construct String
+	set ctor (StringView)
+node b5 Return
+wire b4.then b3.in
+wire b4.object b3.value
+wire b1.then b4.in
+wire b1.name b4.text
+wire b3.then b5.in
+
+function f8d2a TakeDamage
+	override
+	access public
+param amount int
+sheet body
+node d1 Entry
+node d2 Set this.mHealth
+	set op -=
+node d3 Branch
+node d4 Operator <=
+	in b 0
+node d5 Call this.Die()
+node d6 Get this.mHealth
+node d7 Return
+wire d1.then d2.in
+wire d1.amount d2.value
+wire d4.result d3.condition
+wire d2.then d3.in
+wire d6.value d4.a
+wire d3.true d5.in
+wire d3.false d7.in
+wire d5.then d7.in
+
+function g3m1c Die
+	virtual
+	access protected
+sheet body
+node e1 Entry
+node e2 Return
+wire e1.then e2.in

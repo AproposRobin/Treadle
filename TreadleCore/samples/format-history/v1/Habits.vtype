@@ -1,0 +1,25 @@
+# vtype 1
+type T class
+
+field mPos Game.Vec2
+	category "Movement and Speed"
+
+function f1 Run
+param x int
+sheet body
+node a1 Entry
+node a2 Set this.mPos
+	split value Game.Vec2
+	in value.Y 2
+node a3 Get this.mPos
+	split value Game.Vec2
+node a4 Call Console.WriteLine(int)
+node a5 Return
+wire a1.then a2.in
+wire a1.x a2.value.X
+wire a2.then a4.in
+wire a3.value.Y a4.value
+wire a4.then a5.in
+group g1 "Print Y"
+	node a3
+	node a4

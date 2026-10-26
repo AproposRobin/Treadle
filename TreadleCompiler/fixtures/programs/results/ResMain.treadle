@@ -1,0 +1,101 @@
+# treadle 1
+type ResMain class
+	namespace Res
+	static
+	doc "Errors as values: Make Case, Try, Result: match, Switch on an enum, a Math Expression."
+
+function f1 Half
+	static
+	pure
+	returns Core.Result<int,int32>
+param x int
+sheet body
+node a1 Entry
+node a2 Branch
+node a3 Operator ==
+	in b 0
+node a4 Operator %
+	in b 2
+node a5 MakeCase Core.Result<int,int32>.Ok
+node a6 Operator /
+	in b 2
+node a7 MakeCase Core.Result<int,int32>.Err
+	in error 7
+node a8 Return
+node a9 Return
+wire a1.then a2.in
+wire a3.result a2.condition
+wire a4.result a3.a
+wire a1.x a4.a
+wire a2.true a8.in
+wire a2.false a9.in
+wire a6.result a5.value
+wire a1.x a6.a
+wire a5.value a8.value
+wire a7.value a9.value
+
+function f2 Quarter
+	static
+	pure
+	returns Core.Result<int,int32>
+param x int
+sheet body
+node b1 Entry
+node b2 Try
+node b3 Call Res.ResMain.Half
+node b4 Return
+node b6 Call Res.ResMain.Half
+wire b1.then b2.in
+wire b3.result b2.result
+wire b1.x b3.x
+wire b2.then b4.in
+wire b2.value b6.x
+wire b6.result b4.value
+
+function f3 Main
+	static
+	returns int
+local total int
+sheet body
+node c1 Entry
+node c2 ResultMatch
+node c3 Set local:total
+node c4 Call C.libc.puts
+	in s "err8"
+node c5 ResultMatch
+node c6 Call C.libc.puts
+	in s "ok6"
+node c7 Call C.libc.puts
+	in s "err6"
+node c8 Switch
+	case Red
+	case Green
+node c9 Call C.libc.puts
+	in s "red"
+node d1 Call C.libc.puts
+	in s "green"
+node d2 Return
+node d3 Call Res.ResMain.Quarter
+	in x 8
+node d4 Call Res.ResMain.Quarter
+	in x 6
+node d5 MakeCase Res.Color.Green
+node d6 Math
+	set expr "t*10+1"
+node d7 Get local:total
+wire c1.then c2.in
+wire d3.result c2.result
+wire c2.ok c3.in
+wire c2.value c3.value
+wire c2.err c4.in
+wire c2.done c5.in
+wire d4.result c5.result
+wire c5.ok c6.in
+wire c5.err c7.in
+wire c5.done c8.in
+wire d5.value c8.value
+wire c8.case:Red c9.in
+wire c8.case:Green d1.in
+wire c8.done d2.in
+wire d6.result d2.value
+wire d7.value d6.t

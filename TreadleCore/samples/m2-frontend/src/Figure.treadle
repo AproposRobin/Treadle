@@ -1,0 +1,94 @@
+# treadle 1
+type Figure enum
+	namespace M2
+	doc "A payload enum whose own functions read This (the receiver's address): Switch on This with payload outputs, Is Case on This. Run prints 0, 12, 20 and true."
+
+case Dot
+
+case Square
+	payload side int
+
+case Rect
+	payload w int
+	payload h int
+
+function g0001 Area
+	pure
+	returns int
+	doc "The area: Switch on This, payloads from the case outputs."
+sheet body
+node a1 Entry
+node a2 This
+node a3 Switch
+	set on M2.Figure
+	case Square
+	case Rect
+node a4 Math
+	set expr "s * s"
+node a5 Return
+node a6 Math
+	set expr "w * h"
+node a7 Return
+node a8 Return
+	in value 0
+node a9 Fatal
+	in message "unreachable: every case returns"
+wire a1.then a3.in
+wire a2.value a3.value
+wire a3.case:Square.side a4.s
+wire a3.case:Square a5.in
+wire a4.result a5.value
+wire a3.case:Rect.h a6.h
+wire a3.case:Rect.w a6.w
+wire a3.case:Rect a7.in
+wire a6.result a7.value
+wire a3.default a8.in
+wire a3.done a9.in
+
+function g0002 IsDot
+	pure
+	returns bool
+sheet body
+node b1 Entry
+node b2 This
+node b3 IsCase M2.Figure.Dot
+node b4 Return
+wire b2.value b3.value
+wire b1.then b4.in
+wire b3.result b4.value
+
+function g0003 Run
+	static
+sheet body
+node c1 Entry
+node c10 Call M2.Figure.Area
+node c11 Call Console.WriteLine(int)
+node c12 Call M2.Figure.IsDot
+node c13 Call Console.WriteLine(bool)
+node c14 Return
+node c2 MakeCase M2.Figure.Dot
+node c3 Call M2.Figure.Area
+node c4 Call Console.WriteLine(int)
+node c5 MakeCase M2.Figure.Square
+	in side 3
+node c6 Math
+	set expr "a + 3"
+node c7 Call M2.Figure.Area
+node c8 Call Console.WriteLine(int)
+node c9 MakeCase M2.Figure.Rect
+	in w 4
+	in h 5
+wire c9.value c10.receiver
+wire c8.then c11.in
+wire c10.result c11.value
+wire c2.value c12.receiver
+wire c11.then c13.in
+wire c12.result c13.value
+wire c13.then c14.in
+wire c2.value c3.receiver
+wire c1.then c4.in
+wire c3.result c4.value
+wire c7.result c6.a
+wire c5.value c7.receiver
+wire c4.then c8.in
+wire c6.result c8.value

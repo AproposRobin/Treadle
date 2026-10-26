@@ -1,0 +1,207 @@
+# treadle 1
+type Stack class
+	namespace Core
+	generic T
+	doc "Last in, first out: Push puts a value on top, Pop takes it off (the caller then owns it), Peek reads it. The stack owns its storage, not what the values refer to."
+
+field mItems T[]
+	access internal
+
+field mCount int
+	access internal
+
+ctor k0001
+	doc "An empty stack (no storage until something is pushed)."
+sheet body
+node a1 Entry
+node a2 Return
+wire a1.then a2.in
+
+dtor k0002
+	doc "Destroys the values (a struct that has a destructor) and frees the storage."
+sheet body
+node b1 Entry
+node b2 Get this.mItems
+node b3 Get this.mCount
+node b4 Call Arrays.DestroyRange
+	in start 0
+node b5 Call Arrays.Free
+node b6 Return
+wire b2.value b4.array
+wire b3.value b4.count
+wire b1.then b4.in
+wire b2.value b5.array
+wire b4.then b5.in
+wire b5.then b6.in
+
+property k0003 Count int
+	doc "The number of values."
+sheet get
+node c1 Entry
+node c2 Get this.mCount
+node c3 Return
+wire c1.then c3.in
+wire c2.value c3.value
+
+function k0004 Push
+	doc "Puts the value on top."
+param value T
+sheet body
+node d1 Entry
+node d2 Get this.mItems
+node d3 Operator !=
+	in b null
+node d4 Get T[].Length
+node d5 Select
+	in false 0
+node d6 Get this.mCount
+node d7 Operator ==
+node d8 Branch
+node d9 Operator *
+	in b 2
+node e1 Call Math.Max
+	in b 4
+node e2 Call Arrays.Grow
+node e3 Set this.mItems
+node e4 Get this.mItems
+node e5 Call Arrays.Set
+node e6 Set this.mCount
+	set op +=
+	in value 1
+node e7 Return
+wire d2.value d3.a
+wire d2.value d4.receiver
+wire d3.result d5.condition
+wire d4.value d5.true
+wire d5.result d7.a
+wire d6.value d7.b
+wire d7.result d8.condition
+wire d1.then d8.in
+wire d5.result d9.a
+wire d9.result e1.a
+wire d2.value e2.array
+wire e1.result e2.capacity
+wire d6.value e2.count
+wire d8.true e2.in
+wire e2.then e3.in
+wire e2.result e3.value
+wire e4.value e5.array
+wire d8.false e5.in
+wire e3.then e5.in
+wire d6.value e5.index
+wire d1.value e5.value
+wire e5.then e6.in
+wire e6.then e7.in
+
+function k0005 Pop
+	returns T
+	doc "Takes the value off the top and gives it to the caller. An empty stack is a fatal error."
+local value T
+sheet body
+node f1 Entry
+node f2 Get this.mCount
+node f3 Operator ==
+	in b 0
+node f4 Branch
+node f5 Fatal
+	in message "Stack.Pop: the stack is empty"
+node f6 Set this.mCount
+	set op -=
+	in value 1
+node f7 Get this.mItems
+node f8 Get this.mCount
+node f9 Index
+node g1 Set local:value
+node g2 Call Arrays.Set
+	in value default
+node g3 Get local:value
+node g4 Return
+wire f2.value f3.a
+wire f3.result f4.condition
+wire f1.then f4.in
+wire f4.true f5.in
+wire f4.false f6.in
+wire f7.value f9.collection
+wire f8.value f9.index
+wire f6.then g1.in
+wire f9.value g1.value
+wire f7.value g2.array
+wire g1.then g2.in
+wire f8.value g2.index
+wire g2.then g4.in
+wire g3.value g4.value
+
+function k0006 Peek
+	pure
+	returns T
+	doc "The value on top (a copy the stack still owns). An empty stack is a fatal error."
+sheet body
+node h1 Entry
+node h2 Get this.mCount
+node h3 Operator ==
+	in b 0
+node h4 Branch
+node h5 Fatal
+	in message "Stack.Peek: the stack is empty"
+node h6 Get this.mItems
+node h7 Operator -
+	in b 1
+node h8 Index
+node h9 Return
+wire h2.value h3.a
+wire h3.result h4.condition
+wire h1.then h4.in
+wire h4.true h5.in
+wire h2.value h7.a
+wire h6.value h8.collection
+wire h7.result h8.index
+wire h4.false h9.in
+wire h8.value h9.value
+
+function k0007 Clear
+	doc "Removes every value (structs that have a destructor are destroyed; objects are not deleted). The storage is kept."
+sheet body
+node j1 Entry
+node j2 Get this.mItems
+node j3 Get this.mCount
+node j4 Call Arrays.DestroyRange
+	in start 0
+node j5 Set this.mCount
+	in value 0
+node j6 Return
+wire j2.value j4.array
+wire j3.value j4.count
+wire j1.then j4.in
+wire j4.then j5.in
+wire j5.then j6.in
+
+function k0008 TryPeek
+	pure
+	returns bool
+	doc "True and the value on top in `item` (a copy the stack still owns); false when the stack is empty."
+out item T
+sheet body
+node p01 Entry
+node p02 Get this.mCount
+node p03 Operator ==
+	in b 0
+node p04 Branch
+node p05 Return
+	in value false
+	in item default
+node p06 Get this.mItems
+node p07 Get this.mCount
+node p08 Operator -
+	in b 1
+node p09 Index
+node p10 Return
+	in value true
+wire p02.value p03.a
+wire p03.result p04.condition
+wire p01.then p04.in
+wire p04.true p05.in
+wire p07.value p08.a
+wire p06.value p09.collection
+wire p08.result p09.index
+wire p04.false p10.in
+wire p09.value p10.item

@@ -1,0 +1,27 @@
+== exit
+0
+== stdout
+glm.model true
+glm.view true
+glm.proj true
+glm.mvp true
+glm.clip.0 true
+glm.ndc.0 true
+glm.world.0 true
+glm.clip.1 true
+glm.ndc.1 true
+glm.world.1 true
+glm.clip.2 true
+glm.ndc.2 true
+glm.world.2 true
+glm.clip.3 true
+glm.ndc.3 true
+glm.world.3 true
+glm.mvp.inverse true
+glm.view.inverse.affine true
+glm.normal.matrix true
+glm.transform.chain true
+glm.transform.point true
+glm.slerp.rotate true
+glm.ortho.gl true
+glm.aabb.view true

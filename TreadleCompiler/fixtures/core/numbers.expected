@@ -1,0 +1,7 @@
+# Math.Lerp (double, float), Math.Sign (int, double), Math.IsNaN, Random.NextFloat / Range in range (0 misses).
+== exit
+0
+== stdout
+2.5 2 -1 0
+1 true false
+0

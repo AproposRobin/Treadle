@@ -1,0 +1,27 @@
+# treadle 1
+type Button class
+	namespace M2
+	doc "A class with an event (Language.md 4, Event): OnClick holds its handlers; Press invokes them in the order they were added; the Button's destructor deletes the ones still there."
+
+field OnClick ClickHandler
+	attr Event
+
+function b0001 Press
+param times int
+sheet body
+node a1 Entry
+node a2 Call this.OnClick.Invoke
+node a3 Return
+wire a1.times a2.arg0
+wire a1.then a2.in
+wire a2.then a3.in
+
+function b0002 Handlers
+	pure
+	returns int
+sheet body
+node b1 Entry
+node b2 Call this.OnClick.Count
+node b3 Return
+wire b1.then b3.in
+wire b2.result b3.value

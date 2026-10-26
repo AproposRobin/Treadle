@@ -1,0 +1,14 @@
+# treadle 1
+# expect n2 - T2242
+type StateFieldType class
+	namespace Broken
+	doc "A Gate keeps a bool: its State Field cannot be an int."
+
+field mCount int
+
+function f1 Run
+sheet body
+node n1 Entry
+node n2 Gate
+	set state mCount
+wire n1.then n2.in

@@ -1,0 +1,30 @@
+# treadle 1
+type Counter class
+	namespace M2
+	doc "An auto property: Total keeps its value in a hidden field the compiler makes. Prints 7."
+
+property c0001 Total int
+	auto
+
+function c0002 Run
+	static
+sheet body
+node a1 Entry
+node a2 Local M2.Counter
+node a3 Set M2.Counter.Total
+	in value 5
+node a4 Set M2.Counter.Total
+	set op +=
+	in value 2
+node a5 Get M2.Counter.Total
+node a6 Call Console.WriteLine(int)
+node a7 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.receiver
+wire a3.then a4.in
+wire a2.object a4.receiver
+wire a2.object a5.receiver
+wire a4.then a6.in
+wire a5.value a6.value
+wire a6.then a7.in

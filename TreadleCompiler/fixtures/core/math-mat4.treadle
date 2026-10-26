@@ -1,0 +1,2194 @@
+# treadle 1
+type MathMat4Main class
+	namespace Cx
+	static
+	doc "The core math library, mat4: every check compares the result with a reference computed in double precision by a separate C implementation (Gauss-Jordan inverse, Rodrigues rotations, the GLM conventions), within 1e-5 of the larger of 1 and the reference's size; each line is the check's name and true."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node n00000 Entry
+node n00001 Local String
+	set ctor ()
+node n00002 Get Core.Mat4.Identity
+node n00003 Make Core.Vec4
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n00004 Make Core.Vec4
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+	in W 0.0f
+node n00005 Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+	in W 0.0f
+node n00006 Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n00007 Make Core.Mat4
+node n00008 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n00009 Call String.Clear
+node n0000a Call String.Append(StringView)
+	in text "mat4.Identity "
+node n0000b Call String.Append(bool)
+node n0000c Call Console.WriteLine(StringView)
+node n0000d Get Core.Mat4.Zero
+node n0000e Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0000f Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0000g Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0000h Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0000i Make Core.Mat4
+node n0000j Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n0000k Call String.Clear
+node n0000l Call String.Append(StringView)
+	in text "mat4.Zero "
+node n0000m Call String.Append(bool)
+node n0000n Call Console.WriteLine(StringView)
+node n0000o Make Core.Vec4
+	in X 2.0f
+	in Y 1.0f
+	in Z 0.0f
+	in W 3.0f
+node n0000p Make Core.Vec4
+	in X 0.0f
+	in Y 3.0f
+	in Z 1.0f
+	in W 1.0f
+node n0000q Make Core.Vec4
+	in X 1.0f
+	in Y 2.0f
+	in Z 4.0f
+	in W 0.0f
+node n0000r Make Core.Vec4
+	in X 3.0f
+	in Y 1.0f
+	in Z 2.0f
+	in W 5.0f
+node n0000s Make Core.Mat4
+node n0000t Call Core.Mat4.Get
+	in row 1
+	in col 2
+node n0000u Math
+	set expr "Abs(a - b) <= 0.000019999999494757503f"
+	in b 2.0f
+node n0000v Call String.Clear
+node n0000w Call String.Append(StringView)
+	in text "mat4.Get "
+node n0000x Call String.Append(bool)
+node n0000y Call Console.WriteLine(StringView)
+node n0000z Call Core.Mat4.Get
+	in row 3
+	in col 0
+node n00010 Math
+	set expr "Abs(a - b) <= 0.000029999999242136255f"
+	in b 3.0f
+node n00011 Call String.Clear
+node n00012 Call String.Append(StringView)
+	in text "mat4.Get.corner "
+node n00013 Call String.Append(bool)
+node n00014 Call Console.WriteLine(StringView)
+node n00015 Call Core.Mat4.Column
+	in index 3
+node n00016 Make Core.Vec4
+	in X 3.0f
+	in Y 1.0f
+	in Z 2.0f
+	in W 5.0f
+node n00017 Math
+	set expr "Abs(a.X - b.X) <= 0.00004999999873689376f && Abs(a.Y - b.Y) <= 0.00004999999873689376f && Abs(a.Z - b.Z) <= 0.00004999999873689376f && Abs(a.W - b.W) <= 0.00004999999873689376f"
+node n00018 Call String.Clear
+node n00019 Call String.Append(StringView)
+	in text "mat4.Column "
+node n0001a Call String.Append(bool)
+node n0001b Call Console.WriteLine(StringView)
+node n0001c Call Core.Mat4.Row
+	in index 1
+node n0001d Make Core.Vec4
+	in X 1.0f
+	in Y 3.0f
+	in Z 2.0f
+	in W 1.0f
+node n0001e Math
+	set expr "Abs(a.X - b.X) <= 0.000029999999242136255f && Abs(a.Y - b.Y) <= 0.000029999999242136255f && Abs(a.Z - b.Z) <= 0.000029999999242136255f && Abs(a.W - b.W) <= 0.000029999999242136255f"
+node n0001f Call String.Clear
+node n0001g Call String.Append(StringView)
+	in text "mat4.Row "
+node n0001h Call String.Append(bool)
+node n0001i Call Console.WriteLine(StringView)
+node n0001j Make Core.Vec4
+	in X 1.0f
+	in Y 0.0f
+	in Z 4.0f
+	in W -2.0f
+node n0001k Make Core.Vec4
+	in X 2.0f
+	in Y 1.0f
+	in Z 0.0f
+	in W 1.0f
+node n0001l Make Core.Vec4
+	in X 0.0f
+	in Y 3.0f
+	in Z 1.0f
+	in W 0.0f
+node n0001m Make Core.Vec4
+	in X -1.0f
+	in Y 2.0f
+	in Z 1.0f
+	in W 2.0f
+node n0001n Make Core.Mat4
+node n0001o Operator *
+node n0001p Make Core.Vec4
+	in X 0.0f
+	in Y 7.0f
+	in Z 12.0f
+	in W -7.0f
+node n0001q Make Core.Vec4
+	in X 7.0f
+	in Y 6.0f
+	in Z 3.0f
+	in W 12.0f
+node n0001r Make Core.Vec4
+	in X 1.0f
+	in Y 11.0f
+	in Z 7.0f
+	in W 3.0f
+node n0001s Make Core.Vec4
+	in X 5.0f
+	in Y 9.0f
+	in Z 10.0f
+	in W 9.0f
+node n0001t Make Core.Mat4
+node n0001u Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00011999999696854502f && Abs(a.C0.Y - b.C0.Y) <= 0.00011999999696854502f && Abs(a.C0.Z - b.C0.Z) <= 0.00011999999696854502f && Abs(a.C0.W - b.C0.W) <= 0.00011999999696854502f && Abs(a.C1.X - b.C1.X) <= 0.00011999999696854502f && Abs(a.C1.Y - b.C1.Y) <= 0.00011999999696854502f && Abs(a.C1.Z - b.C1.Z) <= 0.00011999999696854502f && Abs(a.C1.W - b.C1.W) <= 0.00011999999696854502f && Abs(a.C2.X - b.C2.X) <= 0.00011999999696854502f && Abs(a.C2.Y - b.C2.Y) <= 0.00011999999696854502f && Abs(a.C2.Z - b.C2.Z) <= 0.00011999999696854502f && Abs(a.C2.W - b.C2.W) <= 0.00011999999696854502f && Abs(a.C3.X - b.C3.X) <= 0.00011999999696854502f && Abs(a.C3.Y - b.C3.Y) <= 0.00011999999696854502f && Abs(a.C3.Z - b.C3.Z) <= 0.00011999999696854502f && Abs(a.C3.W - b.C3.W) <= 0.00011999999696854502f"
+node n0001v Call String.Clear
+node n0001w Call String.Append(StringView)
+	in text "mat4.mul "
+node n0001x Call String.Append(bool)
+node n0001y Call Console.WriteLine(StringView)
+node n0001z Call Core.Mat4.Multiply
+node n00020 Make Core.Vec4
+	in X 0.0f
+	in Y 7.0f
+	in Z 12.0f
+	in W -7.0f
+node n00021 Make Core.Vec4
+	in X 7.0f
+	in Y 6.0f
+	in Z 3.0f
+	in W 12.0f
+node n00022 Make Core.Vec4
+	in X 1.0f
+	in Y 11.0f
+	in Z 7.0f
+	in W 3.0f
+node n00023 Make Core.Vec4
+	in X 5.0f
+	in Y 9.0f
+	in Z 10.0f
+	in W 9.0f
+node n00024 Make Core.Mat4
+node n00025 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00011999999696854502f && Abs(a.C0.Y - b.C0.Y) <= 0.00011999999696854502f && Abs(a.C0.Z - b.C0.Z) <= 0.00011999999696854502f && Abs(a.C0.W - b.C0.W) <= 0.00011999999696854502f && Abs(a.C1.X - b.C1.X) <= 0.00011999999696854502f && Abs(a.C1.Y - b.C1.Y) <= 0.00011999999696854502f && Abs(a.C1.Z - b.C1.Z) <= 0.00011999999696854502f && Abs(a.C1.W - b.C1.W) <= 0.00011999999696854502f && Abs(a.C2.X - b.C2.X) <= 0.00011999999696854502f && Abs(a.C2.Y - b.C2.Y) <= 0.00011999999696854502f && Abs(a.C2.Z - b.C2.Z) <= 0.00011999999696854502f && Abs(a.C2.W - b.C2.W) <= 0.00011999999696854502f && Abs(a.C3.X - b.C3.X) <= 0.00011999999696854502f && Abs(a.C3.Y - b.C3.Y) <= 0.00011999999696854502f && Abs(a.C3.Z - b.C3.Z) <= 0.00011999999696854502f && Abs(a.C3.W - b.C3.W) <= 0.00011999999696854502f"
+node n00026 Call String.Clear
+node n00027 Call String.Append(StringView)
+	in text "mat4.Multiply "
+node n00028 Call String.Append(bool)
+node n00029 Call Console.WriteLine(StringView)
+node n0002a Operator +
+node n0002b Make Core.Vec4
+	in X 3.0f
+	in Y 1.0f
+	in Z 4.0f
+	in W 1.0f
+node n0002c Make Core.Vec4
+	in X 2.0f
+	in Y 4.0f
+	in Z 1.0f
+	in W 2.0f
+node n0002d Make Core.Vec4
+	in X 1.0f
+	in Y 5.0f
+	in Z 5.0f
+	in W 0.0f
+node n0002e Make Core.Vec4
+	in X 2.0f
+	in Y 3.0f
+	in Z 3.0f
+	in W 7.0f
+node n0002f Make Core.Mat4
+node n0002g Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00007000000186963007f && Abs(a.C0.Y - b.C0.Y) <= 0.00007000000186963007f && Abs(a.C0.Z - b.C0.Z) <= 0.00007000000186963007f && Abs(a.C0.W - b.C0.W) <= 0.00007000000186963007f && Abs(a.C1.X - b.C1.X) <= 0.00007000000186963007f && Abs(a.C1.Y - b.C1.Y) <= 0.00007000000186963007f && Abs(a.C1.Z - b.C1.Z) <= 0.00007000000186963007f && Abs(a.C1.W - b.C1.W) <= 0.00007000000186963007f && Abs(a.C2.X - b.C2.X) <= 0.00007000000186963007f && Abs(a.C2.Y - b.C2.Y) <= 0.00007000000186963007f && Abs(a.C2.Z - b.C2.Z) <= 0.00007000000186963007f && Abs(a.C2.W - b.C2.W) <= 0.00007000000186963007f && Abs(a.C3.X - b.C3.X) <= 0.00007000000186963007f && Abs(a.C3.Y - b.C3.Y) <= 0.00007000000186963007f && Abs(a.C3.Z - b.C3.Z) <= 0.00007000000186963007f && Abs(a.C3.W - b.C3.W) <= 0.00007000000186963007f"
+node n0002h Call String.Clear
+node n0002i Call String.Append(StringView)
+	in text "mat4.add "
+node n0002j Call String.Append(bool)
+node n0002k Call Console.WriteLine(StringView)
+node n0002l Operator -
+node n0002m Make Core.Vec4
+	in X 1.0f
+	in Y 1.0f
+	in Z -4.0f
+	in W 5.0f
+node n0002n Make Core.Vec4
+	in X -2.0f
+	in Y 2.0f
+	in Z 1.0f
+	in W 0.0f
+node n0002o Make Core.Vec4
+	in X 1.0f
+	in Y -1.0f
+	in Z 3.0f
+	in W 0.0f
+node n0002p Make Core.Vec4
+	in X 4.0f
+	in Y -1.0f
+	in Z 1.0f
+	in W 3.0f
+node n0002q Make Core.Mat4
+node n0002r Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00004999999873689376f && Abs(a.C0.Y - b.C0.Y) <= 0.00004999999873689376f && Abs(a.C0.Z - b.C0.Z) <= 0.00004999999873689376f && Abs(a.C0.W - b.C0.W) <= 0.00004999999873689376f && Abs(a.C1.X - b.C1.X) <= 0.00004999999873689376f && Abs(a.C1.Y - b.C1.Y) <= 0.00004999999873689376f && Abs(a.C1.Z - b.C1.Z) <= 0.00004999999873689376f && Abs(a.C1.W - b.C1.W) <= 0.00004999999873689376f && Abs(a.C2.X - b.C2.X) <= 0.00004999999873689376f && Abs(a.C2.Y - b.C2.Y) <= 0.00004999999873689376f && Abs(a.C2.Z - b.C2.Z) <= 0.00004999999873689376f && Abs(a.C2.W - b.C2.W) <= 0.00004999999873689376f && Abs(a.C3.X - b.C3.X) <= 0.00004999999873689376f && Abs(a.C3.Y - b.C3.Y) <= 0.00004999999873689376f && Abs(a.C3.Z - b.C3.Z) <= 0.00004999999873689376f && Abs(a.C3.W - b.C3.W) <= 0.00004999999873689376f"
+node n0002s Call String.Clear
+node n0002t Call String.Append(StringView)
+	in text "mat4.sub "
+node n0002u Call String.Append(bool)
+node n0002v Call Console.WriteLine(StringView)
+node n0002w Make Core.Vec4
+	in X 2.0f
+	in Y 1.0f
+	in Z 0.0f
+	in W 3.0f
+node n0002x Make Core.Vec4
+	in X 0.0f
+	in Y 3.0f
+	in Z 1.0f
+	in W 1.0f
+node n0002y Make Core.Vec4
+	in X 1.0f
+	in Y 2.0f
+	in Z 4.0f
+	in W 0.0f
+node n0002z Make Core.Vec4
+	in X 3.0f
+	in Y 1.0f
+	in Z 2.0f
+	in W 5.0f
+node n00030 Make Core.Mat4
+node n00031 Operator ==
+node n00032 Operator ==
+	in b true
+node n00033 Call String.Clear
+node n00034 Call String.Append(StringView)
+	in text "mat4.eq "
+node n00035 Call String.Append(bool)
+node n00036 Call Console.WriteLine(StringView)
+node n00037 Operator ==
+node n00038 Operator ==
+	in b false
+node n00039 Call String.Clear
+node n0003a Call String.Append(StringView)
+	in text "mat4.eq.false "
+node n0003b Call String.Append(bool)
+node n0003c Call Console.WriteLine(StringView)
+node n0003d Make Core.Vec4
+	in X 1.0f
+	in Y -2.0f
+	in Z 0.5f
+	in W 3.0f
+node n0003e Operator *
+node n0003f Make Core.Vec4
+	in X 11.5f
+	in Y -1.0f
+	in Z 6.0f
+	in W 16.0f
+node n0003g Math
+	set expr "Abs(a.X - b.X) <= 0.00015999999595806003f && Abs(a.Y - b.Y) <= 0.00015999999595806003f && Abs(a.Z - b.Z) <= 0.00015999999595806003f && Abs(a.W - b.W) <= 0.00015999999595806003f"
+node n0003h Call String.Clear
+node n0003i Call String.Append(StringView)
+	in text "mat4.mul.vec4 "
+node n0003j Call String.Append(bool)
+node n0003k Call Console.WriteLine(StringView)
+node n0003l Operator *
+	in b -0.5f
+node n0003m Make Core.Vec4
+	in X -1.0f
+	in Y -0.5f
+	in Z -0.0f
+	in W -1.5f
+node n0003n Make Core.Vec4
+	in X -0.0f
+	in Y -1.5f
+	in Z -0.5f
+	in W -0.5f
+node n0003o Make Core.Vec4
+	in X -0.5f
+	in Y -1.0f
+	in Z -2.0f
+	in W -0.0f
+node n0003p Make Core.Vec4
+	in X -1.5f
+	in Y -0.5f
+	in Z -1.0f
+	in W -2.5f
+node n0003q Make Core.Mat4
+node n0003r Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00002499999936844688f && Abs(a.C0.Y - b.C0.Y) <= 0.00002499999936844688f && Abs(a.C0.Z - b.C0.Z) <= 0.00002499999936844688f && Abs(a.C0.W - b.C0.W) <= 0.00002499999936844688f && Abs(a.C1.X - b.C1.X) <= 0.00002499999936844688f && Abs(a.C1.Y - b.C1.Y) <= 0.00002499999936844688f && Abs(a.C1.Z - b.C1.Z) <= 0.00002499999936844688f && Abs(a.C1.W - b.C1.W) <= 0.00002499999936844688f && Abs(a.C2.X - b.C2.X) <= 0.00002499999936844688f && Abs(a.C2.Y - b.C2.Y) <= 0.00002499999936844688f && Abs(a.C2.Z - b.C2.Z) <= 0.00002499999936844688f && Abs(a.C2.W - b.C2.W) <= 0.00002499999936844688f && Abs(a.C3.X - b.C3.X) <= 0.00002499999936844688f && Abs(a.C3.Y - b.C3.Y) <= 0.00002499999936844688f && Abs(a.C3.Z - b.C3.Z) <= 0.00002499999936844688f && Abs(a.C3.W - b.C3.W) <= 0.00002499999936844688f"
+node n0003s Call String.Clear
+node n0003t Call String.Append(StringView)
+	in text "mat4.mul.scalar "
+node n0003u Call String.Append(bool)
+node n0003v Call Console.WriteLine(StringView)
+node n0003w Make Core.Vec4
+	in X 1.0f
+	in Y -2.0f
+	in Z 0.5f
+	in W 3.0f
+node n0003x Call Core.Mat4.Transform
+node n0003y Make Core.Vec4
+	in X 11.5f
+	in Y -1.0f
+	in Z 6.0f
+	in W 16.0f
+node n0003z Math
+	set expr "Abs(a.X - b.X) <= 0.00015999999595806003f && Abs(a.Y - b.Y) <= 0.00015999999595806003f && Abs(a.Z - b.Z) <= 0.00015999999595806003f && Abs(a.W - b.W) <= 0.00015999999595806003f"
+node n00040 Call String.Clear
+node n00041 Call String.Append(StringView)
+	in text "mat4.Transform "
+node n00042 Call String.Append(bool)
+node n00043 Call Console.WriteLine(StringView)
+node n00044 Call Core.Mat4.Scaled
+	in k -0.5f
+node n00045 Make Core.Vec4
+	in X -1.0f
+	in Y -0.5f
+	in Z -0.0f
+	in W -1.5f
+node n00046 Make Core.Vec4
+	in X -0.0f
+	in Y -1.5f
+	in Z -0.5f
+	in W -0.5f
+node n00047 Make Core.Vec4
+	in X -0.5f
+	in Y -1.0f
+	in Z -2.0f
+	in W -0.0f
+node n00048 Make Core.Vec4
+	in X -1.5f
+	in Y -0.5f
+	in Z -1.0f
+	in W -2.5f
+node n00049 Make Core.Mat4
+node n0004a Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00002499999936844688f && Abs(a.C0.Y - b.C0.Y) <= 0.00002499999936844688f && Abs(a.C0.Z - b.C0.Z) <= 0.00002499999936844688f && Abs(a.C0.W - b.C0.W) <= 0.00002499999936844688f && Abs(a.C1.X - b.C1.X) <= 0.00002499999936844688f && Abs(a.C1.Y - b.C1.Y) <= 0.00002499999936844688f && Abs(a.C1.Z - b.C1.Z) <= 0.00002499999936844688f && Abs(a.C1.W - b.C1.W) <= 0.00002499999936844688f && Abs(a.C2.X - b.C2.X) <= 0.00002499999936844688f && Abs(a.C2.Y - b.C2.Y) <= 0.00002499999936844688f && Abs(a.C2.Z - b.C2.Z) <= 0.00002499999936844688f && Abs(a.C2.W - b.C2.W) <= 0.00002499999936844688f && Abs(a.C3.X - b.C3.X) <= 0.00002499999936844688f && Abs(a.C3.Y - b.C3.Y) <= 0.00002499999936844688f && Abs(a.C3.Z - b.C3.Z) <= 0.00002499999936844688f && Abs(a.C3.W - b.C3.W) <= 0.00002499999936844688f"
+node n0004b Call String.Clear
+node n0004c Call String.Append(StringView)
+	in text "mat4.Scaled "
+node n0004d Call String.Append(bool)
+node n0004e Call Console.WriteLine(StringView)
+node n0004f Call Core.Mat4.Transposed
+node n0004g Make Core.Vec4
+	in X 2.0f
+	in Y 0.0f
+	in Z 1.0f
+	in W 3.0f
+node n0004h Make Core.Vec4
+	in X 1.0f
+	in Y 3.0f
+	in Z 2.0f
+	in W 1.0f
+node n0004i Make Core.Vec4
+	in X 0.0f
+	in Y 1.0f
+	in Z 4.0f
+	in W 2.0f
+node n0004j Make Core.Vec4
+	in X 3.0f
+	in Y 1.0f
+	in Z 0.0f
+	in W 5.0f
+node n0004k Make Core.Mat4
+node n0004l Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00004999999873689376f && Abs(a.C0.Y - b.C0.Y) <= 0.00004999999873689376f && Abs(a.C0.Z - b.C0.Z) <= 0.00004999999873689376f && Abs(a.C0.W - b.C0.W) <= 0.00004999999873689376f && Abs(a.C1.X - b.C1.X) <= 0.00004999999873689376f && Abs(a.C1.Y - b.C1.Y) <= 0.00004999999873689376f && Abs(a.C1.Z - b.C1.Z) <= 0.00004999999873689376f && Abs(a.C1.W - b.C1.W) <= 0.00004999999873689376f && Abs(a.C2.X - b.C2.X) <= 0.00004999999873689376f && Abs(a.C2.Y - b.C2.Y) <= 0.00004999999873689376f && Abs(a.C2.Z - b.C2.Z) <= 0.00004999999873689376f && Abs(a.C2.W - b.C2.W) <= 0.00004999999873689376f && Abs(a.C3.X - b.C3.X) <= 0.00004999999873689376f && Abs(a.C3.Y - b.C3.Y) <= 0.00004999999873689376f && Abs(a.C3.Z - b.C3.Z) <= 0.00004999999873689376f && Abs(a.C3.W - b.C3.W) <= 0.00004999999873689376f"
+node n0004m Call String.Clear
+node n0004n Call String.Append(StringView)
+	in text "mat4.Transposed "
+node n0004o Call String.Append(bool)
+node n0004p Call Console.WriteLine(StringView)
+node n0004q Call Core.Mat4.Determinant
+node n0004r Math
+	set expr "Abs(a - b) <= 0.00039999998989515007f"
+	in b 40.0f
+node n0004s Call String.Clear
+node n0004t Call String.Append(StringView)
+	in text "mat4.Determinant "
+node n0004u Call String.Append(bool)
+node n0004v Call Console.WriteLine(StringView)
+node n0004w Call Core.Mat4.Inverted
+node n0004x Make Core.Vec4
+	in X 1.25f
+	in Y -0.5f
+	in Z 0.44999998807907104f
+	in W -0.6499999761581421f
+node n0004y Make Core.Vec4
+	in X 0.375f
+	in Y 0.25f
+	in Z 0.07500000298023224f
+	in W -0.2750000059604645f
+node n0004z Make Core.Vec4
+	in X -0.5f
+	in Y -5.551115123125783e-17f
+	in Z 0.10000000149011612f
+	in W 0.30000001192092896f
+node n00050 Make Core.Vec4
+	in X -0.625f
+	in Y 0.25f
+	in Z -0.32499998807907104f
+	in W 0.5249999761581421f
+node n00051 Make Core.Mat4
+node n00052 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00001249999968422344f && Abs(a.C0.Y - b.C0.Y) <= 0.00001249999968422344f && Abs(a.C0.Z - b.C0.Z) <= 0.00001249999968422344f && Abs(a.C0.W - b.C0.W) <= 0.00001249999968422344f && Abs(a.C1.X - b.C1.X) <= 0.00001249999968422344f && Abs(a.C1.Y - b.C1.Y) <= 0.00001249999968422344f && Abs(a.C1.Z - b.C1.Z) <= 0.00001249999968422344f && Abs(a.C1.W - b.C1.W) <= 0.00001249999968422344f && Abs(a.C2.X - b.C2.X) <= 0.00001249999968422344f && Abs(a.C2.Y - b.C2.Y) <= 0.00001249999968422344f && Abs(a.C2.Z - b.C2.Z) <= 0.00001249999968422344f && Abs(a.C2.W - b.C2.W) <= 0.00001249999968422344f && Abs(a.C3.X - b.C3.X) <= 0.00001249999968422344f && Abs(a.C3.Y - b.C3.Y) <= 0.00001249999968422344f && Abs(a.C3.Z - b.C3.Z) <= 0.00001249999968422344f && Abs(a.C3.W - b.C3.W) <= 0.00001249999968422344f"
+node n00053 Call String.Clear
+node n00054 Call String.Append(StringView)
+	in text "mat4.Inverted "
+node n00055 Call String.Append(bool)
+node n00056 Call Console.WriteLine(StringView)
+node n00057 Call Core.Mat4.Inverted
+node n00058 Operator *
+node n00059 Make Core.Vec4
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0005a Make Core.Vec4
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+	in W 0.0f
+node n0005b Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+	in W 0.0f
+node n0005c Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n0005d Make Core.Mat4
+node n0005e Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n0005f Call String.Clear
+node n0005g Call String.Append(StringView)
+	in text "mat4.Inverted.times "
+node n0005h Call String.Append(bool)
+node n0005i Call Console.WriteLine(StringView)
+node n0005j Make Core.Vec4
+	in X 1.0f
+	in Y 2.0f
+	in Z 0.0f
+	in W 1.0f
+node n0005k Make Core.Vec4
+	in X 2.0f
+	in Y 4.0f
+	in Z 1.0f
+	in W 0.0f
+node n0005l Make Core.Vec4
+	in X 3.0f
+	in Y 6.0f
+	in Z 0.0f
+	in W 1.0f
+node n0005m Make Core.Vec4
+	in X 4.0f
+	in Y 8.0f
+	in Z 1.0f
+	in W 0.0f
+node n0005n Make Core.Mat4
+node n0005o Call Core.Mat4.Inverted
+node n0005p Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0005q Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0005r Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0005s Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0005t Make Core.Mat4
+node n0005u Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n0005v Call String.Clear
+node n0005w Call String.Append(StringView)
+	in text "mat4.Inverted.singular "
+node n0005x Call String.Append(bool)
+node n0005y Call Console.WriteLine(StringView)
+node n0005z Call Core.Mat4.Determinant
+node n00060 Math
+	set expr "Abs(a - b) <= 0.000009999999747378752f"
+	in b 0.0f
+node n00061 Call String.Clear
+node n00062 Call String.Append(StringView)
+	in text "mat4.Determinant.singular "
+node n00063 Call String.Append(bool)
+node n00064 Call Console.WriteLine(StringView)
+node n00065 Call Core.Mat4.TryInvert
+node n00066 Operator ==
+	in b true
+node n00067 Call String.Clear
+node n00068 Call String.Append(StringView)
+	in text "mat4.TryInvert "
+node n00069 Call String.Append(bool)
+node n0006a Call Console.WriteLine(StringView)
+node n0006b Call Core.Mat4.TryInvert
+node n0006c Make Core.Vec4
+	in X 0.04615384712815285f
+	in Y 0.4000000059604645f
+	in Z -0.03076923079788685f
+	in W -0.1538461595773697f
+node n0006d Make Core.Vec4
+	in X -0.07692307978868484f
+	in Y 0.0f
+	in Z 0.38461539149284363f
+	in W -0.07692307978868484f
+node n0006e Make Core.Vec4
+	in X 0.23076923191547394f
+	in Y 0.0f
+	in Z -0.1538461595773697f
+	in W 0.23076923191547394f
+node n0006f Make Core.Vec4
+	in X -0.015384615398943424f
+	in Y 0.20000000298023224f
+	in Z -0.32307693362236023f
+	in W 0.38461539149284363f
+node n0006g Make Core.Mat4
+node n0006h Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n0006i Call String.Clear
+node n0006j Call String.Append(StringView)
+	in text "mat4.TryInvert.inverse "
+node n0006k Call String.Append(bool)
+node n0006l Call Console.WriteLine(StringView)
+node n0006m Call Core.Mat4.TryInvert
+node n0006n Operator ==
+	in b false
+node n0006o Call String.Clear
+node n0006p Call String.Append(StringView)
+	in text "mat4.TryInvert.singular "
+node n0006q Call String.Append(bool)
+node n0006r Call Console.WriteLine(StringView)
+node n0006s Make Core.Vec3
+	in X 1.0f
+	in Y -2.0f
+	in Z 3.0f
+node n0006t Make Core.Vec3
+	in X 0.3333333432674408f
+	in Y 0.6666666865348816f
+	in Z 0.6666666865348816f
+node n0006u Call Core.Quat.FromAxisAngle
+	in angle 0.800000011920929f
+node n0006v Make Core.Vec3
+	in X 2.0f
+	in Y 2.0f
+	in Z 2.0f
+node n0006w Call Core.Mat4.FromTRS
+node n0006x Make Core.Vec4
+	in X 1.460811972618103f
+	in Y 1.0912717580795288f
+	in Z -0.8216777443885803f
+	in W 0.0f
+node n0006y Make Core.Vec4
+	in X -0.8216777443885803f
+	in Y 1.6630074977874756f
+	in Z 0.747831404209137f
+	in W 0.0f
+node n0006z Make Core.Vec4
+	in X 1.0912717580795288f
+	in Y -0.2086433619260788f
+	in Z 1.6630074977874756f
+	in W 0.0f
+node n00070 Make Core.Vec4
+	in X 1.0f
+	in Y -2.0f
+	in Z 3.0f
+	in W 1.0f
+node n00071 Make Core.Mat4
+node n00072 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000029999999242136255f && Abs(a.C0.Y - b.C0.Y) <= 0.000029999999242136255f && Abs(a.C0.Z - b.C0.Z) <= 0.000029999999242136255f && Abs(a.C0.W - b.C0.W) <= 0.000029999999242136255f && Abs(a.C1.X - b.C1.X) <= 0.000029999999242136255f && Abs(a.C1.Y - b.C1.Y) <= 0.000029999999242136255f && Abs(a.C1.Z - b.C1.Z) <= 0.000029999999242136255f && Abs(a.C1.W - b.C1.W) <= 0.000029999999242136255f && Abs(a.C2.X - b.C2.X) <= 0.000029999999242136255f && Abs(a.C2.Y - b.C2.Y) <= 0.000029999999242136255f && Abs(a.C2.Z - b.C2.Z) <= 0.000029999999242136255f && Abs(a.C2.W - b.C2.W) <= 0.000029999999242136255f && Abs(a.C3.X - b.C3.X) <= 0.000029999999242136255f && Abs(a.C3.Y - b.C3.Y) <= 0.000029999999242136255f && Abs(a.C3.Z - b.C3.Z) <= 0.000029999999242136255f && Abs(a.C3.W - b.C3.W) <= 0.000029999999242136255f"
+node n00073 Call String.Clear
+node n00074 Call String.Append(StringView)
+	in text "mat4.FromTRS "
+node n00075 Call String.Append(bool)
+node n00076 Call Console.WriteLine(StringView)
+node n00077 Call Core.Mat4.InvertedAffine
+node n00078 Make Core.Vec4
+	in X 0.36520299315452576f
+	in Y -0.20541943609714508f
+	in Z 0.2728179395198822f
+	in W 0.0f
+node n00079 Make Core.Vec4
+	in X 0.2728179395198822f
+	in Y 0.4157518744468689f
+	in Z -0.0521608404815197f
+	in W 0.0f
+node n0007a Make Core.Vec4
+	in X -0.20541943609714508f
+	in Y 0.18695785105228424f
+	in Z 0.4157518744468689f
+	in W 0.0f
+node n0007b Make Core.Vec4
+	in X 0.7966912388801575f
+	in Y 0.47604960203170776f
+	in Z -1.6243952512741089f
+	in W 1.0f
+node n0007c Make Core.Mat4
+node n0007d Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000016243951904471032f && Abs(a.C0.Y - b.C0.Y) <= 0.000016243951904471032f && Abs(a.C0.Z - b.C0.Z) <= 0.000016243951904471032f && Abs(a.C0.W - b.C0.W) <= 0.000016243951904471032f && Abs(a.C1.X - b.C1.X) <= 0.000016243951904471032f && Abs(a.C1.Y - b.C1.Y) <= 0.000016243951904471032f && Abs(a.C1.Z - b.C1.Z) <= 0.000016243951904471032f && Abs(a.C1.W - b.C1.W) <= 0.000016243951904471032f && Abs(a.C2.X - b.C2.X) <= 0.000016243951904471032f && Abs(a.C2.Y - b.C2.Y) <= 0.000016243951904471032f && Abs(a.C2.Z - b.C2.Z) <= 0.000016243951904471032f && Abs(a.C2.W - b.C2.W) <= 0.000016243951904471032f && Abs(a.C3.X - b.C3.X) <= 0.000016243951904471032f && Abs(a.C3.Y - b.C3.Y) <= 0.000016243951904471032f && Abs(a.C3.Z - b.C3.Z) <= 0.000016243951904471032f && Abs(a.C3.W - b.C3.W) <= 0.000016243951904471032f"
+node n0007e Call String.Clear
+node n0007f Call String.Append(StringView)
+	in text "mat4.InvertedAffine "
+node n0007g Call String.Append(bool)
+node n0007h Call Console.WriteLine(StringView)
+node n0007i Make Core.Vec4
+	in X 2.0000009536743164f
+	in Y 1.0000009536743164f
+	in Z 9.999999974752427e-7f
+	in W 3.0000009536743164f
+node n0007j Make Core.Vec4
+	in X 9.999999974752427e-7f
+	in Y 3.0000009536743164f
+	in Z 1.0000009536743164f
+	in W 1.0000009536743164f
+node n0007k Make Core.Vec4
+	in X 1.0000009536743164f
+	in Y 2.0000009536743164f
+	in Z 4.000000953674316f
+	in W 9.999999974752427e-7f
+node n0007l Make Core.Vec4
+	in X 3.0000009536743164f
+	in Y 1.0000009536743164f
+	in Z 2.0000009536743164f
+	in W 5.000000953674316f
+node n0007m Make Core.Mat4
+node n0007n Call Core.Mat4.ApproxEquals
+node n0007o Operator ==
+	in b true
+node n0007p Call String.Clear
+node n0007q Call String.Append(StringView)
+	in text "mat4.ApproxEquals "
+node n0007r Call String.Append(bool)
+node n0007s Call Console.WriteLine(StringView)
+node n0007t Call Core.Mat4.ApproxEquals
+node n0007u Operator ==
+	in b false
+node n0007v Call String.Clear
+node n0007w Call String.Append(StringView)
+	in text "mat4.ApproxEquals.false "
+node n0007x Call String.Append(bool)
+node n0007y Call Console.WriteLine(StringView)
+node n0007z Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n00080 Call Core.Mat4.Translation
+node n00081 Make Core.Vec4
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n00082 Make Core.Vec4
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+	in W 0.0f
+node n00083 Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+	in W 0.0f
+node n00084 Make Core.Vec4
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+	in W 1.0f
+node n00085 Make Core.Mat4
+node n00086 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000029999999242136255f && Abs(a.C0.Y - b.C0.Y) <= 0.000029999999242136255f && Abs(a.C0.Z - b.C0.Z) <= 0.000029999999242136255f && Abs(a.C0.W - b.C0.W) <= 0.000029999999242136255f && Abs(a.C1.X - b.C1.X) <= 0.000029999999242136255f && Abs(a.C1.Y - b.C1.Y) <= 0.000029999999242136255f && Abs(a.C1.Z - b.C1.Z) <= 0.000029999999242136255f && Abs(a.C1.W - b.C1.W) <= 0.000029999999242136255f && Abs(a.C2.X - b.C2.X) <= 0.000029999999242136255f && Abs(a.C2.Y - b.C2.Y) <= 0.000029999999242136255f && Abs(a.C2.Z - b.C2.Z) <= 0.000029999999242136255f && Abs(a.C2.W - b.C2.W) <= 0.000029999999242136255f && Abs(a.C3.X - b.C3.X) <= 0.000029999999242136255f && Abs(a.C3.Y - b.C3.Y) <= 0.000029999999242136255f && Abs(a.C3.Z - b.C3.Z) <= 0.000029999999242136255f && Abs(a.C3.W - b.C3.W) <= 0.000029999999242136255f"
+node n00087 Call String.Clear
+node n00088 Call String.Append(StringView)
+	in text "mat4.Translation "
+node n00089 Call String.Append(bool)
+node n0008a Call Console.WriteLine(StringView)
+node n0008b Make Core.Vec3
+	in X 2.0f
+	in Y 3.0f
+	in Z 4.0f
+node n0008c Call Core.Mat4.Scale
+node n0008d Make Core.Vec4
+	in X 2.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0008e Make Core.Vec4
+	in X 0.0f
+	in Y 3.0f
+	in Z 0.0f
+	in W 0.0f
+node n0008f Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 4.0f
+	in W 0.0f
+node n0008g Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n0008h Make Core.Mat4
+node n0008i Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000039999998989515007f && Abs(a.C0.Y - b.C0.Y) <= 0.000039999998989515007f && Abs(a.C0.Z - b.C0.Z) <= 0.000039999998989515007f && Abs(a.C0.W - b.C0.W) <= 0.000039999998989515007f && Abs(a.C1.X - b.C1.X) <= 0.000039999998989515007f && Abs(a.C1.Y - b.C1.Y) <= 0.000039999998989515007f && Abs(a.C1.Z - b.C1.Z) <= 0.000039999998989515007f && Abs(a.C1.W - b.C1.W) <= 0.000039999998989515007f && Abs(a.C2.X - b.C2.X) <= 0.000039999998989515007f && Abs(a.C2.Y - b.C2.Y) <= 0.000039999998989515007f && Abs(a.C2.Z - b.C2.Z) <= 0.000039999998989515007f && Abs(a.C2.W - b.C2.W) <= 0.000039999998989515007f && Abs(a.C3.X - b.C3.X) <= 0.000039999998989515007f && Abs(a.C3.Y - b.C3.Y) <= 0.000039999998989515007f && Abs(a.C3.Z - b.C3.Z) <= 0.000039999998989515007f && Abs(a.C3.W - b.C3.W) <= 0.000039999998989515007f"
+node n0008j Call String.Clear
+node n0008k Call String.Append(StringView)
+	in text "mat4.Scale "
+node n0008l Call String.Append(bool)
+node n0008m Call Console.WriteLine(StringView)
+node n0008n Call Core.Mat4.RotationX
+	in angle 0.6000000238418579f
+node n0008o Make Core.Vec4
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0008p Make Core.Vec4
+	in X 0.0f
+	in Y 0.8253356218338013f
+	in Z 0.5646424889564514f
+	in W 0.0f
+node n0008q Make Core.Vec4
+	in X 0.0f
+	in Y -0.5646424889564514f
+	in Z 0.8253356218338013f
+	in W 0.0f
+node n0008r Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n0008s Make Core.Mat4
+node n0008t Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n0008u Call String.Clear
+node n0008v Call String.Append(StringView)
+	in text "mat4.RotationX "
+node n0008w Call String.Append(bool)
+node n0008x Call Console.WriteLine(StringView)
+node n0008y Call Core.Mat4.RotationY
+	in angle 0.6000000238418579f
+node n0008z Make Core.Vec4
+	in X 0.8253356218338013f
+	in Y 0.0f
+	in Z -0.5646424889564514f
+	in W 0.0f
+node n00090 Make Core.Vec4
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+	in W 0.0f
+node n00091 Make Core.Vec4
+	in X 0.5646424889564514f
+	in Y 0.0f
+	in Z 0.8253356218338013f
+	in W 0.0f
+node n00092 Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n00093 Make Core.Mat4
+node n00094 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n00095 Call String.Clear
+node n00096 Call String.Append(StringView)
+	in text "mat4.RotationY "
+node n00097 Call String.Append(bool)
+node n00098 Call Console.WriteLine(StringView)
+node n00099 Call Core.Mat4.RotationZ
+	in angle 0.6000000238418579f
+node n0009a Make Core.Vec4
+	in X 0.8253356218338013f
+	in Y 0.5646424889564514f
+	in Z 0.0f
+	in W 0.0f
+node n0009b Make Core.Vec4
+	in X -0.5646424889564514f
+	in Y 0.8253356218338013f
+	in Z 0.0f
+	in W 0.0f
+node n0009c Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+	in W 0.0f
+node n0009d Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n0009e Make Core.Mat4
+node n0009f Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n0009g Call String.Clear
+node n0009h Call String.Append(StringView)
+	in text "mat4.RotationZ "
+node n0009i Call String.Append(bool)
+node n0009j Call Console.WriteLine(StringView)
+node n0009k Call Core.Mat4.RotationY
+	in angle 0.6000000238418579f
+node n0009l Make Core.Vec4
+	in X 0.8253356218338013f
+	in Y 0.0f
+	in Z -0.5646424889564514f
+	in W 0.0f
+node n0009m Make Core.Vec4
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+	in W 0.0f
+node n0009n Make Core.Vec4
+	in X 0.5646424889564514f
+	in Y 0.0f
+	in Z 0.8253356218338013f
+	in W 0.0f
+node n0009o Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n0009p Make Core.Mat4
+node n0009q Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n0009r Call String.Clear
+node n0009s Call String.Append(StringView)
+	in text "mat4.RotationY.axis "
+node n0009t Call String.Append(bool)
+node n0009u Call Console.WriteLine(StringView)
+node n0009v Make Core.Vec3
+	in X 0.0f
+	in Y 0.6000000238418579f
+	in Z 0.800000011920929f
+node n0009w Call Core.Quat.FromAxisAngle
+	in angle 1.100000023841858f
+node n0009x Call Core.Mat4.Rotation
+node n0009y Make Core.Vec4
+	in X 0.4535961151123047f
+	in Y 0.7129659056663513f
+	in Z -0.5347244143486023f
+	in W 0.0f
+node n0009z Make Core.Vec4
+	in X -0.7129659056663513f
+	in Y 0.6503015160560608f
+	in Z 0.2622738480567932f
+	in W 0.0f
+node n000a0 Make Core.Vec4
+	in X 0.5347244143486023f
+	in Y 0.2622738480567932f
+	in Z 0.8032945990562439f
+	in W 0.0f
+node n000a1 Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n000a2 Make Core.Mat4
+node n000a3 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n000a4 Call String.Clear
+node n000a5 Call String.Append(StringView)
+	in text "mat4.Rotation "
+node n000a6 Call String.Append(bool)
+node n000a7 Call Console.WriteLine(StringView)
+node n000a8 Make Core.Vec3
+	in X 3.0f
+	in Y 4.0f
+	in Z 5.0f
+node n000a9 Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n000aa Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n000ab Call Core.Mat4.LookAt
+node n000ac Make Core.Vec4
+	in X 0.8574929237365723f
+	in Y -0.23537960648536682f
+	in Z 0.45749571919441223f
+	in W 0.0f
+node n000ad Make Core.Vec4
+	in X 0.0f
+	in Y 0.8892118334770203f
+	in Z 0.45749571919441223f
+	in W 0.0f
+node n000ae Make Core.Vec4
+	in X -0.5144957304000854f
+	in Y -0.3922993242740631f
+	in Z 0.762492835521698f
+	in W 0.0f
+node n000af Make Core.Vec4
+	in X -0.0f
+	in Y -0.8892118334770203f
+	in Z -7.014934062957764f
+	in W 1.0f
+node n000ag Make Core.Mat4
+node n000ah Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00007014934089966118f && Abs(a.C0.Y - b.C0.Y) <= 0.00007014934089966118f && Abs(a.C0.Z - b.C0.Z) <= 0.00007014934089966118f && Abs(a.C0.W - b.C0.W) <= 0.00007014934089966118f && Abs(a.C1.X - b.C1.X) <= 0.00007014934089966118f && Abs(a.C1.Y - b.C1.Y) <= 0.00007014934089966118f && Abs(a.C1.Z - b.C1.Z) <= 0.00007014934089966118f && Abs(a.C1.W - b.C1.W) <= 0.00007014934089966118f && Abs(a.C2.X - b.C2.X) <= 0.00007014934089966118f && Abs(a.C2.Y - b.C2.Y) <= 0.00007014934089966118f && Abs(a.C2.Z - b.C2.Z) <= 0.00007014934089966118f && Abs(a.C2.W - b.C2.W) <= 0.00007014934089966118f && Abs(a.C3.X - b.C3.X) <= 0.00007014934089966118f && Abs(a.C3.Y - b.C3.Y) <= 0.00007014934089966118f && Abs(a.C3.Z - b.C3.Z) <= 0.00007014934089966118f && Abs(a.C3.W - b.C3.W) <= 0.00007014934089966118f"
+node n000ai Call String.Clear
+node n000aj Call String.Append(StringView)
+	in text "mat4.LookAt "
+node n000ak Call String.Append(bool)
+node n000al Call Console.WriteLine(StringView)
+node n000am Make Core.Vec3
+	in X 3.0f
+	in Y 4.0f
+	in Z 5.0f
+node n000an Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n000ao Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n000ap Call Core.Mat4.LookAt
+node n000aq Make Core.Vec3
+	in X 3.0f
+	in Y 4.0f
+	in Z 5.0f
+node n000ar Call Core.Mat4.TransformPoint
+node n000as Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n000at Math
+	set expr "Abs(a.X - b.X) <= 0.000009999999747378752f && Abs(a.Y - b.Y) <= 0.000009999999747378752f && Abs(a.Z - b.Z) <= 0.000009999999747378752f"
+node n000au Call String.Clear
+node n000av Call String.Append(StringView)
+	in text "mat4.LookAt.eye "
+node n000aw Call String.Append(bool)
+node n000ax Call Console.WriteLine(StringView)
+node n000ay Make Core.Vec3
+	in X 3.0f
+	in Y 4.0f
+	in Z 5.0f
+node n000az Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n000b0 Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n000b1 Call Core.Mat4.LookAt
+node n000b2 Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n000b3 Call Core.Mat4.TransformPoint
+node n000b4 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -6.557438373565674f
+node n000b5 Math
+	set expr "Abs(a.X - b.X) <= 0.00006557438609888777f && Abs(a.Y - b.Y) <= 0.00006557438609888777f && Abs(a.Z - b.Z) <= 0.00006557438609888777f"
+node n000b6 Call String.Clear
+node n000b7 Call String.Append(StringView)
+	in text "mat4.LookAt.target "
+node n000b8 Call String.Append(bool)
+node n000b9 Call Console.WriteLine(StringView)
+node n000ba Call Core.Mat4.Perspective
+	in fovY 1.0f
+	in aspect 1.5f
+	in near 0.10000000149011612f
+	in far 100.0f
+node n000bb Make Core.Vec4
+	in X 1.2203251123428345f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n000bc Make Core.Vec4
+	in X 0.0f
+	in Y 1.8304877281188965f
+	in Z 0.0f
+	in W 0.0f
+node n000bd Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.001001000404358f
+	in W -1.0f
+node n000be Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z -0.10010010004043579f
+	in W 0.0f
+node n000bf Make Core.Mat4
+node n000bg Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00018304877448827028f && Abs(a.C0.Y - b.C0.Y) <= 0.00018304877448827028f && Abs(a.C0.Z - b.C0.Z) <= 0.00018304877448827028f && Abs(a.C0.W - b.C0.W) <= 0.00018304877448827028f && Abs(a.C1.X - b.C1.X) <= 0.00018304877448827028f && Abs(a.C1.Y - b.C1.Y) <= 0.00018304877448827028f && Abs(a.C1.Z - b.C1.Z) <= 0.00018304877448827028f && Abs(a.C1.W - b.C1.W) <= 0.00018304877448827028f && Abs(a.C2.X - b.C2.X) <= 0.00018304877448827028f && Abs(a.C2.Y - b.C2.Y) <= 0.00018304877448827028f && Abs(a.C2.Z - b.C2.Z) <= 0.00018304877448827028f && Abs(a.C2.W - b.C2.W) <= 0.00018304877448827028f && Abs(a.C3.X - b.C3.X) <= 0.00018304877448827028f && Abs(a.C3.Y - b.C3.Y) <= 0.00018304877448827028f && Abs(a.C3.Z - b.C3.Z) <= 0.00018304877448827028f && Abs(a.C3.W - b.C3.W) <= 0.00018304877448827028f"
+node n000bh Call String.Clear
+node n000bi Call String.Append(StringView)
+	in text "mat4.Perspective "
+node n000bj Call String.Append(bool)
+node n000bk Call Console.WriteLine(StringView)
+node n000bl Call Core.Mat4.PerspectiveGL
+	in fovY 1.0f
+	in aspect 1.5f
+	in near 0.10000000149011612f
+	in far 100.0f
+node n000bm Make Core.Vec4
+	in X 1.2203251123428345f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n000bn Make Core.Vec4
+	in X 0.0f
+	in Y 1.8304877281188965f
+	in Z 0.0f
+	in W 0.0f
+node n000bo Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0020020008087158f
+	in W -1.0f
+node n000bp Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z -0.20020020008087158f
+	in W 0.0f
+node n000bq Make Core.Mat4
+node n000br Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00018304877448827028f && Abs(a.C0.Y - b.C0.Y) <= 0.00018304877448827028f && Abs(a.C0.Z - b.C0.Z) <= 0.00018304877448827028f && Abs(a.C0.W - b.C0.W) <= 0.00018304877448827028f && Abs(a.C1.X - b.C1.X) <= 0.00018304877448827028f && Abs(a.C1.Y - b.C1.Y) <= 0.00018304877448827028f && Abs(a.C1.Z - b.C1.Z) <= 0.00018304877448827028f && Abs(a.C1.W - b.C1.W) <= 0.00018304877448827028f && Abs(a.C2.X - b.C2.X) <= 0.00018304877448827028f && Abs(a.C2.Y - b.C2.Y) <= 0.00018304877448827028f && Abs(a.C2.Z - b.C2.Z) <= 0.00018304877448827028f && Abs(a.C2.W - b.C2.W) <= 0.00018304877448827028f && Abs(a.C3.X - b.C3.X) <= 0.00018304877448827028f && Abs(a.C3.Y - b.C3.Y) <= 0.00018304877448827028f && Abs(a.C3.Z - b.C3.Z) <= 0.00018304877448827028f && Abs(a.C3.W - b.C3.W) <= 0.00018304877448827028f"
+node n000bs Call String.Clear
+node n000bt Call String.Append(StringView)
+	in text "mat4.PerspectiveGL "
+node n000bu Call String.Append(bool)
+node n000bv Call Console.WriteLine(StringView)
+node n000bw Call Core.Mat4.Perspective
+	in fovY 1.0f
+	in aspect 1.5f
+	in near 0.1f
+	in far 100.0f
+node n000bx Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -0.10000000149011612f
+node n000by Call Core.Mat4.TransformPerspective
+node n000bz Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n000c0 Math
+	set expr "Abs(a.X - b.X) <= 0.00009999999747378752f && Abs(a.Y - b.Y) <= 0.00009999999747378752f && Abs(a.Z - b.Z) <= 0.00009999999747378752f"
+node n000c1 Call String.Clear
+node n000c2 Call String.Append(StringView)
+	in text "mat4.Perspective.near "
+node n000c3 Call String.Append(bool)
+node n000c4 Call Console.WriteLine(StringView)
+node n000c5 Call Core.Mat4.Perspective
+	in fovY 1.0f
+	in aspect 1.5f
+	in near 0.1f
+	in far 100.0f
+node n000c6 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -100.0f
+node n000c7 Call Core.Mat4.TransformPerspective
+node n000c8 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+node n000c9 Math
+	set expr "Abs(a.X - b.X) <= 0.00009999999747378752f && Abs(a.Y - b.Y) <= 0.00009999999747378752f && Abs(a.Z - b.Z) <= 0.00009999999747378752f"
+node n000ca Call String.Clear
+node n000cb Call String.Append(StringView)
+	in text "mat4.Perspective.far "
+node n000cc Call String.Append(bool)
+node n000cd Call Console.WriteLine(StringView)
+node n000ce Call Core.Mat4.PerspectiveGL
+	in fovY 1.0f
+	in aspect 1.5f
+	in near 0.1f
+	in far 100.0f
+node n000cf Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -0.10000000149011612f
+node n000cg Call Core.Mat4.TransformPerspective
+node n000ch Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0f
+node n000ci Math
+	set expr "Abs(a.X - b.X) <= 0.00009999999747378752f && Abs(a.Y - b.Y) <= 0.00009999999747378752f && Abs(a.Z - b.Z) <= 0.00009999999747378752f"
+node n000cj Call String.Clear
+node n000ck Call String.Append(StringView)
+	in text "mat4.PerspectiveGL.near "
+node n000cl Call String.Append(bool)
+node n000cm Call Console.WriteLine(StringView)
+node n000cn Call Core.Mat4.Orthographic
+	in left -2.0f
+	in right 6.0f
+	in bottom -1.0f
+	in top 3.0f
+	in near 0.5f
+	in far 10.0f
+node n000co Make Core.Vec4
+	in X 0.25f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n000cp Make Core.Vec4
+	in X 0.0f
+	in Y 0.5f
+	in Z 0.0f
+	in W 0.0f
+node n000cq Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z -0.10526315867900848f
+	in W 0.0f
+node n000cr Make Core.Vec4
+	in X -0.5f
+	in Y -0.5f
+	in Z -0.05263157933950424f
+	in W 1.0f
+node n000cs Make Core.Mat4
+node n000ct Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n000cu Call String.Clear
+node n000cv Call String.Append(StringView)
+	in text "mat4.Orthographic "
+node n000cw Call String.Append(bool)
+node n000cx Call Console.WriteLine(StringView)
+node n000cy Call Core.Mat4.OrthographicGL
+	in left -2.0f
+	in right 6.0f
+	in bottom -1.0f
+	in top 3.0f
+	in near 0.5f
+	in far 10.0f
+node n000cz Make Core.Vec4
+	in X 0.25f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n000d0 Make Core.Vec4
+	in X 0.0f
+	in Y 0.5f
+	in Z 0.0f
+	in W 0.0f
+node n000d1 Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z -0.21052631735801697f
+	in W 0.0f
+node n000d2 Make Core.Vec4
+	in X -0.5f
+	in Y -0.5f
+	in Z -1.105263113975525f
+	in W 1.0f
+node n000d3 Make Core.Mat4
+node n000d4 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000011052631634811405f && Abs(a.C0.Y - b.C0.Y) <= 0.000011052631634811405f && Abs(a.C0.Z - b.C0.Z) <= 0.000011052631634811405f && Abs(a.C0.W - b.C0.W) <= 0.000011052631634811405f && Abs(a.C1.X - b.C1.X) <= 0.000011052631634811405f && Abs(a.C1.Y - b.C1.Y) <= 0.000011052631634811405f && Abs(a.C1.Z - b.C1.Z) <= 0.000011052631634811405f && Abs(a.C1.W - b.C1.W) <= 0.000011052631634811405f && Abs(a.C2.X - b.C2.X) <= 0.000011052631634811405f && Abs(a.C2.Y - b.C2.Y) <= 0.000011052631634811405f && Abs(a.C2.Z - b.C2.Z) <= 0.000011052631634811405f && Abs(a.C2.W - b.C2.W) <= 0.000011052631634811405f && Abs(a.C3.X - b.C3.X) <= 0.000011052631634811405f && Abs(a.C3.Y - b.C3.Y) <= 0.000011052631634811405f && Abs(a.C3.Z - b.C3.Z) <= 0.000011052631634811405f && Abs(a.C3.W - b.C3.W) <= 0.000011052631634811405f"
+node n000d5 Call String.Clear
+node n000d6 Call String.Append(StringView)
+	in text "mat4.OrthographicGL "
+node n000d7 Call String.Append(bool)
+node n000d8 Call Console.WriteLine(StringView)
+node n000d9 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z -1.0f
+node n000da Call Core.Mat4.TransformPoint
+node n000db Make Core.Vec3
+	in X 4.0f
+	in Y 6.0f
+	in Z 0.0f
+node n000dc Math
+	set expr "Abs(a.X - b.X) <= 0.00005999999848427251f && Abs(a.Y - b.Y) <= 0.00005999999848427251f && Abs(a.Z - b.Z) <= 0.00005999999848427251f"
+node n000dd Call String.Clear
+node n000de Call String.Append(StringView)
+	in text "mat4.TransformPoint "
+node n000df Call String.Append(bool)
+node n000dg Call Console.WriteLine(StringView)
+node n000dh Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z -1.0f
+node n000di Call Core.Mat4.TransformVector
+node n000dj Make Core.Vec3
+	in X 1.0f
+	in Y 5.0f
+	in Z -2.0f
+node n000dk Math
+	set expr "Abs(a.X - b.X) <= 0.00004999999873689376f && Abs(a.Y - b.Y) <= 0.00004999999873689376f && Abs(a.Z - b.Z) <= 0.00004999999873689376f"
+node n000dl Call String.Clear
+node n000dm Call String.Append(StringView)
+	in text "mat4.TransformVector "
+node n000dn Call String.Append(bool)
+node n000do Call Console.WriteLine(StringView)
+node n000dp Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z -1.0f
+node n000dq Call Core.Mat4.TransformPerspective
+node n000dr Make Core.Vec3
+	in X 0.4000000059604645f
+	in Y 0.6000000238418579f
+	in Z 0.0f
+node n000ds Math
+	set expr "Abs(a.X - b.X) <= 0.000009999999747378752f && Abs(a.Y - b.Y) <= 0.000009999999747378752f && Abs(a.Z - b.Z) <= 0.000009999999747378752f"
+node n000dt Call String.Clear
+node n000du Call String.Append(StringView)
+	in text "mat4.TransformPerspective "
+node n000dv Call String.Append(bool)
+node n000dw Call Console.WriteLine(StringView)
+node n000dx Call Core.Mat4.Upper3x3
+node n000dy Make Core.Vec3
+	in X 2.0f
+	in Y 1.0f
+	in Z 0.0f
+node n000dz Make Core.Vec3
+	in X 0.0f
+	in Y 3.0f
+	in Z 1.0f
+node n000e0 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 4.0f
+node n000e1 Make Core.Mat3
+node n000e2 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000039999998989515007f && Abs(a.C0.Y - b.C0.Y) <= 0.000039999998989515007f && Abs(a.C0.Z - b.C0.Z) <= 0.000039999998989515007f && Abs(a.C1.X - b.C1.X) <= 0.000039999998989515007f && Abs(a.C1.Y - b.C1.Y) <= 0.000039999998989515007f && Abs(a.C1.Z - b.C1.Z) <= 0.000039999998989515007f && Abs(a.C2.X - b.C2.X) <= 0.000039999998989515007f && Abs(a.C2.Y - b.C2.Y) <= 0.000039999998989515007f && Abs(a.C2.Z - b.C2.Z) <= 0.000039999998989515007f"
+node n000e3 Call String.Clear
+node n000e4 Call String.Append(StringView)
+	in text "mat4.Upper3x3 "
+node n000e5 Call String.Append(bool)
+node n000e6 Call Console.WriteLine(StringView)
+node n000e7 Local float
+	set count
+	in count 16
+node n000e8 Call Core.Mat4.ToStd430
+node n000e9 Index
+	in index 0
+node n000ea Math
+	set expr "e * 0.0f"
+node n000eb Index
+	in index 1
+node n000ec Math
+	set expr "s + e * 1.0f"
+node n000ed Index
+	in index 2
+node n000ee Math
+	set expr "s + e * 2.0f"
+node n000ef Index
+	in index 3
+node n000eg Math
+	set expr "s + e * 3.0f"
+node n000eh Index
+	in index 4
+node n000ei Math
+	set expr "s + e * 4.0f"
+node n000ej Index
+	in index 5
+node n000ek Math
+	set expr "s + e * 5.0f"
+node n000el Index
+	in index 6
+node n000em Math
+	set expr "s + e * 6.0f"
+node n000en Index
+	in index 7
+node n000eo Math
+	set expr "s + e * 7.0f"
+node n000ep Index
+	in index 8
+node n000eq Math
+	set expr "s + e * 8.0f"
+node n000er Index
+	in index 9
+node n000es Math
+	set expr "s + e * 9.0f"
+node n000et Index
+	in index 10
+node n000eu Math
+	set expr "s + e * 10.0f"
+node n000ev Index
+	in index 11
+node n000ew Math
+	set expr "s + e * 11.0f"
+node n000ex Index
+	in index 12
+node n000ey Math
+	set expr "s + e * 12.0f"
+node n000ez Index
+	in index 13
+node n000f0 Math
+	set expr "s + e * 13.0f"
+node n000f1 Index
+	in index 14
+node n000f2 Math
+	set expr "s + e * 14.0f"
+node n000f3 Index
+	in index 15
+node n000f4 Math
+	set expr "s + e * 15.0f"
+node n000f5 Math
+	set expr "Abs(a - b) <= 0.0025599999353289604f"
+	in b 256.0f
+node n000f6 Call String.Clear
+node n000f7 Call String.Append(StringView)
+	in text "mat4.ToStd430 "
+node n000f8 Call String.Append(bool)
+node n000f9 Call Console.WriteLine(StringView)
+node n000fa Return
+	in value 0
+wire n00000.then n00001.in
+wire n00003.value n00007.C0
+wire n00004.value n00007.C1
+wire n00005.value n00007.C2
+wire n00006.value n00007.C3
+wire n00002.value n00008.a
+wire n00007.value n00008.b
+wire n00001.then n00009.in
+wire n00001.object n00009.receiver
+wire n00009.then n0000a.in
+wire n00001.object n0000a.receiver
+wire n0000a.then n0000b.in
+wire n00001.object n0000b.receiver
+wire n00008.result n0000b.value
+wire n0000b.then n0000c.in
+wire n00001.object n0000c.text
+wire n0000e.value n0000i.C0
+wire n0000f.value n0000i.C1
+wire n0000g.value n0000i.C2
+wire n0000h.value n0000i.C3
+wire n0000d.value n0000j.a
+wire n0000i.value n0000j.b
+wire n0000c.then n0000k.in
+wire n00001.object n0000k.receiver
+wire n0000k.then n0000l.in
+wire n00001.object n0000l.receiver
+wire n0000l.then n0000m.in
+wire n00001.object n0000m.receiver
+wire n0000j.result n0000m.value
+wire n0000m.then n0000n.in
+wire n00001.object n0000n.text
+wire n0000o.value n0000s.C0
+wire n0000p.value n0000s.C1
+wire n0000q.value n0000s.C2
+wire n0000r.value n0000s.C3
+wire n0000s.value n0000t.receiver
+wire n0000t.result n0000u.a
+wire n0000n.then n0000v.in
+wire n00001.object n0000v.receiver
+wire n0000v.then n0000w.in
+wire n00001.object n0000w.receiver
+wire n0000w.then n0000x.in
+wire n00001.object n0000x.receiver
+wire n0000u.result n0000x.value
+wire n0000x.then n0000y.in
+wire n00001.object n0000y.text
+wire n0000s.value n0000z.receiver
+wire n0000z.result n00010.a
+wire n0000y.then n00011.in
+wire n00001.object n00011.receiver
+wire n00011.then n00012.in
+wire n00001.object n00012.receiver
+wire n00012.then n00013.in
+wire n00001.object n00013.receiver
+wire n00010.result n00013.value
+wire n00013.then n00014.in
+wire n00001.object n00014.text
+wire n0000s.value n00015.receiver
+wire n00015.result n00017.a
+wire n00016.value n00017.b
+wire n00014.then n00018.in
+wire n00001.object n00018.receiver
+wire n00018.then n00019.in
+wire n00001.object n00019.receiver
+wire n00019.then n0001a.in
+wire n00001.object n0001a.receiver
+wire n00017.result n0001a.value
+wire n0001a.then n0001b.in
+wire n00001.object n0001b.text
+wire n0000s.value n0001c.receiver
+wire n0001c.result n0001e.a
+wire n0001d.value n0001e.b
+wire n0001b.then n0001f.in
+wire n00001.object n0001f.receiver
+wire n0001f.then n0001g.in
+wire n00001.object n0001g.receiver
+wire n0001g.then n0001h.in
+wire n00001.object n0001h.receiver
+wire n0001e.result n0001h.value
+wire n0001h.then n0001i.in
+wire n00001.object n0001i.text
+wire n0001j.value n0001n.C0
+wire n0001k.value n0001n.C1
+wire n0001l.value n0001n.C2
+wire n0001m.value n0001n.C3
+wire n0000s.value n0001o.a
+wire n0001n.value n0001o.b
+wire n0001p.value n0001t.C0
+wire n0001q.value n0001t.C1
+wire n0001r.value n0001t.C2
+wire n0001s.value n0001t.C3
+wire n0001o.result n0001u.a
+wire n0001t.value n0001u.b
+wire n0001i.then n0001v.in
+wire n00001.object n0001v.receiver
+wire n0001v.then n0001w.in
+wire n00001.object n0001w.receiver
+wire n0001w.then n0001x.in
+wire n00001.object n0001x.receiver
+wire n0001u.result n0001x.value
+wire n0001x.then n0001y.in
+wire n00001.object n0001y.text
+wire n0001n.value n0001z.b
+wire n0000s.value n0001z.receiver
+wire n00020.value n00024.C0
+wire n00021.value n00024.C1
+wire n00022.value n00024.C2
+wire n00023.value n00024.C3
+wire n0001z.result n00025.a
+wire n00024.value n00025.b
+wire n0001y.then n00026.in
+wire n00001.object n00026.receiver
+wire n00026.then n00027.in
+wire n00001.object n00027.receiver
+wire n00027.then n00028.in
+wire n00001.object n00028.receiver
+wire n00025.result n00028.value
+wire n00028.then n00029.in
+wire n00001.object n00029.text
+wire n0000s.value n0002a.a
+wire n0001n.value n0002a.b
+wire n0002b.value n0002f.C0
+wire n0002c.value n0002f.C1
+wire n0002d.value n0002f.C2
+wire n0002e.value n0002f.C3
+wire n0002a.result n0002g.a
+wire n0002f.value n0002g.b
+wire n00029.then n0002h.in
+wire n00001.object n0002h.receiver
+wire n0002h.then n0002i.in
+wire n00001.object n0002i.receiver
+wire n0002i.then n0002j.in
+wire n00001.object n0002j.receiver
+wire n0002g.result n0002j.value
+wire n0002j.then n0002k.in
+wire n00001.object n0002k.text
+wire n0000s.value n0002l.a
+wire n0001n.value n0002l.b
+wire n0002m.value n0002q.C0
+wire n0002n.value n0002q.C1
+wire n0002o.value n0002q.C2
+wire n0002p.value n0002q.C3
+wire n0002l.result n0002r.a
+wire n0002q.value n0002r.b
+wire n0002k.then n0002s.in
+wire n00001.object n0002s.receiver
+wire n0002s.then n0002t.in
+wire n00001.object n0002t.receiver
+wire n0002t.then n0002u.in
+wire n00001.object n0002u.receiver
+wire n0002r.result n0002u.value
+wire n0002u.then n0002v.in
+wire n00001.object n0002v.text
+wire n0002w.value n00030.C0
+wire n0002x.value n00030.C1
+wire n0002y.value n00030.C2
+wire n0002z.value n00030.C3
+wire n0000s.value n00031.a
+wire n00030.value n00031.b
+wire n00031.result n00032.a
+wire n0002v.then n00033.in
+wire n00001.object n00033.receiver
+wire n00033.then n00034.in
+wire n00001.object n00034.receiver
+wire n00034.then n00035.in
+wire n00001.object n00035.receiver
+wire n00032.result n00035.value
+wire n00035.then n00036.in
+wire n00001.object n00036.text
+wire n0000s.value n00037.a
+wire n0001n.value n00037.b
+wire n00037.result n00038.a
+wire n00036.then n00039.in
+wire n00001.object n00039.receiver
+wire n00039.then n0003a.in
+wire n00001.object n0003a.receiver
+wire n0003a.then n0003b.in
+wire n00001.object n0003b.receiver
+wire n00038.result n0003b.value
+wire n0003b.then n0003c.in
+wire n00001.object n0003c.text
+wire n0000s.value n0003e.a
+wire n0003d.value n0003e.b
+wire n0003e.result n0003g.a
+wire n0003f.value n0003g.b
+wire n0003c.then n0003h.in
+wire n00001.object n0003h.receiver
+wire n0003h.then n0003i.in
+wire n00001.object n0003i.receiver
+wire n0003i.then n0003j.in
+wire n00001.object n0003j.receiver
+wire n0003g.result n0003j.value
+wire n0003j.then n0003k.in
+wire n00001.object n0003k.text
+wire n0000s.value n0003l.a
+wire n0003m.value n0003q.C0
+wire n0003n.value n0003q.C1
+wire n0003o.value n0003q.C2
+wire n0003p.value n0003q.C3
+wire n0003l.result n0003r.a
+wire n0003q.value n0003r.b
+wire n0003k.then n0003s.in
+wire n00001.object n0003s.receiver
+wire n0003s.then n0003t.in
+wire n00001.object n0003t.receiver
+wire n0003t.then n0003u.in
+wire n00001.object n0003u.receiver
+wire n0003r.result n0003u.value
+wire n0003u.then n0003v.in
+wire n00001.object n0003v.text
+wire n0000s.value n0003x.receiver
+wire n0003w.value n0003x.v
+wire n0003x.result n0003z.a
+wire n0003y.value n0003z.b
+wire n0003v.then n00040.in
+wire n00001.object n00040.receiver
+wire n00040.then n00041.in
+wire n00001.object n00041.receiver
+wire n00041.then n00042.in
+wire n00001.object n00042.receiver
+wire n0003z.result n00042.value
+wire n00042.then n00043.in
+wire n00001.object n00043.text
+wire n0000s.value n00044.receiver
+wire n00045.value n00049.C0
+wire n00046.value n00049.C1
+wire n00047.value n00049.C2
+wire n00048.value n00049.C3
+wire n00044.result n0004a.a
+wire n00049.value n0004a.b
+wire n00043.then n0004b.in
+wire n00001.object n0004b.receiver
+wire n0004b.then n0004c.in
+wire n00001.object n0004c.receiver
+wire n0004c.then n0004d.in
+wire n00001.object n0004d.receiver
+wire n0004a.result n0004d.value
+wire n0004d.then n0004e.in
+wire n00001.object n0004e.text
+wire n0000s.value n0004f.receiver
+wire n0004g.value n0004k.C0
+wire n0004h.value n0004k.C1
+wire n0004i.value n0004k.C2
+wire n0004j.value n0004k.C3
+wire n0004f.result n0004l.a
+wire n0004k.value n0004l.b
+wire n0004e.then n0004m.in
+wire n00001.object n0004m.receiver
+wire n0004m.then n0004n.in
+wire n00001.object n0004n.receiver
+wire n0004n.then n0004o.in
+wire n00001.object n0004o.receiver
+wire n0004l.result n0004o.value
+wire n0004o.then n0004p.in
+wire n00001.object n0004p.text
+wire n0000s.value n0004q.receiver
+wire n0004q.result n0004r.a
+wire n0004p.then n0004s.in
+wire n00001.object n0004s.receiver
+wire n0004s.then n0004t.in
+wire n00001.object n0004t.receiver
+wire n0004t.then n0004u.in
+wire n00001.object n0004u.receiver
+wire n0004r.result n0004u.value
+wire n0004u.then n0004v.in
+wire n00001.object n0004v.text
+wire n0000s.value n0004w.receiver
+wire n0004x.value n00051.C0
+wire n0004y.value n00051.C1
+wire n0004z.value n00051.C2
+wire n00050.value n00051.C3
+wire n0004w.result n00052.a
+wire n00051.value n00052.b
+wire n0004v.then n00053.in
+wire n00001.object n00053.receiver
+wire n00053.then n00054.in
+wire n00001.object n00054.receiver
+wire n00054.then n00055.in
+wire n00001.object n00055.receiver
+wire n00052.result n00055.value
+wire n00055.then n00056.in
+wire n00001.object n00056.text
+wire n0000s.value n00057.receiver
+wire n00057.result n00058.a
+wire n0000s.value n00058.b
+wire n00059.value n0005d.C0
+wire n0005a.value n0005d.C1
+wire n0005b.value n0005d.C2
+wire n0005c.value n0005d.C3
+wire n00058.result n0005e.a
+wire n0005d.value n0005e.b
+wire n00056.then n0005f.in
+wire n00001.object n0005f.receiver
+wire n0005f.then n0005g.in
+wire n00001.object n0005g.receiver
+wire n0005g.then n0005h.in
+wire n00001.object n0005h.receiver
+wire n0005e.result n0005h.value
+wire n0005h.then n0005i.in
+wire n00001.object n0005i.text
+wire n0005j.value n0005n.C0
+wire n0005k.value n0005n.C1
+wire n0005l.value n0005n.C2
+wire n0005m.value n0005n.C3
+wire n0005n.value n0005o.receiver
+wire n0005p.value n0005t.C0
+wire n0005q.value n0005t.C1
+wire n0005r.value n0005t.C2
+wire n0005s.value n0005t.C3
+wire n0005o.result n0005u.a
+wire n0005t.value n0005u.b
+wire n0005i.then n0005v.in
+wire n00001.object n0005v.receiver
+wire n0005v.then n0005w.in
+wire n00001.object n0005w.receiver
+wire n0005w.then n0005x.in
+wire n00001.object n0005x.receiver
+wire n0005u.result n0005x.value
+wire n0005x.then n0005y.in
+wire n00001.object n0005y.text
+wire n0005n.value n0005z.receiver
+wire n0005z.result n00060.a
+wire n0005y.then n00061.in
+wire n00001.object n00061.receiver
+wire n00061.then n00062.in
+wire n00001.object n00062.receiver
+wire n00062.then n00063.in
+wire n00001.object n00063.receiver
+wire n00060.result n00063.value
+wire n00063.then n00064.in
+wire n00001.object n00064.text
+wire n0001n.value n00065.receiver
+wire n00065.result n00066.a
+wire n00064.then n00067.in
+wire n00001.object n00067.receiver
+wire n00067.then n00068.in
+wire n00001.object n00068.receiver
+wire n00068.then n00069.in
+wire n00001.object n00069.receiver
+wire n00066.result n00069.value
+wire n00069.then n0006a.in
+wire n00001.object n0006a.text
+wire n0001n.value n0006b.receiver
+wire n0006c.value n0006g.C0
+wire n0006d.value n0006g.C1
+wire n0006e.value n0006g.C2
+wire n0006f.value n0006g.C3
+wire n0006b.inverse n0006h.a
+wire n0006g.value n0006h.b
+wire n0006a.then n0006i.in
+wire n00001.object n0006i.receiver
+wire n0006i.then n0006j.in
+wire n00001.object n0006j.receiver
+wire n0006j.then n0006k.in
+wire n00001.object n0006k.receiver
+wire n0006h.result n0006k.value
+wire n0006k.then n0006l.in
+wire n00001.object n0006l.text
+wire n0005n.value n0006m.receiver
+wire n0006m.result n0006n.a
+wire n0006l.then n0006o.in
+wire n00001.object n0006o.receiver
+wire n0006o.then n0006p.in
+wire n00001.object n0006p.receiver
+wire n0006p.then n0006q.in
+wire n00001.object n0006q.receiver
+wire n0006n.result n0006q.value
+wire n0006q.then n0006r.in
+wire n00001.object n0006r.text
+wire n0006t.value n0006u.axis
+wire n0006u.result n0006w.rotation
+wire n0006v.value n0006w.scale
+wire n0006s.value n0006w.translation
+wire n0006x.value n00071.C0
+wire n0006y.value n00071.C1
+wire n0006z.value n00071.C2
+wire n00070.value n00071.C3
+wire n0006w.result n00072.a
+wire n00071.value n00072.b
+wire n0006r.then n00073.in
+wire n00001.object n00073.receiver
+wire n00073.then n00074.in
+wire n00001.object n00074.receiver
+wire n00074.then n00075.in
+wire n00001.object n00075.receiver
+wire n00072.result n00075.value
+wire n00075.then n00076.in
+wire n00001.object n00076.text
+wire n0006w.result n00077.receiver
+wire n00078.value n0007c.C0
+wire n00079.value n0007c.C1
+wire n0007a.value n0007c.C2
+wire n0007b.value n0007c.C3
+wire n00077.result n0007d.a
+wire n0007c.value n0007d.b
+wire n00076.then n0007e.in
+wire n00001.object n0007e.receiver
+wire n0007e.then n0007f.in
+wire n00001.object n0007f.receiver
+wire n0007f.then n0007g.in
+wire n00001.object n0007g.receiver
+wire n0007d.result n0007g.value
+wire n0007g.then n0007h.in
+wire n00001.object n0007h.text
+wire n0007i.value n0007m.C0
+wire n0007j.value n0007m.C1
+wire n0007k.value n0007m.C2
+wire n0007l.value n0007m.C3
+wire n0007m.value n0007n.other
+wire n0000s.value n0007n.receiver
+wire n0007n.result n0007o.a
+wire n0007h.then n0007p.in
+wire n00001.object n0007p.receiver
+wire n0007p.then n0007q.in
+wire n00001.object n0007q.receiver
+wire n0007q.then n0007r.in
+wire n00001.object n0007r.receiver
+wire n0007o.result n0007r.value
+wire n0007r.then n0007s.in
+wire n00001.object n0007s.text
+wire n0001n.value n0007t.other
+wire n0000s.value n0007t.receiver
+wire n0007t.result n0007u.a
+wire n0007s.then n0007v.in
+wire n00001.object n0007v.receiver
+wire n0007v.then n0007w.in
+wire n00001.object n0007w.receiver
+wire n0007w.then n0007x.in
+wire n00001.object n0007x.receiver
+wire n0007u.result n0007x.value
+wire n0007x.then n0007y.in
+wire n00001.object n0007y.text
+wire n0007z.value n00080.offset
+wire n00081.value n00085.C0
+wire n00082.value n00085.C1
+wire n00083.value n00085.C2
+wire n00084.value n00085.C3
+wire n00080.result n00086.a
+wire n00085.value n00086.b
+wire n0007y.then n00087.in
+wire n00001.object n00087.receiver
+wire n00087.then n00088.in
+wire n00001.object n00088.receiver
+wire n00088.then n00089.in
+wire n00001.object n00089.receiver
+wire n00086.result n00089.value
+wire n00089.then n0008a.in
+wire n00001.object n0008a.text
+wire n0008b.value n0008c.scale
+wire n0008d.value n0008h.C0
+wire n0008e.value n0008h.C1
+wire n0008f.value n0008h.C2
+wire n0008g.value n0008h.C3
+wire n0008c.result n0008i.a
+wire n0008h.value n0008i.b
+wire n0008a.then n0008j.in
+wire n00001.object n0008j.receiver
+wire n0008j.then n0008k.in
+wire n00001.object n0008k.receiver
+wire n0008k.then n0008l.in
+wire n00001.object n0008l.receiver
+wire n0008i.result n0008l.value
+wire n0008l.then n0008m.in
+wire n00001.object n0008m.text
+wire n0008o.value n0008s.C0
+wire n0008p.value n0008s.C1
+wire n0008q.value n0008s.C2
+wire n0008r.value n0008s.C3
+wire n0008n.result n0008t.a
+wire n0008s.value n0008t.b
+wire n0008m.then n0008u.in
+wire n00001.object n0008u.receiver
+wire n0008u.then n0008v.in
+wire n00001.object n0008v.receiver
+wire n0008v.then n0008w.in
+wire n00001.object n0008w.receiver
+wire n0008t.result n0008w.value
+wire n0008w.then n0008x.in
+wire n00001.object n0008x.text
+wire n0008z.value n00093.C0
+wire n00090.value n00093.C1
+wire n00091.value n00093.C2
+wire n00092.value n00093.C3
+wire n0008y.result n00094.a
+wire n00093.value n00094.b
+wire n0008x.then n00095.in
+wire n00001.object n00095.receiver
+wire n00095.then n00096.in
+wire n00001.object n00096.receiver
+wire n00096.then n00097.in
+wire n00001.object n00097.receiver
+wire n00094.result n00097.value
+wire n00097.then n00098.in
+wire n00001.object n00098.text
+wire n0009a.value n0009e.C0
+wire n0009b.value n0009e.C1
+wire n0009c.value n0009e.C2
+wire n0009d.value n0009e.C3
+wire n00099.result n0009f.a
+wire n0009e.value n0009f.b
+wire n00098.then n0009g.in
+wire n00001.object n0009g.receiver
+wire n0009g.then n0009h.in
+wire n00001.object n0009h.receiver
+wire n0009h.then n0009i.in
+wire n00001.object n0009i.receiver
+wire n0009f.result n0009i.value
+wire n0009i.then n0009j.in
+wire n00001.object n0009j.text
+wire n0009l.value n0009p.C0
+wire n0009m.value n0009p.C1
+wire n0009n.value n0009p.C2
+wire n0009o.value n0009p.C3
+wire n0009k.result n0009q.a
+wire n0009p.value n0009q.b
+wire n0009j.then n0009r.in
+wire n00001.object n0009r.receiver
+wire n0009r.then n0009s.in
+wire n00001.object n0009s.receiver
+wire n0009s.then n0009t.in
+wire n00001.object n0009t.receiver
+wire n0009q.result n0009t.value
+wire n0009t.then n0009u.in
+wire n00001.object n0009u.text
+wire n0009v.value n0009w.axis
+wire n0009w.result n0009x.rotation
+wire n0009y.value n000a2.C0
+wire n0009z.value n000a2.C1
+wire n000a0.value n000a2.C2
+wire n000a1.value n000a2.C3
+wire n0009x.result n000a3.a
+wire n000a2.value n000a3.b
+wire n0009u.then n000a4.in
+wire n00001.object n000a4.receiver
+wire n000a4.then n000a5.in
+wire n00001.object n000a5.receiver
+wire n000a5.then n000a6.in
+wire n00001.object n000a6.receiver
+wire n000a3.result n000a6.value
+wire n000a6.then n000a7.in
+wire n00001.object n000a7.text
+wire n000a8.value n000ab.eye
+wire n000a9.value n000ab.target
+wire n000aa.value n000ab.up
+wire n000ac.value n000ag.C0
+wire n000ad.value n000ag.C1
+wire n000ae.value n000ag.C2
+wire n000af.value n000ag.C3
+wire n000ab.result n000ah.a
+wire n000ag.value n000ah.b
+wire n000a7.then n000ai.in
+wire n00001.object n000ai.receiver
+wire n000ai.then n000aj.in
+wire n00001.object n000aj.receiver
+wire n000aj.then n000ak.in
+wire n00001.object n000ak.receiver
+wire n000ah.result n000ak.value
+wire n000ak.then n000al.in
+wire n00001.object n000al.text
+wire n000am.value n000ap.eye
+wire n000an.value n000ap.target
+wire n000ao.value n000ap.up
+wire n000aq.value n000ar.point
+wire n000ap.result n000ar.receiver
+wire n000ar.result n000at.a
+wire n000as.value n000at.b
+wire n000al.then n000au.in
+wire n00001.object n000au.receiver
+wire n000au.then n000av.in
+wire n00001.object n000av.receiver
+wire n000av.then n000aw.in
+wire n00001.object n000aw.receiver
+wire n000at.result n000aw.value
+wire n000aw.then n000ax.in
+wire n00001.object n000ax.text
+wire n000ay.value n000b1.eye
+wire n000az.value n000b1.target
+wire n000b0.value n000b1.up
+wire n000b2.value n000b3.point
+wire n000b1.result n000b3.receiver
+wire n000b3.result n000b5.a
+wire n000b4.value n000b5.b
+wire n000ax.then n000b6.in
+wire n00001.object n000b6.receiver
+wire n000b6.then n000b7.in
+wire n00001.object n000b7.receiver
+wire n000b7.then n000b8.in
+wire n00001.object n000b8.receiver
+wire n000b5.result n000b8.value
+wire n000b8.then n000b9.in
+wire n00001.object n000b9.text
+wire n000bb.value n000bf.C0
+wire n000bc.value n000bf.C1
+wire n000bd.value n000bf.C2
+wire n000be.value n000bf.C3
+wire n000ba.result n000bg.a
+wire n000bf.value n000bg.b
+wire n000b9.then n000bh.in
+wire n00001.object n000bh.receiver
+wire n000bh.then n000bi.in
+wire n00001.object n000bi.receiver
+wire n000bi.then n000bj.in
+wire n00001.object n000bj.receiver
+wire n000bg.result n000bj.value
+wire n000bj.then n000bk.in
+wire n00001.object n000bk.text
+wire n000bm.value n000bq.C0
+wire n000bn.value n000bq.C1
+wire n000bo.value n000bq.C2
+wire n000bp.value n000bq.C3
+wire n000bl.result n000br.a
+wire n000bq.value n000br.b
+wire n000bk.then n000bs.in
+wire n00001.object n000bs.receiver
+wire n000bs.then n000bt.in
+wire n00001.object n000bt.receiver
+wire n000bt.then n000bu.in
+wire n00001.object n000bu.receiver
+wire n000br.result n000bu.value
+wire n000bu.then n000bv.in
+wire n00001.object n000bv.text
+wire n000bx.value n000by.point
+wire n000bw.result n000by.receiver
+wire n000by.result n000c0.a
+wire n000bz.value n000c0.b
+wire n000bv.then n000c1.in
+wire n00001.object n000c1.receiver
+wire n000c1.then n000c2.in
+wire n00001.object n000c2.receiver
+wire n000c2.then n000c3.in
+wire n00001.object n000c3.receiver
+wire n000c0.result n000c3.value
+wire n000c3.then n000c4.in
+wire n00001.object n000c4.text
+wire n000c6.value n000c7.point
+wire n000c5.result n000c7.receiver
+wire n000c7.result n000c9.a
+wire n000c8.value n000c9.b
+wire n000c4.then n000ca.in
+wire n00001.object n000ca.receiver
+wire n000ca.then n000cb.in
+wire n00001.object n000cb.receiver
+wire n000cb.then n000cc.in
+wire n00001.object n000cc.receiver
+wire n000c9.result n000cc.value
+wire n000cc.then n000cd.in
+wire n00001.object n000cd.text
+wire n000cf.value n000cg.point
+wire n000ce.result n000cg.receiver
+wire n000cg.result n000ci.a
+wire n000ch.value n000ci.b
+wire n000cd.then n000cj.in
+wire n00001.object n000cj.receiver
+wire n000cj.then n000ck.in
+wire n00001.object n000ck.receiver
+wire n000ck.then n000cl.in
+wire n00001.object n000cl.receiver
+wire n000ci.result n000cl.value
+wire n000cl.then n000cm.in
+wire n00001.object n000cm.text
+wire n000co.value n000cs.C0
+wire n000cp.value n000cs.C1
+wire n000cq.value n000cs.C2
+wire n000cr.value n000cs.C3
+wire n000cn.result n000ct.a
+wire n000cs.value n000ct.b
+wire n000cm.then n000cu.in
+wire n00001.object n000cu.receiver
+wire n000cu.then n000cv.in
+wire n00001.object n000cv.receiver
+wire n000cv.then n000cw.in
+wire n00001.object n000cw.receiver
+wire n000ct.result n000cw.value
+wire n000cw.then n000cx.in
+wire n00001.object n000cx.text
+wire n000cz.value n000d3.C0
+wire n000d0.value n000d3.C1
+wire n000d1.value n000d3.C2
+wire n000d2.value n000d3.C3
+wire n000cy.result n000d4.a
+wire n000d3.value n000d4.b
+wire n000cx.then n000d5.in
+wire n00001.object n000d5.receiver
+wire n000d5.then n000d6.in
+wire n00001.object n000d6.receiver
+wire n000d6.then n000d7.in
+wire n00001.object n000d7.receiver
+wire n000d4.result n000d7.value
+wire n000d7.then n000d8.in
+wire n00001.object n000d8.text
+wire n000d9.value n000da.point
+wire n0000s.value n000da.receiver
+wire n000da.result n000dc.a
+wire n000db.value n000dc.b
+wire n000d8.then n000dd.in
+wire n00001.object n000dd.receiver
+wire n000dd.then n000de.in
+wire n00001.object n000de.receiver
+wire n000de.then n000df.in
+wire n00001.object n000df.receiver
+wire n000dc.result n000df.value
+wire n000df.then n000dg.in
+wire n00001.object n000dg.text
+wire n0000s.value n000di.receiver
+wire n000dh.value n000di.vector
+wire n000di.result n000dk.a
+wire n000dj.value n000dk.b
+wire n000dg.then n000dl.in
+wire n00001.object n000dl.receiver
+wire n000dl.then n000dm.in
+wire n00001.object n000dm.receiver
+wire n000dm.then n000dn.in
+wire n00001.object n000dn.receiver
+wire n000dk.result n000dn.value
+wire n000dn.then n000do.in
+wire n00001.object n000do.text
+wire n000dp.value n000dq.point
+wire n0000s.value n000dq.receiver
+wire n000dq.result n000ds.a
+wire n000dr.value n000ds.b
+wire n000do.then n000dt.in
+wire n00001.object n000dt.receiver
+wire n000dt.then n000du.in
+wire n00001.object n000du.receiver
+wire n000du.then n000dv.in
+wire n00001.object n000dv.receiver
+wire n000ds.result n000dv.value
+wire n000dv.then n000dw.in
+wire n00001.object n000dw.text
+wire n0000s.value n000dx.receiver
+wire n000dy.value n000e1.C0
+wire n000dz.value n000e1.C1
+wire n000e0.value n000e1.C2
+wire n000dx.result n000e2.a
+wire n000e1.value n000e2.b
+wire n000dw.then n000e3.in
+wire n00001.object n000e3.receiver
+wire n000e3.then n000e4.in
+wire n00001.object n000e4.receiver
+wire n000e4.then n000e5.in
+wire n00001.object n000e5.receiver
+wire n000e2.result n000e5.value
+wire n000e5.then n000e6.in
+wire n00001.object n000e6.text
+wire n000e6.then n000e7.in
+wire n000e7.then n000e8.in
+wire n000e7.object n000e8.into
+wire n0000s.value n000e8.receiver
+wire n000e7.object n000e9.collection
+wire n000e9.value n000ea.e
+wire n000e7.object n000eb.collection
+wire n000eb.value n000ec.e
+wire n000ea.result n000ec.s
+wire n000e7.object n000ed.collection
+wire n000ed.value n000ee.e
+wire n000ec.result n000ee.s
+wire n000e7.object n000ef.collection
+wire n000ef.value n000eg.e
+wire n000ee.result n000eg.s
+wire n000e7.object n000eh.collection
+wire n000eh.value n000ei.e
+wire n000eg.result n000ei.s
+wire n000e7.object n000ej.collection
+wire n000ej.value n000ek.e
+wire n000ei.result n000ek.s
+wire n000e7.object n000el.collection
+wire n000el.value n000em.e
+wire n000ek.result n000em.s
+wire n000e7.object n000en.collection
+wire n000en.value n000eo.e
+wire n000em.result n000eo.s
+wire n000e7.object n000ep.collection
+wire n000ep.value n000eq.e
+wire n000eo.result n000eq.s
+wire n000e7.object n000er.collection
+wire n000er.value n000es.e
+wire n000eq.result n000es.s
+wire n000e7.object n000et.collection
+wire n000et.value n000eu.e
+wire n000es.result n000eu.s
+wire n000e7.object n000ev.collection
+wire n000ev.value n000ew.e
+wire n000eu.result n000ew.s
+wire n000e7.object n000ex.collection
+wire n000ex.value n000ey.e
+wire n000ew.result n000ey.s
+wire n000e7.object n000ez.collection
+wire n000ez.value n000f0.e
+wire n000ey.result n000f0.s
+wire n000e7.object n000f1.collection
+wire n000f1.value n000f2.e
+wire n000f0.result n000f2.s
+wire n000e7.object n000f3.collection
+wire n000f3.value n000f4.e
+wire n000f2.result n000f4.s
+wire n000f4.result n000f5.a
+wire n000e8.then n000f6.in
+wire n00001.object n000f6.receiver
+wire n000f6.then n000f7.in
+wire n00001.object n000f7.receiver
+wire n000f7.then n000f8.in
+wire n00001.object n000f8.receiver
+wire n000f5.result n000f8.value
+wire n000f8.then n000f9.in
+wire n00001.object n000f9.text
+wire n000f9.then n000fa.in

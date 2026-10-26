@@ -1,0 +1,327 @@
+# treadle 1
+type Thread class
+	namespace Core
+	sealed
+	doc "A thread of its own: Construct it (a name and a stack size are optional), Start it with a body (a delegate made with Allocation construct: the thread owns it and deletes it when it returns), then Join it. Deleting a Thread joins it first when it is still running and not detached. docs: Threads."
+
+field mHandle void*
+	access private
+
+ctor h0001
+	doc "A thread named `Thread <n>` with a 1 MB stack, not started."
+sheet body
+node a1 Entry
+node a2 This
+node a3 Call Thread.rt_thread_new
+	in name null
+	in len 0
+	in stackSize 0
+node a4 Set this.mHandle
+node a5 Return
+wire a1.then a3.in
+wire a2.value a3.owner
+wire a3.then a4.in
+wire a3.result a4.value
+wire a4.then a5.in
+
+ctor h0002
+	doc "A thread with a name (debuggers and fatal errors show it) and a 1 MB stack, not started."
+param name StringView
+sheet body
+node b1 Entry
+node b2 This
+node b3 Break StringView
+node b4 Call Thread.rt_thread_new
+	in stackSize 0
+node b5 Set this.mHandle
+node b6 Return
+wire b1.name b3.value
+wire b1.then b4.in
+wire b3.Length b4.len
+wire b3.Ptr b4.name
+wire b2.value b4.owner
+wire b4.then b5.in
+wire b4.result b5.value
+wire b5.then b6.in
+
+ctor h0003
+	doc "A thread with a name and a stack of `stackSize` bytes (0: 1 MB), not started."
+param name StringView
+param stackSize int
+sheet body
+node c1 Entry
+node c2 This
+node c3 Break StringView
+node c4 Call Thread.rt_thread_new
+node c5 Set this.mHandle
+node c6 Return
+wire c1.name c3.value
+wire c1.then c4.in
+wire c3.Length c4.len
+wire c3.Ptr c4.name
+wire c2.value c4.owner
+wire c1.stackSize c4.stackSize
+wire c4.then c5.in
+wire c4.result c5.value
+wire c5.then c6.in
+
+dtor h0004
+	doc "Joins the thread when it is still running and not detached, then frees it."
+sheet body
+node d1 Entry
+node d2 Get this.mHandle
+node d3 Call Thread.rt_thread_free
+node d4 Return
+wire d1.then d3.in
+wire d2.value d3.thread
+wire d3.then d4.in
+
+function h0005 Start
+	returns bool
+	doc "Runs `body` on the thread. The thread owns the body from now on and deletes it when it returns, so make it with Allocation construct (Debug stops on a Local one). A Thread starts once. False when the system could not start a thread (the body is deleted)."
+param body delegate:void()
+sheet body
+node e1 Entry
+node e2 Get this.mHandle
+node e3 Call Thread.rt_thread_start
+node e4 Operator !=
+	in b 0
+node e5 Return
+wire e1.body e3.body
+wire e1.then e3.in
+wire e2.value e3.thread
+wire e3.result e4.a
+wire e3.then e5.in
+wire e4.result e5.value
+
+function h0006 Join
+	doc "Waits until the body returned (at once when it did, or when the thread was never started or is detached)."
+sheet body
+node f1 Entry
+node f2 Get this.mHandle
+node f3 Call Thread.rt_thread_join
+node f4 Return
+wire f1.then f3.in
+wire f2.value f3.thread
+wire f3.then f4.in
+
+function h0007 Detach
+	doc "Lets the thread run on by itself: no Join, and deleting the Thread no longer waits for it."
+sheet body
+node g1 Entry
+node g2 Get this.mHandle
+node g3 Call Thread.rt_thread_detach
+node g4 Return
+wire g1.then g3.in
+wire g2.value g3.thread
+wire g3.then g4.in
+
+function h0008 Name
+	returns StringView
+	doc "The thread's name (`Thread <n>` when it was made without one)."
+local length int
+sheet body
+node k1 Entry
+node k2 Get this.mHandle
+node k3 Get local:length
+node k4 Call Thread.rt_thread_name
+node k5 Get local:length
+node k6 Make StringView
+node k7 Return
+wire k1.then k4.in
+wire k3.value k4.len
+wire k2.value k4.thread
+wire k5.value k6.Length
+wire k4.result k6.Ptr
+wire k4.then k7.in
+wire k6.value k7.value
+
+function h0009 IsAlive
+	returns bool
+	doc "True while the body runs."
+sheet body
+node m1 Entry
+node m2 Get this.mHandle
+node m3 Call Thread.rt_thread_alive
+node m4 Operator !=
+	in b 0
+node m5 Return
+wire m1.then m3.in
+wire m2.value m3.thread
+wire m3.result m4.a
+wire m3.then m5.in
+wire m4.result m5.value
+
+function h000a Id
+	returns int
+	doc "The system's id of the thread once it started (0 before)."
+sheet body
+node n1 Entry
+node n2 Get this.mHandle
+node n3 Call Thread.rt_thread_id
+node n4 Return
+wire n1.then n3.in
+wire n2.value n3.thread
+wire n3.then n4.in
+wire n3.result n4.value
+
+function h000b Current
+	static
+	returns Thread
+	doc "The Thread that runs this code; null on the main thread and on the pool's threads."
+sheet body
+node p1 Entry
+node p2 Call Thread.rt_thread_current
+node p3 Return
+wire p1.then p2.in
+wire p2.then p3.in
+wire p2.result p3.value
+
+function h000c CurrentId
+	static
+	returns int
+	doc "The system's id of the thread that runs this code."
+sheet body
+node q1 Entry
+node q2 Call Thread.rt_thread_current_id
+node q3 Return
+wire q1.then q2.in
+wire q2.then q3.in
+wire q2.result q3.value
+
+function h000d CurrentName
+	static
+	returns StringView
+	doc "The name of the thread that runs this code (`Main` on the main thread, `Pool <n>` on the pool's)."
+local length int
+sheet body
+node r1 Entry
+node r2 Get local:length
+node r3 Call Thread.rt_thread_name
+	in thread null
+node r4 Get local:length
+node r5 Make StringView
+node r6 Return
+wire r1.then r3.in
+wire r2.value r3.len
+wire r4.value r5.Length
+wire r3.result r5.Ptr
+wire r3.then r6.in
+wire r5.value r6.value
+
+function h000e Sleep
+	static
+	doc "Lets the calling thread sleep at least `milliseconds` (not at all for 0 or less)."
+param milliseconds int
+sheet body
+node s1 Entry
+node s2 Call C.crt.rt_sleep
+node s3 Return
+wire s1.then s2.in
+wire s1.milliseconds s2.ms
+wire s2.then s3.in
+
+function h000f Yield
+	static
+	doc "Gives the rest of the calling thread's time slice to another thread that is ready to run."
+sheet body
+node t1 Entry
+node t2 Call Thread.rt_thread_yield
+node t3 Return
+wire t1.then t2.in
+wire t2.then t3.in
+
+function h0010 HardwareThreads
+	static
+	returns int
+	doc "How many threads the machine runs at once (its logical processors)."
+sheet body
+node u1 Entry
+node u2 Call Thread.rt_cpu_count
+node u3 Cast int
+node u4 Return
+wire u1.then u2.in
+wire u2.result u3.value
+wire u2.then u4.in
+wire u3.result u4.value
+
+function h0020 rt_thread_new
+	static
+	access private
+	returns void*
+	attr Import treadle_rt rt_thread_new
+param name char8*
+param len int
+param stackSize int
+param owner Thread
+
+function h0021 rt_thread_start
+	static
+	access private
+	returns int32
+	attr Import treadle_rt rt_thread_start
+param thread void*
+param body delegate:void()
+
+function h0022 rt_thread_join
+	static
+	access private
+	attr Import treadle_rt rt_thread_join
+param thread void*
+
+function h0023 rt_thread_detach
+	static
+	access private
+	attr Import treadle_rt rt_thread_detach
+param thread void*
+
+function h0024 rt_thread_free
+	static
+	access private
+	attr Import treadle_rt rt_thread_free
+param thread void*
+
+function h0025 rt_thread_alive
+	static
+	access private
+	returns int32
+	attr Import treadle_rt rt_thread_alive
+param thread void*
+
+function h0026 rt_thread_id
+	static
+	access private
+	returns int
+	attr Import treadle_rt rt_thread_id
+param thread void*
+
+function h0027 rt_thread_name
+	static
+	access private
+	returns char8*
+	attr Import treadle_rt rt_thread_name
+param thread void*
+param len int*
+
+function h0028 rt_thread_current
+	static
+	access private
+	returns Thread
+	attr Import treadle_rt rt_thread_current
+
+function h0029 rt_thread_current_id
+	static
+	access private
+	returns int
+	attr Import treadle_rt rt_thread_current_id
+
+function h002a rt_thread_yield
+	static
+	access private
+	attr Import treadle_rt rt_thread_yield
+
+function h002b rt_cpu_count
+	static
+	access private
+	returns int32
+	attr Import treadle_rt rt_cpu_count

@@ -1,0 +1,761 @@
+# treadle 1
+type MathRayMain class
+	namespace Cx
+	static
+	doc "The core math library, ray: every check compares the result with a reference computed in double precision by a separate C implementation (Gauss-Jordan inverse, Rodrigues rotations, the GLM conventions), within 1e-5 of the larger of 1 and the reference's size; each line is the check's name and true."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node n00000 Entry
+node n00001 Local String
+	set ctor ()
+node n00002 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n00003 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -2.0f
+node n00004 Make Core.Ray
+node n00005 Call Core.Ray.At
+	in t 1.5f
+node n00006 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 0.0f
+node n00007 Math
+	set expr "Abs(a.X - b.X) <= 0.000019999999494757503f && Abs(a.Y - b.Y) <= 0.000019999999494757503f && Abs(a.Z - b.Z) <= 0.000019999999494757503f"
+node n00008 Call String.Clear
+node n00009 Call String.Append(StringView)
+	in text "ray.At "
+node n0000a Call String.Append(bool)
+node n0000b Call Console.WriteLine(StringView)
+node n0000c Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -5.0f
+node n0000d Make Core.Vec3
+	in X 2.0f
+	in Y 4.0f
+	in Z -1.0f
+node n0000e Make Core.AABB
+node n0000f Call Core.Ray.IntersectAABB
+node n0000g Operator ==
+	in b true
+node n0000h Call String.Clear
+node n0000i Call String.Append(StringView)
+	in text "ray.IntersectAABB "
+node n0000j Call String.Append(bool)
+node n0000k Call Console.WriteLine(StringView)
+node n0000l Call Core.Ray.IntersectAABB
+node n0000m Math
+	set expr "Abs(a - b) <= 0.000019999999494757503f"
+	in b 2.0f
+node n0000n Call String.Clear
+node n0000o Call String.Append(StringView)
+	in text "ray.IntersectAABB.t "
+node n0000p Call String.Append(bool)
+node n0000q Call Console.WriteLine(StringView)
+node n0000r Make Core.Vec3
+	in X 5.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0000s Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -2.0f
+node n0000t Make Core.Ray
+node n0000u Call Core.Ray.IntersectAABB
+node n0000v Operator ==
+	in b false
+node n0000w Call String.Clear
+node n0000x Call String.Append(StringView)
+	in text "ray.IntersectAABB.miss "
+node n0000y Call String.Append(bool)
+node n0000z Call Console.WriteLine(StringView)
+node n00010 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z -3.0f
+node n00011 Make Core.Vec3
+	in X 0.30000001192092896f
+	in Y 1.0f
+	in Z 0.10000000149011612f
+node n00012 Make Core.Ray
+node n00013 Call Core.Ray.IntersectAABB
+node n00014 Math
+	set expr "Abs(a - b) <= 0.000009999999747378752f"
+	in b 0.0f
+node n00015 Call String.Clear
+node n00016 Call String.Append(StringView)
+	in text "ray.IntersectAABB.inside "
+node n00017 Call String.Append(bool)
+node n00018 Call Console.WriteLine(StringView)
+node n00019 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0001a Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+node n0001b Make Core.Ray
+node n0001c Call Core.Ray.IntersectAABB
+node n0001d Operator ==
+	in b false
+node n0001e Call String.Clear
+node n0001f Call String.Append(StringView)
+	in text "ray.IntersectAABB.behind "
+node n0001g Call String.Append(bool)
+node n0001h Call Console.WriteLine(StringView)
+node n0001i Make Core.Vec3
+	in X -2.0f
+	in Y 1.0f
+	in Z -3.0f
+node n0001j Make Core.Vec3
+	in X 1.0f
+	in Y 0.5f
+	in Z 0.0f
+node n0001k Make Core.Ray
+node n0001l Call Core.Ray.IntersectAABB
+node n0001m Math
+	set expr "Abs(a - b) <= 0.000019999999494757503f"
+	in b 2.0f
+node n0001n Call String.Clear
+node n0001o Call String.Append(StringView)
+	in text "ray.IntersectAABB.slant.t "
+node n0001p Call String.Append(bool)
+node n0001q Call Console.WriteLine(StringView)
+node n0001r Make Core.Vec3
+	in X 0.0f
+	in Y 5.0f
+	in Z 0.0f
+node n0001s Make Core.Vec3
+	in X 1.0f
+	in Y -2.0f
+	in Z 0.0f
+node n0001t Make Core.Ray
+node n0001u Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n0001v Make Core.Plane
+	in D -1.0f
+node n0001w Call Core.Ray.IntersectPlane
+node n0001x Operator ==
+	in b true
+node n0001y Call String.Clear
+node n0001z Call String.Append(StringView)
+	in text "ray.IntersectPlane "
+node n00020 Call String.Append(bool)
+node n00021 Call Console.WriteLine(StringView)
+node n00022 Make Core.Vec3
+	in X 0.0f
+	in Y 5.0f
+	in Z 0.0f
+node n00023 Make Core.Vec3
+	in X 1.0f
+	in Y -2.0f
+	in Z 0.0f
+node n00024 Make Core.Ray
+node n00025 Call Core.Ray.IntersectPlane
+node n00026 Math
+	set expr "Abs(a - b) <= 0.000019999999494757503f"
+	in b 2.0f
+node n00027 Call String.Clear
+node n00028 Call String.Append(StringView)
+	in text "ray.IntersectPlane.t "
+node n00029 Call String.Append(bool)
+node n0002a Call Console.WriteLine(StringView)
+node n0002b Make Core.Vec3
+	in X 0.0f
+	in Y 5.0f
+	in Z 0.0f
+node n0002c Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0002d Make Core.Ray
+node n0002e Call Core.Ray.IntersectPlane
+node n0002f Operator ==
+	in b false
+node n0002g Call String.Clear
+node n0002h Call String.Append(StringView)
+	in text "ray.IntersectPlane.parallel "
+node n0002i Call String.Append(bool)
+node n0002j Call Console.WriteLine(StringView)
+node n0002k Make Core.Vec3
+	in X 0.0f
+	in Y 5.0f
+	in Z 0.0f
+node n0002l Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n0002m Make Core.Ray
+node n0002n Call Core.Ray.IntersectPlane
+node n0002o Operator ==
+	in b false
+node n0002p Call String.Clear
+node n0002q Call String.Append(StringView)
+	in text "ray.IntersectPlane.behind "
+node n0002r Call String.Append(bool)
+node n0002s Call Console.WriteLine(StringView)
+node n0002t Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 10.0f
+node n0002u Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0f
+node n0002v Make Core.Ray
+node n0002w Make Core.Vec3
+	in X 0.0f
+	in Y 0.6000000238418579f
+	in Z 0.0f
+node n0002x Call Core.Ray.IntersectSphere
+	in radius 1.0f
+node n0002y Operator ==
+	in b true
+node n0002z Call String.Clear
+node n00030 Call String.Append(StringView)
+	in text "ray.IntersectSphere "
+node n00031 Call String.Append(bool)
+node n00032 Call Console.WriteLine(StringView)
+node n00033 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 10.0f
+node n00034 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0f
+node n00035 Make Core.Ray
+node n00036 Make Core.Vec3
+	in X 0.0f
+	in Y 0.6000000238418579f
+	in Z 0.0f
+node n00037 Call Core.Ray.IntersectSphere
+	in radius 1.0f
+node n00038 Math
+	set expr "Abs(a - b) <= 0.00009200000204145908f"
+	in b 9.199999809265137f
+node n00039 Call String.Clear
+node n0003a Call String.Append(StringView)
+	in text "ray.IntersectSphere.t "
+node n0003b Call String.Append(bool)
+node n0003c Call Console.WriteLine(StringView)
+node n0003d Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 10.0f
+node n0003e Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -2.0f
+node n0003f Make Core.Ray
+node n0003g Make Core.Vec3
+	in X 0.0f
+	in Y 0.6000000238418579f
+	in Z 0.0f
+node n0003h Call Core.Ray.IntersectSphere
+	in radius 1.0f
+node n0003i Math
+	set expr "Abs(a - b) <= 0.00004600000102072954f"
+	in b 4.599999904632568f
+node n0003j Call String.Clear
+node n0003k Call String.Append(StringView)
+	in text "ray.IntersectSphere.scaled.t "
+node n0003l Call String.Append(bool)
+node n0003m Call Console.WriteLine(StringView)
+node n0003n Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 10.0f
+node n0003o Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0f
+node n0003p Make Core.Ray
+node n0003q Make Core.Vec3
+	in X 0.0f
+	in Y 1.5f
+	in Z 0.0f
+node n0003r Call Core.Ray.IntersectSphere
+	in radius 1.0f
+node n0003s Operator ==
+	in b false
+node n0003t Call String.Clear
+node n0003u Call String.Append(StringView)
+	in text "ray.IntersectSphere.miss "
+node n0003v Call String.Append(bool)
+node n0003w Call Console.WriteLine(StringView)
+node n0003x Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.20000000298023224f
+node n0003y Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0003z Make Core.Ray
+node n00040 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n00041 Call Core.Ray.IntersectSphere
+	in radius 1.0f
+node n00042 Math
+	set expr "Abs(a - b) <= 0.000009999999747378752f"
+	in b 0.0f
+node n00043 Call String.Clear
+node n00044 Call String.Append(StringView)
+	in text "ray.IntersectSphere.inside "
+node n00045 Call String.Append(bool)
+node n00046 Call Console.WriteLine(StringView)
+node n00047 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 5.0f
+node n00048 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+node n00049 Make Core.Ray
+node n0004a Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0004b Call Core.Ray.IntersectSphere
+	in radius 1.0f
+node n0004c Operator ==
+	in b false
+node n0004d Call String.Clear
+node n0004e Call String.Append(StringView)
+	in text "ray.IntersectSphere.behind "
+node n0004f Call String.Append(bool)
+node n0004g Call Console.WriteLine(StringView)
+node n0004h Make Core.Vec3
+	in X 1.0f
+	in Y 1.0f
+	in Z 5.0f
+node n0004i Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0f
+node n0004j Make Core.Ray
+node n0004k Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0004l Make Core.Vec3
+	in X 4.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0004m Make Core.Vec3
+	in X 0.0f
+	in Y 4.0f
+	in Z 0.0f
+node n0004n Call Core.Ray.IntersectTriangle
+node n0004o Operator ==
+	in b true
+node n0004p Call String.Clear
+node n0004q Call String.Append(StringView)
+	in text "ray.IntersectTriangle "
+node n0004r Call String.Append(bool)
+node n0004s Call Console.WriteLine(StringView)
+node n0004t Make Core.Vec3
+	in X 1.0f
+	in Y 1.0f
+	in Z 5.0f
+node n0004u Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0f
+node n0004v Make Core.Ray
+node n0004w Call Core.Ray.IntersectTriangle
+node n0004x Math
+	set expr "Abs(a - b) <= 0.00004999999873689376f"
+	in b 5.0f
+node n0004y Call String.Clear
+node n0004z Call String.Append(StringView)
+	in text "ray.IntersectTriangle.t "
+node n00050 Call String.Append(bool)
+node n00051 Call Console.WriteLine(StringView)
+node n00052 Make Core.Vec3
+	in X 1.0f
+	in Y 1.0f
+	in Z -2.0f
+node n00053 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.5f
+node n00054 Make Core.Ray
+node n00055 Call Core.Ray.IntersectTriangle
+node n00056 Math
+	set expr "Abs(a - b) <= 0.000039999998989515007f"
+	in b 4.0f
+node n00057 Call String.Clear
+node n00058 Call String.Append(StringView)
+	in text "ray.IntersectTriangle.back "
+node n00059 Call String.Append(bool)
+node n0005a Call Console.WriteLine(StringView)
+node n0005b Make Core.Vec3
+	in X 3.0f
+	in Y 3.0f
+	in Z 5.0f
+node n0005c Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0f
+node n0005d Make Core.Ray
+node n0005e Call Core.Ray.IntersectTriangle
+node n0005f Operator ==
+	in b false
+node n0005g Call String.Clear
+node n0005h Call String.Append(StringView)
+	in text "ray.IntersectTriangle.miss "
+node n0005i Call String.Append(bool)
+node n0005j Call Console.WriteLine(StringView)
+node n0005k Make Core.Vec3
+	in X 1.0f
+	in Y 1.0f
+	in Z 0.0f
+node n0005l Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0005m Make Core.Ray
+node n0005n Call Core.Ray.IntersectTriangle
+node n0005o Operator ==
+	in b false
+node n0005p Call String.Clear
+node n0005q Call String.Append(StringView)
+	in text "ray.IntersectTriangle.parallel "
+node n0005r Call String.Append(bool)
+node n0005s Call Console.WriteLine(StringView)
+node n0005t Return
+	in value 0
+wire n00000.then n00001.in
+wire n00003.value n00004.Direction
+wire n00002.value n00004.Origin
+wire n00004.value n00005.receiver
+wire n00005.result n00007.a
+wire n00006.value n00007.b
+wire n00001.then n00008.in
+wire n00001.object n00008.receiver
+wire n00008.then n00009.in
+wire n00001.object n00009.receiver
+wire n00009.then n0000a.in
+wire n00001.object n0000a.receiver
+wire n00007.result n0000a.value
+wire n0000a.then n0000b.in
+wire n00001.object n0000b.text
+wire n0000d.value n0000e.Max
+wire n0000c.value n0000e.Min
+wire n0000e.value n0000f.box
+wire n00004.value n0000f.receiver
+wire n0000f.result n0000g.a
+wire n0000b.then n0000h.in
+wire n00001.object n0000h.receiver
+wire n0000h.then n0000i.in
+wire n00001.object n0000i.receiver
+wire n0000i.then n0000j.in
+wire n00001.object n0000j.receiver
+wire n0000g.result n0000j.value
+wire n0000j.then n0000k.in
+wire n00001.object n0000k.text
+wire n0000e.value n0000l.box
+wire n00004.value n0000l.receiver
+wire n0000l.t n0000m.a
+wire n0000k.then n0000n.in
+wire n00001.object n0000n.receiver
+wire n0000n.then n0000o.in
+wire n00001.object n0000o.receiver
+wire n0000o.then n0000p.in
+wire n00001.object n0000p.receiver
+wire n0000m.result n0000p.value
+wire n0000p.then n0000q.in
+wire n00001.object n0000q.text
+wire n0000s.value n0000t.Direction
+wire n0000r.value n0000t.Origin
+wire n0000e.value n0000u.box
+wire n0000t.value n0000u.receiver
+wire n0000u.result n0000v.a
+wire n0000q.then n0000w.in
+wire n00001.object n0000w.receiver
+wire n0000w.then n0000x.in
+wire n00001.object n0000x.receiver
+wire n0000x.then n0000y.in
+wire n00001.object n0000y.receiver
+wire n0000v.result n0000y.value
+wire n0000y.then n0000z.in
+wire n00001.object n0000z.text
+wire n00011.value n00012.Direction
+wire n00010.value n00012.Origin
+wire n0000e.value n00013.box
+wire n00012.value n00013.receiver
+wire n00013.t n00014.a
+wire n0000z.then n00015.in
+wire n00001.object n00015.receiver
+wire n00015.then n00016.in
+wire n00001.object n00016.receiver
+wire n00016.then n00017.in
+wire n00001.object n00017.receiver
+wire n00014.result n00017.value
+wire n00017.then n00018.in
+wire n00001.object n00018.text
+wire n0001a.value n0001b.Direction
+wire n00019.value n0001b.Origin
+wire n0000e.value n0001c.box
+wire n0001b.value n0001c.receiver
+wire n0001c.result n0001d.a
+wire n00018.then n0001e.in
+wire n00001.object n0001e.receiver
+wire n0001e.then n0001f.in
+wire n00001.object n0001f.receiver
+wire n0001f.then n0001g.in
+wire n00001.object n0001g.receiver
+wire n0001d.result n0001g.value
+wire n0001g.then n0001h.in
+wire n00001.object n0001h.text
+wire n0001j.value n0001k.Direction
+wire n0001i.value n0001k.Origin
+wire n0000e.value n0001l.box
+wire n0001k.value n0001l.receiver
+wire n0001l.t n0001m.a
+wire n0001h.then n0001n.in
+wire n00001.object n0001n.receiver
+wire n0001n.then n0001o.in
+wire n00001.object n0001o.receiver
+wire n0001o.then n0001p.in
+wire n00001.object n0001p.receiver
+wire n0001m.result n0001p.value
+wire n0001p.then n0001q.in
+wire n00001.object n0001q.text
+wire n0001s.value n0001t.Direction
+wire n0001r.value n0001t.Origin
+wire n0001u.value n0001v.Normal
+wire n0001v.value n0001w.plane
+wire n0001t.value n0001w.receiver
+wire n0001w.result n0001x.a
+wire n0001q.then n0001y.in
+wire n00001.object n0001y.receiver
+wire n0001y.then n0001z.in
+wire n00001.object n0001z.receiver
+wire n0001z.then n00020.in
+wire n00001.object n00020.receiver
+wire n0001x.result n00020.value
+wire n00020.then n00021.in
+wire n00001.object n00021.text
+wire n00023.value n00024.Direction
+wire n00022.value n00024.Origin
+wire n0001v.value n00025.plane
+wire n00024.value n00025.receiver
+wire n00025.t n00026.a
+wire n00021.then n00027.in
+wire n00001.object n00027.receiver
+wire n00027.then n00028.in
+wire n00001.object n00028.receiver
+wire n00028.then n00029.in
+wire n00001.object n00029.receiver
+wire n00026.result n00029.value
+wire n00029.then n0002a.in
+wire n00001.object n0002a.text
+wire n0002c.value n0002d.Direction
+wire n0002b.value n0002d.Origin
+wire n0001v.value n0002e.plane
+wire n0002d.value n0002e.receiver
+wire n0002e.result n0002f.a
+wire n0002a.then n0002g.in
+wire n00001.object n0002g.receiver
+wire n0002g.then n0002h.in
+wire n00001.object n0002h.receiver
+wire n0002h.then n0002i.in
+wire n00001.object n0002i.receiver
+wire n0002f.result n0002i.value
+wire n0002i.then n0002j.in
+wire n00001.object n0002j.text
+wire n0002l.value n0002m.Direction
+wire n0002k.value n0002m.Origin
+wire n0001v.value n0002n.plane
+wire n0002m.value n0002n.receiver
+wire n0002n.result n0002o.a
+wire n0002j.then n0002p.in
+wire n00001.object n0002p.receiver
+wire n0002p.then n0002q.in
+wire n00001.object n0002q.receiver
+wire n0002q.then n0002r.in
+wire n00001.object n0002r.receiver
+wire n0002o.result n0002r.value
+wire n0002r.then n0002s.in
+wire n00001.object n0002s.text
+wire n0002u.value n0002v.Direction
+wire n0002t.value n0002v.Origin
+wire n0002w.value n0002x.center
+wire n0002v.value n0002x.receiver
+wire n0002x.result n0002y.a
+wire n0002s.then n0002z.in
+wire n00001.object n0002z.receiver
+wire n0002z.then n00030.in
+wire n00001.object n00030.receiver
+wire n00030.then n00031.in
+wire n00001.object n00031.receiver
+wire n0002y.result n00031.value
+wire n00031.then n00032.in
+wire n00001.object n00032.text
+wire n00034.value n00035.Direction
+wire n00033.value n00035.Origin
+wire n00036.value n00037.center
+wire n00035.value n00037.receiver
+wire n00037.t n00038.a
+wire n00032.then n00039.in
+wire n00001.object n00039.receiver
+wire n00039.then n0003a.in
+wire n00001.object n0003a.receiver
+wire n0003a.then n0003b.in
+wire n00001.object n0003b.receiver
+wire n00038.result n0003b.value
+wire n0003b.then n0003c.in
+wire n00001.object n0003c.text
+wire n0003e.value n0003f.Direction
+wire n0003d.value n0003f.Origin
+wire n0003g.value n0003h.center
+wire n0003f.value n0003h.receiver
+wire n0003h.t n0003i.a
+wire n0003c.then n0003j.in
+wire n00001.object n0003j.receiver
+wire n0003j.then n0003k.in
+wire n00001.object n0003k.receiver
+wire n0003k.then n0003l.in
+wire n00001.object n0003l.receiver
+wire n0003i.result n0003l.value
+wire n0003l.then n0003m.in
+wire n00001.object n0003m.text
+wire n0003o.value n0003p.Direction
+wire n0003n.value n0003p.Origin
+wire n0003q.value n0003r.center
+wire n0003p.value n0003r.receiver
+wire n0003r.result n0003s.a
+wire n0003m.then n0003t.in
+wire n00001.object n0003t.receiver
+wire n0003t.then n0003u.in
+wire n00001.object n0003u.receiver
+wire n0003u.then n0003v.in
+wire n00001.object n0003v.receiver
+wire n0003s.result n0003v.value
+wire n0003v.then n0003w.in
+wire n00001.object n0003w.text
+wire n0003y.value n0003z.Direction
+wire n0003x.value n0003z.Origin
+wire n00040.value n00041.center
+wire n0003z.value n00041.receiver
+wire n00041.t n00042.a
+wire n0003w.then n00043.in
+wire n00001.object n00043.receiver
+wire n00043.then n00044.in
+wire n00001.object n00044.receiver
+wire n00044.then n00045.in
+wire n00001.object n00045.receiver
+wire n00042.result n00045.value
+wire n00045.then n00046.in
+wire n00001.object n00046.text
+wire n00048.value n00049.Direction
+wire n00047.value n00049.Origin
+wire n0004a.value n0004b.center
+wire n00049.value n0004b.receiver
+wire n0004b.result n0004c.a
+wire n00046.then n0004d.in
+wire n00001.object n0004d.receiver
+wire n0004d.then n0004e.in
+wire n00001.object n0004e.receiver
+wire n0004e.then n0004f.in
+wire n00001.object n0004f.receiver
+wire n0004c.result n0004f.value
+wire n0004f.then n0004g.in
+wire n00001.object n0004g.text
+wire n0004i.value n0004j.Direction
+wire n0004h.value n0004j.Origin
+wire n0004k.value n0004n.a
+wire n0004l.value n0004n.b
+wire n0004m.value n0004n.c
+wire n0004j.value n0004n.receiver
+wire n0004n.result n0004o.a
+wire n0004g.then n0004p.in
+wire n00001.object n0004p.receiver
+wire n0004p.then n0004q.in
+wire n00001.object n0004q.receiver
+wire n0004q.then n0004r.in
+wire n00001.object n0004r.receiver
+wire n0004o.result n0004r.value
+wire n0004r.then n0004s.in
+wire n00001.object n0004s.text
+wire n0004u.value n0004v.Direction
+wire n0004t.value n0004v.Origin
+wire n0004k.value n0004w.a
+wire n0004l.value n0004w.b
+wire n0004m.value n0004w.c
+wire n0004v.value n0004w.receiver
+wire n0004w.t n0004x.a
+wire n0004s.then n0004y.in
+wire n00001.object n0004y.receiver
+wire n0004y.then n0004z.in
+wire n00001.object n0004z.receiver
+wire n0004z.then n00050.in
+wire n00001.object n00050.receiver
+wire n0004x.result n00050.value
+wire n00050.then n00051.in
+wire n00001.object n00051.text
+wire n00053.value n00054.Direction
+wire n00052.value n00054.Origin
+wire n0004k.value n00055.a
+wire n0004l.value n00055.b
+wire n0004m.value n00055.c
+wire n00054.value n00055.receiver
+wire n00055.t n00056.a
+wire n00051.then n00057.in
+wire n00001.object n00057.receiver
+wire n00057.then n00058.in
+wire n00001.object n00058.receiver
+wire n00058.then n00059.in
+wire n00001.object n00059.receiver
+wire n00056.result n00059.value
+wire n00059.then n0005a.in
+wire n00001.object n0005a.text
+wire n0005c.value n0005d.Direction
+wire n0005b.value n0005d.Origin
+wire n0004k.value n0005e.a
+wire n0004l.value n0005e.b
+wire n0004m.value n0005e.c
+wire n0005d.value n0005e.receiver
+wire n0005e.result n0005f.a
+wire n0005a.then n0005g.in
+wire n00001.object n0005g.receiver
+wire n0005g.then n0005h.in
+wire n00001.object n0005h.receiver
+wire n0005h.then n0005i.in
+wire n00001.object n0005i.receiver
+wire n0005f.result n0005i.value
+wire n0005i.then n0005j.in
+wire n00001.object n0005j.text
+wire n0005l.value n0005m.Direction
+wire n0005k.value n0005m.Origin
+wire n0004k.value n0005n.a
+wire n0004l.value n0005n.b
+wire n0004m.value n0005n.c
+wire n0005m.value n0005n.receiver
+wire n0005n.result n0005o.a
+wire n0005j.then n0005p.in
+wire n00001.object n0005p.receiver
+wire n0005p.then n0005q.in
+wire n00001.object n0005q.receiver
+wire n0005q.then n0005r.in
+wire n00001.object n0005r.receiver
+wire n0005o.result n0005r.value
+wire n0005r.then n0005s.in
+wire n00001.object n0005s.text
+wire n0005s.then n0005t.in

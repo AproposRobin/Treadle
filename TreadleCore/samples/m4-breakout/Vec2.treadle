@@ -1,0 +1,8 @@
+# treadle 1
+type Vec2 struct
+	namespace Breakout
+	doc "A 2D vector of floats: a position, or a velocity in pixels per step. Vec2Ext adds its arithmetic."
+
+field X float
+
+field Y float

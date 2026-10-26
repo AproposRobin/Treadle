@@ -1,0 +1,5 @@
+# treadle 1
+type BrickHandler delegate
+	namespace Breakout
+	signature void(Brick)
+	doc "The handlers of Game.OnBrickDestroyed: the brick that was destroyed in, nothing out."

@@ -1,0 +1,87 @@
+# treadle 1
+type Program class
+	namespace Zoo
+	static
+	doc "Milestone 1: classes and a virtual call through the base, a struct, a generic type with two instances, Construct / Local / Delete / Defer Delete / Defer, Branch, a loop, Sequence and libc."
+
+function m0001 Main
+	static
+	returns int
+local pet Zoo.Animal
+sheet body
+node a1 Entry
+node a2 Construct Zoo.Dog
+	set ctor ()
+node a3 DeferDelete
+node a4 Local Zoo.Bird
+	set ctor ()
+node a5 Defer
+node a6 Call C.libc.puts
+	in s "goodbye from Defer"
+node a7 Sequence
+	set count 2
+node b1 For
+	in start 0
+	in count 2
+node b2 Operator ==
+	in b 0
+node b3 Branch
+node b4 Set local:pet
+node b5 Set local:pet
+node b6 Get local:pet
+node b7 Call Zoo.Animal.Speak()
+node b8 Call Zoo.Animal.Legs()
+node b9 Call Console.WriteLine(int)
+node c1 Make Zoo.Point
+	in X 3
+	in Y 4
+node c2 Construct Zoo.Box<int>
+	set ctor (int)
+	in value 7
+node c3 Delete
+node c4 Call Zoo.Box<int>.Get()
+node c5 Call Console.WriteLine(int)
+node c6 Local Zoo.Box<Zoo.Point>
+	set ctor (Zoo.Point)
+node c7 Call Zoo.Box<Zoo.Point>.Get()
+node c8 Call Zoo.Point.Sum()
+node c9 Call Console.WriteLine(int)
+node d1 Call C.libc.puts
+	in s "done"
+node d2 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.object
+wire a3.then a4.in
+wire a4.then a5.in
+wire a5.deferred a6.in
+wire a5.done a7.in
+wire a7.then0 b1.in
+wire b1.index b2.a
+wire b2.result b3.condition
+wire b1.body b3.in
+wire b3.true b4.in
+wire a2.object b4.value
+wire b3.false b5.in
+wire a4.object b5.value
+wire b4.then b7.in
+wire b5.then b7.in
+wire b6.value b7.receiver
+wire b6.value b8.receiver
+wire b7.then b9.in
+wire b8.result b9.value
+wire a7.then1 c2.in
+wire c5.then c3.in
+wire c2.object c3.object
+wire c2.object c4.receiver
+wire c2.then c5.in
+wire c4.result c5.value
+wire c3.then c6.in
+wire c1.value c6.value
+wire c6.object c7.receiver
+wire c7.result c8.receiver
+wire c6.then c9.in
+wire c8.result c9.value
+wire c9.then d1.in
+wire d1.then d2.in

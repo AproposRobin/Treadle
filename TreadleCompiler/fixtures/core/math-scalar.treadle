@@ -1,0 +1,536 @@
+# treadle 1
+type MathScalarMain class
+	namespace Cx
+	static
+	doc "The core math library, scalar: every check compares the result with a reference computed in double precision by a separate C implementation (Gauss-Jordan inverse, Rodrigues rotations, the GLM conventions), within 1e-5 of the larger of 1 and the reference's size; each line is the check's name and true."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node n00000 Entry
+node n00001 Local String
+	set ctor ()
+node n00002 Call Core.Math.Tan
+	in x 0.699999988079071f
+node n00003 Math
+	set expr "Abs(a - b) <= 0.000009999999747378752f"
+	in b 0.8422883749008179f
+node n00004 Call String.Clear
+node n00005 Call String.Append(StringView)
+	in text "math.float.Tan "
+node n00006 Call String.Append(bool)
+node n00007 Call Console.WriteLine(StringView)
+node n00008 Call Core.Math.Asin
+	in x 0.4000000059604645f
+node n00009 Math
+	set expr "Abs(a - b) <= 0.000009999999747378752f"
+	in b 0.41151684522628784f
+node n0000a Call String.Clear
+node n0000b Call String.Append(StringView)
+	in text "math.float.Asin "
+node n0000c Call String.Append(bool)
+node n0000d Call Console.WriteLine(StringView)
+node n0000e Call Core.Math.Acos
+	in x -0.30000001192092896f
+node n0000f Math
+	set expr "Abs(a - b) <= 0.000018754890334093943f"
+	in b 1.8754889965057373f
+node n0000g Call String.Clear
+node n0000h Call String.Append(StringView)
+	in text "math.float.Acos "
+node n0000i Call String.Append(bool)
+node n0000j Call Console.WriteLine(StringView)
+node n0000k Call Core.Math.Atan
+	in x 2.5f
+node n0000l Math
+	set expr "Abs(a - b) <= 0.000011902899132110178f"
+	in b 1.1902899742126465f
+node n0000m Call String.Clear
+node n0000n Call String.Append(StringView)
+	in text "math.float.Atan "
+node n0000o Call String.Append(bool)
+node n0000p Call Console.WriteLine(StringView)
+node n0000q Call Core.Math.Atan2
+	in y -1.0f
+	in x -2.0f
+node n0000r Math
+	set expr "Abs(a - b) <= 0.000026779451218317263f"
+	in b -2.677945137023926f
+node n0000s Call String.Clear
+node n0000t Call String.Append(StringView)
+	in text "math.float.Atan2 "
+node n0000u Call String.Append(bool)
+node n0000v Call Console.WriteLine(StringView)
+node n0000w Call Core.Math.Fma
+	in a 1.5f
+	in b 2.0f
+	in c -0.25f
+node n0000x Math
+	set expr "Abs(a - b) <= 0.00002750000021478627f"
+	in b 2.75f
+node n0000y Call String.Clear
+node n0000z Call String.Append(StringView)
+	in text "math.float.Fma "
+node n00010 Call String.Append(bool)
+node n00011 Call Console.WriteLine(StringView)
+node n00012 Call Core.Math.CopySign
+	in x 3.0f
+	in sign -0.5f
+node n00013 Math
+	set expr "Abs(a - b) <= 0.000029999999242136255f"
+	in b -3.0f
+node n00014 Call String.Clear
+node n00015 Call String.Append(StringView)
+	in text "math.float.CopySign "
+node n00016 Call String.Append(bool)
+node n00017 Call Console.WriteLine(StringView)
+node n00018 Call Core.Math.Radians
+	in degrees 90.0f
+node n00019 Math
+	set expr "Abs(a - b) <= 0.000015707963029854f"
+	in b 1.5707963705062866f
+node n0001a Call String.Clear
+node n0001b Call String.Append(StringView)
+	in text "math.float.Radians "
+node n0001c Call String.Append(bool)
+node n0001d Call Console.WriteLine(StringView)
+node n0001e Call Core.Math.Degrees
+	in radians 1.0f
+node n0001f Math
+	set expr "Abs(a - b) <= 0.0005729577969759703f"
+	in b 57.295780181884766f
+node n0001g Call String.Clear
+node n0001h Call String.Append(StringView)
+	in text "math.float.Degrees "
+node n0001i Call String.Append(bool)
+node n0001j Call Console.WriteLine(StringView)
+node n0001k Call Core.Math.SmoothStep
+	in e0 1.0f
+	in e1 3.0f
+	in x 1.5f
+node n0001l Math
+	set expr "Abs(a - b) <= 0.000009999999747378752f"
+	in b 0.15625f
+node n0001m Call String.Clear
+node n0001n Call String.Append(StringView)
+	in text "math.float.SmoothStep "
+node n0001o Call String.Append(bool)
+node n0001p Call Console.WriteLine(StringView)
+node n0001q Call Core.Math.SmoothStep
+	in e0 1.0f
+	in e1 3.0f
+	in x 0.0f
+node n0001r Math
+	set expr "Abs(a - b) <= 0.000009999999747378752f"
+	in b 0.0f
+node n0001s Call String.Clear
+node n0001t Call String.Append(StringView)
+	in text "math.float.SmoothStep.below "
+node n0001u Call String.Append(bool)
+node n0001v Call Console.WriteLine(StringView)
+node n0001w Call Core.Math.SmoothStep
+	in e0 1.0f
+	in e1 3.0f
+	in x 9.0f
+node n0001x Math
+	set expr "Abs(a - b) <= 0.000009999999747378752f"
+	in b 1.0f
+node n0001y Call String.Clear
+node n0001z Call String.Append(StringView)
+	in text "math.float.SmoothStep.above "
+node n00020 Call String.Append(bool)
+node n00021 Call Console.WriteLine(StringView)
+node n00022 Call Core.Math.Tan
+	in x 0.7
+node n00023 Math
+	set expr "Abs(a - b) <= 1.0e-9"
+	in b 0.8422883804630794
+node n00024 Call String.Clear
+node n00025 Call String.Append(StringView)
+	in text "math.double.Tan "
+node n00026 Call String.Append(bool)
+node n00027 Call Console.WriteLine(StringView)
+node n00028 Call Core.Math.Asin
+	in x 0.4
+node n00029 Math
+	set expr "Abs(a - b) <= 1.0e-9"
+	in b 0.41151684606748806
+node n0002a Call String.Clear
+node n0002b Call String.Append(StringView)
+	in text "math.double.Asin "
+node n0002c Call String.Append(bool)
+node n0002d Call Console.WriteLine(StringView)
+node n0002e Call Core.Math.Acos
+	in x -0.3
+node n0002f Math
+	set expr "Abs(a - b) <= 1.8754889808102942e-9"
+	in b 1.8754889808102941
+node n0002g Call String.Clear
+node n0002h Call String.Append(StringView)
+	in text "math.double.Acos "
+node n0002i Call String.Append(bool)
+node n0002j Call Console.WriteLine(StringView)
+node n0002k Call Core.Math.Atan
+	in x 2.5
+node n0002l Math
+	set expr "Abs(a - b) <= 1.1902899496825318e-9"
+	in b 1.1902899496825317
+node n0002m Call String.Clear
+node n0002n Call String.Append(StringView)
+	in text "math.double.Atan "
+node n0002o Call String.Append(bool)
+node n0002p Call Console.WriteLine(StringView)
+node n0002q Call Core.Math.Atan2
+	in y -1.0
+	in x -2.0
+node n0002r Math
+	set expr "Abs(a - b) <= 2.677945044588987e-9"
+	in b -2.677945044588987
+node n0002s Call String.Clear
+node n0002t Call String.Append(StringView)
+	in text "math.double.Atan2 "
+node n0002u Call String.Append(bool)
+node n0002v Call Console.WriteLine(StringView)
+node n0002w Call Core.Math.Fma
+	in a 1.5
+	in b 2.0
+	in c -0.25
+node n0002x Math
+	set expr "Abs(a - b) <= 2.7500000000000002e-9"
+	in b 2.75
+node n0002y Call String.Clear
+node n0002z Call String.Append(StringView)
+	in text "math.double.Fma "
+node n00030 Call String.Append(bool)
+node n00031 Call Console.WriteLine(StringView)
+node n00032 Call Core.Math.CopySign
+	in x 3.0
+	in sign -0.5
+node n00033 Math
+	set expr "Abs(a - b) <= 3.0000000000000004e-9"
+	in b -3.0
+node n00034 Call String.Clear
+node n00035 Call String.Append(StringView)
+	in text "math.double.CopySign "
+node n00036 Call String.Append(bool)
+node n00037 Call Console.WriteLine(StringView)
+node n00038 Call Core.Math.Radians
+	in degrees 90.0
+node n00039 Math
+	set expr "Abs(a - b) <= 1.5707963267948966e-9"
+	in b 1.5707963267948966
+node n0003a Call String.Clear
+node n0003b Call String.Append(StringView)
+	in text "math.double.Radians "
+node n0003c Call String.Append(bool)
+node n0003d Call Console.WriteLine(StringView)
+node n0003e Call Core.Math.Degrees
+	in radians 1.0
+node n0003f Math
+	set expr "Abs(a - b) <= 5.7295779513082324e-8"
+	in b 57.29577951308232
+node n0003g Call String.Clear
+node n0003h Call String.Append(StringView)
+	in text "math.double.Degrees "
+node n0003i Call String.Append(bool)
+node n0003j Call Console.WriteLine(StringView)
+node n0003k Call Core.Math.SmoothStep
+	in e0 1.0
+	in e1 3.0
+	in x 1.5
+node n0003l Math
+	set expr "Abs(a - b) <= 1.0e-9"
+	in b 0.15625
+node n0003m Call String.Clear
+node n0003n Call String.Append(StringView)
+	in text "math.double.SmoothStep "
+node n0003o Call String.Append(bool)
+node n0003p Call Console.WriteLine(StringView)
+node n0003q Call Core.Math.SmoothStep
+	in e0 1.0
+	in e1 3.0
+	in x 0.0
+node n0003r Math
+	set expr "Abs(a - b) <= 1.0e-9"
+	in b 0.0
+node n0003s Call String.Clear
+node n0003t Call String.Append(StringView)
+	in text "math.double.SmoothStep.below "
+node n0003u Call String.Append(bool)
+node n0003v Call Console.WriteLine(StringView)
+node n0003w Call Core.Math.SmoothStep
+	in e0 1.0
+	in e1 3.0
+	in x 9.0
+node n0003x Math
+	set expr "Abs(a - b) <= 1.0e-9"
+	in b 1.0
+node n0003y Call String.Clear
+node n0003z Call String.Append(StringView)
+	in text "math.double.SmoothStep.above "
+node n00040 Call String.Append(bool)
+node n00041 Call Console.WriteLine(StringView)
+node n00042 Get Core.Math.Tau
+node n00043 Math
+	set expr "Abs(a - b) <= 6.283185307179586e-9"
+	in b 6.283185307179586
+node n00044 Call String.Clear
+node n00045 Call String.Append(StringView)
+	in text "math.Tau "
+node n00046 Call String.Append(bool)
+node n00047 Call Console.WriteLine(StringView)
+node n00048 Return
+	in value 0
+wire n00000.then n00001.in
+wire n00002.result n00003.a
+wire n00001.then n00004.in
+wire n00001.object n00004.receiver
+wire n00004.then n00005.in
+wire n00001.object n00005.receiver
+wire n00005.then n00006.in
+wire n00001.object n00006.receiver
+wire n00003.result n00006.value
+wire n00006.then n00007.in
+wire n00001.object n00007.text
+wire n00008.result n00009.a
+wire n00007.then n0000a.in
+wire n00001.object n0000a.receiver
+wire n0000a.then n0000b.in
+wire n00001.object n0000b.receiver
+wire n0000b.then n0000c.in
+wire n00001.object n0000c.receiver
+wire n00009.result n0000c.value
+wire n0000c.then n0000d.in
+wire n00001.object n0000d.text
+wire n0000e.result n0000f.a
+wire n0000d.then n0000g.in
+wire n00001.object n0000g.receiver
+wire n0000g.then n0000h.in
+wire n00001.object n0000h.receiver
+wire n0000h.then n0000i.in
+wire n00001.object n0000i.receiver
+wire n0000f.result n0000i.value
+wire n0000i.then n0000j.in
+wire n00001.object n0000j.text
+wire n0000k.result n0000l.a
+wire n0000j.then n0000m.in
+wire n00001.object n0000m.receiver
+wire n0000m.then n0000n.in
+wire n00001.object n0000n.receiver
+wire n0000n.then n0000o.in
+wire n00001.object n0000o.receiver
+wire n0000l.result n0000o.value
+wire n0000o.then n0000p.in
+wire n00001.object n0000p.text
+wire n0000q.result n0000r.a
+wire n0000p.then n0000s.in
+wire n00001.object n0000s.receiver
+wire n0000s.then n0000t.in
+wire n00001.object n0000t.receiver
+wire n0000t.then n0000u.in
+wire n00001.object n0000u.receiver
+wire n0000r.result n0000u.value
+wire n0000u.then n0000v.in
+wire n00001.object n0000v.text
+wire n0000w.result n0000x.a
+wire n0000v.then n0000y.in
+wire n00001.object n0000y.receiver
+wire n0000y.then n0000z.in
+wire n00001.object n0000z.receiver
+wire n0000z.then n00010.in
+wire n00001.object n00010.receiver
+wire n0000x.result n00010.value
+wire n00010.then n00011.in
+wire n00001.object n00011.text
+wire n00012.result n00013.a
+wire n00011.then n00014.in
+wire n00001.object n00014.receiver
+wire n00014.then n00015.in
+wire n00001.object n00015.receiver
+wire n00015.then n00016.in
+wire n00001.object n00016.receiver
+wire n00013.result n00016.value
+wire n00016.then n00017.in
+wire n00001.object n00017.text
+wire n00018.result n00019.a
+wire n00017.then n0001a.in
+wire n00001.object n0001a.receiver
+wire n0001a.then n0001b.in
+wire n00001.object n0001b.receiver
+wire n0001b.then n0001c.in
+wire n00001.object n0001c.receiver
+wire n00019.result n0001c.value
+wire n0001c.then n0001d.in
+wire n00001.object n0001d.text
+wire n0001e.result n0001f.a
+wire n0001d.then n0001g.in
+wire n00001.object n0001g.receiver
+wire n0001g.then n0001h.in
+wire n00001.object n0001h.receiver
+wire n0001h.then n0001i.in
+wire n00001.object n0001i.receiver
+wire n0001f.result n0001i.value
+wire n0001i.then n0001j.in
+wire n00001.object n0001j.text
+wire n0001k.result n0001l.a
+wire n0001j.then n0001m.in
+wire n00001.object n0001m.receiver
+wire n0001m.then n0001n.in
+wire n00001.object n0001n.receiver
+wire n0001n.then n0001o.in
+wire n00001.object n0001o.receiver
+wire n0001l.result n0001o.value
+wire n0001o.then n0001p.in
+wire n00001.object n0001p.text
+wire n0001q.result n0001r.a
+wire n0001p.then n0001s.in
+wire n00001.object n0001s.receiver
+wire n0001s.then n0001t.in
+wire n00001.object n0001t.receiver
+wire n0001t.then n0001u.in
+wire n00001.object n0001u.receiver
+wire n0001r.result n0001u.value
+wire n0001u.then n0001v.in
+wire n00001.object n0001v.text
+wire n0001w.result n0001x.a
+wire n0001v.then n0001y.in
+wire n00001.object n0001y.receiver
+wire n0001y.then n0001z.in
+wire n00001.object n0001z.receiver
+wire n0001z.then n00020.in
+wire n00001.object n00020.receiver
+wire n0001x.result n00020.value
+wire n00020.then n00021.in
+wire n00001.object n00021.text
+wire n00022.result n00023.a
+wire n00021.then n00024.in
+wire n00001.object n00024.receiver
+wire n00024.then n00025.in
+wire n00001.object n00025.receiver
+wire n00025.then n00026.in
+wire n00001.object n00026.receiver
+wire n00023.result n00026.value
+wire n00026.then n00027.in
+wire n00001.object n00027.text
+wire n00028.result n00029.a
+wire n00027.then n0002a.in
+wire n00001.object n0002a.receiver
+wire n0002a.then n0002b.in
+wire n00001.object n0002b.receiver
+wire n0002b.then n0002c.in
+wire n00001.object n0002c.receiver
+wire n00029.result n0002c.value
+wire n0002c.then n0002d.in
+wire n00001.object n0002d.text
+wire n0002e.result n0002f.a
+wire n0002d.then n0002g.in
+wire n00001.object n0002g.receiver
+wire n0002g.then n0002h.in
+wire n00001.object n0002h.receiver
+wire n0002h.then n0002i.in
+wire n00001.object n0002i.receiver
+wire n0002f.result n0002i.value
+wire n0002i.then n0002j.in
+wire n00001.object n0002j.text
+wire n0002k.result n0002l.a
+wire n0002j.then n0002m.in
+wire n00001.object n0002m.receiver
+wire n0002m.then n0002n.in
+wire n00001.object n0002n.receiver
+wire n0002n.then n0002o.in
+wire n00001.object n0002o.receiver
+wire n0002l.result n0002o.value
+wire n0002o.then n0002p.in
+wire n00001.object n0002p.text
+wire n0002q.result n0002r.a
+wire n0002p.then n0002s.in
+wire n00001.object n0002s.receiver
+wire n0002s.then n0002t.in
+wire n00001.object n0002t.receiver
+wire n0002t.then n0002u.in
+wire n00001.object n0002u.receiver
+wire n0002r.result n0002u.value
+wire n0002u.then n0002v.in
+wire n00001.object n0002v.text
+wire n0002w.result n0002x.a
+wire n0002v.then n0002y.in
+wire n00001.object n0002y.receiver
+wire n0002y.then n0002z.in
+wire n00001.object n0002z.receiver
+wire n0002z.then n00030.in
+wire n00001.object n00030.receiver
+wire n0002x.result n00030.value
+wire n00030.then n00031.in
+wire n00001.object n00031.text
+wire n00032.result n00033.a
+wire n00031.then n00034.in
+wire n00001.object n00034.receiver
+wire n00034.then n00035.in
+wire n00001.object n00035.receiver
+wire n00035.then n00036.in
+wire n00001.object n00036.receiver
+wire n00033.result n00036.value
+wire n00036.then n00037.in
+wire n00001.object n00037.text
+wire n00038.result n00039.a
+wire n00037.then n0003a.in
+wire n00001.object n0003a.receiver
+wire n0003a.then n0003b.in
+wire n00001.object n0003b.receiver
+wire n0003b.then n0003c.in
+wire n00001.object n0003c.receiver
+wire n00039.result n0003c.value
+wire n0003c.then n0003d.in
+wire n00001.object n0003d.text
+wire n0003e.result n0003f.a
+wire n0003d.then n0003g.in
+wire n00001.object n0003g.receiver
+wire n0003g.then n0003h.in
+wire n00001.object n0003h.receiver
+wire n0003h.then n0003i.in
+wire n00001.object n0003i.receiver
+wire n0003f.result n0003i.value
+wire n0003i.then n0003j.in
+wire n00001.object n0003j.text
+wire n0003k.result n0003l.a
+wire n0003j.then n0003m.in
+wire n00001.object n0003m.receiver
+wire n0003m.then n0003n.in
+wire n00001.object n0003n.receiver
+wire n0003n.then n0003o.in
+wire n00001.object n0003o.receiver
+wire n0003l.result n0003o.value
+wire n0003o.then n0003p.in
+wire n00001.object n0003p.text
+wire n0003q.result n0003r.a
+wire n0003p.then n0003s.in
+wire n00001.object n0003s.receiver
+wire n0003s.then n0003t.in
+wire n00001.object n0003t.receiver
+wire n0003t.then n0003u.in
+wire n00001.object n0003u.receiver
+wire n0003r.result n0003u.value
+wire n0003u.then n0003v.in
+wire n00001.object n0003v.text
+wire n0003w.result n0003x.a
+wire n0003v.then n0003y.in
+wire n00001.object n0003y.receiver
+wire n0003y.then n0003z.in
+wire n00001.object n0003z.receiver
+wire n0003z.then n00040.in
+wire n00001.object n00040.receiver
+wire n0003x.result n00040.value
+wire n00040.then n00041.in
+wire n00001.object n00041.text
+wire n00042.value n00043.a
+wire n00041.then n00044.in
+wire n00001.object n00044.receiver
+wire n00044.then n00045.in
+wire n00001.object n00045.receiver
+wire n00045.then n00046.in
+wire n00001.object n00046.receiver
+wire n00043.result n00046.value
+wire n00046.then n00047.in
+wire n00001.object n00047.text
+wire n00047.then n00048.in

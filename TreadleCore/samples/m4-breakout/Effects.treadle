@@ -1,0 +1,159 @@
+# treadle 1
+type Effects class
+	namespace Breakout
+	doc "The second subscriber of Game.OnBrickDestroyed: a flash where the brick was. Flashes are rented from a Pool<Flash>, aged each step and released when they fade."
+
+field mPool Pool<Flash>
+	owner owned
+
+field mActive List<Flash>
+	owner owned
+
+field mSpawned int
+
+ctor x0001
+sheet body
+node a01 Entry
+node a02 Construct Pool<Flash>
+node a03 Construct List<Flash>
+node a04 Set this.mPool
+node a05 Set this.mActive
+node a06 Return
+wire a01.then a02.in
+wire a04.then a03.in
+wire a02.then a04.in
+wire a02.object a04.value
+wire a03.then a05.in
+wire a03.object a05.value
+wire a05.then a06.in
+
+dtor x0002
+	doc "Gives the flashes still showing back to the pool, which deletes them; both owned fields go after this Sheet."
+sheet body
+node b01 Entry
+node b02 Get this.mActive
+node b03 ForEach
+node b04 Get this.mPool
+node b05 Call Pool<Flash>.Release
+node b06 Return
+wire b02.value b03.collection
+wire b01.then b03.in
+wire b03.body b05.in
+wire b03.element b05.item
+wire b04.value b05.receiver
+wire b03.done b06.in
+
+function x0003 OnBrickDestroyed
+	doc "The handler: a flash over the brick."
+param brick Brick
+sheet body
+node c01 Entry
+node c02 Get this.mPool
+node c03 Call Pool<Flash>.Rent
+node c04 Call Flash.Reset
+node c05 Get this.mActive
+node c06 Call List<Flash>.Add
+node c07 Set this.mSpawned
+	set op +=
+	in value 1
+node c08 Return
+wire c01.then c03.in
+wire c02.value c03.receiver
+wire c01.brick c04.brick
+wire c03.then c04.in
+wire c03.result c04.receiver
+wire c04.then c06.in
+wire c05.value c06.receiver
+wire c03.result c06.value
+wire c06.then c07.in
+wire c07.then c08.in
+
+function x0004 Update
+	doc "Ages every flash one step, from the last to the first so that removing one does not skip the next."
+local n int
+local f Flash
+sheet body
+node d01 Entry
+node d02 Get this.mActive
+node d03 Get List<Flash>.Count
+node d04 Set local:n
+node d05 Get local:n
+node d06 For
+	in start 0
+node d07 Get local:n
+node d08 Math
+	set expr "n - 1 - i"
+node d09 Index
+node d0a Set local:f
+node d0b Get local:f
+node d0c Call Flash.Tick
+node d0d Operator !
+node d0e Branch
+node d0f Call List<Flash>.RemoveAt
+node d0g Get this.mPool
+node d0h Get local:f
+node d0i Call Pool<Flash>.Release
+node d0j Return
+wire d02.value d03.receiver
+wire d01.then d04.in
+wire d03.value d04.value
+wire d05.value d06.count
+wire d04.then d06.in
+wire d06.index d08.i
+wire d07.value d08.n
+wire d02.value d09.collection
+wire d08.result d09.index
+wire d06.body d0a.in
+wire d09.value d0a.value
+wire d0a.then d0c.in
+wire d0b.value d0c.receiver
+wire d0c.result d0d.a
+wire d0d.result d0e.condition
+wire d0c.then d0e.in
+wire d0e.true d0f.in
+wire d08.result d0f.index
+wire d02.value d0f.receiver
+wire d0f.then d0i.in
+wire d0h.value d0i.item
+wire d0g.value d0i.receiver
+wire d06.done d0j.in
+
+function x0005 Draw
+	doc "Draws the flashes."
+param renderer C.SDL_Renderer*
+sheet body
+node e01 Entry
+node e02 Get this.mActive
+node e03 ForEach
+node e04 Call Flash.Draw
+node e05 Return
+wire e02.value e03.collection
+wire e01.then e03.in
+wire e03.body e04.in
+wire e03.element e04.receiver
+wire e01.renderer e04.renderer
+wire e03.done e05.in
+
+function x0006 Spawned
+	pure
+	returns int
+	doc "How many flashes were shown."
+sheet body
+node f01 Entry
+node f02 Get this.mSpawned
+node f03 Return
+wire f01.then f03.in
+wire f02.value f03.value
+
+function x0007 PoolCreated
+	pure
+	returns int
+	doc "How many Flash objects the pool made (the rest were reused)."
+sheet body
+node g01 Entry
+node g02 Get this.mPool
+node g03 Call Pool<Flash>.Created
+node g04 Return
+wire g02.value g03.receiver
+wire g01.then g04.in
+wire g03.result g04.value

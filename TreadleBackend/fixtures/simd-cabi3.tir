@@ -1,0 +1,105 @@
+# tir 1
+# simd-cabi at x86-64-v3 (AVX2: 32-byte vectors in YMM registers); simd-cabi3.c is simd-cabi.c.
+# Vectors across the C boundary (SIMD-and-Vectors.md 1.6): imported C functions taking and returning
+# __m128 (float4), float2, int32x4, float3 and an 8-lane float (32 bytes), and [Export]ed Treadle
+# functions that C calls with the same types (simd-cabi.c). win64: the vector types as they are (LLVM
+# passes 128- and 256-bit arguments through a pointer to a copy); System V: an 8-byte vector as one
+# double, a 32-byte argument through memory without AVX.
+program SimdCabi3 console
+entry Ca.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+func C.self.c_scale(float4,float) float4 import "c_scale"
+func C.self.c_swap2(float2) float2 import "c_swap2"
+func C.self.c_addi(int32x4,int32x4) int32x4 import "c_addi"
+func C.self.c_cross(float3,float3) float3 import "c_cross"
+func C.self.c_twice8(float8) float8 import "c_twice8"
+func C.self.c_sum8(float8) float import "c_sum8"
+func C.self.c_check() int import "c_check"
+
+unit Ca.Lib
+type Ca.Lib class
+
+func Ca.Lib.Mad(float4,float4,float4) float4 static export "kx_mad" sheet "f1" display "Ca.Lib.Mad"
+	param a float4
+	param b float4
+	param c float4
+	block b0
+		%m = binop float4 mul %a %b
+		%s = binop float4 add %m %c
+		ret %s
+
+func Ca.Lib.Swap2(float2) float2 static export "kx_swap2" sheet "f2" display "Ca.Lib.Swap2"
+	param v float2
+	block b0
+		%s = vec.shuffle float2 %v poison 1 0
+		ret %s
+
+func Ca.Lib.HSum8(float8) float static export "kx_hsum8" sheet "f3" display "Ca.Lib.HSum8"
+	param v float8
+	block b0
+		%s = vec.reduce float add %v
+		ret %s
+
+func Ca.Lib.Twice8(float8) float8 static export "kx_twice8" sheet "f4" display "Ca.Lib.Twice8"
+	param v float8
+	block b0
+		%s = binop float8 add %v %v
+		ret %s
+
+func Ca.Lib.Lerp3(float3,float3,float) float3 static export "kx_lerp3" sheet "f5" display "Ca.Lib.Lerp3"
+	param a float3
+	param b float3
+	param t float
+	block b0
+		%d = binop float3 sub %b %a
+		%ts = vec.splat float3 %t
+		%m = binop float3 mul %d %ts
+		%r = binop float3 add %a %m
+		ret %r
+
+func Ca.Lib.NegI(int32x4) int32x4 static export "kx_negi" sheet "f6" display "Ca.Lib.NegI"
+	param v int32x4
+	block b0
+		%z = const int32x4 zero
+		%r = binop int32x4 sub %z %v
+		ret %r
+
+unit Ca.Program
+type Ca.Program class
+
+func Ca.Program.Main() int static sheet "f7" display "Ca.Program.Main"
+	block b0
+		%v = const float4 1,2,3,4
+		%k = const float 3
+		%sc = ccall float4 C.self.c_scale(float4,float) %v %k
+		%s0 = vec.get float %sc 0
+		%s3 = vec.get float %sc 3
+		%s0d = cast double %s0
+		%s3d = cast double %s3
+		%p = const float2 1,2
+		%sw = ccall float2 C.self.c_swap2(float2) %p
+		%w0 = vec.get float %sw 0
+		%w0d = cast double %w0
+		%ia = const int32x4 1,2,3,4
+		%ib = const int32x4 10,20,30,40
+		%is = ccall int32x4 C.self.c_addi(int32x4,int32x4) %ia %ib
+		%is3 = vec.get int32 %is 3
+		%xa = const float3 1,0,0
+		%xb = const float3 0,1,0
+		%xc = ccall float3 C.self.c_cross(float3,float3) %xa %xb
+		%xz = vec.get float %xc 2
+		%xzd = cast double %xz
+		%e = const float8 1,2,3,4,5,6,7,8
+		%et = ccall float8 C.self.c_twice8(float8) %e
+		%et7 = vec.get float %et 7
+		%et7d = cast double %et7
+		%es = ccall float C.self.c_sum8(float8) %e
+		%esd = cast double %es
+		%f = const char8* "Treadle sees scale %g %g swap %g add %d cross %g twice %g sum %g\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %s0d %s3d %w0d %is3 %xzd %et7d %esd
+		%chk = ccall int C.self.c_check()
+		%f2 = const char8* "check %lld\n"
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %chk
+		%z = const int 0
+		ret %z

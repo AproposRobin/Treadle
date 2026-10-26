@@ -1,0 +1,90 @@
+# tir 1
+# Delete without the vtable (Compiler.md 6, "Delete of a class nothing derives from"): in Release, a class no
+# other class of the program derives from has its complete destructor called directly, or nothing at all
+# when its chain destroys nothing; a class with a derived class keeps the call through the vtable. Leaf:
+# no destructor (nothing runs); Noisy: a destructor Sheet (called directly); Owner: an owned Noisy field
+# (its complete destructor deletes it); Base / Derived: deleted through Base, so Derived's destructor runs
+# through the vtable. Debug calls through the vtable each time; both print the same.
+program FinalDelete console
+entry Fd.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Fd.Leaf
+type Fd.Leaf class
+	field mValue int
+
+unit Fd.Noisy
+type Fd.Noisy class
+	field mId int
+	dtor Fd.Noisy.~this()
+
+func Fd.Noisy.~this() void sheet "d1" display "Fd.Noisy.~this"
+	node a1 Entry
+	node a2 Call C.libc.printf
+	block b0
+		%p = field.addr int* %this mId @a2
+		%id = load int %p @a2
+		%f = const char8* "~Noisy %lld\n" @a2.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %id @a2
+		ret @a2
+
+unit Fd.Owner
+type Fd.Owner class
+	field mPart Fd.Noisy owned
+
+unit Fd.Base
+type Fd.Base class
+
+unit Fd.Derived
+type Fd.Derived class
+	base Fd.Base
+	dtor Fd.Derived.~this()
+
+func Fd.Derived.~this() void sheet "d2" display "Fd.Derived.~this"
+	node a1 Entry
+	node a2 Call C.libc.printf
+	block b0
+		%f = const char8* "~Derived\n" @a2.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f @a2
+		ret @a2
+
+unit Fd.Program
+type Fd.Program class
+
+func Fd.Program.Main() int static sheet "m1" display "Fd.Program.Main"
+	node a1 Entry
+	node a2 Construct Fd.Leaf
+	node a3 Construct Fd.Noisy
+	node a4 Construct Fd.Owner
+	node a5 Construct Fd.Derived
+	node a6 Delete
+	node a7 Call C.libc.printf
+	node b1 Return 0
+	block b0
+		%leaf = alloc Fd.Leaf @a2
+		%vp = field.addr int* %leaf mValue @a2
+		%v = const int 41 @a2
+		store %vp %v @a2
+		%lv = load int %vp @a2
+		%f = const char8* "leaf %lld\n" @a7.format
+		%p1 = ccall int32 C.libc.printf(char8*,...) %f %lv @a7
+		delete %leaf @a6
+		%n = alloc Fd.Noisy @a3
+		%np = field.addr int* %n mId @a3
+		%one = const int 1 @a3
+		store %np %one @a3
+		delete %n @a6
+		%o = alloc Fd.Owner @a4
+		%part = alloc Fd.Noisy @a4
+		%pp = field.addr int* %part mId @a4
+		%two = const int 2 @a4
+		store %pp %two @a4
+		%op = field.addr Fd.Noisy* %o mPart @a4
+		store %op %part @a4
+		delete %o @a6
+		%d = alloc Fd.Derived @a5
+		%b = cast Fd.Base %d @a5
+		delete %b @a6
+		%z = const int 0 @b1.value
+		ret %z @b1

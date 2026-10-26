@@ -1,0 +1,104 @@
+# treadle 1
+# expect - - T1090
+# expect - - T1091
+# expect - - T1092
+# expect - - T2302
+# expect n3 - T2300
+# expect n4 - T2301
+# expect n5 b T2320
+# expect n6 - T2321
+# expect n7 condition T2322
+# expect n8 - T2323
+# expect n9 value T2324
+# expect m1 value T2325
+# expect m2 - T2326
+# expect m3 span T2327
+# expect m4 - T2328
+# expect m5 - T2329
+# expect m6 i T2301
+# expect m7 - T2300
+# expect m8 - T2301
+type Vectors class
+	namespace Broken
+	static
+	doc "Vector primitives used wrongly (SIMD-and-Vectors.md 1): a near-miss name, a bad Vector<T,N>, a constant of another vector type, a mask at the C boundary, && on masks, swizzle letters a float4 does not have, vectors that do not combine, a bitwise operator on float lanes, a Select of scalars by a mask, a Shuffle of two vector types, a Swizzle of a float, a Cast that changes the lane count, a Splat without its type, a Load of the wrong lanes, a Sum of a mask, a function Vector does not have, a lane index past the end, && and a bad swizzle in Math Expressions."
+
+field Bad int4
+	static
+
+field Long Vector<float,5>
+	static
+
+field Up float4
+	const
+	init int32x4(1, 2, 3, 4)
+
+function f0001 Exported
+	static
+	returns int
+	attr Export "kx_mask"
+param m bool4
+sheet body
+node e1 Entry
+node e2 Return
+	in value 0
+wire e1.then e2.in
+
+function f0002 Run
+	static
+param a float4
+param b float4
+param i int32x4
+param s float
+param n Span<int>
+sheet body
+node m1 Cast float8
+node m2 Call Core.Vector.Splat
+	in value 1
+node m3 Call Core.Vector.Load<float4>
+	in index 0
+node m4 Call Core.Vector.Sum
+node m5 Call Core.Vector.Shake
+node m6 Call Core.Vector.GetLane
+	in i 7
+node m7 Math
+	set expr "a > b && a < b"
+node m8 Math
+	set expr "a.xyzq"
+node m9 Return
+node n1 Entry
+node n2 Operator >
+node n3 Operator &&
+node n4 Swizzle
+	set lanes xyq
+node n5 Operator +
+node n6 Operator &
+node n7 Select
+node n8 Shuffle
+	set mask 0 4 1 5
+node n9 Swizzle
+	set lanes x
+wire n1.a m1.value
+wire n1.n m3.span
+wire n2.result m4.v
+wire n1.a m5.v
+wire n1.a m6.v
+wire n1.a m7.a
+wire n1.b m7.b
+wire n1.a m8.a
+wire n1.then m9.in
+wire n1.a n2.a
+wire n1.b n2.b
+wire n2.result n3.a
+wire n2.result n3.b
+wire n1.a n4.value
+wire n1.a n5.a
+wire n1.i n5.b
+wire n1.a n6.a
+wire n1.b n6.b
+wire n2.result n7.condition
+wire n1.s n7.false
+wire n1.s n7.true
+wire n1.a n8.a
+wire n1.i n8.b
+wire n1.s n9.value

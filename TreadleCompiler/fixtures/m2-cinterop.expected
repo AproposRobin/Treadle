@@ -1,0 +1,7 @@
+== exit
+0
+== stdout
+div 3 2
+rand max 32767
+text 2.5 k
+adeelrt

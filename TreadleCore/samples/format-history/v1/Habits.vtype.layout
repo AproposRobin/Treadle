@@ -1,0 +1,9 @@
+# vtype-layout 1
+sheet f1
+	node a1 0 0
+	node a2 260 0
+	node a3 260 200
+	node a4 520 0
+	node a5 780 0
+	node g1 400 120
+	collapsed g1

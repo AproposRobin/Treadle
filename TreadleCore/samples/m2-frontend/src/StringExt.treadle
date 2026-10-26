@@ -1,0 +1,18 @@
+# treadle 1
+type StringExt extension
+	namespace M2
+	extends Core.String
+	doc "An extension of a core library type (Language.md 4, Extension): functions only (no fields on a type of another project)."
+
+function x0001 Doubled
+	returns int
+sheet body
+node a1 Entry
+node a2 Call this.Length
+node a3 Operator *
+	in b 2
+node a4 Return
+wire a1.then a2.in
+wire a2.result a3.a
+wire a2.then a4.in
+wire a3.result a4.value

@@ -1,0 +1,43 @@
+# treadle 1
+type Mathx class
+	namespace Lib
+	static
+	doc "A library project (kind library): Twice and Sum are exported under their C names, Hidden is not."
+
+function f0001 Twice
+	static
+	returns int
+	attr Export "fl_twice"
+param x int
+sheet body
+node a1 Entry
+node a2 Operator *
+	in b 2
+node a3 Return
+wire a1.x a2.a
+wire a1.then a3.in
+wire a2.result a3.value
+
+function f0002 Sum
+	static
+	returns int
+	attr Export "fl_sum"
+param a int
+param b int
+sheet body
+node b1 Entry
+node b2 Operator +
+node b3 Return
+wire b1.a b2.a
+wire b1.b b2.b
+wire b1.then b3.in
+wire b2.result b3.value
+
+function f0003 Hidden
+	static
+	returns int
+sheet body
+node c1 Entry
+node c2 Return
+	in value 7
+wire c1.then c2.in

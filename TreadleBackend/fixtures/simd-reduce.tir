@@ -1,0 +1,75 @@
+# tir 1
+# Reductions (SIMD-and-Vectors.md 1.4): float Sum / Product in the fixed pairwise order ((l0 + l2) +
+# (l1 + l3); the lanes 1e8, 1, -1e8, 1 give 2 where left to right gives 1), a float3 sum (its 4th lane
+# the identity -0.0), MinLane / MaxLane (a NaN lane is ignored, as minnum), integer Sum / Min / Max /
+# And / Or / Xor (signedness from the lane type), a uint8x16 sum that wraps, an 8-lane float sum.
+program SimdReduce console
+entry Sr.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Sr.Program
+type Sr.Program class
+
+func Sr.Program.Main() int static sheet "f1" display "Sr.Program.Main"
+	block b0
+		%v = const float4 1,2,3,4
+		%sum = vec.reduce float add %v
+		%prod = vec.reduce float mul %v
+		%min = vec.reduce float min %v
+		%max = vec.reduce float max %v
+		%sd = cast double %sum
+		%pd = cast double %prod
+		%mind = cast double %min
+		%maxd = cast double %max
+		%f = const char8* "sum %g product %g min %g max %g\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %sd %pd %mind %maxd
+		%o = const float4 100000000,1,-100000000,1
+		%os = vec.reduce float add %o
+		%osd = cast double %os
+		%f2 = const char8* "pairwise %g\n"
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %osd
+		%t = const float3 1.5,2,3
+		%ts = vec.reduce float add %t
+		%tp = vec.reduce float mul %t
+		%tsd = cast double %ts
+		%tpd = cast double %tp
+		%f3 = const char8* "float3 sum %g product %g\n"
+		%r3 = ccall int32 C.libc.printf(char8*,...) %f3 %tsd %tpd
+		%zero = const float 0
+		%nan = binop float div %zero %zero
+		%nv = vec.set float4 %v 2 %nan
+		%nmin = vec.reduce float min %nv
+		%nmax = vec.reduce float max %nv
+		%nmind = cast double %nmin
+		%nmaxd = cast double %nmax
+		%f4 = const char8* "with nan min %g max %g\n"
+		%r4 = ccall int32 C.libc.printf(char8*,...) %f4 %nmind %nmaxd
+		%i = const int32x4 5,-7,3,9
+		%isum = vec.reduce int32 add %i
+		%imin = vec.reduce int32 min %i
+		%imax = vec.reduce int32 max %i
+		%iand = vec.reduce int32 and %i
+		%ior = vec.reduce int32 or %i
+		%ixor = vec.reduce int32 xor %i
+		%f5 = const char8* "int sum %d min %d max %d and %d or %d xor %d\n"
+		%r5 = ccall int32 C.libc.printf(char8*,...) %f5 %isum %imin %imax %iand %ior %ixor
+		%u = vec.bitcast uint32x4 %i
+		%umin = vec.reduce uint32 min %u
+		%umax = vec.reduce uint32 max %u
+		%f6 = const char8* "uint min %u max %u\n"
+		%r6 = ccall int32 C.libc.printf(char8*,...) %f6 %umin %umax
+		%b = const uint8x16 200
+		%bs = vec.reduce uint8 add %b
+		%bsi = cast int32 %bs
+		%f7 = const char8* "uint8x16 sum %d\n"
+		%r7 = ccall int32 C.libc.printf(char8*,...) %f7 %bsi
+		%e = const float8 1,2,3,4,5,6,7,8
+		%es = vec.reduce float add %e
+		%esd = cast double %es
+		%d = const double2 0.25,0.5
+		%ds = vec.reduce double add %d
+		%f8 = const char8* "float8 sum %g double2 sum %g\n"
+		%r8 = ccall int32 C.libc.printf(char8*,...) %f8 %esd %ds
+		%z = const int 0
+		ret %z

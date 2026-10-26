@@ -1,0 +1,70 @@
+# treadle 1
+type ScriptError struct
+	namespace Mini
+	doc "Why a script stopped: the line and column (1-based; the column counts bytes) and a message, for the lexer, the parser, the compiler and the virtual machine alike. Detail is the name or text the message is about, or empty. Both texts are views (constant texts or views of the script), so the struct owns nothing."
+
+field Line int
+
+field Column int
+
+field Message StringView
+
+field Detail StringView
+
+function m0001 At
+	static
+	pure
+	returns Mini.ScriptError
+	doc "An error at a packed position (line * 65536 + column)."
+param pos int
+param message StringView
+param detail StringView
+sheet body
+node x00000 Entry
+node x00001 Operator /
+	in b 65536
+node x00002 Operator %
+	in b 65536
+node x00003 Make Mini.ScriptError
+node x00004 Return
+wire x00000.pos x00001.a
+wire x00000.pos x00002.a
+wire x00002.result x00003.Column
+wire x00000.detail x00003.Detail
+wire x00001.result x00003.Line
+wire x00000.message x00003.Message
+wire x00000.then x00004.in
+wire x00003.value x00004.value
+
+function m0002 Describe
+	doc "Appends `line L, column C: message` and, when there is a detail, ` 'detail'`."
+param into String
+sheet body
+node x01000 Entry
+node x01001 Get this.Line
+node x01002 Get this.Column
+node x01003 Get this.Message
+node x01004 Call String.AppendF
+	in format "line {0}, column {1}: {2}"
+node x01005 Get this.Detail
+node x01006 Call StringView.IsEmpty
+node x01007 Operator !
+node x01008 Branch
+node x01009 Get this.Detail
+node x0100a Call String.AppendF
+	in format " '{0}'"
+node x0100b Return
+wire x01001.value x01004.arg0
+wire x01002.value x01004.arg1
+wire x01003.value x01004.arg2
+wire x01000.then x01004.in
+wire x01000.into x01004.receiver
+wire x01005.value x01006.receiver
+wire x01006.result x01007.a
+wire x01007.result x01008.condition
+wire x01004.then x01008.in
+wire x01009.value x0100a.arg0
+wire x01008.true x0100a.in
+wire x01000.into x0100a.receiver
+wire x01008.false x0100b.in
+wire x0100a.then x0100b.in

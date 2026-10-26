@@ -1,0 +1,8 @@
+# treadle 1
+type IEquatable interface
+	namespace Core
+	generic T
+
+function e0001 Equals
+	returns bool
+param other T

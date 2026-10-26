@@ -1,0 +1,41 @@
+# The trimmed llvm-mingw 20261006-ucrt-x86_64 the package ships as tools\llvm (docs/Releasing.md, "The toolchain").
+# One entry per line, relative to the llvm-mingw root: a file, or a folder ending in "/" (copied whole).
+# "!" excludes a file or folder under an included folder. "[debug]" marks what only the debugger needs
+# (package.ps1 -NoDebugger leaves those out). Everything else in llvm-mingw (other targets, clangd,
+# clang-tidy, python scripting, sanitizer runtimes, the libc++ headers) is not shipped.
+
+# The compiler driver, its configuration (target defaults: compiler-rt, libunwind, lld) and the linker.
+bin/clang.exe
+bin/clang-23.exe
+bin/x86_64-w64-windows-gnu.cfg
+bin/x86_64-pc-windows-gnu.cfg
+bin/mingw32-common.cfg
+bin/ld.lld.exe
+bin/libLLVM-23.dll
+bin/libclang-cpp.dll
+bin/libc++.dll
+bin/libunwind.dll
+
+# The debugger: lldb-dap and the lldb library it loads (liblldb links the Python runtime DLL; the
+# Python standard library is not shipped, lldb-dap starts with --no-lldbinit and no scripting).
+bin/lldb-dap.exe [debug]
+bin/liblldb.dll [debug]
+bin/libpython3.14.dll [debug]
+
+# clang's builtin headers and the compiler runtime for x86-64.
+lib/clang/23/include/
+lib/clang/23/lib/windows/libclang_rt.builtins-x86_64.a
+
+# The mingw-w64 sysroot: C and Windows headers (not the libc++ headers), CRT objects and import libraries.
+include/
+!include/c++/
+x86_64-w64-mingw32/lib/
+!x86_64-w64-mingw32/lib/libc++.a
+!x86_64-w64-mingw32/lib/libc++.dll.a
+!x86_64-w64-mingw32/lib/libc++abi.a
+!x86_64-w64-mingw32/lib/libc++experimental.a
+!x86_64-w64-mingw32/lib/libc++.modules.json
+!x86_64-w64-mingw32/lib/libomp.dll.a
+
+# Licence texts of the toolchain.
+LICENSE.TXT

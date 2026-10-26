@@ -1,0 +1,107 @@
+# treadle 1
+type Atomic class
+	namespace Core
+	static
+
+function t0001 Load
+	static
+	returns T
+	generic T
+	attr Intrinsic Atomic.Load
+param location T
+	mode ref
+
+function t0002 Store
+	static
+	generic T
+	attr Intrinsic Atomic.Store
+param location T
+	mode ref
+param value T
+
+function t0003 Add
+	static
+	returns T
+	generic T
+	attr Intrinsic Atomic.add
+param location T
+	mode ref
+param value T
+
+function t0004 Sub
+	static
+	returns T
+	generic T
+	attr Intrinsic Atomic.sub
+param location T
+	mode ref
+param value T
+
+function t0005 And
+	static
+	returns T
+	generic T
+	attr Intrinsic Atomic.and
+param location T
+	mode ref
+param value T
+
+function t0006 Or
+	static
+	returns T
+	generic T
+	attr Intrinsic Atomic.or
+param location T
+	mode ref
+param value T
+
+function t0007 Xor
+	static
+	returns T
+	generic T
+	attr Intrinsic Atomic.xor
+param location T
+	mode ref
+param value T
+
+function t0008 Min
+	static
+	returns T
+	generic T
+	attr Intrinsic Atomic.min
+param location T
+	mode ref
+param value T
+
+function t0009 Max
+	static
+	returns T
+	generic T
+	attr Intrinsic Atomic.max
+param location T
+	mode ref
+param value T
+
+function t000a Exchange
+	static
+	returns T
+	generic T
+	attr Intrinsic Atomic.xchg
+param location T
+	mode ref
+param value T
+
+function t000b CompareExchange
+	static
+	returns T
+	generic T
+	attr Intrinsic Atomic.CompareExchange
+param location T
+	mode ref
+param expected T
+param desired T
+out replaced bool
+
+function t000c Fence
+	static
+	attr Intrinsic Atomic.Fence

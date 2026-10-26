@@ -1,0 +1,153 @@
+# tir 1
+# Struct destructors: a struct's complete destructor (D1) runs its ~this Sheet (D2), then its fields
+# last first; a struct field of a struct or class is destroyed with its owner; a fixed array field
+# destroys its elements first to last; an array of such structs destroys every element when deleted.
+# A Local struct is destroyed when its region exits (in a loop: every pass). A struct value copied
+# into a variable is a bitwise copy: only an explicit `dtor` on its storage destroys it. The struct
+# with the destructor lives in another unit (its D1 is declared there, defined in Sd.Res).
+program StructDtor console
+entry Sd.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Sd.Res
+type Sd.Res struct
+	field mId int
+	dtor Sd.Res.~this()
+
+func Sd.Res.~this() void sheet "d1" display "Sd.Res.~this"
+	node a1 Entry
+	node a2 Call C.libc.printf
+	block b0
+		%p = field.addr int* %this mId @a2
+		%id = load int %p @a2
+		%f = const char8* "~Res %lld\n" @a2.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %id @a2
+		ret @a2
+
+unit Sd.Program
+type Sd.Pair struct
+	field a Sd.Res
+	field b Sd.Res
+	dtor Sd.Pair.~this()
+type Sd.Trio struct
+	field tag int
+	field items Sd.Res[2]
+type Sd.Holder class
+	field mRes Sd.Res
+type Sd.Program class
+
+func Sd.Pair.~this() void sheet "d2" display "Sd.Pair.~this"
+	node a1 Entry
+	node a2 Call C.libc.printf
+	block b0
+		%pa = field.addr Sd.Res* %this a @a2
+		%pai = field.addr int* %pa mId @a2
+		%ia = load int %pai @a2
+		%pb = field.addr Sd.Res* %this b @a2
+		%pbi = field.addr int* %pb mId @a2
+		%ib = load int %pbi @a2
+		%f = const char8* "~Pair %lld %lld\n" @a2.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %ia %ib @a2
+		ret @a2
+
+func Sd.Program.SetId(Sd.Res*,int) void static sheet "m2" display "Sd.Program.SetId"
+	param res Sd.Res*
+	param id int
+	node a1 Entry
+	node a2 Set res.mId
+	block b0
+		%p = field.addr int* %res mId @a2
+		store %p %id @a2
+		ret @a2
+
+func Sd.Program.Main() int static sheet "m1" display "Sd.Program.Main"
+	region r1
+	slot si int loopvar node a2.index
+	slot sl Sd.Res local region r1 node a3.object
+	slot sp Sd.Pair local node a5.object
+	slot st Sd.Trio local node a6.object
+	slot sv Sd.Res variable
+	node a1 Entry
+	node a2 For
+	node a3 Local Sd.Res
+	node a4 Call C.libc.printf
+	node a5 Local Sd.Pair
+	node a6 Local Sd.Trio
+	node a7 Set copy
+	node a8 Construct Sd.Holder
+	node a9 Delete
+	node b1 Construct Sd.Res[]
+	node b2 Delete
+	node b3 Destroy copy
+	node b4 Return 0
+	block b0
+		region.enter r0 @a1
+		%z = const int 0 @a2.start
+		store.slot si %z @a2
+		br cond
+	block cond
+		%i = load.slot int si @a2
+		%n = const int 2 @a2.count
+		%more = cmp bool lt %i %n @a2
+		condbr %more body after @a2
+	block body
+		region.enter r1 @a3
+		%l = local Sd.Res* sl @a3
+		%i2 = load.slot int si @a3
+		%c10 = const int 10 @a3
+		%id = binop int add %i2 %c10 @a3
+		call void Sd.Program.SetId(Sd.Res*,int) %l %id @a3
+		%f = const char8* "pass %lld\n" @a4.format
+		%r0 = ccall int32 C.libc.printf(char8*,...) %f %i2 @a4
+		region.exit r1 @a2
+		%i3 = load.slot int si @a2
+		%one = const int 1 @a2
+		%i4 = binop int add %i3 %one @a2
+		store.slot si %i4 @a2
+		br cond @a2
+	block after
+		%pp = local Sd.Pair* sp @a5
+		%pa = field.addr Sd.Res* %pp a @a5
+		%k1 = const int 1 @a5
+		call void Sd.Program.SetId(Sd.Res*,int) %pa %k1 @a5
+		%pb = field.addr Sd.Res* %pp b @a5
+		%k2 = const int 2 @a5
+		call void Sd.Program.SetId(Sd.Res*,int) %pb %k2 @a5
+		%tp = local Sd.Trio* st @a6
+		%items = field.addr Sd.Res[2]* %tp items @a6
+		%e0 = const int 0 @a6
+		%x0 = elem.addr Sd.Res* %items %e0 @a6
+		%k30 = const int 30 @a6
+		call void Sd.Program.SetId(Sd.Res*,int) %x0 %k30 @a6
+		%e1 = const int 1 @a6
+		%x1 = elem.addr Sd.Res* %items %e1 @a6
+		%k31 = const int 31 @a6
+		call void Sd.Program.SetId(Sd.Res*,int) %x1 %k31 @a6
+		%cv = load Sd.Res %pa @a7
+		store.slot sv %cv @a7
+		%h = alloc Sd.Holder @a8
+		%hr = field.addr Sd.Res* %h mRes @a8
+		%k7 = const int 7 @a8
+		call void Sd.Program.SetId(Sd.Res*,int) %hr %k7 @a8
+		delete %h @a9
+		%n3 = const int 3 @b1.length
+		%arr = alloc.array Sd.Res[] %n3 @b1
+		%j0 = const int 0 @b1
+		%y0 = elem.addr Sd.Res* %arr %j0 @b1
+		%k20 = const int 20 @b1
+		call void Sd.Program.SetId(Sd.Res*,int) %y0 %k20 @b1
+		%j1 = const int 1 @b1
+		%y1 = elem.addr Sd.Res* %arr %j1 @b1
+		%k21 = const int 21 @b1
+		call void Sd.Program.SetId(Sd.Res*,int) %y1 %k21 @b1
+		%j2 = const int 2 @b1
+		%y2 = elem.addr Sd.Res* %arr %j2 @b1
+		%k22 = const int 22 @b1
+		call void Sd.Program.SetId(Sd.Res*,int) %y2 %k22 @b1
+		delete %arr @b2
+		%svp = slot.addr Sd.Res* sv @b3
+		dtor %svp @b3
+		%ret = const int 0 @b4.value
+		region.exit r0 @b4
+		ret %ret @b4

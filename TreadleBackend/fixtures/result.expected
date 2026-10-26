@@ -1,0 +1,9 @@
+== exit
+0
+== stdout
+Some 4
+None
+Ok 50
+Err 7
+Err 7
+Ok 40

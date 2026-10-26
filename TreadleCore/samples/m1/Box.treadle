@@ -1,0 +1,27 @@
+# treadle 1
+type Box class
+	namespace Zoo
+	generic T
+	doc "Holds one value of any type: each type argument is its own instance."
+
+field mValue T
+
+ctor x0001
+param value T
+sheet body
+node a1 Entry
+node a2 Set this.mValue
+node a3 Return
+wire a1.then a2.in
+wire a1.value a2.value
+wire a2.then a3.in
+
+function x0002 Get
+	pure
+	returns T
+sheet body
+node b1 Entry
+node b2 Get this.mValue
+node b3 Return
+wire b1.then b3.in
+wire b2.value b3.value

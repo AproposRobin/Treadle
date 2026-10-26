@@ -1,0 +1,29 @@
+# treadle 1
+# expect n3 receiver T2217
+type StructBindHeap struct
+	namespace Broken
+	doc "A delegate of a local struct's function holds the local's address: it must be Local."
+
+field mValue int
+
+function f1 Touch
+sheet body
+node a1 Entry
+node a2 Return
+wire a1.then a2.in
+
+function f2 Run
+	static
+local s StructBindHeap
+sheet body
+node n1 Entry
+node n2 Get local:s
+node n3 Bind Broken.StructBindHeap.Touch
+	set alloc construct
+node n4 Delete
+node n5 Return
+wire n1.then n3.in
+wire n2.value n3.receiver
+wire n3.then n4.in
+wire n3.value n4.object
+wire n4.then n5.in

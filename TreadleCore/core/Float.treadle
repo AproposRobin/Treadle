@@ -1,0 +1,141 @@
+# treadle 1
+type Float class
+	namespace Core
+	static
+	doc "Floats from text and to text: Parse and TryParse, ToString with a precision and a style."
+
+function f0001 Parse
+	static
+	returns Result<float,ParseError>
+	doc "The number the text holds, read as Double.Parse reads it and rounded to a float (past float's range: an infinity). Err: NoValue (empty), InvalidChar(position)."
+param text StringView
+local value double
+local pos int64
+sheet body
+node a01 Entry
+node a02 Break StringView
+node a03 Get local:value
+node a04 Get local:pos
+node a05 Call C.crt.rt_parse_double
+node a06 Switch
+	case 0
+	case 1
+	case 2
+node a07 Get local:value
+node a08 Cast float
+node a09 MakeCase Result<float,ParseError>.Ok
+node a10 Return
+node a11 MakeCase ParseError.NoValue
+node a12 MakeCase Result<float,ParseError>.Err
+node a13 Return
+node a14 MakeCase ParseError.Overflow
+node a15 MakeCase Result<float,ParseError>.Err
+node a16 Return
+node a17 Get local:pos
+node a18 MakeCase ParseError.InvalidChar
+node a19 MakeCase Result<float,ParseError>.Err
+node a20 Return
+wire a01.text a02.value
+wire a01.then a05.in
+wire a02.Length a05.n
+wire a03.value a05.out
+wire a02.Ptr a05.p
+wire a04.value a05.pos
+wire a05.then a06.in
+wire a05.result a06.value
+wire a07.value a08.value
+wire a08.result a09.value
+wire a06.case:0 a10.in
+wire a09.value a10.value
+wire a11.value a12.error
+wire a06.case:1 a13.in
+wire a12.value a13.value
+wire a14.value a15.error
+wire a06.case:2 a16.in
+wire a15.value a16.value
+wire a17.value a18.position
+wire a18.value a19.error
+wire a06.done a20.in
+wire a19.value a20.value
+
+function f0002 TryParse
+	static
+	returns bool
+	doc "True and the number in `parsed` when Parse succeeds; false and 0 otherwise."
+param text StringView
+out parsed float
+sheet body
+node b01 Entry
+node b02 Call Float.Parse
+node b03 Call Result<float,ParseError>.IsOk
+node b04 Call Result<float,ParseError>.UnwrapOr
+	in fallback 0
+node b05 Return
+wire b01.then b02.in
+wire b01.text b02.text
+wire b02.result b03.receiver
+wire b02.result b04.receiver
+wire b02.then b05.in
+wire b04.result b05.parsed
+wire b03.result b05.value
+
+function f0003 ToString
+	static
+	doc "Appends the float to `into` with `precision` decimals (Fixed), digits after the point (Scientific) or significant digits (General); -1 is the style's default (2, 6, and 7). String.AppendNumber takes the same as a spec."
+param value float
+param into String
+param precision int
+	default -1
+param style FloatStyle
+	default .Fixed
+sheet body
+node c01 Entry
+node c02 Local String
+node c03 Literal
+	set type StringView
+	set value "F"
+node c04 Literal
+	set type StringView
+	set value "e"
+node c05 Literal
+	set type StringView
+	set value "G"
+node c06 Cast int
+node c07 Operator ==
+	in b 0
+node c08 Operator ==
+	in b 1
+node c09 Select
+node c10 Select
+node c11 Call String.Append(StringView)
+node c12 Operator >=
+	in b 0
+node c13 Branch
+node c14 Call String.Append(int)
+node c15 Call String.AppendNumber(float,StringView)
+node c16 Return
+wire c01.then c02.in
+wire c01.style c06.value
+wire c06.result c07.a
+wire c06.result c08.a
+wire c08.result c09.condition
+wire c05.value c09.false
+wire c04.value c09.true
+wire c07.result c10.condition
+wire c09.result c10.false
+wire c03.value c10.true
+wire c02.then c11.in
+wire c02.object c11.receiver
+wire c10.result c11.text
+wire c01.precision c12.a
+wire c12.result c13.condition
+wire c11.then c13.in
+wire c13.true c14.in
+wire c02.object c14.receiver
+wire c01.precision c14.value
+wire c02.object c15.format
+wire c13.false c15.in
+wire c14.then c15.in
+wire c01.into c15.receiver
+wire c01.value c15.value
+wire c15.then c16.in

@@ -1,0 +1,166 @@
+# treadle 1
+type MovesMain class
+	namespace Cx
+	static
+	doc "Structs with a destructor in the core collections: List, Dictionary, Queue and Stack grow by moving their elements (no destructor runs on the old copies), destroy what they remove or replace, and destroy what they hold when cleared or deleted. Each Res is destroyed exactly once: the counts and id sums prove it, and the Debug run's double-free check and leak report would fail otherwise."
+
+field sDestroyed int
+	static
+
+field sSum int
+	static
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Construct List<Res>
+node a3 For
+	in start 0
+	in count 20
+node a4 Construct String
+node a5 Make Res
+node a6 Call List<Res>.Add
+node a7 Call List<Res>.RemoveAt
+	in index 3
+node a8 Construct String
+node a9 Make Res
+	in mId 100
+node b1 Call List<Res>.SetAt
+	in index 0
+node b2 Construct String
+node b3 Make Res
+	in mId 200
+node b4 Call List<Res>.Insert
+	in index 5
+node b5 Get List<Res>.Count
+node b6 Call Console.WriteLine(int)
+node b7 Delete
+node b8 Call this.Report
+node c1 Construct Dictionary<int,Res>
+node c2 For
+	in start 0
+	in count 20
+node c3 Construct String
+node c4 Make Res
+node c5 Call Dictionary<int,Res>.SetItem
+node c6 Construct String
+node c7 Make Res
+	in mId 500
+node c8 Call Dictionary<int,Res>.SetItem
+	in key 5
+node c9 Call Dictionary<int,Res>.Remove
+	in key 7
+node d1 Delete
+node d2 Call this.Report
+node e1 Construct Queue<Res>
+node e2 For
+	in start 0
+	in count 10
+node e3 Construct String
+node e4 Make Res
+node e5 Call Queue<Res>.Enqueue
+node e6 Construct Stack<Res>
+node e7 For
+	in start 0
+	in count 10
+node e8 Construct String
+node e9 Make Res
+node f1 Call Stack<Res>.Push
+node f2 Call Stack<Res>.Clear
+node f3 Delete
+node f4 Delete
+node f5 Call this.Report
+node f6 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a3.body a4.in
+wire a3.index a5.mId
+wire a4.object a5.mName
+wire a4.then a6.in
+wire a2.object a6.receiver
+wire a5.value a6.value
+wire a3.done a7.in
+wire a2.object a7.receiver
+wire a7.then a8.in
+wire a8.object a9.mName
+wire a8.then b1.in
+wire a2.object b1.receiver
+wire a9.value b1.value
+wire b1.then b2.in
+wire b2.object b3.mName
+wire b2.then b4.in
+wire a2.object b4.receiver
+wire b3.value b4.value
+wire a2.object b5.receiver
+wire b4.then b6.in
+wire b5.value b6.value
+wire b6.then b7.in
+wire a2.object b7.object
+wire b7.then b8.in
+wire b8.then c1.in
+wire c1.then c2.in
+wire c2.body c3.in
+wire c2.index c4.mId
+wire c3.object c4.mName
+wire c3.then c5.in
+wire c2.index c5.key
+wire c1.object c5.receiver
+wire c4.value c5.value
+wire c2.done c6.in
+wire c6.object c7.mName
+wire c6.then c8.in
+wire c1.object c8.receiver
+wire c7.value c8.value
+wire c8.then c9.in
+wire c1.object c9.receiver
+wire c9.then d1.in
+wire c1.object d1.object
+wire d1.then d2.in
+wire d2.then e1.in
+wire e1.then e2.in
+wire e2.body e3.in
+wire e2.index e4.mId
+wire e3.object e4.mName
+wire e3.then e5.in
+wire e1.object e5.receiver
+wire e4.value e5.value
+wire e2.done e6.in
+wire e6.then e7.in
+wire e7.body e8.in
+wire e7.index e9.mId
+wire e8.object e9.mName
+wire e8.then f1.in
+wire e6.object f1.receiver
+wire e9.value f1.value
+wire e7.done f2.in
+wire e6.object f2.receiver
+wire f2.then f3.in
+wire e1.object f3.object
+wire f3.then f4.in
+wire e6.object f4.object
+wire f4.then f5.in
+wire f5.then f6.in
+
+function m2 Report
+	static
+	doc "Writes how many Res were destroyed so far and the sum of their ids."
+sheet body
+node r1 Entry
+node r2 Local String
+node r3 Get MovesMain.sDestroyed
+node r4 Get MovesMain.sSum
+node r5 Call String.AppendF
+	in format "destroyed {0}, id sum {1}"
+node r6 Call Console.WriteLine(String)
+node r7 Return
+wire r1.then r2.in
+wire r3.value r5.arg0
+wire r4.value r5.arg1
+wire r2.then r5.in
+wire r2.object r5.receiver
+wire r5.then r6.in
+wire r2.object r6.value
+wire r6.then r7.in

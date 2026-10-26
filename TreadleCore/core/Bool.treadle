@@ -1,0 +1,77 @@
+# treadle 1
+type Bool class
+	namespace Core
+	static
+	doc "Bools from text: Parse and TryParse (true / false in any letter case). String.Append(bool) writes them."
+
+function b0001 Parse
+	static
+	returns Result<bool,ParseError>
+	doc "true or false in any letter case (True, FALSE). No white space (Trim first). Err: NoValue (empty), InvalidChar(0) (any other text)."
+param text StringView
+sheet body
+node a01 Entry
+node a02 Break StringView
+node a03 Operator ==
+	in b 0
+node a04 Branch
+node a05 MakeCase ParseError.NoValue
+node a06 MakeCase Result<bool,ParseError>.Err
+node a07 Return
+node a08 Call StringView.EqualsIgnoreCase
+	in other "true"
+node a09 Branch
+node a10 MakeCase Result<bool,ParseError>.Ok
+	in value true
+node a11 Return
+node a12 Call StringView.EqualsIgnoreCase
+	in other "false"
+node a13 Branch
+node a14 MakeCase Result<bool,ParseError>.Ok
+	in value false
+node a15 Return
+node a16 MakeCase ParseError.InvalidChar
+	in position 0
+node a17 MakeCase Result<bool,ParseError>.Err
+node a18 Return
+wire a01.text a02.value
+wire a02.Length a03.a
+wire a03.result a04.condition
+wire a01.then a04.in
+wire a05.value a06.error
+wire a04.true a07.in
+wire a06.value a07.value
+wire a01.text a08.receiver
+wire a08.result a09.condition
+wire a04.false a09.in
+wire a09.true a11.in
+wire a10.value a11.value
+wire a01.text a12.receiver
+wire a12.result a13.condition
+wire a09.false a13.in
+wire a13.true a15.in
+wire a14.value a15.value
+wire a16.value a17.error
+wire a13.false a18.in
+wire a17.value a18.value
+
+function b0002 TryParse
+	static
+	returns bool
+	doc "True and the value in `parsed` when Parse succeeds; false (and false in `parsed`) otherwise."
+param text StringView
+out parsed bool
+sheet body
+node b01 Entry
+node b02 Call Bool.Parse
+node b03 Call Result<bool,ParseError>.IsOk
+node b04 Call Result<bool,ParseError>.UnwrapOr
+	in fallback false
+node b05 Return
+wire b01.then b02.in
+wire b01.text b02.text
+wire b02.result b03.receiver
+wire b02.result b04.receiver
+wire b02.then b05.in
+wire b04.result b05.parsed
+wire b03.result b05.value

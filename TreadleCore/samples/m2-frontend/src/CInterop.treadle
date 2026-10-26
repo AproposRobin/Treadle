@@ -1,0 +1,90 @@
+# treadle 1
+type CInterop class
+	namespace M2
+	static
+	doc "C import records (docs/C-Import.md): a C function returning a struct through a typedef (div, Break div_t), a constant (RAND_MAX), a variadic call with C's promotions (printf), a static function bound to a C callback as a plain function pointer (qsort). Run prints div 3 2, rand max 32767, text 2.5 k, adeelrt."
+
+function c0001 CompareChars
+	static
+	unsafe
+	returns int32
+param a void*
+param b void*
+sheet body
+node a1 Entry
+node a2 Cast char8*
+	set kind unchecked
+node a3 Index
+	in index 0
+node a4 Cast char8*
+	set kind unchecked
+node a5 Index
+	in index 0
+node a6 Cast int32
+node a7 Cast int32
+node a8 Operator -
+node a9 Return
+wire a1.a a2.value
+wire a2.result a3.collection
+wire a1.b a4.value
+wire a4.result a5.collection
+wire a3.value a6.value
+wire a5.value a7.value
+wire a6.result a8.a
+wire a7.result a8.b
+wire a1.then a9.in
+wire a8.result a9.value
+
+function c0002 Run
+	static
+local f float
+	init 2.5
+local ch char8
+	init 'k'
+sheet body
+node b1 Entry
+node b2 Call C.cstd.div
+	in numerator 17
+	in denominator 5
+node b3 Break C.div_t
+node b4 Call C.cstd.printf
+	in format "div %d %d\n"
+node b5 Get C.cstd.RAND_MAX
+node b6 Call C.cstd.printf
+	in format "rand max %d\n"
+node b7 Get local:f
+node b8 Get local:ch
+node b9 Call C.cstd.printf
+	in format "%s %.1f %c\n"
+	in va0 "text"
+node c1 Local String
+	set ctor (StringView)
+	in text "treadle"
+node c2 Call String.CStr()
+node c3 Bind M2.CInterop.CompareChars
+node c4 Call C.cstd.qsort
+	in numOfElements 7
+	in sizeOfElements 1
+node c5 Call String.CStr()
+node c6 Call C.cstd.printf
+	in format "%s\n"
+node c7 Return
+wire b1.then b2.in
+wire b2.result b3.value
+wire b2.then b4.in
+wire b3.quot b4.va0
+wire b3.rem b4.va1
+wire b4.then b6.in
+wire b5.value b6.va0
+wire b6.then b9.in
+wire b7.value b9.va1
+wire b8.value b9.va2
+wire b9.then c1.in
+wire c1.object c2.receiver
+wire c2.result c4.base
+wire c1.then c4.in
+wire c3.value c4.ptFuncCompare
+wire c1.object c5.receiver
+wire c4.then c6.in
+wire c5.result c6.va0
+wire c6.then c7.in

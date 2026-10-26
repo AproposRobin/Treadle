@@ -1,0 +1,38 @@
+# tir 1
+# Array lengths (Security-Review.md finding 2): Construct of an array whose size in bytes does not fit (2^62 ints) is a fatal
+# error naming the node in both configs (Debug: `len < 0` and llvm.umul / uadd.with.overflow; Release: one
+# unsigned compare), before anything is allocated or the length is stored.
+program ArrayHuge console
+entry Ah.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Ah.Program
+type Ah.Program class
+
+func Ah.Program.Length(int) int static sheet "m2" display "Ah.Program.Length"
+	param n int
+	node a1 Entry
+	node a2 Multiply
+	block b0
+		%ten = const int 4611686018427387904 @a2
+		%r = binop int mul %n %ten @a2
+		ret %r @a2
+
+func Ah.Program.Main() int static sheet "m1" display "Ah.Program.Main"
+	node a1 Entry
+	node a2 Call Ah.Program.Length
+	node a3 Construct int[]
+	node a4 Call C.libc.printf
+	node a5 Return 0
+	block b0
+		%nine = const int 1 @a2.n
+		%len = call int Ah.Program.Length(int) %nine @a2
+		%a = alloc.array int[] %len @a3
+		%k = const int 100000 @a4
+		%e = elem.addr int* %a %k @a4
+		store %e %nine @a4
+		%f = const char8* "not reached\n" @a4.format
+		%p = ccall int32 C.libc.printf(char8*,...) %f @a4
+		%z = const int 0 @a5.value
+		ret %z @a5

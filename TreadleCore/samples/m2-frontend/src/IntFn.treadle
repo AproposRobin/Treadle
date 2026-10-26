@@ -1,0 +1,5 @@
+# treadle 1
+type IntFn delegate
+	namespace M2
+	signature int(int)
+	doc "A delegate type: an int in, an int out (Language.md 4.2). Its pins and every delegate:int(int) pin take each other."

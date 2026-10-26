@@ -1,0 +1,11 @@
+# treadle 1
+type IAllocator interface
+	namespace Core
+
+function a0001 Alloc
+	returns void*
+param size int
+param align int
+
+function a0002 Free
+param ptr void*

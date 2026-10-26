@@ -1,0 +1,60 @@
+# treadle 1
+type NestedLambdas class
+	namespace M2
+	static
+	doc "A Lambda inside a Lambda Sheet that captures the outer Lambda's input (Language.md 4.2): the outer heap Lambda makes a Local Lambda reading its x and invokes it with 3. Run prints 35, 37."
+
+function n0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 Lambda
+	set type IntFn
+	set alloc construct
+	set inputs x
+node a3 Invoke
+	in arg0 5
+node a4 Call Console.WriteLine(int)
+node a5 Invoke
+	in arg0 7
+node a6 Call Console.WriteLine(int)
+node a7 Delete
+node a8 Return
+wire a1.then a2.in
+wire a2.value a3.delegate
+wire a2.then a3.in
+wire a3.then a4.in
+wire a3.result a4.value
+wire a2.value a5.delegate
+wire a4.then a5.in
+wire a5.then a6.in
+wire a5.result a6.value
+wire a6.then a7.in
+wire a2.value a7.object
+wire a7.then a8.in
+sheet lambda:a2
+node b1 Entry
+node b2 Lambda
+	set type IntFn
+	set alloc local
+	set inputs y
+node b3 Invoke
+	in arg0 3
+node b4 Return
+wire b1.then b2.in
+wire b2.value b3.delegate
+wire b2.then b3.in
+wire b3.then b4.in
+wire b3.result b4.value
+sheet lambda:b2
+node c1 Entry
+node c2 Operator *
+	in b 10
+node c3 Get param:x
+node c4 Operator +
+node c5 Return
+wire c1.y c2.a
+wire c2.result c4.a
+wire c3.value c4.b
+wire c1.then c5.in
+wire c4.result c5.value

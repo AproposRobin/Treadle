@@ -1,0 +1,21 @@
+*.sh text eol=lf
+packaging/linux/AppRun text eol=lf
+*.desktop text eol=lf
+*.yml text eol=lf
+TreadleCore/samples/** eol=lf
+*.kir text eol=lf
+*.tir text eol=lf
+*.vtype text eol=lf
+*.treadle text eol=lf
+*.vtype.layout text eol=lf
+*.treadle.layout text eol=lf
+*.layout text eol=lf
+*.vproject text eol=lf
+*.tproj text eol=lf
+*.cimport text eol=lf
+*.cdecl text eol=lf
+*.expected text eol=lf
+packaging/*.cfg text eol=lf
+packaging/*-linux.txt text eol=lf
+Native/bin/** -text
+THIRD_PARTY/*.txt text eol=lf

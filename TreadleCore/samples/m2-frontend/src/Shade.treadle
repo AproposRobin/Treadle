@@ -1,0 +1,10 @@
+# treadle 1
+type Shade enum
+	namespace M2
+	doc "Three shades (Consts names one in a constant)."
+
+case Dark
+
+case Mid
+
+case Light

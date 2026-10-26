@@ -1,0 +1,8 @@
+# cimport 1
+import cvars
+	header ../../../../tools/probe/headers/small.h
+	header errno.h
+	header stdio.h
+	only treadle_counter treadle_limit errno stdout fputs fflush
+	csource counter.c
+	category "C / cvars"

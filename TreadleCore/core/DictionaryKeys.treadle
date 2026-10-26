@@ -1,0 +1,80 @@
+# treadle 1
+type DictionaryKeys struct
+	namespace Core
+	generic K IHashable
+	generic V
+	doc "The keys of a Dictionary for For Each (Dictionary.Keys()): it is its own enumerator. Slot order; the dictionary must not change while it is walked."
+
+field mDict Dictionary<K,V>
+	access internal
+
+field mIndex int
+	access internal
+
+function e0001 MoveNext
+	mutating
+	returns bool
+	doc "Steps to the next key in use; false after the last."
+sheet body
+node a1 Entry
+node a2 Set this.mIndex
+	set op +=
+	in value 1
+node a3 Get this.mIndex
+node a4 Get this.mDict
+node a5 Get Dictionary<K,V>.mCapacity
+node a6 Operator <
+node a7 Get Dictionary<K,V>.mStates
+node a8 Index
+node a9 Operator !=
+	in b 1
+node b1 Operator &&
+node b2 While
+node b3 Set this.mIndex
+	set op +=
+	in value 1
+node b4 Return
+wire a1.then a2.in
+wire a4.value a5.receiver
+wire a3.value a6.a
+wire a5.value a6.b
+wire a4.value a7.receiver
+wire a7.value a8.collection
+wire a3.value a8.index
+wire a8.value a9.a
+wire a6.result b1.a
+wire a9.result b1.b
+wire b1.result b2.condition
+wire a2.then b2.in
+wire b2.body b3.in
+wire b2.done b4.in
+wire a6.result b4.value
+
+property e0002 Current K
+	doc "The key MoveNext stepped to."
+sheet get
+node c1 Entry
+node c2 Get this.mDict
+node c3 Get Dictionary<K,V>.mKeys
+node c5 Get this.mIndex
+node c6 Index
+node c9 Return
+wire c2.value c3.receiver
+wire c3.value c6.collection
+wire c5.value c6.index
+wire c1.then c9.in
+wire c6.value c9.value
+
+function e0003 GetEnumerator
+	returns DictionaryKeys<K,V>
+	doc "The enumerator For Each uses: a copy of this one."
+sheet body
+node d1 Entry
+node d2 Get this.mDict
+node d3 Return
+node d4 Get this.mIndex
+node d5 Make DictionaryKeys<K,V>
+wire d1.then d3.in
+wire d5.value d3.value
+wire d2.value d5.mDict
+wire d4.value d5.mIndex

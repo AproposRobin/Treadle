@@ -1,0 +1,54 @@
+# treadle 1
+type ControlText class
+	namespace M2
+	static
+	doc "A text literal holding every control byte (0x00 to 0x1F) and DEL: each reaches the program (the Sheet IR writes them as hexadecimal escapes, the back end reads both hex digits). Run prints 33 and 623 (0 + 1 + ... + 31 + 127)."
+
+function x0001 Sum
+	static
+	pure
+	returns int
+	doc "The sum of the bytes of text."
+param text StringView
+local total int
+sheet body
+node a1 Entry
+node a2 For
+	in start 0
+node a3 Get Core.StringView.Length
+node a4 Index
+node a5 Cast int
+node a6 Set local:total
+	set op +=
+node a7 Get local:total
+node a8 Return
+wire a3.value a2.count
+wire a1.then a2.in
+wire a1.text a3.receiver
+wire a1.text a4.collection
+wire a2.index a4.index
+wire a4.value a5.value
+wire a2.body a6.in
+wire a5.result a6.value
+wire a2.done a8.in
+wire a7.value a8.value
+
+function x0002 Run
+	static
+sheet body
+node b1 Entry
+node b2 Literal
+	set type StringView
+	set value "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\u0008\u0009\u000A\u000B\u000C\u000D\u000E\u000F\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001A\u001B\u001C\u001D\u001E\u001F\u007F"
+node b3 Get Core.StringView.Length
+node b4 Call Console.WriteLine(int)
+node b5 Call M2.ControlText.Sum
+node b6 Call Console.WriteLine(int)
+node b7 Return
+wire b2.value b3.receiver
+wire b1.then b4.in
+wire b3.value b4.value
+wire b2.value b5.text
+wire b4.then b6.in
+wire b5.result b6.value
+wire b6.then b7.in

@@ -1,0 +1,23 @@
+# treadle 1
+# expect n3 collection T2102
+type EnumeratorClass class
+	namespace Broken
+	doc "GetEnumerator gives an object: For Each takes an enumerator struct."
+
+function f1 GetEnumerator
+	returns Object
+sheet body
+node a1 Entry
+node a2 Return
+	in value null
+wire a1.then a2.in
+
+function f2 Run
+	static
+sheet body
+node n1 Entry
+node n2 Local Broken.EnumeratorClass
+node n3 ForEach
+wire n1.then n2.in
+wire n2.object n3.collection
+wire n2.then n3.in

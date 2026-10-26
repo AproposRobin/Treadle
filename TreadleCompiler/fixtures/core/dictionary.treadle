@@ -1,0 +1,212 @@
+# treadle 1
+type DictionaryMain class
+	namespace Cx
+	static
+	doc "Core Dictionary<K,V>: String keys compared by text, Add, SetItem, Get [ ], ContainsKey, TryGet, Remove, TryAdd, Count; int keys through several growths, Remove, For Each over (key, value) pairs, Clear; a dictionary owning its values emptied with DeleteValues (no leaks)."
+
+function m1 Main
+	static
+	returns int
+local item int
+local sum int
+sheet body
+node a1 Entry
+node a2 Local Dictionary<String,int>
+node a3 Local String
+	set ctor (StringView)
+	in text "apple"
+node a4 Local String
+	set ctor (StringView)
+	in text "pear"
+node a5 Call Dictionary<String,int>.Add
+	in value 3
+node a6 Call Dictionary<String,int>.Add
+	in value 5
+node a7 Call Dictionary<String,int>.SetItem
+	in key "apple"
+	in value 4
+node a8 Get Dictionary<String,int>.Count
+node a9 Call Console.WriteLine(int)
+node b1 Index
+node b2 Call Console.WriteLine(int)
+node b3 Index
+node b4 Call Console.WriteLine(int)
+node b5 Call Dictionary<String,int>.ContainsKey
+	in key "plum"
+node b6 Call Console.WriteLine(bool)
+node b7 Call Dictionary<String,int>.TryGet
+node b8 Call Console.WriteLine(bool)
+node b9 Call Console.WriteLine(int)
+node c1 Call Dictionary<String,int>.Remove
+	in key "pear"
+node c2 Call Console.WriteLine(bool)
+node c3 Call Dictionary<String,int>.Remove
+	in key "pear"
+node c4 Call Console.WriteLine(bool)
+node c5 Call Dictionary<String,int>.TryAdd
+	in value 9
+node c6 Call Console.WriteLine(bool)
+node c7 Call Console.WriteLine(int)
+node d1 Local Dictionary<int,int>
+node d2 For
+	in start 0
+	in count 100
+node d3 Operator *
+node d4 Call Dictionary<int,int>.SetItem
+node d5 Get Dictionary<int,int>.Count
+node d6 Call Console.WriteLine(int)
+node d7 Index
+	in index 37
+node d8 Call Console.WriteLine(int)
+node d9 For
+	in start 0
+	in count 50
+node e1 Operator *
+	in b 2
+node e2 Call Dictionary<int,int>.Remove
+node e3 Call Console.WriteLine(int)
+node e4 Call Dictionary<int,int>.ContainsKey
+	in key 37
+node e5 Call Console.WriteLine(bool)
+node e6 Call Dictionary<int,int>.ContainsKey
+	in key 38
+node e7 Call Console.WriteLine(bool)
+node e8 ForEach
+node e9 Break (int,int)
+node f1 Set local:sum
+	set op +=
+node f2 Get local:sum
+node f3 Call Console.WriteLine(int)
+node f4 Call Dictionary<int,int>.Clear
+node f5 Call Console.WriteLine(int)
+node f6 Call Dictionary<int,int>.Add
+	in key 5
+	in value 25
+node f7 Index
+	in index 5
+node f8 Call Console.WriteLine(int)
+node f9 Return
+	in value 0
+node g1 Construct Dictionary<int,String>
+node g2 Construct String
+	set ctor (StringView)
+	in text "owned"
+node g3 Call Dictionary<int,String>.SetItem
+	in key 1
+node g4 Construct String
+	set ctor (StringView)
+	in text "values"
+node g5 Call Dictionary<int,String>.SetItem
+	in key 2
+node g6 Index
+	in index 2
+node g7 Call Console.WriteLine(String)
+node g8 Call Dictionary<int,String>.DeleteValues
+node g9 Delete
+wire a1.then a2.in
+wire a2.then a3.in
+wire a3.then a4.in
+wire a4.then a5.in
+wire a3.object a5.key
+wire a2.object a5.receiver
+wire a5.then a6.in
+wire a4.object a6.key
+wire a2.object a6.receiver
+wire a6.then a7.in
+wire a2.object a7.receiver
+wire a2.object a8.receiver
+wire a7.then a9.in
+wire a8.value a9.value
+wire a2.object b1.collection
+wire a4.object b1.index
+wire a9.then b2.in
+wire b1.value b2.value
+wire a2.object b3.collection
+wire a3.object b3.index
+wire b2.then b4.in
+wire b3.value b4.value
+wire a2.object b5.receiver
+wire b4.then b6.in
+wire b5.result b6.value
+wire b6.then b7.in
+wire a3.object b7.key
+wire a2.object b7.receiver
+wire b7.then b8.in
+wire b7.result b8.value
+wire b8.then b9.in
+wire b7.item b9.value
+wire b9.then c1.in
+wire a2.object c1.receiver
+wire c1.then c2.in
+wire c1.result c2.value
+wire c2.then c3.in
+wire a2.object c3.receiver
+wire c3.then c4.in
+wire c3.result c4.value
+wire c4.then c5.in
+wire a3.object c5.key
+wire a2.object c5.receiver
+wire c5.then c6.in
+wire c5.result c6.value
+wire c6.then c7.in
+wire a8.value c7.value
+wire c7.then d1.in
+wire d1.then d2.in
+wire d2.index d3.a
+wire d2.index d3.b
+wire d2.body d4.in
+wire d2.index d4.key
+wire d1.object d4.receiver
+wire d3.result d4.value
+wire d1.object d5.receiver
+wire d2.done d6.in
+wire d5.value d6.value
+wire d1.object d7.collection
+wire d6.then d8.in
+wire d7.value d8.value
+wire d8.then d9.in
+wire d9.index e1.a
+wire d9.body e2.in
+wire e1.result e2.key
+wire d1.object e2.receiver
+wire d9.done e3.in
+wire d5.value e3.value
+wire d1.object e4.receiver
+wire e3.then e5.in
+wire e4.result e5.value
+wire d1.object e6.receiver
+wire e5.then e7.in
+wire e6.result e7.value
+wire d1.object e8.collection
+wire e7.then e8.in
+wire e8.element e9.value
+wire e8.body f1.in
+wire e9.item1 f1.value
+wire e8.done f3.in
+wire f2.value f3.value
+wire f3.then f4.in
+wire d1.object f4.receiver
+wire f4.then f5.in
+wire d5.value f5.value
+wire f5.then f6.in
+wire d1.object f6.receiver
+wire d1.object f7.collection
+wire f6.then f8.in
+wire f7.value f8.value
+wire g9.then f9.in
+wire f8.then g1.in
+wire g1.then g2.in
+wire g2.then g3.in
+wire g1.object g3.receiver
+wire g2.object g3.value
+wire g3.then g4.in
+wire g4.then g5.in
+wire g1.object g5.receiver
+wire g4.object g5.value
+wire g1.object g6.collection
+wire g5.then g7.in
+wire g6.value g7.value
+wire g7.then g8.in
+wire g1.object g8.receiver
+wire g8.then g9.in
+wire g1.object g9.object

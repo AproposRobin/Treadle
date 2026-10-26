@@ -1,0 +1,192 @@
+# treadle 1
+type Directory class
+	namespace Core
+	static
+	doc "Folders through the runtime (treadle_rt: _findfirst64 and _mkdir on Windows, opendir and mkdir on Linux): whether one is there, making one, listing its files or folders. Paths are UTF-8 text; both separators work."
+
+function d0001 Exists
+	static
+	returns bool
+	doc "True when a directory is there."
+param path StringView
+sheet body
+node a1 Entry
+node a2 Local String
+	set ctor (StringView)
+node a3 Call String.CStr
+node a4 Call C.crt.rt_dir_exists
+node a5 Operator !=
+	in b 0
+node a6 Return
+wire a1.then a2.in
+wire a1.path a2.text
+wire a2.object a3.receiver
+wire a2.then a4.in
+wire a3.result a4.path
+wire a4.result a5.a
+wire a4.then a6.in
+wire a5.result a6.value
+
+function d0002 Create
+	static
+	returns bool
+	doc "Makes the directory and the missing ones above it; true when it is there afterwards (also when it was there already)."
+param path StringView
+sheet body
+node b1 Entry
+node b2 Local String
+	set ctor (StringView)
+node b3 Call String.CStr
+node b4 Call C.crt.rt_dir_create
+node b5 Operator !=
+	in b 0
+node b6 Return
+wire b1.then b2.in
+wire b1.path b2.text
+wire b2.object b3.receiver
+wire b2.then b4.in
+wire b3.result b4.path
+wire b4.result b5.a
+wire b4.then b6.in
+wire b5.result b6.value
+
+function d0003 GetFiles
+	static
+	returns bool
+	doc "Adds the names (not paths) of the directory's files to `into` as new Strings the caller owns (List.DeleteAll), in the order the system gives them (Sort the list for a fixed order); false when the directory cannot be read."
+param path StringView
+param into List<String>
+sheet body
+node c1 Entry
+node c2 Call Directory.List
+	in dirs 0
+node c3 Return
+wire c1.then c2.in
+wire c1.into c2.into
+wire c1.path c2.path
+wire c2.then c3.in
+wire c2.result c3.value
+
+function d0004 GetDirectories
+	static
+	returns bool
+	doc "Adds the names of the directory's sub-directories (without . and ..) to `into` as new Strings the caller owns, as GetFiles does."
+param path StringView
+param into List<String>
+sheet body
+node d1 Entry
+node d2 Call Directory.List
+	in dirs 1
+node d3 Return
+wire d1.then d2.in
+wire d1.into d2.into
+wire d1.path d2.path
+wire d2.then d3.in
+wire d2.result d3.value
+
+function d0005 List
+	static
+	access private
+	returns bool
+	doc "The entries of one kind (dirs 1: directories, 0: the others) as new Strings in `into`."
+param path StringView
+param into List<String>
+param dirs int32
+local h void*
+local name char8*
+sheet body
+node e1 Entry
+node e2 Local String
+	set ctor (StringView)
+node e3 Scope
+	unsafe
+node e4 Call String.CStr
+node e5 Call C.crt.rt_dir_open
+node e6 Set local:h
+node e7 Get local:h
+node e8 Operator ==
+	in b null
+node e9 Branch
+node f1 Return
+	in value false
+node f2 Call C.crt.rt_dir_next
+node f3 Set local:name
+node f4 Get local:name
+node f5 Operator !=
+	in b null
+node f6 While
+node f7 Call C.crt.strlen
+node f8 Cast int
+node f9 Make StringView
+node g1 Construct String
+	set ctor (StringView)
+node g2 Call List<String>.Add
+node g3 Call C.crt.rt_dir_next
+node g4 Set local:name
+node g5 Call C.crt.rt_dir_close
+node g6 Return
+	in value true
+node zz1 Return
+	in value false
+wire e1.then e2.in
+wire e1.path e2.text
+wire e2.then e3.in
+wire e2.object e4.receiver
+wire e3.body e5.in
+wire e4.result e5.path
+wire e5.then e6.in
+wire e5.result e6.value
+wire e7.value e8.a
+wire e8.result e9.condition
+wire e6.then e9.in
+wire e9.true f1.in
+wire e1.dirs f2.dirs
+wire e7.value f2.handle
+wire e9.false f2.in
+wire f2.then f3.in
+wire f2.result f3.value
+wire f4.value f5.a
+wire f5.result f6.condition
+wire f3.then f6.in
+wire f6.body f7.in
+wire f4.value f7.s
+wire f7.result f8.value
+wire f8.result f9.Length
+wire f4.value f9.Ptr
+wire f7.then g1.in
+wire f9.value g1.text
+wire g1.then g2.in
+wire e1.into g2.receiver
+wire g1.object g2.value
+wire e1.dirs g3.dirs
+wire e7.value g3.handle
+wire g2.then g3.in
+wire g3.then g4.in
+wire g3.result g4.value
+wire e7.value g5.handle
+wire f6.done g5.in
+wire g5.then g6.in
+wire e3.done zz1.in
+
+function d0006 Delete
+	static
+	returns bool
+	doc "Deletes the directory, which must be empty; false when it could not be deleted."
+param path StringView
+sheet body
+node h1 Entry
+node h2 Local String
+	set ctor (StringView)
+node h3 Call String.CStr
+node h4 Call C.crt.rt_dir_delete
+node h5 Operator !=
+	in b 0
+node h6 Return
+wire h1.then h2.in
+wire h1.path h2.text
+wire h2.object h3.receiver
+wire h2.then h4.in
+wire h3.result h4.path
+wire h4.result h5.a
+wire h4.then h6.in
+wire h5.result h6.value

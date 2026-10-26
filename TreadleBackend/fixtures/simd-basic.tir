@@ -1,0 +1,145 @@
+# tir 1
+# Vector primitives (SIMD-and-Vectors.md 1): make, splat, element-wise binop on float4 / double2 /
+# int32x4 / uint8x16 (signedness from the lane type, wrap-around), compare -> a lane mask, select per
+# lane, mask logic (and, or, xor, any, all, bitmask), a float3 (three lanes, the room of four), lanes
+# read back with vec.get. A struct with a float field before a float4 keeps the vector at offset 16.
+program SimdBasic console
+entry Sb.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Sb.Program
+type Sb.Pair struct
+	field a float
+	field v float4
+type Sb.Program class
+
+func Sb.Program.Show(float4) void static sheet "f1" display "Sb.Program.Show"
+	param v float4
+	block b0
+		%x = vec.get float %v 0
+		%y = vec.get float %v 1
+		%z = vec.get float %v 2
+		%w = vec.get float %v 3
+		%xd = cast double %x
+		%yd = cast double %y
+		%zd = cast double %z
+		%wd = cast double %w
+		%f = const char8* "(%g, %g, %g, %g)\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %xd %yd %zd %wd
+		ret
+
+func Sb.Program.ShowI(int32x4) void static sheet "f2" display "Sb.Program.ShowI"
+	param v int32x4
+	block b0
+		%x = vec.get int32 %v 0
+		%y = vec.get int32 %v 1
+		%z = vec.get int32 %v 2
+		%w = vec.get int32 %v 3
+		%f = const char8* "(%d, %d, %d, %d)\n"
+		%r = ccall int32 C.libc.printf(char8*,...) %f %x %y %z %w
+		ret
+
+func Sb.Program.Main() int static sheet "f3" display "Sb.Program.Main"
+	slot s0 Sb.Pair variable
+	block b0
+		%one = const float 1
+		%two = const float 2
+		%three = const float 3
+		%four = const float 4
+		%a = vec.make float4 %one %two %three %four
+		%b = vec.splat float4 %two
+		%add = binop float4 add %a %b
+		%sub = binop float4 sub %a %b
+		%mul = binop float4 mul %a %b
+		%div = binop float4 div %a %b
+		%zero = const float4 zero
+		%neg = binop float4 sub %zero %a
+		call void Sb.Program.Show(float4) %add
+		call void Sb.Program.Show(float4) %sub
+		call void Sb.Program.Show(float4) %mul
+		call void Sb.Program.Show(float4) %div
+		call void Sb.Program.Show(float4) %neg
+		%k = const float4 2.5
+		%gt = cmp bool4 gt %a %k
+		%sel = select float4 %gt %a %neg
+		call void Sb.Program.Show(float4) %sel
+		%ne = cmp bool4 ne %a %b
+		%eq = cmp bool4 eq %a %b
+		%both = binop bool4 and %gt %ne
+		%either = binop bool4 or %gt %eq
+		%flip = binop bool4 xor %gt %either
+		%any = vec.any bool %eq
+		%all = vec.all bool %ne
+		%m1 = vec.bitmask uint %gt
+		%m2 = vec.bitmask uint %both
+		%m3 = vec.bitmask uint %either
+		%m4 = vec.bitmask uint %flip
+		%anyi = cast int32 %any
+		%alli = cast int32 %all
+		%fm = const char8* "masks %llu %llu %llu %llu any %d all %d\n"
+		%r1 = ccall int32 C.libc.printf(char8*,...) %fm %m1 %m2 %m3 %m4 %anyi %alli
+		%i = const int32x4 7,-8,9,-10
+		%j = const int32x4 2
+		%iadd = binop int32x4 add %i %j
+		%idiv = binop int32x4 div %i %j
+		%irem = binop int32x4 rem %i %j
+		%ishr = binop int32x4 shr %i %j
+		%ishl = binop int32x4 shl %i %j
+		%iand = binop int32x4 and %i %j
+		call void Sb.Program.ShowI(int32x4) %iadd
+		call void Sb.Program.ShowI(int32x4) %idiv
+		call void Sb.Program.ShowI(int32x4) %irem
+		call void Sb.Program.ShowI(int32x4) %ishr
+		call void Sb.Program.ShowI(int32x4) %ishl
+		call void Sb.Program.ShowI(int32x4) %iand
+		%u = vec.bitcast uint32x4 %i
+		%u2 = vec.bitcast uint32x4 %j
+		%ushr = binop uint32x4 shr %u %u2
+		%ulane = vec.get uint32 %ushr 1
+		%ilt = cmp bool4 lt %i %j
+		%ilm = vec.bitmask uint %ilt
+		%fu = const char8* "unsigned shr lane1 %u signed lt %llu\n"
+		%r2 = ccall int32 C.libc.printf(char8*,...) %fu %ulane %ilm
+		%bytes = const uint8x16 250
+		%inc = const uint8x16 10
+		%wrap = binop uint8x16 add %bytes %inc
+		%b0 = vec.get uint8 %wrap 0
+		%b15 = vec.get uint8 %wrap 15
+		%b0i = cast int32 %b0
+		%b15i = cast int32 %b15
+		%fb = const char8* "uint8x16 wraps %d %d\n"
+		%r3 = ccall int32 C.libc.printf(char8*,...) %fb %b0i %b15i
+		%da = const double2 1.5,-2.25
+		%db = const double2 0.5
+		%dm = binop double2 mul %da %db
+		%d0 = vec.get double %dm 0
+		%d1 = vec.get double %dm 1
+		%fd = const char8* "double2 %g %g\n"
+		%r4 = ccall int32 C.libc.printf(char8*,...) %fd %d0 %d1
+		%t3 = const float3 1,2,3
+		%t3b = const float3 10
+		%t3s = binop float3 add %t3 %t3b
+		%t3x = vec.get float %t3s 0
+		%t3z = vec.get float %t3s 2
+		%t3xd = cast double %t3x
+		%t3zd = cast double %t3z
+		%f3 = const char8* "float3 %g %g\n"
+		%r5 = ccall int32 C.libc.printf(char8*,...) %f3 %t3xd %t3zd
+		%pa = const float 0.5
+		%pair = make Sb.Pair %pa %add
+		store.slot s0 %pair
+		%pp = slot.addr Sb.Pair* s0
+		%vp = field.addr float4* %pp v
+		%vv = load float4 %vp
+		%back = extract float4 %pair 1
+		%sum2 = binop float4 add %vv %back
+		call void Sb.Program.Show(float4) %sum2
+		%sz = sizeof int Sb.Pair
+		%szv = sizeof int float3
+		%szb = sizeof int bool4
+		%al = alignof int float4
+		%fs = const char8* "sizes %lld %lld %lld align %lld\n"
+		%r6 = ccall int32 C.libc.printf(char8*,...) %fs %sz %szv %szb %al
+		%z = const int 0
+		ret %z

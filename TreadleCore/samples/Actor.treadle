@@ -1,0 +1,24 @@
+# treadle 1
+type Actor class
+	namespace Game.Core
+	doc "The base of everything that lives in the game world."
+
+field mLevel int
+
+ctor h2k4a
+param level int
+sheet body
+node a1 Entry
+node a2 Set this.mLevel
+node a3 Return
+wire a1.then a2.in
+wire a1.level a2.value
+wire a2.then a3.in
+
+function h3m5b TakeDamage
+	virtual
+param amount int
+sheet body
+node b1 Entry
+node b2 Return
+wire b1.then b2.in

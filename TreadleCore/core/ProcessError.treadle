@@ -1,0 +1,10 @@
+# treadle 1
+type ProcessError enum
+	namespace Core
+	doc "Why Process.Start did not start a program."
+
+case NotFound
+	doc "No program at that path or by that name on the PATH."
+
+case Failed
+	doc "The program was found but could not be started (or the system refused)."

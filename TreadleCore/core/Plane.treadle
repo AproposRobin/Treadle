@@ -1,0 +1,175 @@
+# treadle 1
+type Plane struct
+	namespace Core
+	attr CRepr
+	doc "A plane: the points p with Dot(Normal, p) + D = 0 (16 bytes). The side Normal points to is the front. Every function is Pure."
+
+field Normal Vec3
+
+field D float
+
+function p000 FromPointNormal
+	static
+	pure
+	returns Plane
+	doc "The plane through `point` facing `normal` (kept as given: pass a unit normal for true distances)."
+param point Vec3
+param normal Vec3
+sheet body
+node n00000 Entry
+node n00001 Math
+	set expr "-(n.X * p.X + n.Y * p.Y + n.Z * p.Z)"
+node n00002 Make Plane
+node n00003 Return
+wire n00000.normal n00001.n
+wire n00000.point n00001.p
+wire n00001.result n00002.D
+wire n00000.normal n00002.Normal
+wire n00000.then n00003.in
+wire n00002.value n00003.value
+
+function p001 FromPoints
+	static
+	pure
+	returns Plane
+	doc "The plane through three points; its front is where they run counter-clockwise (unit normal)."
+param a Vec3
+param b Vec3
+param c Vec3
+sheet body
+node n00100 Entry
+node n00101 Operator -
+node n00102 Operator -
+node n00103 Call Core.Vec3.Cross
+node n00104 Call Core.Vec3.Normalized
+node n00105 Math
+	set expr "-(n.X * p.X + n.Y * p.Y + n.Z * p.Z)"
+node n00106 Make Plane
+node n00107 Return
+wire n00100.b n00101.a
+wire n00100.a n00101.b
+wire n00100.c n00102.a
+wire n00100.a n00102.b
+wire n00102.result n00103.b
+wire n00101.result n00103.receiver
+wire n00103.result n00104.receiver
+wire n00104.result n00105.n
+wire n00100.a n00105.p
+wire n00105.result n00106.D
+wire n00104.result n00106.Normal
+wire n00100.then n00107.in
+wire n00106.value n00107.value
+
+function p002 DistanceTo
+	pure
+	returns float
+	doc "The signed distance: positive in front, negative behind (true distance for a unit normal)."
+param point Vec3
+sheet body
+node n00200 Entry
+node n00201 This
+node n00202 Math
+	set expr "l.Normal.X * p.X + l.Normal.Y * p.Y + l.Normal.Z * p.Z + l.D"
+node n00203 Return
+wire n00201.value n00202.l
+wire n00200.point n00202.p
+wire n00200.then n00203.in
+wire n00202.result n00203.value
+
+function p003 Side
+	pure
+	returns int
+	doc "1 in front, -1 behind, 0 on the plane."
+param point Vec3
+sheet body
+node n00300 Entry
+node n00301 This
+node n00302 Math
+	set expr "l.Normal.X * p.X + l.Normal.Y * p.Y + l.Normal.Z * p.Z + l.D"
+node n00303 Math
+	set expr "d > 0.0f ? 1 : d < 0.0f ? -1 : 0"
+node n00304 Return
+wire n00301.value n00302.l
+wire n00300.point n00302.p
+wire n00302.result n00303.d
+wire n00300.then n00304.in
+wire n00303.result n00304.value
+
+function p004 Normalized
+	pure
+	returns Plane
+	doc "The same plane with a unit normal (D scaled to match); a zero normal gives zeros."
+sheet body
+node n00400 Entry
+node n00401 This
+node n00402 Math
+	set expr "Sqrt(l.Normal.X * l.Normal.X + l.Normal.Y * l.Normal.Y + l.Normal.Z * l.Normal.Z)"
+node n00403 Math
+	set expr "s > 0.0f ? 1.0f / s : 0.0f"
+node n00404 Math
+	set expr "l.Normal.X * k"
+node n00405 Math
+	set expr "l.Normal.Y * k"
+node n00406 Math
+	set expr "l.Normal.Z * k"
+node n00407 Make Vec3
+node n00408 Math
+	set expr "l.D * k"
+node n00409 Make Plane
+node n0040a Return
+wire n00401.value n00402.l
+wire n00402.result n00403.s
+wire n00403.result n00404.k
+wire n00401.value n00404.l
+wire n00403.result n00405.k
+wire n00401.value n00405.l
+wire n00403.result n00406.k
+wire n00401.value n00406.l
+wire n00404.result n00407.X
+wire n00405.result n00407.Y
+wire n00406.result n00407.Z
+wire n00403.result n00408.k
+wire n00401.value n00408.l
+wire n00408.result n00409.D
+wire n00407.value n00409.Normal
+wire n00400.then n0040a.in
+wire n00409.value n0040a.value
+
+function p005 Project
+	pure
+	returns Vec3
+	doc "The point of the plane nearest to `point`."
+param point Vec3
+sheet body
+node n00500 Entry
+node n00501 This
+node n00502 Math
+	set expr "l.Normal.X * l.Normal.X + l.Normal.Y * l.Normal.Y + l.Normal.Z * l.Normal.Z"
+node n00503 Math
+	set expr "nn > 0.0f ? (l.Normal.X * p.X + l.Normal.Y * p.Y + l.Normal.Z * p.Z + l.D) / nn : 0.0f"
+node n00504 Math
+	set expr "p.X - l.Normal.X * k"
+node n00505 Math
+	set expr "p.Y - l.Normal.Y * k"
+node n00506 Math
+	set expr "p.Z - l.Normal.Z * k"
+node n00507 Make Vec3
+node n00508 Return
+wire n00501.value n00502.l
+wire n00501.value n00503.l
+wire n00502.result n00503.nn
+wire n00500.point n00503.p
+wire n00503.result n00504.k
+wire n00501.value n00504.l
+wire n00500.point n00504.p
+wire n00503.result n00505.k
+wire n00501.value n00505.l
+wire n00500.point n00505.p
+wire n00503.result n00506.k
+wire n00501.value n00506.l
+wire n00500.point n00506.p
+wire n00504.result n00507.X
+wire n00505.result n00507.Y
+wire n00506.result n00507.Z
+wire n00500.then n00508.in
+wire n00507.value n00508.value

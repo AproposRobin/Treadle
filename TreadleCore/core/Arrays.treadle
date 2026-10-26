@@ -1,0 +1,219 @@
+# treadle 1
+type Arrays class
+	namespace Core
+	static
+	doc "Helpers over arrays (T[]): write an element, fill, search, sort (Sort also takes a Span)."
+
+function r0001 Set
+	static
+	generic T
+	attr Intrinsic Arrays.Set
+	doc "Writes `value` at `index` (checked in Debug, as Get [ ] is)."
+param array T[]
+param index int
+param value T
+
+function r0002 Fill
+	static
+	generic T
+	doc "Writes `value` into every element."
+param array T[]
+param value T
+sheet body
+node a1 Entry
+node a2 Get T[].Length
+node a3 For
+	in start 0
+node a4 Call Arrays.Set
+node a5 Return
+wire a1.array a2.receiver
+wire a2.value a3.count
+wire a1.then a3.in
+wire a1.array a4.array
+wire a3.body a4.in
+wire a3.index a4.index
+wire a1.value a4.value
+wire a3.done a5.in
+
+function r0003 IndexOf
+	static
+	pure
+	returns int
+	generic T
+	doc "The position of the first element equal to `value` (Hash.Equal), or -1."
+param array T[]
+param value T
+sheet body
+node b1 Entry
+node b2 Get T[].Length
+node b3 For
+	in start 0
+node b4 Index
+node b5 Call Hash.Equal
+node b6 Branch
+node b7 Return
+node b8 Return
+	in value -1
+wire b1.array b2.receiver
+wire b2.value b3.count
+wire b1.then b3.in
+wire b1.array b4.collection
+wire b3.index b4.index
+wire b4.value b5.a
+wire b1.value b5.b
+wire b5.result b6.condition
+wire b3.body b6.in
+wire b6.true b7.in
+wire b3.index b7.value
+wire b3.done b8.in
+
+function r0004 Contains
+	static
+	pure
+	returns bool
+	generic T
+	doc "True when an element equals `value`."
+param array T[]
+param value T
+sheet body
+node c1 Entry
+node c2 Call Arrays.IndexOf
+node c3 Operator >=
+	in b 0
+node c4 Return
+wire c1.array c2.array
+wire c1.value c2.value
+wire c2.result c3.a
+wire c1.then c4.in
+wire c3.result c4.value
+
+function r0005 DestroyAt
+	static
+	access internal
+	generic T
+	attr Intrinsic Arrays.DestroyAt
+	doc "Runs the destructor of the element at `index` when T is a struct that has one (checked in Debug); nothing for other types. The collections call it for the elements they remove."
+param array T[]
+param index int
+
+function r0006 Free
+	static
+	access internal
+	generic T
+	attr Intrinsic Arrays.Free
+	doc "Frees the array without running its elements' destructors (they were moved out, or destroyed already); null does nothing."
+param array T[]
+
+function r0007 DestroyRange
+	static
+	access internal
+	generic T
+	doc "DestroyAt for the elements from `start`, `count` of them."
+param array T[]
+param start int
+param count int
+sheet body
+node aa Entry
+node ab For
+node ac Call Arrays.DestroyAt
+node ad Return
+wire aa.count ab.count
+wire aa.then ab.in
+wire aa.start ab.start
+wire aa.array ac.array
+wire ab.body ac.in
+wire ab.index ac.index
+wire ab.done ad.in
+
+function r0008 Grow
+	static
+	access internal
+	returns T[]
+	generic T
+	doc "A new array of `capacity` elements holding the first `count` elements of `array` moved over bit for bit; `array` is freed without destroying them (null: nothing to move)."
+param array T[]
+param count int
+param capacity int
+sheet body
+node a6 Call Arrays.Free
+node a7 Return
+node ae Entry
+node af Construct T
+	set count
+node ag For
+	in start 0
+node ah Index
+node ai Call Arrays.Set
+wire ae.array a6.array
+wire ag.done a6.in
+wire a6.then a7.in
+wire af.object a7.value
+wire ae.capacity af.count
+wire ae.then af.in
+wire ae.count ag.count
+wire af.then ag.in
+wire ae.array ah.collection
+wire ag.index ah.index
+wire af.object ai.array
+wire ag.body ai.in
+wire ag.index ai.index
+wire ah.value ai.value
+
+function r0009 Address
+	static
+	pure
+	access internal
+	returns T*
+	generic T
+	attr Intrinsic Arrays.Address
+	doc "The address of the element at `index` (not checked; the array must not be null). List.Slice makes its Span with it."
+param array T[]
+param index int
+
+function r000a Sort
+	static
+	generic T
+	doc "Sorts the elements of `array` with `comparer` (negative: a before b, 0: equal, positive: a after b): an introsort, O(n log n), in place, not stable. A null array is left alone. (A Span sorts with its own Sort.)"
+param array T[]
+param comparer delegate:int(T,T)
+sheet body
+node x1 Entry
+node x2 Operator ==
+	in b null
+node x3 Branch
+node x4 Return
+node x5 Cast Span<T>
+node x6 Call Sorting.SortBy
+node x7 Return
+wire x1.array x2.a
+wire x2.result x3.condition
+wire x1.then x3.in
+wire x3.true x4.in
+wire x1.array x5.value
+wire x1.comparer x6.comparer
+wire x3.false x6.in
+wire x5.result x6.items
+wire x6.then x7.in
+
+function r000b Sort
+	static
+	generic T operator<
+	doc "Sorts the elements of `array` in ascending order with T's operator < (numbers, characters, a type with an operator <): the same sort as Sort(array, comparer) with no delegate call per comparison. A null array is left alone."
+param array T[]
+sheet body
+node y1 Entry
+node y2 Operator ==
+	in b null
+node y3 Branch
+node y4 Return
+node y5 Cast Span<T>
+node y6 Call Sorting.Sort
+node y7 Return
+wire y1.array y2.a
+wire y2.result y3.condition
+wire y1.then y3.in
+wire y3.true y4.in
+wire y1.array y5.value
+wire y3.false y6.in
+wire y5.result y6.items
+wire y6.then y7.in

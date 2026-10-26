@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Treadle</title>
+  <!-- Treadle icon: a T standing on a loom treadle (the foot pedal), with a thread wired from the beam to the
+       pedal like a graph wire. Colours from the editor: panel #1b1a1f, AccentBlue 38,187,255,
+       AccentOrange 254,155,7, exec white 240,240,240. -->
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="#1b1a1f"/>
+  <rect x="10" y="10" width="236" height="236" rx="50" fill="none" stroke="#2f2d36" stroke-width="4"/>
+  <!-- thread: from the beam's right end down to the pedal, drawn like a wire -->
+  <path d="M186 84 C 226 120, 214 160, 178 184" fill="none" stroke="#fe9b07" stroke-width="9" stroke-linecap="round"/>
+  <!-- stem -->
+  <rect x="112" y="80" width="32" height="112" rx="6" fill="#f0f0f0"/>
+  <!-- beam (the T's bar) with two pin holes -->
+  <rect x="48" y="56" width="160" height="38" rx="19" fill="#26bbff"/>
+  <circle cx="76" cy="75" r="8" fill="#1b1a1f"/>
+  <circle cx="180" cy="75" r="8" fill="#1b1a1f"/>
+  <!-- treadle: the tilted foot pedal the T stands on -->
+  <rect x="58" y="182" width="140" height="26" rx="13" fill="#fe9b07" transform="rotate(-10 128 195)"/>
+</svg>

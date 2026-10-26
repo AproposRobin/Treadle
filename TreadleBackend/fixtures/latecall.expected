@@ -1,0 +1,5 @@
+# The program's stdout (exact) and exit code.
+== exit
+0
+== stdout
+count = 42

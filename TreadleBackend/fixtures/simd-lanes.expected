@@ -1,0 +1,5 @@
+== exit
+0
+== stdout
+sum 100 lanes 11 21 -9
+mask lanes 0 1 bits 11

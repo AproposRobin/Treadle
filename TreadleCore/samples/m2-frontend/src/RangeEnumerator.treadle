@@ -1,0 +1,49 @@
+# treadle 1
+type RangeEnumerator struct
+	namespace M2
+	doc "The enumerator of a Range (the For Each protocol): MoveNext steps, Current is the value."
+
+field mNext int
+
+field mLeft int
+
+field mCur int
+
+property p0001 Current int
+sheet get
+node a1 Entry
+node a2 Get this.mCur
+node a3 Return
+wire a1.then a3.in
+wire a2.value a3.value
+
+function p0002 MoveNext
+	mutating
+	returns bool
+sheet body
+node b1 Entry
+node b2 Get this.mLeft
+node b3 Operator >
+	in b 0
+node b4 Branch
+node b5 Get this.mNext
+node b6 Set this.mCur
+node b7 Set this.mNext
+	set op +=
+	in value 1
+node b8 Set this.mLeft
+	set op -=
+	in value 1
+node b9 Return
+	in value true
+node c1 Return
+	in value false
+wire b2.value b3.a
+wire b3.result b4.condition
+wire b1.then b4.in
+wire b4.true b6.in
+wire b5.value b6.value
+wire b6.then b7.in
+wire b7.then b8.in
+wire b8.then b9.in
+wire b4.false c1.in

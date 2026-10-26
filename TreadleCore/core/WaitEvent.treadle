@@ -1,0 +1,142 @@
+# treadle 1
+type WaitEvent class
+	namespace Core
+	sealed
+	doc "A flag threads wait for: Set raises it, Wait returns once it is raised. Manual reset (the default) stays raised until Reset and lets every waiter through; auto reset lets one waiter through and lowers itself. docs: Threads."
+
+field mHandle void*
+	access private
+
+ctor v0001
+	doc "A manual-reset WaitEvent, not set."
+sheet body
+node a1 Entry
+node a2 Call WaitEvent.rt_event_new
+	in autoReset 0
+node a3 Set this.mHandle
+node a4 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.result a3.value
+wire a3.then a4.in
+
+ctor v0002
+	doc "A WaitEvent, not set: `autoReset` true lowers it again after it let one waiter through."
+param autoReset bool
+sheet body
+node b1 Entry
+node b2 Select
+	in true 1
+	in false 0
+node b3 Cast int32
+node b4 Call WaitEvent.rt_event_new
+node b5 Set this.mHandle
+node b6 Return
+wire b1.autoReset b2.condition
+wire b2.result b3.value
+wire b3.result b4.autoReset
+wire b1.then b4.in
+wire b4.then b5.in
+wire b4.result b5.value
+wire b5.then b6.in
+
+dtor v0003
+	doc "Frees the WaitEvent (no thread may still wait on it)."
+sheet body
+node c1 Entry
+node c2 Get this.mHandle
+node c3 Call WaitEvent.rt_event_free
+node c4 Return
+wire c2.value c3.event
+wire c1.then c3.in
+wire c3.then c4.in
+
+function v0004 Set
+	doc "Raises the flag: waiting threads go on (one of them for an auto-reset WaitEvent)."
+sheet body
+node d1 Entry
+node d2 Get this.mHandle
+node d3 Call WaitEvent.rt_event_set
+node d4 Return
+wire d2.value d3.event
+wire d1.then d3.in
+wire d3.then d4.in
+
+function v0005 Reset
+	doc "Lowers the flag."
+sheet body
+node e1 Entry
+node e2 Get this.mHandle
+node e3 Call WaitEvent.rt_event_reset
+node e4 Return
+wire e2.value e3.event
+wire e1.then e3.in
+wire e3.then e4.in
+
+function v0006 Wait
+	doc "Waits until the flag is raised (at once when it is)."
+sheet body
+node f1 Entry
+node f2 Get this.mHandle
+node f3 Call WaitEvent.rt_event_wait
+node f4 Return
+wire f2.value f3.event
+wire f1.then f3.in
+wire f3.then f4.in
+
+function v0007 WaitFor
+	returns bool
+	doc "As Wait, for at most `milliseconds`: false when the time ran out first."
+param milliseconds int
+sheet body
+node g1 Entry
+node g2 Get this.mHandle
+node g3 Call WaitEvent.rt_event_wait_ms
+node g4 Operator !=
+	in b 0
+node g5 Return
+wire g2.value g3.event
+wire g1.then g3.in
+wire g1.milliseconds g3.ms
+wire g3.result g4.a
+wire g3.then g5.in
+wire g4.result g5.value
+
+function v0020 rt_event_new
+	static
+	access private
+	returns void*
+	attr Import treadle_rt rt_event_new
+param autoReset int32
+
+function v0021 rt_event_free
+	static
+	access private
+	attr Import treadle_rt rt_event_free
+param event void*
+
+function v0022 rt_event_set
+	static
+	access private
+	attr Import treadle_rt rt_event_set
+param event void*
+
+function v0023 rt_event_reset
+	static
+	access private
+	attr Import treadle_rt rt_event_reset
+param event void*
+
+function v0024 rt_event_wait
+	static
+	access private
+	attr Import treadle_rt rt_event_wait
+param event void*
+
+function v0025 rt_event_wait_ms
+	static
+	access private
+	returns int32
+	attr Import treadle_rt rt_event_wait_ms
+param event void*
+param ms int

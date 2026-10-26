@@ -1,0 +1,280 @@
+# treadle 1
+type MathFormatMain class
+	namespace Cx
+	static
+	doc "The core math library's text: String.Append of every math type (vectors as (1, 2, 3), matrices as rows), and AppendF with math values as its arguments."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node n00000 Entry
+node n00001 Local String
+	set ctor ()
+node n00002 Make Core.Vec2
+	in X 1.5f
+	in Y -2.0f
+node n00003 Call String.Clear
+node n00004 Call String.Append(Vec2)
+node n00005 Call Console.WriteLine(StringView)
+node n00006 Make Core.Vec3
+	in X 1.0f
+	in Y 2.25f
+	in Z -0.5f
+node n00007 Call String.Clear
+node n00008 Call String.Append(Vec3)
+node n00009 Call Console.WriteLine(StringView)
+node n0000a Make Core.Vec4
+	in X 0.0f
+	in Y 1.0f
+	in Z 2.0f
+	in W 3.0f
+node n0000b Call String.Clear
+node n0000c Call String.Append(Vec4)
+node n0000d Call Console.WriteLine(StringView)
+node n0000e Make Core.Vec2d
+	in X 0.1
+	in Y 2.0
+node n0000f Call String.Clear
+node n0000g Call String.Append(Vec2d)
+node n0000h Call Console.WriteLine(StringView)
+node n0000i Make Core.Vec3d
+	in X 0.001
+	in Y 123456789.0
+	in Z -7.0
+node n0000j Call String.Clear
+node n0000k Call String.Append(Vec3d)
+node n0000l Call Console.WriteLine(StringView)
+node n0000m Make Core.Vec4d
+	in X 0.5
+	in Y 0.25
+	in Z 0.125
+	in W 1.0
+node n0000n Call String.Clear
+node n0000o Call String.Append(Vec4d)
+node n0000p Call Console.WriteLine(StringView)
+node n0000q Get Core.Mat3.Identity
+node n0000r Call String.Clear
+node n0000s Call String.Append(Mat3)
+node n0000t Call Console.WriteLine(StringView)
+node n0000u Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0000v Call Core.Mat4.Translation
+node n0000w Call String.Clear
+node n0000x Call String.Append(Mat4)
+node n0000y Call Console.WriteLine(StringView)
+node n0000z Get Core.Quat.Identity
+node n00010 Call String.Clear
+node n00011 Call String.Append(Quat)
+node n00012 Call Console.WriteLine(StringView)
+node n00013 Get Core.Color.Gray
+node n00014 Call String.Clear
+node n00015 Call String.Append(Color)
+node n00016 Call Console.WriteLine(StringView)
+node n00017 Call Core.Color32.FromHex
+	in rrggbbaa 0x12AB7F01
+node n00018 Call String.Clear
+node n00019 Call String.Append(Color32)
+node n0001a Call Console.WriteLine(StringView)
+node n0001b Make Core.Rect
+	in X 1.0f
+	in Y 2.0f
+	in Width 4.0f
+	in Height 3.0f
+node n0001c Call String.Clear
+node n0001d Call String.Append(Rect)
+node n0001e Call Console.WriteLine(StringView)
+node n0001f Make Core.RectI
+	in X -1
+	in Y 0
+	in Width 640
+	in Height 480
+node n0001g Call String.Clear
+node n0001h Call String.Append(RectI)
+node n0001i Call Console.WriteLine(StringView)
+node n0001j Make Core.Vec3
+	in X -1.0f
+	in Y 0.0f
+	in Z 2.0f
+node n0001k Make Core.Vec3
+	in X 3.0f
+	in Y 4.0f
+	in Z 5.0f
+node n0001l Make Core.AABB
+node n0001m Call String.Clear
+node n0001n Call String.Append(AABB)
+node n0001o Call Console.WriteLine(StringView)
+node n0001p Make Core.Vec3
+	in X 0.0f
+	in Y 0.6000000238418579f
+	in Z 0.800000011920929f
+node n0001q Make Core.Plane
+	in D -2.0f
+node n0001r Call String.Clear
+node n0001s Call String.Append(Plane)
+node n0001t Call Console.WriteLine(StringView)
+node n0001u Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0001v Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0f
+node n0001w Make Core.Ray
+node n0001x Call String.Clear
+node n0001y Call String.Append(Ray)
+node n0001z Call Console.WriteLine(StringView)
+node n00020 Get Core.Transform.Identity
+node n00021 Call String.Clear
+node n00022 Call String.Append(Transform)
+node n00023 Call Console.WriteLine(StringView)
+node n00024 Call String.Clear
+node n00025 Make Core.Vec3
+	in X 1.0f
+	in Y 2.25f
+	in Z -0.5f
+node n00026 Get Core.Quat.Identity
+node n00027 Call String.AppendF
+	in format "v = {0}, q = {1}, n = {2}"
+	in arg2 3
+node n00028 Call Console.WriteLine(StringView)
+node n00029 Return
+	in value 0
+wire n00000.then n00001.in
+wire n00001.then n00003.in
+wire n00001.object n00003.receiver
+wire n00003.then n00004.in
+wire n00001.object n00004.receiver
+wire n00002.value n00004.value
+wire n00004.then n00005.in
+wire n00001.object n00005.text
+wire n00005.then n00007.in
+wire n00001.object n00007.receiver
+wire n00007.then n00008.in
+wire n00001.object n00008.receiver
+wire n00006.value n00008.value
+wire n00008.then n00009.in
+wire n00001.object n00009.text
+wire n00009.then n0000b.in
+wire n00001.object n0000b.receiver
+wire n0000b.then n0000c.in
+wire n00001.object n0000c.receiver
+wire n0000a.value n0000c.value
+wire n0000c.then n0000d.in
+wire n00001.object n0000d.text
+wire n0000d.then n0000f.in
+wire n00001.object n0000f.receiver
+wire n0000f.then n0000g.in
+wire n00001.object n0000g.receiver
+wire n0000e.value n0000g.value
+wire n0000g.then n0000h.in
+wire n00001.object n0000h.text
+wire n0000h.then n0000j.in
+wire n00001.object n0000j.receiver
+wire n0000j.then n0000k.in
+wire n00001.object n0000k.receiver
+wire n0000i.value n0000k.value
+wire n0000k.then n0000l.in
+wire n00001.object n0000l.text
+wire n0000l.then n0000n.in
+wire n00001.object n0000n.receiver
+wire n0000n.then n0000o.in
+wire n00001.object n0000o.receiver
+wire n0000m.value n0000o.value
+wire n0000o.then n0000p.in
+wire n00001.object n0000p.text
+wire n0000p.then n0000r.in
+wire n00001.object n0000r.receiver
+wire n0000r.then n0000s.in
+wire n00001.object n0000s.receiver
+wire n0000q.value n0000s.value
+wire n0000s.then n0000t.in
+wire n00001.object n0000t.text
+wire n0000u.value n0000v.offset
+wire n0000t.then n0000w.in
+wire n00001.object n0000w.receiver
+wire n0000w.then n0000x.in
+wire n00001.object n0000x.receiver
+wire n0000v.result n0000x.value
+wire n0000x.then n0000y.in
+wire n00001.object n0000y.text
+wire n0000y.then n00010.in
+wire n00001.object n00010.receiver
+wire n00010.then n00011.in
+wire n00001.object n00011.receiver
+wire n0000z.value n00011.value
+wire n00011.then n00012.in
+wire n00001.object n00012.text
+wire n00012.then n00014.in
+wire n00001.object n00014.receiver
+wire n00014.then n00015.in
+wire n00001.object n00015.receiver
+wire n00013.value n00015.value
+wire n00015.then n00016.in
+wire n00001.object n00016.text
+wire n00016.then n00018.in
+wire n00001.object n00018.receiver
+wire n00018.then n00019.in
+wire n00001.object n00019.receiver
+wire n00017.result n00019.value
+wire n00019.then n0001a.in
+wire n00001.object n0001a.text
+wire n0001a.then n0001c.in
+wire n00001.object n0001c.receiver
+wire n0001c.then n0001d.in
+wire n00001.object n0001d.receiver
+wire n0001b.value n0001d.value
+wire n0001d.then n0001e.in
+wire n00001.object n0001e.text
+wire n0001e.then n0001g.in
+wire n00001.object n0001g.receiver
+wire n0001g.then n0001h.in
+wire n00001.object n0001h.receiver
+wire n0001f.value n0001h.value
+wire n0001h.then n0001i.in
+wire n00001.object n0001i.text
+wire n0001k.value n0001l.Max
+wire n0001j.value n0001l.Min
+wire n0001i.then n0001m.in
+wire n00001.object n0001m.receiver
+wire n0001m.then n0001n.in
+wire n00001.object n0001n.receiver
+wire n0001l.value n0001n.value
+wire n0001n.then n0001o.in
+wire n00001.object n0001o.text
+wire n0001p.value n0001q.Normal
+wire n0001o.then n0001r.in
+wire n00001.object n0001r.receiver
+wire n0001r.then n0001s.in
+wire n00001.object n0001s.receiver
+wire n0001q.value n0001s.value
+wire n0001s.then n0001t.in
+wire n00001.object n0001t.text
+wire n0001v.value n0001w.Direction
+wire n0001u.value n0001w.Origin
+wire n0001t.then n0001x.in
+wire n00001.object n0001x.receiver
+wire n0001x.then n0001y.in
+wire n00001.object n0001y.receiver
+wire n0001w.value n0001y.value
+wire n0001y.then n0001z.in
+wire n00001.object n0001z.text
+wire n0001z.then n00021.in
+wire n00001.object n00021.receiver
+wire n00021.then n00022.in
+wire n00001.object n00022.receiver
+wire n00020.value n00022.value
+wire n00022.then n00023.in
+wire n00001.object n00023.text
+wire n00023.then n00024.in
+wire n00001.object n00024.receiver
+wire n00025.value n00027.arg0
+wire n00026.value n00027.arg1
+wire n00024.then n00027.in
+wire n00001.object n00027.receiver
+wire n00027.then n00028.in
+wire n00001.object n00028.text
+wire n00028.then n00029.in

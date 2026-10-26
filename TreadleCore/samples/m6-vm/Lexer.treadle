@@ -1,0 +1,763 @@
+# treadle 1
+type Lexer class
+	namespace Mini
+	doc "Turns a script into tokens. The lexer reads a StringView it does not own; the tokens it gives are views of the same text, so the text must live while they are used. White space and comments (# to the end of the line) are skipped; lines are counted for the positions."
+
+field mText StringView
+	doc "The script."
+
+field mPos int
+	doc "The byte position of the next character."
+
+field mLine int
+	init 1
+	doc "The line of mPos (1-based)."
+
+field mLineStart int
+	doc "The byte position where the current line starts."
+
+ctor m0001
+	doc "A lexer at the start of `text`."
+param text StringView
+sheet body
+node x00000 Entry
+node x00001 Set this.mText
+node x00002 Return
+wire x00000.then x00001.in
+wire x00000.text x00001.value
+wire x00001.then x00002.in
+
+function m0002 Peek
+	pure
+	access private
+	returns int
+	doc "The byte at the current position (0-255), or -1 at the end."
+sheet body
+node x01000 Entry
+node x01001 Get this.mPos
+node x01002 Get this.mText
+node x01003 Get StringView.Length
+node x01004 Operator <
+node x01005 Get this.mText
+node x01006 Get this.mPos
+node x01007 Index
+node x01008 Cast int
+node x01009 Select
+	in false -1
+node x0100a Return
+wire x01002.value x01003.receiver
+wire x01001.value x01004.a
+wire x01003.value x01004.b
+wire x01005.value x01007.collection
+wire x01006.value x01007.index
+wire x01007.value x01008.value
+wire x01004.result x01009.condition
+wire x01008.result x01009.true
+wire x01000.then x0100a.in
+wire x01009.result x0100a.value
+
+function m0003 PeekNext
+	pure
+	access private
+	returns int
+	doc "The byte after the current one, or -1 past the end."
+sheet body
+node x02000 Entry
+node x02001 Get this.mPos
+node x02002 Operator +
+	in b 1
+node x02003 Get this.mText
+node x02004 Get StringView.Length
+node x02005 Operator <
+node x02006 Get this.mText
+node x02007 Get this.mPos
+node x02008 Operator +
+	in b 1
+node x02009 Index
+node x0200a Cast int
+node x0200b Select
+	in false -1
+node x0200c Return
+wire x02001.value x02002.a
+wire x02003.value x02004.receiver
+wire x02002.result x02005.a
+wire x02004.value x02005.b
+wire x02007.value x02008.a
+wire x02006.value x02009.collection
+wire x02008.result x02009.index
+wire x02009.value x0200a.value
+wire x02005.result x0200b.condition
+wire x0200a.result x0200b.true
+wire x02000.then x0200c.in
+wire x0200b.result x0200c.value
+
+function m0004 Here
+	pure
+	access private
+	returns int
+	doc "The current position, packed as line * 65536 + column."
+sheet body
+node x03000 Entry
+node x03001 Get this.mLine
+node x03002 Operator *
+	in b 65536
+node x03003 Get this.mPos
+node x03004 Get this.mLineStart
+node x03005 Operator -
+node x03006 Operator +
+	in b 1
+node x03007 Operator +
+node x03008 Return
+wire x03001.value x03002.a
+wire x03003.value x03005.a
+wire x03004.value x03005.b
+wire x03005.result x03006.a
+wire x03002.result x03007.a
+wire x03006.result x03007.b
+wire x03000.then x03008.in
+wire x03007.result x03008.value
+
+function m0005 IsDigit
+	static
+	pure
+	returns bool
+	doc "0-9."
+param c int
+sheet body
+node x04000 Entry
+node x04001 Operator >=
+	in b 48
+node x04002 Operator <=
+	in b 57
+node x04003 Operator &&
+node x04004 Return
+wire x04000.c x04001.a
+wire x04000.c x04002.a
+wire x04001.result x04003.a
+wire x04002.result x04003.b
+wire x04000.then x04004.in
+wire x04003.result x04004.value
+
+function m0006 IsAlpha
+	static
+	pure
+	returns bool
+	doc "a-z, A-Z or _."
+param c int
+sheet body
+node x05000 Entry
+node x05001 Operator >=
+	in b 97
+node x05002 Operator <=
+	in b 122
+node x05003 Operator &&
+node x05004 Operator >=
+	in b 65
+node x05005 Operator <=
+	in b 90
+node x05006 Operator &&
+node x05007 Operator ||
+node x05008 Operator ==
+	in b 95
+node x05009 Operator ||
+node x0500a Return
+wire x05000.c x05001.a
+wire x05000.c x05002.a
+wire x05001.result x05003.a
+wire x05002.result x05003.b
+wire x05000.c x05004.a
+wire x05000.c x05005.a
+wire x05004.result x05006.a
+wire x05005.result x05006.b
+wire x05003.result x05007.a
+wire x05006.result x05007.b
+wire x05000.c x05008.a
+wire x05007.result x05009.a
+wire x05008.result x05009.b
+wire x05000.then x0500a.in
+wire x05009.result x0500a.value
+
+function m0007 SkipSpace
+	access private
+	doc "Skips spaces, tabs, line breaks (counting lines) and comments."
+local c int
+sheet body
+node x06000 Entry
+node x06001 While
+	in condition true
+node x06002 Call this.Peek
+node x06003 Set local:c
+node x06004 Get local:c
+node x06005 Operator ==
+	in b 10
+node x06006 Branch
+node x06007 Set this.mLine
+	set op +=
+	in value 1
+node x06008 Set this.mPos
+	set op +=
+	in value 1
+node x06009 Get this.mPos
+node x0600a Set this.mLineStart
+node x0600b Continue
+node x0600c Get local:c
+node x0600d Operator ==
+	in b 32
+node x0600e Get local:c
+node x0600f Operator ==
+	in b 9
+node x0600g Operator ||
+node x0600h Get local:c
+node x0600i Operator ==
+	in b 13
+node x0600j Operator ||
+node x0600k Branch
+node x0600l Set this.mPos
+	set op +=
+	in value 1
+node x0600m Continue
+node x0600n Get local:c
+node x0600o Operator ==
+	in b 35
+node x0600p Branch
+node x0600q While
+node x0600r Call this.Peek
+node x0600s Operator !=
+	in b 10
+node x0600t Call this.Peek
+node x0600u Operator !=
+	in b -1
+node x0600v Operator &&
+node x0600w Set this.mPos
+	set op +=
+	in value 1
+node x0600x Continue
+node x0600y Break
+node x0600z Return
+wire x06000.then x06001.in
+wire x06001.body x06003.in
+wire x06002.result x06003.value
+wire x06004.value x06005.a
+wire x06005.result x06006.condition
+wire x06003.then x06006.in
+wire x06006.true x06007.in
+wire x06007.then x06008.in
+wire x06008.then x0600a.in
+wire x06009.value x0600a.value
+wire x0600a.then x0600b.in
+wire x0600c.value x0600d.a
+wire x0600e.value x0600f.a
+wire x0600d.result x0600g.a
+wire x0600f.result x0600g.b
+wire x0600h.value x0600i.a
+wire x0600g.result x0600j.a
+wire x0600i.result x0600j.b
+wire x0600j.result x0600k.condition
+wire x06006.false x0600k.in
+wire x0600k.true x0600l.in
+wire x0600l.then x0600m.in
+wire x0600n.value x0600o.a
+wire x0600o.result x0600p.condition
+wire x0600k.false x0600p.in
+wire x0600v.result x0600q.condition
+wire x0600p.true x0600q.in
+wire x0600r.result x0600s.a
+wire x0600t.result x0600u.a
+wire x0600s.result x0600v.a
+wire x0600u.result x0600v.b
+wire x0600q.body x0600w.in
+wire x0600q.done x0600x.in
+wire x0600p.false x0600y.in
+wire x06001.done x0600z.in
+
+function m0008 Fail
+	static
+	pure
+	access private
+	returns Result<int,Mini.ScriptError>
+	doc "An Err result at a packed position."
+param pos int
+param message StringView
+param detail StringView
+sheet body
+node x07000 Entry
+node x07001 Call Mini.ScriptError.At
+node x07002 MakeCase Result<int,Mini.ScriptError>.Err
+node x07003 Return
+wire x07000.detail x07001.detail
+wire x07000.message x07001.message
+wire x07000.pos x07001.pos
+wire x07001.result x07002.error
+wire x07000.then x07003.in
+wire x07002.value x07003.value
+
+function m0009 Tokenize
+	returns Result<int,Mini.ScriptError>
+	doc "Adds the tokens of the whole script to `into`, ending with an End token: Ok(the number of tokens) or Err at the first character that starts no token (an unknown character, an unterminated text, a number too large)."
+param into List<Mini.Token>
+local c int
+local start int
+local pos int
+local code int
+local text StringView
+local isFloat bool
+sheet body
+node x08000 Entry
+node x08001 While
+	in condition true
+node x08002 Call this.SkipSpace
+node x08003 Call this.Here
+node x08004 Set local:pos
+node x08005 Get this.mPos
+node x08006 Set local:start
+node x08007 Call this.Peek
+node x08008 Set local:c
+node x08009 Get local:c
+node x0800a Operator ==
+	in b -1
+node x0800b Branch
+node x0800c MakeCase Mini.TokenKind.End
+node x0800d Get local:pos
+node x0800e Make Mini.Token
+node x0800f Call List<Mini.Token>.Add
+node x0800g Get List<Mini.Token>.Count
+node x0800h MakeCase Result<int,Mini.ScriptError>.Ok
+node x0800i Return
+node x0800j Get local:c
+node x0800k Call Mini.Lexer.IsDigit
+node x0800l Branch
+node x0800m While
+node x0800n Call this.Peek
+node x0800o Call Mini.Lexer.IsDigit
+node x0800p Set this.mPos
+	set op +=
+	in value 1
+node x0800q Set local:isFloat
+	in value false
+node x0800r Call this.Peek
+node x0800s Operator ==
+	in b 46
+node x0800t Call this.PeekNext
+node x0800u Call Mini.Lexer.IsDigit
+node x0800v Operator &&
+node x0800w Branch
+node x0800x Set local:isFloat
+	in value true
+node x0800y Set this.mPos
+	set op +=
+	in value 1
+node x0800z While
+node x08010 Call this.Peek
+node x08011 Call Mini.Lexer.IsDigit
+node x08012 Set this.mPos
+	set op +=
+	in value 1
+node x08013 Get local:start
+node x08014 Get this.mPos
+node x08015 Get local:start
+node x08016 Operator -
+node x08017 Get this.mText
+node x08018 Call StringView.Substring
+node x08019 Set local:text
+node x0801a Get local:isFloat
+node x0801b Branch
+node x0801c Get local:text
+node x0801d Call Double.TryParse
+node x0801e MakeCase Mini.TokenKind.Float
+node x0801f Get local:pos
+node x0801g Make Mini.Token
+node x0801h Call List<Mini.Token>.Add
+node x0801i Get local:text
+node x0801j Call Int.TryParse
+node x0801k Operator !
+node x0801l Branch
+node x0801m Get local:pos
+node x0801n Get local:text
+node x0801o Call Mini.Lexer.Fail
+	in message "number too large"
+node x0801p Return
+node x0801q MakeCase Mini.TokenKind.Int
+node x0801r Get local:pos
+node x0801s Make Mini.Token
+node x0801t Call List<Mini.Token>.Add
+node x0801u Continue
+node x0801v Get local:c
+node x0801w Call Mini.Lexer.IsAlpha
+node x0801x Branch
+node x0801y While
+node x0801z Call this.Peek
+node x08020 Call Mini.Lexer.IsAlpha
+node x08021 Call this.Peek
+node x08022 Call Mini.Lexer.IsDigit
+node x08023 Operator ||
+node x08024 Set this.mPos
+	set op +=
+	in value 1
+node x08025 Get local:start
+node x08026 Get this.mPos
+node x08027 Get local:start
+node x08028 Operator -
+node x08029 Get this.mText
+node x0802a Call StringView.Substring
+node x0802b Set local:text
+node x0802c Set local:code
+	in value -1
+node x0802d Get local:text
+node x0802e Switch
+	case let
+	case fn
+	case if
+	case else
+	case while
+	case return
+	case true
+	case false
+node x0802f Set local:code
+	in value 300
+node x0802g Set local:code
+	in value 301
+node x0802h Set local:code
+	in value 302
+node x0802i Set local:code
+	in value 303
+node x0802j Set local:code
+	in value 304
+node x0802k Set local:code
+	in value 305
+node x0802l Set local:code
+	in value 306
+node x0802m Set local:code
+	in value 307
+node x0802n Get local:code
+node x0802o Operator >=
+	in b 0
+node x0802p Branch
+node x0802q Get local:code
+node x0802r MakeCase Mini.TokenKind.Sym
+node x0802s Get local:pos
+node x0802t Make Mini.Token
+node x0802u Call List<Mini.Token>.Add
+node x0802v Get local:text
+node x0802w MakeCase Mini.TokenKind.Name
+node x0802x Get local:pos
+node x0802y Make Mini.Token
+node x0802z Call List<Mini.Token>.Add
+node x08030 Continue
+node x08031 Get local:c
+node x08032 Operator ==
+	in b 34
+node x08033 Branch
+node x08034 Set this.mPos
+	set op +=
+	in value 1
+node x08035 Get this.mPos
+node x08036 Set local:start
+node x08037 While
+node x08038 Call this.Peek
+node x08039 Operator !=
+	in b 34
+node x0803a Call this.Peek
+node x0803b Operator ==
+	in b -1
+node x0803c Call this.Peek
+node x0803d Operator ==
+	in b 10
+node x0803e Operator ||
+node x0803f Branch
+node x0803g Get local:pos
+node x0803h Call Mini.Lexer.Fail
+	in message "unterminated text"
+	in detail ""
+node x0803i Return
+node x0803j Set this.mPos
+	set op +=
+	in value 1
+node x0803k Get local:start
+node x0803l Get this.mPos
+node x0803m Get local:start
+node x0803n Operator -
+node x0803o Get this.mText
+node x0803p Call StringView.Substring
+node x0803q MakeCase Mini.TokenKind.Str
+node x0803r Get local:pos
+node x0803s Make Mini.Token
+node x0803t Call List<Mini.Token>.Add
+node x0803u Set this.mPos
+	set op +=
+	in value 1
+node x0803v Continue
+node x0803w Set local:code
+	in value -1
+node x0803x Get this.mPos
+node x0803y Operator +
+	in b 1
+node x0803z Get this.mText
+node x08040 Get StringView.Length
+node x08041 Operator <
+node x08042 Branch
+node x08043 Get this.mPos
+node x08044 Get this.mText
+node x08045 Call StringView.Substring
+	in length 2
+node x08046 Switch
+	case ==
+	case !=
+	case <=
+	case >=
+	case &&
+	case ||
+node x08047 Set local:code
+	in value 256
+node x08048 Set local:code
+	in value 257
+node x08049 Set local:code
+	in value 258
+node x0804a Set local:code
+	in value 259
+node x0804b Set local:code
+	in value 260
+node x0804c Set local:code
+	in value 261
+node x0804d Get local:code
+node x0804e Operator >=
+	in b 0
+node x0804f Branch
+node x0804g Set this.mPos
+	set op +=
+	in value 2
+node x0804h Get local:code
+node x0804i MakeCase Mini.TokenKind.Sym
+node x0804j Get local:pos
+node x0804k Make Mini.Token
+node x0804l Call List<Mini.Token>.Add
+node x0804m Continue
+node x0804n Get local:c
+node x0804o Cast char8
+node x0804p Literal
+	set type StringView
+	set value "+-*/%(){},;<>=!"
+node x0804q Call StringView.IndexOf(char8)
+node x0804r Operator >=
+	in b 0
+node x0804s Branch
+node x0804t Set this.mPos
+	set op +=
+	in value 1
+node x0804u Get local:c
+node x0804v MakeCase Mini.TokenKind.Sym
+node x0804w Get local:pos
+node x0804x Make Mini.Token
+node x0804y Call List<Mini.Token>.Add
+node x0804z Continue
+node x08050 Get local:pos
+node x08051 Get this.mPos
+node x08052 Get this.mText
+node x08053 Call StringView.Substring
+	in length 1
+node x08054 Call Mini.Lexer.Fail
+	in message "unexpected character"
+node x08055 Return
+node x08056 Fatal
+	in message "unreachable: the loop only ends by Return"
+wire x08000.then x08001.in
+wire x08001.body x08002.in
+wire x08002.then x08004.in
+wire x08003.result x08004.value
+wire x08004.then x08006.in
+wire x08005.value x08006.value
+wire x08006.then x08008.in
+wire x08007.result x08008.value
+wire x08009.value x0800a.a
+wire x0800a.result x0800b.condition
+wire x08008.then x0800b.in
+wire x0800c.value x0800e.Kind
+wire x0800d.value x0800e.Pos
+wire x0800b.true x0800f.in
+wire x08000.into x0800f.receiver
+wire x0800e.value x0800f.value
+wire x08000.into x0800g.receiver
+wire x0800g.value x0800h.value
+wire x0800f.then x0800i.in
+wire x0800h.value x0800i.value
+wire x0800j.value x0800k.c
+wire x0800k.result x0800l.condition
+wire x0800b.false x0800l.in
+wire x0800o.result x0800m.condition
+wire x0800l.true x0800m.in
+wire x0800n.result x0800o.c
+wire x0800m.body x0800p.in
+wire x0800m.done x0800q.in
+wire x0800r.result x0800s.a
+wire x0800t.result x0800u.c
+wire x0800s.result x0800v.a
+wire x0800u.result x0800v.b
+wire x0800v.result x0800w.condition
+wire x0800q.then x0800w.in
+wire x0800w.true x0800x.in
+wire x0800x.then x0800y.in
+wire x08011.result x0800z.condition
+wire x0800y.then x0800z.in
+wire x08010.result x08011.c
+wire x0800z.body x08012.in
+wire x08014.value x08016.a
+wire x08015.value x08016.b
+wire x08016.result x08018.length
+wire x08017.value x08018.receiver
+wire x08013.value x08018.start
+wire x0800w.false x08019.in
+wire x0800z.done x08019.in
+wire x08018.result x08019.value
+wire x0801a.value x0801b.condition
+wire x08019.then x0801b.in
+wire x0801b.true x0801d.in
+wire x0801c.value x0801d.text
+wire x0801d.parsed x0801e.value
+wire x0801e.value x0801g.Kind
+wire x0801f.value x0801g.Pos
+wire x0801d.then x0801h.in
+wire x08000.into x0801h.receiver
+wire x0801g.value x0801h.value
+wire x0801b.false x0801j.in
+wire x0801i.value x0801j.text
+wire x0801j.result x0801k.a
+wire x0801k.result x0801l.condition
+wire x0801j.then x0801l.in
+wire x0801n.value x0801o.detail
+wire x0801m.value x0801o.pos
+wire x0801l.true x0801p.in
+wire x0801o.result x0801p.value
+wire x0801j.parsed x0801q.value
+wire x0801q.value x0801s.Kind
+wire x0801r.value x0801s.Pos
+wire x0801l.false x0801t.in
+wire x08000.into x0801t.receiver
+wire x0801s.value x0801t.value
+wire x0801h.then x0801u.in
+wire x0801t.then x0801u.in
+wire x0801v.value x0801w.c
+wire x0801w.result x0801x.condition
+wire x0800l.false x0801x.in
+wire x08023.result x0801y.condition
+wire x0801x.true x0801y.in
+wire x0801z.result x08020.c
+wire x08021.result x08022.c
+wire x08020.result x08023.a
+wire x08022.result x08023.b
+wire x0801y.body x08024.in
+wire x08026.value x08028.a
+wire x08027.value x08028.b
+wire x08028.result x0802a.length
+wire x08029.value x0802a.receiver
+wire x08025.value x0802a.start
+wire x0801y.done x0802b.in
+wire x0802a.result x0802b.value
+wire x0802b.then x0802c.in
+wire x0802c.then x0802e.in
+wire x0802d.value x0802e.value
+wire x0802e.case:let x0802f.in
+wire x0802e.case:fn x0802g.in
+wire x0802e.case:if x0802h.in
+wire x0802e.case:else x0802i.in
+wire x0802e.case:while x0802j.in
+wire x0802e.case:return x0802k.in
+wire x0802e.case:true x0802l.in
+wire x0802e.case:false x0802m.in
+wire x0802n.value x0802o.a
+wire x0802o.result x0802p.condition
+wire x0802e.done x0802p.in
+wire x0802q.value x0802r.code
+wire x0802r.value x0802t.Kind
+wire x0802s.value x0802t.Pos
+wire x0802p.true x0802u.in
+wire x08000.into x0802u.receiver
+wire x0802t.value x0802u.value
+wire x0802v.value x0802w.text
+wire x0802w.value x0802y.Kind
+wire x0802x.value x0802y.Pos
+wire x0802p.false x0802z.in
+wire x08000.into x0802z.receiver
+wire x0802y.value x0802z.value
+wire x0802u.then x08030.in
+wire x0802z.then x08030.in
+wire x08031.value x08032.a
+wire x08032.result x08033.condition
+wire x0801x.false x08033.in
+wire x08033.true x08034.in
+wire x08034.then x08036.in
+wire x08035.value x08036.value
+wire x08039.result x08037.condition
+wire x08036.then x08037.in
+wire x08038.result x08039.a
+wire x0803a.result x0803b.a
+wire x0803c.result x0803d.a
+wire x0803b.result x0803e.a
+wire x0803d.result x0803e.b
+wire x0803e.result x0803f.condition
+wire x08037.body x0803f.in
+wire x0803g.value x0803h.pos
+wire x0803f.true x0803i.in
+wire x0803h.result x0803i.value
+wire x0803f.false x0803j.in
+wire x0803l.value x0803n.a
+wire x0803m.value x0803n.b
+wire x0803n.result x0803p.length
+wire x0803o.value x0803p.receiver
+wire x0803k.value x0803p.start
+wire x0803p.result x0803q.text
+wire x0803q.value x0803s.Kind
+wire x0803r.value x0803s.Pos
+wire x08037.done x0803t.in
+wire x08000.into x0803t.receiver
+wire x0803s.value x0803t.value
+wire x0803t.then x0803u.in
+wire x0803u.then x0803v.in
+wire x08033.false x0803w.in
+wire x0803x.value x0803y.a
+wire x0803z.value x08040.receiver
+wire x0803y.result x08041.a
+wire x08040.value x08041.b
+wire x08041.result x08042.condition
+wire x0803w.then x08042.in
+wire x08044.value x08045.receiver
+wire x08043.value x08045.start
+wire x08042.true x08046.in
+wire x08045.result x08046.value
+wire x08046.case:== x08047.in
+wire x08046.case:!= x08048.in
+wire x08046.case:<= x08049.in
+wire x08046.case:>= x0804a.in
+wire x08046.case:&& x0804b.in
+wire x08046.case:|| x0804c.in
+wire x0804d.value x0804e.a
+wire x0804e.result x0804f.condition
+wire x08042.false x0804f.in
+wire x08046.done x0804f.in
+wire x0804f.true x0804g.in
+wire x0804h.value x0804i.code
+wire x0804i.value x0804k.Kind
+wire x0804j.value x0804k.Pos
+wire x0804g.then x0804l.in
+wire x08000.into x0804l.receiver
+wire x0804k.value x0804l.value
+wire x0804l.then x0804m.in
+wire x0804n.value x0804o.value
+wire x0804o.result x0804q.c
+wire x0804p.value x0804q.receiver
+wire x0804q.result x0804r.a
+wire x0804r.result x0804s.condition
+wire x0804f.false x0804s.in
+wire x0804s.true x0804t.in
+wire x0804u.value x0804v.code
+wire x0804v.value x0804x.Kind
+wire x0804w.value x0804x.Pos
+wire x0804t.then x0804y.in
+wire x08000.into x0804y.receiver
+wire x0804x.value x0804y.value
+wire x0804y.then x0804z.in
+wire x08052.value x08053.receiver
+wire x08051.value x08053.start
+wire x08053.result x08054.detail
+wire x08050.value x08054.pos
+wire x0804s.false x08055.in
+wire x08054.result x08055.value
+wire x08001.done x08056.in

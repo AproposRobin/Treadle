@@ -1,0 +1,7 @@
+# Same static function: equal; another: not. Same function on the same object: equal; another
+# object: not. Two closures: not equal; a closure and itself: equal. A delegate and null: not; null
+# and null: equal. ne of a static and an instance delegate: 1; of two equal ones: 0. Debug: no leaks.
+== exit
+0
+== stdout
+static 1 0 instance 1 0 closure 0 1 null 0 1 ne 1 0

@@ -1,0 +1,16 @@
+# treadle 1
+type ArrayArenaMain class
+	namespace Fx
+	static
+	doc "Runs M2.ArrayArena.Run (TreadleCore/samples/m2-frontend)."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Call M2.ArrayArena.Run
+node a3 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in

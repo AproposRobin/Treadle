@@ -1,0 +1,747 @@
+# treadle 1
+type List class
+	namespace Core
+	generic T
+	doc "A growable list of T. The list owns its storage, not what the elements refer to: a List of objects does not delete them (call DeleteAll before deleting the list, or delete them yourself). Elements are read with Get [ ] and written with SetAt; For Each walks them in order."
+
+field mItems T[]
+	access internal
+
+field mCount int
+	access internal
+
+ctor l0001
+	doc "An empty list (no storage until something is added)."
+sheet body
+node a1 Entry
+node a2 Return
+wire a1.then a2.in
+
+dtor l0011
+	doc "Destroys the elements (a struct that has a destructor) and frees the storage; objects the elements refer to are not deleted."
+sheet body
+node a3 Get this.mCount
+node a4 Call Arrays.DestroyRange
+	in start 0
+node a5 Call Arrays.Free
+node a6 Return
+node aa Entry
+node ab Get this.mItems
+wire ab.value a4.array
+wire a3.value a4.count
+wire aa.then a4.in
+wire ab.value a5.array
+wire a4.then a5.in
+wire a5.then a6.in
+
+property l0002 Count int
+	doc "The number of elements."
+sheet get
+node b1 Entry
+node b2 Get this.mCount
+node b3 Return
+wire b1.then b3.in
+wire b2.value b3.value
+
+function l0003 EnsureCapacity
+	access private
+	doc "Makes room for `need` elements: a larger array, the elements moved over bit for bit, the old array freed without destroying them."
+param need int
+local cap int
+sheet body
+node c1 Entry
+node c2 Get this.mItems
+node c3 Operator !=
+	in b null
+node c4 Get T[].Length
+node c5 Select
+	in false 0
+node c6 Operator <=
+node c7 Branch
+node c8 Return
+node c9 Operator *
+	in b 2
+node d1 Call Math.Max
+node d2 Call Math.Max
+	in b 4
+node d3 Construct T
+	set count
+node d4 Get this.mCount
+node d5 For
+	in start 0
+node d6 Index
+node d7 Call Arrays.Set
+node d8 Call Arrays.Free
+node d9 Set this.mItems
+node e1 Return
+wire c2.value c3.a
+wire c2.value c4.receiver
+wire c3.result c5.condition
+wire c4.value c5.true
+wire c1.need c6.a
+wire c5.result c6.b
+wire c6.result c7.condition
+wire c1.then c7.in
+wire c7.true c8.in
+wire c5.result c9.a
+wire c9.result d1.a
+wire c1.need d1.b
+wire d1.result d2.a
+wire d2.result d3.count
+wire c7.false d3.in
+wire d4.value d5.count
+wire d3.then d5.in
+wire c2.value d6.collection
+wire d5.index d6.index
+wire d3.object d7.array
+wire d5.body d7.in
+wire d5.index d7.index
+wire d6.value d7.value
+wire c2.value d8.array
+wire d5.done d8.in
+wire d8.then d9.in
+wire d3.object d9.value
+wire d9.then e1.in
+
+function l0004 Add
+	doc "Adds the value at the end."
+param value T
+sheet body
+node f1 Entry
+node f2 Get this.mCount
+node f3 Operator +
+	in b 1
+node f4 Call this.EnsureCapacity
+node f5 Get this.mItems
+node f6 Call Arrays.Set
+node f7 Set this.mCount
+	set op +=
+	in value 1
+node f8 Return
+wire f2.value f3.a
+wire f1.then f4.in
+wire f3.result f4.need
+wire f5.value f6.array
+wire f4.then f6.in
+wire f2.value f6.index
+wire f1.value f6.value
+wire f6.then f7.in
+wire f7.then f8.in
+
+function l0005 Insert
+	doc "Inserts the value at `index` (0 to Count); the elements from there move up by one."
+param index int
+param value T
+sheet body
+node g1 Entry
+node g2 Get this.mCount
+node g3 Operator <
+	in b 0
+node g4 Operator >
+node g5 Operator ||
+node g6 Branch
+node g7 Fatal
+	in message "List.Insert: the index is out of range"
+node g8 Operator +
+	in b 1
+node g9 Call this.EnsureCapacity
+node h1 Operator -
+node h2 For
+	in start 0
+node h3 Operator -
+node h4 Operator -
+	in b 1
+node h5 Get this.mItems
+node h6 Index
+node h7 Call Arrays.Set
+node h8 Call Arrays.Set
+node h9 Set this.mCount
+	set op +=
+	in value 1
+node i1 Return
+wire g1.index g3.a
+wire g1.index g4.a
+wire g2.value g4.b
+wire g3.result g5.a
+wire g4.result g5.b
+wire g5.result g6.condition
+wire g1.then g6.in
+wire g6.true g7.in
+wire g2.value g8.a
+wire g6.false g9.in
+wire g8.result g9.need
+wire g2.value h1.a
+wire g1.index h1.b
+wire h1.result h2.count
+wire g9.then h2.in
+wire g2.value h3.a
+wire h2.index h3.b
+wire h3.result h4.a
+wire h5.value h6.collection
+wire h4.result h6.index
+wire h5.value h7.array
+wire h2.body h7.in
+wire h3.result h7.index
+wire h6.value h7.value
+wire h5.value h8.array
+wire h2.done h8.in
+wire g1.index h8.index
+wire g1.value h8.value
+wire h8.then h9.in
+wire h9.then i1.in
+
+function l0006 RemoveAt
+	doc "Removes the element at `index` (a struct that has a destructor is destroyed); the elements after it move down by one."
+param index int
+sheet body
+node j1 Entry
+node j2 Call this.CheckIndex
+node j3 Get this.mCount
+node j4 Operator -
+node j5 Operator -
+	in b 1
+node j6 For
+	in start 0
+node j7 Operator +
+node j8 Operator +
+	in b 1
+node j9 Get this.mItems
+node ja Call Arrays.DestroyAt
+node k1 Index
+node k2 Call Arrays.Set
+node k3 Set this.mCount
+	set op -=
+	in value 1
+node k4 Get this.mCount
+node k5 Call Arrays.Set
+	in value default
+node k6 Return
+wire j1.then j2.in
+wire j1.index j2.index
+wire j3.value j4.a
+wire j1.index j4.b
+wire j4.result j5.a
+wire j5.result j6.count
+wire ja.then j6.in
+wire j1.index j7.a
+wire j6.index j7.b
+wire j7.result j8.a
+wire j9.value ja.array
+wire j2.then ja.in
+wire j1.index ja.index
+wire j9.value k1.collection
+wire j8.result k1.index
+wire j9.value k2.array
+wire j6.body k2.in
+wire j7.result k2.index
+wire k1.value k2.value
+wire j6.done k3.in
+wire j9.value k5.array
+wire k3.then k5.in
+wire k4.value k5.index
+wire k5.then k6.in
+
+function l0007 Clear
+	doc "Removes every element: structs that have a destructor are destroyed; the storage is kept; objects the elements refer to are not deleted."
+sheet body
+node l1 Entry
+node l2 Set this.mCount
+	in value 0
+node l3 Return
+node l4 Call Arrays.DestroyRange
+	in start 0
+node l5 Get this.mItems
+node l6 Get this.mCount
+wire l4.then l2.in
+wire l2.then l3.in
+wire l5.value l4.array
+wire l6.value l4.count
+wire l1.then l4.in
+
+function l0008 IndexOf
+	pure
+	returns int
+	doc "The position of the first element equal to `value` (Hash.Equal: same text for strings), or -1."
+param value T
+sheet body
+node m1 Entry
+node m2 Get this.mCount
+node m3 For
+	in start 0
+node m4 Get this.mItems
+node m5 Index
+node m6 Call Hash.Equal
+node m7 Branch
+node m8 Return
+node m9 Return
+	in value -1
+wire m2.value m3.count
+wire m1.then m3.in
+wire m4.value m5.collection
+wire m3.index m5.index
+wire m5.value m6.a
+wire m1.value m6.b
+wire m6.result m7.condition
+wire m3.body m7.in
+wire m7.true m8.in
+wire m3.index m8.value
+wire m3.done m9.in
+
+function l0009 Contains
+	pure
+	returns bool
+	doc "True when an element equals `value`."
+param value T
+sheet body
+node n1 Entry
+node n2 Call this.IndexOf
+node n3 Operator >=
+	in b 0
+node n4 Return
+wire n1.value n2.value
+wire n2.result n3.a
+wire n1.then n4.in
+wire n3.result n4.value
+
+function l000a SetAt
+	doc "Replaces the element at `index` (the old one is destroyed when it is a struct that has a destructor)."
+param index int
+param value T
+sheet body
+node o1 Entry
+node o2 Call this.CheckIndex
+node o3 Get this.mItems
+node o4 Call Arrays.Set
+node o5 Return
+node o6 Call Arrays.DestroyAt
+wire o1.then o2.in
+wire o1.index o2.index
+wire o3.value o4.array
+wire o6.then o4.in
+wire o1.index o4.index
+wire o1.value o4.value
+wire o4.then o5.in
+wire o3.value o6.array
+wire o2.then o6.in
+wire o1.index o6.index
+
+function l000b CheckIndex
+	access private
+	doc "A fatal error when `index` is not an element's position."
+param index int
+sheet body
+node p1 Entry
+node p2 Get this.mCount
+node p3 Operator <
+	in b 0
+node p4 Operator >=
+node p5 Operator ||
+node p6 Branch
+node p7 Fatal
+	in message "List: the index is out of range"
+node p8 Return
+wire p1.index p3.a
+wire p1.index p4.a
+wire p2.value p4.b
+wire p3.result p5.a
+wire p4.result p5.b
+wire p5.result p6.condition
+wire p1.then p6.in
+wire p6.true p7.in
+wire p6.false p8.in
+
+operator l000c []
+	pure
+	returns T
+	doc "The element at `index` (Get [ ] on a List). An index out of range is a fatal error."
+param list List<T>
+param index int
+sheet body
+node q1 Entry
+node q2 Get List<T>.mCount
+node q3 Operator <
+	in b 0
+node q4 Operator >=
+node q5 Operator ||
+node q6 Branch
+node q7 Fatal
+	in message "List: the index is out of range"
+node q8 Get List<T>.mItems
+node q9 Index
+node r1 Return
+wire q1.list q2.receiver
+wire q1.index q3.a
+wire q1.index q4.a
+wire q2.value q4.b
+wire q3.result q5.a
+wire q4.result q5.b
+wire q5.result q6.condition
+wire q1.then q6.in
+wire q6.true q7.in
+wire q1.list q8.receiver
+wire q8.value q9.collection
+wire q1.index q9.index
+wire q6.false r1.in
+wire q9.value r1.value
+
+function l000d Sort
+	doc "Sorts the elements with `comparer` (negative: a before b, 0: equal, positive: a after b): an introsort, O(n log n), in place, not stable (elements the comparer calls equal may change order)."
+param comparer delegate:int(T,T)
+sheet body
+node s1 Entry
+node s2 Call Sorting.SortBy
+node s3 Call this.Slice
+	in start 0
+node s4 Get this.mCount
+node s5 Return
+wire s1.comparer s2.comparer
+wire s1.then s2.in
+wire s3.result s2.items
+wire s4.value s3.length
+wire s2.then s5.in
+
+function l000e DeleteAll
+	generic T delete
+	doc "Deletes every element, then empties the list (for a list that owns its objects)."
+sheet body
+node w1 Entry
+node w2 Get this.mCount
+node w3 For
+	in start 0
+node w4 Get this.mItems
+node w5 Index
+node w6 Delete
+node w7 Call this.Clear
+node w8 Return
+wire w2.value w3.count
+wire w1.then w3.in
+wire w4.value w5.collection
+wire w3.index w5.index
+wire w3.body w6.in
+wire w5.value w6.object
+wire w3.done w7.in
+wire w7.then w8.in
+
+function l000f GetEnumerator
+	returns ListEnumerator<T>
+	doc "The enumerator For Each uses."
+sheet body
+node x1 Entry
+node x2 This
+node x3 Make ListEnumerator<T>
+	in mIndex -1
+node x4 Return
+wire x2.value x3.mList
+wire x1.then x4.in
+wire x3.value x4.value
+
+function l0010 Reverse
+	doc "Reverses the order of the elements."
+local tmp T
+sheet body
+node y1 Entry
+node y2 Get this.mCount
+node y3 Operator /
+	in b 2
+node y4 For
+	in start 0
+node y5 Get this.mItems
+node y6 Operator -
+node y7 Operator -
+	in b 1
+node y8 Index
+node y9 Index
+node z0 Set local:tmp
+node z1 Call Arrays.Set
+node z2 Call Arrays.Set
+node z3 Return
+node z4 Get local:tmp
+wire y2.value y3.a
+wire y3.result y4.count
+wire y1.then y4.in
+wire y2.value y6.a
+wire y4.index y6.b
+wire y6.result y7.a
+wire y5.value y8.collection
+wire y4.index y8.index
+wire y5.value y9.collection
+wire y7.result y9.index
+wire y4.body z0.in
+wire y8.value z0.value
+wire y5.value z1.array
+wire z0.then z1.in
+wire y4.index z1.index
+wire y9.value z1.value
+wire y5.value z2.array
+wire z1.then z2.in
+wire y7.result z2.index
+wire z4.value z2.value
+wire y4.done z3.in
+
+function l0012 Remove
+	returns bool
+	doc "Removes the first element equal to `value` (Hash.Equal), as RemoveAt does; false when there is none."
+param value T
+sheet body
+node a7 Return
+	in value true
+node ac Entry
+node ad Call this.IndexOf
+node ae Operator <
+	in b 0
+node af Branch
+node ag Return
+	in value false
+node ah Call this.RemoveAt
+wire ah.then a7.in
+wire ac.value ad.value
+wire ad.result ae.a
+wire ae.result af.condition
+wire ac.then af.in
+wire af.true ag.in
+wire af.false ah.in
+wire ad.result ah.index
+
+function l0013 AddRange
+	doc "Adds the elements of `other` at the end, in order (`other` may be this list). The elements are copied bit for bit: for a struct that has a destructor both lists would destroy them, so move such elements one by one."
+param other List<T>
+sheet body
+node ai Entry
+node aj Get List<T>.Count
+node ak For
+	in start 0
+node al Index
+node am Call this.Add
+node an Return
+wire ai.other aj.receiver
+wire aj.value ak.count
+wire ai.then ak.in
+wire ai.other al.collection
+wire ak.index al.index
+wire ak.body am.in
+wire al.value am.value
+wire ak.done an.in
+
+function l0014 FindIndex
+	returns int
+	doc "The position of the first element `match` returns true for, or -1."
+param match delegate:bool(T)
+sheet body
+node a8 Return
+node a9 Return
+	in value -1
+node ao Entry
+node ap Get this.mCount
+node aq For
+	in start 0
+node ar Get this.mItems
+node as Index
+node at Invoke
+node au Branch
+wire au.true a8.in
+wire aq.index a8.value
+wire aq.done a9.in
+wire ap.value aq.count
+wire ao.then aq.in
+wire ar.value as.collection
+wire aq.index as.index
+wire as.value at.arg0
+wire ao.match at.delegate
+wire aq.body at.in
+wire at.result au.condition
+wire at.then au.in
+
+function l0015 Find
+	returns bool
+	doc "True with the first element `match` returns true for in `item` (a copy the list still owns); false (item is default) when there is none."
+param match delegate:bool(T)
+out item T
+sheet body
+node a0 Get this.mItems
+node av Entry
+node aw Call this.FindIndex
+node ax Operator <
+	in b 0
+node ay Branch
+node az Return
+	in value false
+	in item default
+node ba Index
+node bb Return
+	in value true
+wire av.then aw.in
+wire av.match aw.match
+wire aw.result ax.a
+wire ax.result ay.condition
+wire aw.then ay.in
+wire ay.true az.in
+wire a0.value ba.collection
+wire aw.result ba.index
+wire ay.false bb.in
+wire ba.value bb.item
+
+function l0016 BinarySearch
+	returns int
+	doc "Finds `value` in a list sorted by `comparer` (as Sort sorts): its index (any of equal ones), or a negative number when it is not there: -(the index where it would go) - 1, so ~result is where to Insert it."
+param value T
+param comparer delegate:int(T,T)
+local lo int
+local hi int
+local mid int
+local order int
+sheet body
+node b01 Entry
+node b02 Get this.mCount
+node b03 Operator -
+	in b 1
+node b04 Set local:hi
+node b05 Get local:lo
+node b06 Get local:hi
+node b07 Operator <=
+node b08 While
+node b09 Operator -
+node b10 Operator /
+	in b 2
+node b11 Operator +
+node b12 Set local:mid
+node b13 Get local:mid
+node b14 Get this.mItems
+node b15 Index
+node b16 Invoke
+node b17 Set local:order
+node b18 Get local:order
+node b19 Operator ==
+	in b 0
+node b20 Branch
+node b21 Return
+node b22 Operator <
+	in b 0
+node b23 Branch
+node b24 Operator +
+	in b 1
+node b25 Set local:lo
+node b26 Operator -
+	in b 1
+node b27 Set local:hi
+node b28 Operator neg
+node b29 Operator -
+	in b 1
+node b30 Return
+wire b02.value b03.a
+wire b01.then b04.in
+wire b03.result b04.value
+wire b05.value b07.a
+wire b06.value b07.b
+wire b07.result b08.condition
+wire b04.then b08.in
+wire b06.value b09.a
+wire b05.value b09.b
+wire b09.result b10.a
+wire b05.value b11.a
+wire b10.result b11.b
+wire b08.body b12.in
+wire b11.result b12.value
+wire b14.value b15.collection
+wire b13.value b15.index
+wire b15.value b16.arg0
+wire b01.value b16.arg1
+wire b01.comparer b16.delegate
+wire b12.then b16.in
+wire b16.then b17.in
+wire b16.result b17.value
+wire b18.value b19.a
+wire b19.result b20.condition
+wire b17.then b20.in
+wire b20.true b21.in
+wire b13.value b21.value
+wire b18.value b22.a
+wire b22.result b23.condition
+wire b20.false b23.in
+wire b13.value b24.a
+wire b23.true b25.in
+wire b24.result b25.value
+wire b13.value b26.a
+wire b23.false b27.in
+wire b26.result b27.value
+wire b05.value b28.a
+wire b28.result b29.a
+wire b08.done b30.in
+wire b29.result b30.value
+
+function l0017 Slice
+	pure
+	returns Span<T>
+	doc "A Span over `length` elements from `start` (no copy: valid until the list grows, shrinks or is deleted). A range outside [0, Count) is a fatal error."
+param start int
+param length int
+sheet body
+node c01 Entry
+node c02 Operator <
+	in b 0
+node c03 Operator <
+	in b 0
+node c04 Operator ||
+node c05 Operator +
+node c06 Get this.mCount
+node c07 Operator >
+node c08 Operator ||
+node c09 Branch
+node c10 Fatal
+	in message "List.Slice: the range is out of range"
+node c11 Operator ==
+	in b 0
+node c12 Branch
+node c13 Make Span<T>
+node c14 Return
+node c15 Get this.mItems
+node c16 Call List<T>.StorageSpan
+node c18 Return
+wire c01.start c02.a
+wire c01.length c03.a
+wire c02.result c04.a
+wire c03.result c04.b
+wire c01.start c05.a
+wire c01.length c05.b
+wire c05.result c07.a
+wire c06.value c07.b
+wire c04.result c08.a
+wire c07.result c08.b
+wire c08.result c09.condition
+wire c01.then c09.in
+wire c09.true c10.in
+wire c01.length c11.a
+wire c11.result c12.condition
+wire c09.false c12.in
+wire c12.true c14.in
+wire c13.value c14.value
+wire c15.value c16.array
+wire c01.length c16.length
+wire c01.start c16.start
+wire c12.false c18.in
+wire c16.result c18.value
+
+function l0018 StorageSpan
+	static
+	pure
+	access private
+	returns Span<T>
+	attr Intrinsic Arrays.Slice
+	doc "A Span over `length` elements of `array` from `start` (the back end's array.span; null and the range are checked in Debug)."
+param array T[]
+param start int
+param length int
+
+function l0019 Sort
+	generic T operator<
+	doc "Sorts the elements in ascending order with T's operator < (numbers, characters, a type with an operator <): the same sort as Sort(comparer) with no delegate call per comparison."
+sheet body
+node t1 Entry
+node t2 Call Sorting.Sort
+node t3 Call this.Slice
+	in start 0
+node t4 Get this.mCount
+node t5 Return
+wire t1.then t2.in
+wire t3.result t2.items
+wire t4.value t3.length
+wire t2.then t5.in

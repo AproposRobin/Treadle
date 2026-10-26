@@ -1,0 +1,6 @@
+# The f / d suffixes on float and double constants.
+== exit
+0
+== stdout
+4.25 2500 0.125 1000
+float 0.1f differs from double 0.1: 1

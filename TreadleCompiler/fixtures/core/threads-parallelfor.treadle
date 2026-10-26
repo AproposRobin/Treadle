@@ -1,0 +1,272 @@
+# treadle 1
+type ThreadsParallelForMain class
+	namespace Cx
+	static
+	doc "Parallel over 10 million indices, each mixed by Mix (8 rounds of a 64-bit LCG step): the plain loop, Parallel.ForRange (a Local Lambda sums its chunk, one Atomic.Add per chunk), and Parallel.For over 64 blocks (each block's sum in its own array slot); the three sums agree. Parallel.ForEach adds the elements of a span of 1000 ints. The timings and the speedup go to stderr (not compared)."
+
+field sTotal int
+	static
+
+field sEach int
+	static
+
+function m1 Mix
+	static
+	returns int
+	doc "8 rounds of x = (x * 6364136223846793005 + 1442695040888963407) ^ (x >> 29), then 10 bits of it."
+param x int
+local v int
+sheet body
+node xa1 Entry
+node xa2 Set local:v
+node xa3 For
+	in start 0
+	in count 8
+node xa4 Get local:v
+node xa5 Math
+	set expr "(v * 6364136223846793005 + 1442695040888963407) ^ (v >> 29)"
+node xa6 Set local:v
+node xa7 Get local:v
+node xa8 Math
+	set expr "(v >> 40) & 1023"
+node xa9 Return
+wire xa1.then xa2.in
+wire xa1.x xa2.value
+wire xa2.then xa3.in
+wire xa4.value xa5.v
+wire xa3.body xa6.in
+wire xa5.result xa6.value
+wire xa7.value xa8.v
+wire xa3.done xa9.in
+wire xa8.result xa9.value
+
+function m2 SumRange
+	static
+	returns int
+	doc "Mix(i) summed over lo up to (not including) hi."
+param lo int
+param hi int
+local s int
+sheet body
+node sa1 Entry
+node sa2 Operator -
+node sa3 For
+node sa4 Call ThreadsParallelForMain.Mix
+node sa5 Set local:s
+	set op +=
+node sa6 Get local:s
+node sa7 Return
+wire sa1.hi sa2.a
+wire sa1.lo sa2.b
+wire sa2.result sa3.count
+wire sa1.then sa3.in
+wire sa1.lo sa3.start
+wire sa3.body sa4.in
+wire sa3.index sa4.x
+wire sa4.then sa5.in
+wire sa4.result sa5.value
+wire sa3.done sa7.in
+wire sa6.value sa7.value
+
+function m3 Main
+	static
+	returns int
+local serial int
+local blocks int[]
+local blockSum int
+local items int[]
+local tSerial int
+local tRange int
+local tFor int
+sheet body
+node a1 Entry
+node a2 Local Stopwatch
+	set ctor (bool)
+	in startNow true
+node a3 Call ThreadsParallelForMain.SumRange
+	in lo 0
+	in hi 10000000
+node a4 Set local:serial
+node a5 Call Stopwatch.ElapsedMicroseconds
+node a6 Set local:tSerial
+node a7 Call Stopwatch.Restart
+node a8 Lambda
+	set type delegate:void(int,int)
+	set alloc local
+	set inputs lo hi
+node a9 Call Parallel.ForRange
+	in from 0
+	in to 10000000
+node b1 Call Stopwatch.ElapsedMicroseconds
+node b2 Set local:tRange
+node b3 Construct int[]
+	in count 64
+node b4 Set local:blocks
+node b5 Call Stopwatch.Restart
+node b6 Lambda
+	set type delegate:void(int)
+	set alloc local
+	set inputs b
+node b7 Call Parallel.For
+	in from 0
+	in to 64
+node b8 Call Stopwatch.ElapsedMicroseconds
+node b9 Set local:tFor
+node c1 Get local:blocks
+node c2 ForEach
+node c3 Set local:blockSum
+	set op +=
+node c4 Get local:serial
+node c5 Call Console.WriteLine(int)
+node c6 Get ThreadsParallelForMain.sTotal
+node c7 Call Console.WriteLine(int)
+node c8 Get local:blockSum
+node c9 Call Console.WriteLine(int)
+node d1 Construct int[]
+	in count 1000
+node d2 Set local:items
+node d3 For
+	in start 0
+	in count 1000
+node d4 Get local:items
+node d5 Call Arrays.Set
+node d6 Get local:items
+node d7 Lambda
+	set type delegate:void(int)
+	set alloc local
+	set inputs e
+node d8 Call Parallel.ForEach
+node d9 Get ThreadsParallelForMain.sEach
+node e1 Call Console.WriteLine(int)
+node e2 Local String
+node e3 Get local:tSerial
+node e4 Get local:tRange
+node e5 Get local:tFor
+node e6 Cast double
+node e7 Cast double
+node e8 Operator /
+node e9 Call String.AppendF
+	in format "serial {0} us, ForRange {1} us, For over 64 blocks {2} us, speedup {3:F2} on {4} threads"
+node f1 Call Thread.HardwareThreads
+node f2 Call Console.Error(StringView)
+node f3 Get local:blocks
+node f4 Delete
+node f5 Get local:items
+node f6 Delete
+node f7 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a3.then a4.in
+wire a3.result a4.value
+wire a4.then a5.in
+wire a2.object a5.receiver
+wire a5.then a6.in
+wire a5.result a6.value
+wire a6.then a7.in
+wire a2.object a7.receiver
+wire a7.then a8.in
+wire a8.value a9.body
+wire a8.then a9.in
+wire a9.then b1.in
+wire a2.object b1.receiver
+wire b1.then b2.in
+wire b1.result b2.value
+wire b2.then b3.in
+wire b3.then b4.in
+wire b3.object b4.value
+wire b4.then b5.in
+wire a2.object b5.receiver
+wire b5.then b6.in
+wire b6.value b7.body
+wire b6.then b7.in
+wire b7.then b8.in
+wire a2.object b8.receiver
+wire b8.then b9.in
+wire b8.result b9.value
+wire c1.value c2.collection
+wire b9.then c2.in
+wire c2.body c3.in
+wire c2.element c3.value
+wire c2.done c5.in
+wire c4.value c5.value
+wire c5.then c7.in
+wire c6.value c7.value
+wire c7.then c9.in
+wire c8.value c9.value
+wire c9.then d1.in
+wire d1.then d2.in
+wire d1.object d2.value
+wire d2.then d3.in
+wire d4.value d5.array
+wire d3.body d5.in
+wire d3.index d5.index
+wire d3.index d5.value
+wire d3.done d7.in
+wire d7.value d8.body
+wire d7.then d8.in
+wire d6.value d8.items
+wire d8.then e1.in
+wire d9.value e1.value
+wire e1.then e2.in
+wire e3.value e6.value
+wire e4.value e7.value
+wire e6.result e8.a
+wire e7.result e8.b
+wire e3.value e9.arg0
+wire e4.value e9.arg1
+wire e5.value e9.arg2
+wire e8.result e9.arg3
+wire f1.result e9.arg4
+wire f1.then e9.in
+wire e2.object e9.receiver
+wire e2.then f1.in
+wire e9.then f2.in
+wire e2.object f2.text
+wire f2.then f4.in
+wire f3.value f4.object
+wire f4.then f6.in
+wire f5.value f6.object
+wire f6.then f7.in
+sheet lambda:a8
+node la1 Entry
+node la2 Call ThreadsParallelForMain.SumRange
+node la3 Get ThreadsParallelForMain.sTotal
+node la4 Call Atomic.Add
+node la5 Return
+wire la1.hi la2.hi
+wire la1.then la2.in
+wire la1.lo la2.lo
+wire la2.then la4.in
+wire la3.value la4.location
+wire la2.result la4.value
+wire la4.then la5.in
+sheet lambda:b6
+node lb1 Entry
+node lb2 Operator *
+	in b 156250
+node lb3 Operator +
+	in b 156250
+node lb4 Call ThreadsParallelForMain.SumRange
+node lb5 Get local:blocks
+node lb6 Call Arrays.Set
+node lb7 Return
+wire lb1.b lb2.a
+wire lb2.result lb3.a
+wire lb3.result lb4.hi
+wire lb1.then lb4.in
+wire lb2.result lb4.lo
+wire lb5.value lb6.array
+wire lb4.then lb6.in
+wire lb1.b lb6.index
+wire lb4.result lb6.value
+wire lb6.then lb7.in
+sheet lambda:d7
+node ld1 Entry
+node ld2 Get ThreadsParallelForMain.sEach
+node ld3 Call Atomic.Add
+node ld4 Return
+wire ld1.then ld3.in
+wire ld2.value ld3.location
+wire ld1.e ld3.value
+wire ld3.then ld4.in

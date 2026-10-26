@@ -1,0 +1,9 @@
+# Structs with a destructor (Cx.Res owns a String) in List, Dictionary, Queue and Stack: each Res is
+# destroyed exactly once (Debug: a double free is fatal, a leak makes the exit code non-zero).
+== exit
+0
+== stdout
+20
+destroyed 22, id sum 490
+destroyed 43, id sum 1180
+destroyed 63, id sum 1270

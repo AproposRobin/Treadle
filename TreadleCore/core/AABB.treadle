@@ -1,0 +1,369 @@
+# treadle 1
+type AABB struct
+	namespace Core
+	attr CRepr
+	doc "An axis-aligned box from corner Min to corner Max (24 bytes): bounds of a mesh, a broad-phase collision test. Empty (Min above Max) holds nothing and grows with Encapsulate. Every function is Pure."
+
+field Min Vec3
+
+field Max Vec3
+
+property a000 Empty AABB
+	static
+	doc "The box that holds nothing: Min at +infinity, Max at -infinity; Encapsulate and Union start from it."
+sheet get
+node n00000 Entry
+node n00001 Math
+	set expr "1.0f / z"
+	in z 0.0f
+node n00002 Math
+	set expr "-1.0f / z"
+	in z 0.0f
+node n00003 Make Vec3
+node n00004 Make Vec3
+node n00005 Make AABB
+node n00006 Return
+wire n00001.result n00003.X
+wire n00001.result n00003.Y
+wire n00001.result n00003.Z
+wire n00002.result n00004.X
+wire n00002.result n00004.Y
+wire n00002.result n00004.Z
+wire n00004.value n00005.Max
+wire n00003.value n00005.Min
+wire n00000.then n00006.in
+wire n00005.value n00006.value
+
+function a001 FromCenterExtents
+	static
+	pure
+	returns AABB
+	doc "The box around `center` reaching `extents` (half the size) each way."
+param center Vec3
+param extents Vec3
+sheet body
+node n00100 Entry
+node n00101 Operator -
+node n00102 Operator +
+node n00103 Make AABB
+node n00104 Return
+wire n00100.center n00101.a
+wire n00100.extents n00101.b
+wire n00100.center n00102.a
+wire n00100.extents n00102.b
+wire n00102.result n00103.Max
+wire n00101.result n00103.Min
+wire n00100.then n00104.in
+wire n00103.value n00104.value
+
+function a002 FromPoints
+	static
+	pure
+	returns AABB
+	doc "The smallest box holding every point (Empty when there are none)."
+param points Span<Vec3>
+local box AABB
+sheet body
+node n00200 Entry
+node n00201 Get Core.AABB.Empty
+node n00202 Set local:box
+node n00203 ForEach
+node n00204 Get local:box
+node n00205 Call Core.AABB.Encapsulate
+node n00206 Set local:box
+node n00207 Get local:box
+node n00208 Return
+wire n00200.then n00202.in
+wire n00201.value n00202.value
+wire n00200.points n00203.collection
+wire n00202.then n00203.in
+wire n00203.element n00205.point
+wire n00204.value n00205.receiver
+wire n00203.body n00206.in
+wire n00205.result n00206.value
+wire n00203.done n00208.in
+wire n00207.value n00208.value
+
+function a003 Center
+	pure
+	returns Vec3
+	doc "The middle point."
+sheet body
+node n00300 Entry
+node n00301 This
+node n00302 Math
+	set expr "(b.Min.X + b.Max.X) * 0.5f"
+node n00303 Math
+	set expr "(b.Min.Y + b.Max.Y) * 0.5f"
+node n00304 Math
+	set expr "(b.Min.Z + b.Max.Z) * 0.5f"
+node n00305 Make Vec3
+node n00306 Return
+wire n00301.value n00302.b
+wire n00301.value n00303.b
+wire n00301.value n00304.b
+wire n00302.result n00305.X
+wire n00303.result n00305.Y
+wire n00304.result n00305.Z
+wire n00300.then n00306.in
+wire n00305.value n00306.value
+
+function a004 Extents
+	pure
+	returns Vec3
+	doc "Half the size along each axis."
+sheet body
+node n00400 Entry
+node n00401 This
+node n00402 Math
+	set expr "(b.Max.X - b.Min.X) * 0.5f"
+node n00403 Math
+	set expr "(b.Max.Y - b.Min.Y) * 0.5f"
+node n00404 Math
+	set expr "(b.Max.Z - b.Min.Z) * 0.5f"
+node n00405 Make Vec3
+node n00406 Return
+wire n00401.value n00402.b
+wire n00401.value n00403.b
+wire n00401.value n00404.b
+wire n00402.result n00405.X
+wire n00403.result n00405.Y
+wire n00404.result n00405.Z
+wire n00400.then n00406.in
+wire n00405.value n00406.value
+
+function a005 Size
+	pure
+	returns Vec3
+	doc "The size along each axis."
+sheet body
+node n00500 Entry
+node n00501 This
+node n00502 Math
+	set expr "b.Max.X - b.Min.X"
+node n00503 Math
+	set expr "b.Max.Y - b.Min.Y"
+node n00504 Math
+	set expr "b.Max.Z - b.Min.Z"
+node n00505 Make Vec3
+node n00506 Return
+wire n00501.value n00502.b
+wire n00501.value n00503.b
+wire n00501.value n00504.b
+wire n00502.result n00505.X
+wire n00503.result n00505.Y
+wire n00504.result n00505.Z
+wire n00500.then n00506.in
+wire n00505.value n00506.value
+
+function a006 IsValid
+	pure
+	returns bool
+	doc "True when Min is nowhere above Max (false for Empty)."
+sheet body
+node n00600 Entry
+node n00601 This
+node n00602 Math
+	set expr "b.Min.X <= b.Max.X && b.Min.Y <= b.Max.Y && b.Min.Z <= b.Max.Z"
+node n00603 Return
+wire n00601.value n00602.b
+wire n00600.then n00603.in
+wire n00602.result n00603.value
+
+function a007 Contains
+	pure
+	returns bool
+	doc "True when the point is inside or on the surface."
+param point Vec3
+sheet body
+node n00700 Entry
+node n00701 This
+node n00702 Math
+	set expr "p.X >= b.Min.X && p.X <= b.Max.X && p.Y >= b.Min.Y && p.Y <= b.Max.Y && p.Z >= b.Min.Z && p.Z <= b.Max.Z"
+node n00703 Return
+wire n00701.value n00702.b
+wire n00700.point n00702.p
+wire n00700.then n00703.in
+wire n00702.result n00703.value
+
+function a008 Overlaps
+	pure
+	returns bool
+	doc "True when the boxes share a point (touching counts)."
+param other AABB
+sheet body
+node n00800 Entry
+node n00801 This
+node n00802 Math
+	set expr "a.Min.X <= b.Max.X && b.Min.X <= a.Max.X && a.Min.Y <= b.Max.Y && b.Min.Y <= a.Max.Y && a.Min.Z <= b.Max.Z && b.Min.Z <= a.Max.Z"
+node n00803 Return
+wire n00801.value n00802.a
+wire n00800.other n00802.b
+wire n00800.then n00803.in
+wire n00802.result n00803.value
+
+function a009 Union
+	pure
+	returns AABB
+	doc "The smallest box holding both."
+param other AABB
+sheet body
+node n00900 Entry
+node n00901 This
+node n00902 Math
+	set expr "Min(a.Min.X, b.Min.X)"
+node n00903 Math
+	set expr "Min(a.Min.Y, b.Min.Y)"
+node n00904 Math
+	set expr "Min(a.Min.Z, b.Min.Z)"
+node n00905 Make Vec3
+node n00906 Math
+	set expr "Max(a.Max.X, b.Max.X)"
+node n00907 Math
+	set expr "Max(a.Max.Y, b.Max.Y)"
+node n00908 Math
+	set expr "Max(a.Max.Z, b.Max.Z)"
+node n00909 Make Vec3
+node n0090a Make AABB
+node n0090b Return
+wire n00901.value n00902.a
+wire n00900.other n00902.b
+wire n00901.value n00903.a
+wire n00900.other n00903.b
+wire n00901.value n00904.a
+wire n00900.other n00904.b
+wire n00902.result n00905.X
+wire n00903.result n00905.Y
+wire n00904.result n00905.Z
+wire n00901.value n00906.a
+wire n00900.other n00906.b
+wire n00901.value n00907.a
+wire n00900.other n00907.b
+wire n00901.value n00908.a
+wire n00900.other n00908.b
+wire n00906.result n00909.X
+wire n00907.result n00909.Y
+wire n00908.result n00909.Z
+wire n00909.value n0090a.Max
+wire n00905.value n0090a.Min
+wire n00900.then n0090b.in
+wire n0090a.value n0090b.value
+
+function a00a Encapsulate
+	pure
+	returns AABB
+	doc "The box grown to hold the point."
+param point Vec3
+sheet body
+node n00a00 Entry
+node n00a01 This
+node n00a02 Math
+	set expr "Min(a.Min.X, p.X)"
+node n00a03 Math
+	set expr "Min(a.Min.Y, p.Y)"
+node n00a04 Math
+	set expr "Min(a.Min.Z, p.Z)"
+node n00a05 Make Vec3
+node n00a06 Math
+	set expr "Max(a.Max.X, p.X)"
+node n00a07 Math
+	set expr "Max(a.Max.Y, p.Y)"
+node n00a08 Math
+	set expr "Max(a.Max.Z, p.Z)"
+node n00a09 Make Vec3
+node n00a0a Make AABB
+node n00a0b Return
+wire n00a01.value n00a02.a
+wire n00a00.point n00a02.p
+wire n00a01.value n00a03.a
+wire n00a00.point n00a03.p
+wire n00a01.value n00a04.a
+wire n00a00.point n00a04.p
+wire n00a02.result n00a05.X
+wire n00a03.result n00a05.Y
+wire n00a04.result n00a05.Z
+wire n00a01.value n00a06.a
+wire n00a00.point n00a06.p
+wire n00a01.value n00a07.a
+wire n00a00.point n00a07.p
+wire n00a01.value n00a08.a
+wire n00a00.point n00a08.p
+wire n00a06.result n00a09.X
+wire n00a07.result n00a09.Y
+wire n00a08.result n00a09.Z
+wire n00a09.value n00a0a.Max
+wire n00a05.value n00a0a.Min
+wire n00a00.then n00a0b.in
+wire n00a0a.value n00a0b.value
+
+function a00b Transformed
+	pure
+	returns AABB
+	doc "The box around this box moved by the affine matrix `m` (it can only grow on a rotation: Arvo's method). Empty stays Empty."
+param m Mat4
+sheet body
+node n00b00 Entry
+node n00b01 This
+node n00b02 Call Core.AABB.Center
+node n00b03 Call Core.AABB.Extents
+node n00b04 Call Core.Mat4.TransformPoint
+node n00b05 Math
+	set expr "Abs(m.C0.X) * e.X + Abs(m.C1.X) * e.Y + Abs(m.C2.X) * e.Z"
+node n00b06 Math
+	set expr "Abs(m.C0.Y) * e.X + Abs(m.C1.Y) * e.Y + Abs(m.C2.Y) * e.Z"
+node n00b07 Math
+	set expr "Abs(m.C0.Z) * e.X + Abs(m.C1.Z) * e.Y + Abs(m.C2.Z) * e.Z"
+node n00b08 Make Vec3
+node n00b09 Call Core.AABB.FromCenterExtents
+node n00b0a Call Core.AABB.IsValid
+node n00b0b Select
+node n00b0c Return
+wire n00b01.value n00b02.receiver
+wire n00b01.value n00b03.receiver
+wire n00b02.result n00b04.point
+wire n00b00.m n00b04.receiver
+wire n00b03.result n00b05.e
+wire n00b00.m n00b05.m
+wire n00b03.result n00b06.e
+wire n00b00.m n00b06.m
+wire n00b03.result n00b07.e
+wire n00b00.m n00b07.m
+wire n00b05.result n00b08.X
+wire n00b06.result n00b08.Y
+wire n00b07.result n00b08.Z
+wire n00b04.result n00b09.center
+wire n00b08.value n00b09.extents
+wire n00b01.value n00b0a.receiver
+wire n00b0a.result n00b0b.condition
+wire n00b01.value n00b0b.false
+wire n00b09.result n00b0b.true
+wire n00b00.then n00b0c.in
+wire n00b0b.result n00b0c.value
+
+function a00c ClosestPoint
+	pure
+	returns Vec3
+	doc "The point of the box nearest to `point` (the point itself when inside)."
+param point Vec3
+sheet body
+node n00c00 Entry
+node n00c01 This
+node n00c02 Math
+	set expr "Clamp(p.X, b.Min.X, b.Max.X)"
+node n00c03 Math
+	set expr "Clamp(p.Y, b.Min.Y, b.Max.Y)"
+node n00c04 Math
+	set expr "Clamp(p.Z, b.Min.Z, b.Max.Z)"
+node n00c05 Make Vec3
+node n00c06 Return
+wire n00c01.value n00c02.b
+wire n00c00.point n00c02.p
+wire n00c01.value n00c03.b
+wire n00c00.point n00c03.p
+wire n00c01.value n00c04.b
+wire n00c00.point n00c04.p
+wire n00c02.result n00c05.X
+wire n00c03.result n00c05.Y
+wire n00c04.result n00c05.Z
+wire n00c00.then n00c06.in
+wire n00c05.value n00c06.value

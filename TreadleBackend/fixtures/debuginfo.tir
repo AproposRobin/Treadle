@@ -1,0 +1,149 @@
+# tir 1
+# Debug info: the line table and the variables a debugger reads. A For loop whose increment block
+# directly follows its test (both on the For node's line: the increment must start a line row of its
+# own, so a step from the loop body stops on the For), a function whose Entry node has no code (its
+# entry branch carries the Entry's line, so Step Into stops on the Entry), a Defer whose test and
+# body run at the region's exit on the Defer's lines. Speak reads `this` and `times` only before its
+# call of puts, and never reads `mood`: in Debug all three must stay readable after the call. The
+# backend self test steps through it with lldb.
+# Main's slots carry their user-facing names (`"pet" local`, `"a3.index" pin`), and variables of each
+# basic type, a pointer, a String and a StringView, so the DWARF names and types can be checked.
+program DebugInfo console
+entry Dbg.Program.Main()
+
+func C.libc.puts(char8*) int32 import "puts"
+
+unit Core.String
+type Core.String class
+	field mPtr char8*
+	field mLength int
+	field mCapacity int
+
+unit Dbg.Bird
+type Dbg.Bird class
+	field mLegs int
+
+func Dbg.Bird.this() void sheet "c1" display "Dbg.Bird.this"
+	node a1 Entry
+	node a2 Set this.mLegs
+	block b0
+		%lp = field.addr int* %this mLegs @a2
+		%two = const int 2 @a2.value
+		store %lp %two @a2
+		ret @a2
+
+func Dbg.Bird.Speak(int,int) int sheet "f1" display "Dbg.Bird.Speak"
+	param times int64
+	param mood int
+	node b1 Entry
+	node b2 Multiply
+	node b3 Call C.libc.puts
+	node b4 Return
+	block b0
+		%lp = field.addr int* %this mLegs @b2
+		%l = load int %lp @b2
+		%x = binop int mul %l %times @b2
+		%s = const char8* "Tweet" @b3.text
+		%r = ccall int32 C.libc.puts(char8*) %s @b3
+		ret %x @b4
+
+unit Dbg.Program
+type Dbg.Program class
+
+func Dbg.Program.Main() int static sheet "m1" display "Dbg.Program.Main"
+	slot s0 Dbg.Bird variable "pet" local
+	slot s1 int loopvar "a3.index" pin node a3.index
+	slot s2 int variable "total" local
+	slot v0 int variable "n" local
+	slot v1 int64 variable "n64" local
+	slot v2 int32 variable "n32" local
+	slot v3 bool variable "flag" local
+	slot v4 char8 variable "c8" local
+	slot v5 char32 variable "c32" local
+	slot v6 float variable "f" local
+	slot v7 double variable "d" local
+	slot v8 int* variable "pn" local
+	slot v9 Core.String variable "text" local
+	slot v10 StringView variable "view" local
+	node a1 Entry
+	node a2 Construct Dbg.Bird
+	node a3 For
+	node a4 Call Dbg.Bird.Speak(int,int)
+	node a5 Set local:total
+	node a6 Return
+	node a7 Defer
+	node a8 Call C.libc.puts
+	node a9 Delete
+	node c1 Set local:n
+	node c2 Construct Core.String
+	node c3 Delete
+	block b0
+		region.enter r0 @a1
+		%b = alloc Dbg.Bird @a2
+		call void Dbg.Bird.this() %b @a2
+		store.slot s0 %b @a2
+		defer r0 dbody @a7
+		%k0 = const int 5 @c1
+		store.slot v0 %k0 @c1
+		%k1 = const int64 -6 @c1
+		store.slot v1 %k1 @c1
+		%k2 = const int32 7 @c1
+		store.slot v2 %k2 @c1
+		%k3 = const bool true @c1
+		store.slot v3 %k3 @c1
+		%k4 = const char8 65 @c1
+		store.slot v4 %k4 @c1
+		%k5 = const char32 955 @c1
+		store.slot v5 %k5 @c1
+		%k6 = const float 1.5 @c1
+		store.slot v6 %k6 @c1
+		%k7 = const double 2.25 @c1
+		store.slot v7 %k7 @c1
+		%k8 = slot.addr int* v0 @c1
+		store.slot v8 %k8 @c1
+		%k9 = const StringView "hey" @c1
+		store.slot v10 %k9 @c1
+		%str = alloc Core.String @c2
+		%sp = field.addr char8** %str mPtr @c2
+		%hi = const char8* "hi" @c2
+		store %sp %hi @c2
+		%sl = field.addr int* %str mLength @c2
+		%two = const int 2 @c2
+		store %sl %two @c2
+		store.slot v9 %str @c2
+		%z = const int 0 @a3
+		store.slot s1 %z @a3
+		br head @a3
+	block head
+		%i = load.slot int s1 @a3
+		%n = const int 2 @a3
+		%c = cmp bool lt %i %n @a3
+		condbr %c body done @a3
+	block step
+		%i2 = load.slot int s1 @a3
+		%one = const int 1 @a3
+		%i3 = binop int add %i2 %one @a3
+		store.slot s1 %i3 @a3
+		br head @a3
+	block body
+		%p = load.slot Dbg.Bird s0 @a4.target
+		nullcheck %p @a4
+		%i4 = load.slot int s1 @a4.times
+		%m = const int 7 @a4.mood
+		%r = call int Dbg.Bird.Speak(int,int) %p %i4 %m @a4
+		%t = load.slot int s2 @a5
+		%t2 = binop int add %t %r @a5
+		store.slot s2 %t2 @a5
+		br step @a5
+	block done
+		%t3 = load.slot int s2 @a6
+		region.exit r0 @a6
+		ret %t3 @a6
+	block dbody
+		%s = const char8* "bye" @a8.text
+		%q = ccall int32 C.libc.puts(char8*) %s @a8
+		%p2 = load.slot Dbg.Bird s0 @a9
+		delete %p2 @a9
+		%sx = load.slot Core.String v9 @c3
+		delete %sx @c3
+		enddefer @c3

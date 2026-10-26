@@ -1,0 +1,388 @@
+# treadle 1
+type Math class
+	namespace Core
+	static
+	doc "Numbers: the constants PI and E, minimum, maximum, clamp, absolute value, roots, powers, rounding and trigonometry (the compiler's LLVM intrinsics, the C runtime's libm underneath)."
+
+field PI double
+	static
+	const
+	init 3.141592653589793
+	doc "The ratio of a circle's circumference to its diameter."
+
+field E double
+	static
+	const
+	init 2.718281828459045
+	doc "The base of natural logarithms."
+
+function m0001 Sqrt
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Sqrt
+	doc "The square root."
+param x double
+
+function m0002 Abs
+	static
+	pure
+	returns int
+	attr Intrinsic Math.Abs(int)
+	doc "The absolute value."
+param x int
+
+function m0003 Abs
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Abs(double)
+	doc "The absolute value."
+param x double
+
+function m0004 Floor
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Floor
+	doc "The largest whole number not above x."
+param x double
+
+function m0005 Ceil
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Ceil
+	doc "The smallest whole number not below x."
+param x double
+
+function m0006 Min
+	static
+	pure
+	returns T
+	generic T operator<
+	attr Intrinsic Math.Min
+	doc "The smaller of a and b."
+param a T
+param b T
+
+function m0007 Max
+	static
+	pure
+	returns T
+	generic T operator<
+	attr Intrinsic Math.Max
+	doc "The larger of a and b."
+param a T
+param b T
+
+function m0008 Clamp
+	static
+	pure
+	returns T
+	generic T operator<
+	attr Intrinsic Math.Clamp
+	doc "x limited to the range min to max."
+param x T
+param min T
+param max T
+
+function m0009 Round
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Round
+	doc "The nearest whole number (halves away from zero)."
+param x double
+
+function m000a Truncate
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Truncate
+	doc "The whole part (towards zero)."
+param x double
+
+function m000b Sin
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Sin
+	doc "The sine of an angle in radians."
+param x double
+
+function m000c Cos
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Cos
+	doc "The cosine of an angle in radians."
+param x double
+
+function m000d Pow
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Pow
+	doc "x to the power y."
+param x double
+param y double
+
+function m000e Exp
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Exp
+	doc "E to the power x."
+param x double
+
+function m000f Log
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Log
+	doc "The natural logarithm."
+param x double
+
+function m0010 Lerp
+	static
+	pure
+	returns double
+	doc "The value `t` of the way from `a` to `b`: a at 0, b at 1 (t is not clamped)."
+param a double
+param b double
+param t double
+sheet body
+node a1 Entry
+node a2 Operator -
+node a3 Operator *
+node a4 Operator +
+node a5 Return
+wire a1.b a2.a
+wire a1.a a2.b
+wire a2.result a3.a
+wire a1.t a3.b
+wire a1.a a4.a
+wire a3.result a4.b
+wire a1.then a5.in
+wire a4.result a5.value
+
+function m0011 Lerp
+	static
+	pure
+	returns float
+	doc "The value `t` of the way from `a` to `b`: a at 0, b at 1 (t is not clamped)."
+param a float
+param b float
+param t float
+sheet body
+node b1 Entry
+node b2 Operator -
+node b3 Operator *
+node b4 Operator +
+node b5 Return
+wire b1.b b2.a
+wire b1.a b2.b
+wire b2.result b3.a
+wire b1.t b3.b
+wire b1.a b4.a
+wire b3.result b4.b
+wire b1.then b5.in
+wire b4.result b5.value
+
+function m0012 Sign
+	static
+	pure
+	returns int
+	doc "-1 for a negative number, 0 for zero, 1 for a positive one."
+param x int
+sheet body
+node c1 Entry
+node c2 Operator >
+	in b 0
+node c3 Operator <
+	in b 0
+node c4 Select
+	in true -1
+	in false 0
+node c5 Select
+	in true 1
+node c6 Return
+wire c1.x c2.a
+wire c1.x c3.a
+wire c3.result c4.condition
+wire c2.result c5.condition
+wire c4.result c5.false
+wire c1.then c6.in
+wire c5.result c6.value
+
+function m0013 Sign
+	static
+	pure
+	returns int
+	doc "-1 for a negative number, 0 for zero (and NaN), 1 for a positive one."
+param x double
+sheet body
+node d1 Entry
+node d2 Operator >
+	in b 0.0
+node d3 Operator <
+	in b 0.0
+node d4 Select
+	in true -1
+	in false 0
+node d5 Select
+	in true 1
+node d6 Return
+wire d1.x d2.a
+wire d1.x d3.a
+wire d3.result d4.condition
+wire d2.result d5.condition
+wire d4.result d5.false
+wire d1.then d6.in
+wire d5.result d6.value
+
+function m0014 IsNaN
+	static
+	pure
+	returns bool
+	doc "True when the number is NaN (not a number: 0.0 / 0.0, the square root of a negative number)."
+param x double
+sheet body
+node e1 Entry
+node e2 Operator !=
+node e3 Return
+wire e1.x e2.a
+wire e1.x e2.b
+wire e1.then e3.in
+wire e2.result e3.value
+
+function m0015 Sqrt
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Sqrt
+	doc "The square root."
+param x float
+
+function m0016 Abs
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Abs(float)
+	doc "The absolute value."
+param x float
+
+function m0017 Floor
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Floor
+	doc "The largest whole number not above x."
+param x float
+
+function m0018 Ceil
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Ceil
+	doc "The smallest whole number not below x."
+param x float
+
+function m0019 Round
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Round
+	doc "The nearest whole number (halves away from zero)."
+param x float
+
+function m001a Truncate
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Truncate
+	doc "The whole part (towards zero)."
+param x float
+
+function m001b Sin
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Sin
+	doc "The sine of an angle in radians."
+param x float
+
+function m001c Cos
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Cos
+	doc "The cosine of an angle in radians."
+param x float
+
+function m001d Pow
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Pow
+	doc "x to the power y."
+param x float
+param y float
+
+function m001e Exp
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Exp
+	doc "E to the power x."
+param x float
+
+function m001f Log
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Log
+	doc "The natural logarithm."
+param x float
+
+function m0020 Sign
+	static
+	pure
+	returns int
+	doc "-1 for a negative number, 0 for zero (and NaN), 1 for a positive one."
+param x float
+sheet body
+node f1 Entry
+node f2 Operator >
+	in b 0.0f
+node f3 Operator <
+	in b 0.0f
+node f4 Select
+	in true -1
+	in false 0
+node f5 Select
+	in true 1
+node f6 Return
+wire f1.x f2.a
+wire f1.x f3.a
+wire f3.result f4.condition
+wire f2.result f5.condition
+wire f4.result f5.false
+wire f1.then f6.in
+wire f5.result f6.value
+
+function m0021 IsNaN
+	static
+	pure
+	returns bool
+	doc "True when the number is NaN (not a number: 0.0f / 0.0f, the square root of a negative number)."
+param x float
+sheet body
+node g1 Entry
+node g2 Operator !=
+node g3 Return
+wire g1.x g2.a
+wire g1.x g2.b
+wire g1.then g3.in
+wire g2.result g3.value

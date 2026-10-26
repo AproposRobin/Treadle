@@ -1,0 +1,13 @@
+== args
+alpha
+
+two words
+== exit
+0
+== stdout
+3
+true
+alpha true
+ true
+two words true
+true

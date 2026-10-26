@@ -1,0 +1,33 @@
+# treadle 1
+type GaugeExt extension
+	namespace M2
+	extends Gauge
+	doc "An extension of a type of its own project (Language.md 4, Extension): a field (mBonus), a function that changes the Gauge (Bump) and a Pure one (Boosted) that reads both fields; the Node menu lists them under Gauge."
+
+field mBonus int
+	init 5
+
+function x0001 Bump
+param by int
+sheet body
+node a1 Entry
+node a2 Set this.mValue
+	set op +=
+node a3 Return
+wire a1.then a2.in
+wire a1.by a2.value
+wire a2.then a3.in
+
+function x0002 Boosted
+	pure
+	returns int
+sheet body
+node b1 Entry
+node b2 Call this.Read
+node b3 Get this.mBonus
+node b4 Operator +
+node b5 Return
+wire b2.result b4.a
+wire b3.value b4.b
+wire b1.then b5.in
+wire b4.result b5.value

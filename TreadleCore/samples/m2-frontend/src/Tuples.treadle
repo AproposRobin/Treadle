@@ -1,0 +1,44 @@
+# treadle 1
+type Tuples class
+	namespace M2
+	static
+	doc "Tuples: Make (int,int) builds one, Break (int,int) splits it, a function returns one. Prints 3 and 7."
+
+function t0001 MinMax
+	static
+	pure
+	returns (int,int)
+param a int
+param b int
+sheet body
+node a1 Entry
+node a2 Call Math.Min
+node a3 Call Math.Max
+node a4 Make (int,int)
+node a5 Return
+wire a1.a a2.a
+wire a1.b a2.b
+wire a1.a a3.a
+wire a1.b a3.b
+wire a2.result a4.item0
+wire a3.result a4.item1
+wire a1.then a5.in
+wire a4.value a5.value
+
+function t0002 Run
+	static
+sheet body
+node b1 Entry
+node b2 Call M2.Tuples.MinMax
+	in a 7
+	in b 3
+node b3 Break (int,int)
+node b4 Call Console.WriteLine(int)
+node b5 Call Console.WriteLine(int)
+node b6 Return
+wire b2.result b3.value
+wire b1.then b4.in
+wire b3.item0 b4.value
+wire b4.then b5.in
+wire b3.item1 b5.value
+wire b5.then b6.in

@@ -1,0 +1,28 @@
+# treadle 1
+type Stepper struct
+	namespace M2
+	doc "A struct whose functions BoundStructs binds to delegates (Language.md 4.2): Step changes it, Read reads it."
+
+field mValue int
+
+function s0001 Step
+	mutating
+param by int
+sheet body
+node a1 Entry
+node a2 Set this.mValue
+	set op +=
+node a3 Return
+wire a1.then a2.in
+wire a1.by a2.value
+wire a2.then a3.in
+
+function s0002 Read
+	pure
+	returns int
+sheet body
+node b1 Entry
+node b2 Get this.mValue
+node b3 Return
+wire b1.then b3.in
+wire b2.value b3.value

@@ -1,0 +1,181 @@
+# tir 1
+# Generics by monomorphisation: a generic struct, a generic static function and a generic class,
+# each in two instantiations (int and double). Instances are emitted linkonce_odr in every unit
+# that uses them (Gen.Cell<int> is constructed in two units and folded by the linker).
+program Generics console
+entry Gen.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Gen.Pair
+type Gen.Pair<int> struct
+	field First int
+	field Second int
+type Gen.Pair<double> struct
+	field First double
+	field Second double
+
+func Gen.Pair<int>.Sum() int sheet "f1" display "Gen.Pair.Sum"
+	node a1 Entry
+	node a2 Get this.First
+	node a3 Get this.Second
+	node a4 Add
+	node a5 Return
+	block b0
+		%fp = field.addr int* %this First @a2
+		%f = load int %fp @a2
+		%sp = field.addr int* %this Second @a3
+		%s = load int %sp @a3
+		%r = binop int add %f %s @a4
+		ret %r @a5
+
+func Gen.Pair<double>.Sum() double sheet "f1" display "Gen.Pair.Sum"
+	node a1 Entry
+	node a2 Get this.First
+	node a3 Get this.Second
+	node a4 Add
+	node a5 Return
+	block b0
+		%fp = field.addr double* %this First @a2
+		%f = load double %fp @a2
+		%sp = field.addr double* %this Second @a3
+		%s = load double %sp @a3
+		%r = binop double add %f %s @a4
+		ret %r @a5
+
+unit Gen.Math
+type Gen.Math class
+
+func Gen.Math.Max<int>(int,int) int static sheet "f1" display "Gen.Math.Max"
+	param a int
+	param b int
+	node a1 Entry
+	node a2 Greater
+	node a3 Select
+	node a4 Return
+	block b0
+		%gt = cmp bool gt %a %b @a2
+		%m = select int %gt %a %b @a3
+		ret %m @a4
+
+func Gen.Math.Max<double>(double,double) double static sheet "f1" display "Gen.Math.Max"
+	param a double
+	param b double
+	node a1 Entry
+	node a2 Greater
+	node a3 Select
+	node a4 Return
+	block b0
+		%gt = cmp bool gt %a %b @a2
+		%m = select double %gt %a %b @a3
+		ret %m @a4
+
+unit Gen.Cell
+type Gen.Cell<int> class
+	field mValue int
+	vslot Gen.Cell<int>.Describe() Gen.Cell<int>.Describe()
+type Gen.Cell<double> class
+	field mValue double
+	vslot Gen.Cell<double>.Describe() Gen.Cell<double>.Describe()
+
+func Gen.Cell<int>.Describe() void virtual sheet "f1" display "Gen.Cell.Describe"
+	node a1 Entry
+	node a2 Get this.mValue
+	node a3 Call C.libc.printf
+	block b0
+		%vp = field.addr int* %this mValue @a2
+		%v = load int %vp @a2
+		%f = const char8* "Cell<int> holds %lld\n" @a3.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %v @a3
+		ret @a3
+
+func Gen.Cell<double>.Describe() void virtual sheet "f1" display "Gen.Cell.Describe"
+	node a1 Entry
+	node a2 Get this.mValue
+	node a3 Call C.libc.printf
+	block b0
+		%vp = field.addr double* %this mValue @a2
+		%v = load double %vp @a2
+		%f = const char8* "Cell<double> holds %g\n" @a3.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %v @a3
+		ret @a3
+
+unit Gen.Helper
+type Gen.Helper class
+
+func Gen.Helper.MakeCell(int) Gen.Cell<int> static sheet "f1" display "Gen.Helper.MakeCell"
+	param value int
+	node a1 Entry
+	node a2 Construct Gen.Cell<int>
+	node a3 Set mValue
+	node a4 Return
+	block b0
+		%c = alloc Gen.Cell<int> @a2
+		%vp = field.addr int* %c mValue @a3
+		store %vp %value @a3
+		ret %c @a4
+
+unit Gen.Program
+type Gen.Program class
+
+func Gen.Program.Main() int static sheet "m1" display "Gen.Program.Main"
+	slot pi Gen.Pair<int> variable
+	slot pd Gen.Pair<double> variable
+	node a1 Entry
+	node a2 Make Gen.Pair<int>
+	node a3 Call Gen.Pair<int>.Sum
+	node a4 Call C.libc.printf
+	node a5 Make Gen.Pair<double>
+	node a6 Call Gen.Pair<double>.Sum
+	node a7 Call C.libc.printf
+	node a8 Call Gen.Math.Max<int>
+	node a9 Call Gen.Math.Max<double>
+	node b1 Call C.libc.printf
+	node b2 Call Gen.Helper.MakeCell
+	node b3 Construct Gen.Cell<int>
+	node b4 Construct Gen.Cell<double>
+	node b5 Call Describe
+	node b6 Call Describe
+	node b7 Call Describe
+	node b8 Delete
+	node b9 Return 0
+	block b0
+		%three = const int 3 @a2.First
+		%four = const int 4 @a2.Second
+		%p1 = make Gen.Pair<int> %three %four @a2
+		store.slot pi %p1 @a2
+		%pip = slot.addr Gen.Pair<int>* pi @a3
+		%s1 = call int Gen.Pair<int>.Sum() %pip @a3
+		%f1 = const char8* "Pair<int> sum = %lld\n" @a4.format
+		%r1 = ccall int32 C.libc.printf(char8*,...) %f1 %s1 @a4
+		%x = const double 1.5 @a5.First
+		%y = const double 2.25 @a5.Second
+		%p2 = make Gen.Pair<double> %x %y @a5
+		store.slot pd %p2 @a5
+		%pdp = slot.addr Gen.Pair<double>* pd @a6
+		%s2 = call double Gen.Pair<double>.Sum() %pdp @a6
+		%f2 = const char8* "Pair<double> sum = %g\n" @a7.format
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %s2 @a7
+		%seven = const int 7 @a8.a
+		%m1 = call int Gen.Math.Max<int>(int,int) %seven %three @a8
+		%dd = const double 9.75 @a9.b
+		%m2 = call double Gen.Math.Max<double>(double,double) %x %dd @a9
+		%f3 = const char8* "Max<int> = %lld, Max<double> = %g\n" @b1.format
+		%r3 = ccall int32 C.libc.printf(char8*,...) %f3 %m1 %m2 @b1
+		%v42 = const int 42 @b2.value
+		%c1 = call Gen.Cell<int> Gen.Helper.MakeCell(int) %v42 @b2
+		%c2 = alloc Gen.Cell<int> @b3
+		%c3 = alloc Gen.Cell<double> @b4
+		%c3p = field.addr double* %c3 mValue @b4
+		store %c3p %y @b4
+		nullcheck %c1 @b5
+		vcall void Gen.Cell<int>.Describe() %c1 @b5
+		nullcheck %c2 @b6
+		vcall void Gen.Cell<int>.Describe() %c2 @b6
+		nullcheck %c3 @b7
+		vcall void Gen.Cell<double>.Describe() %c3 @b7
+		delete %c1 @b8
+		delete %c2 @b8
+		delete %c3 @b8
+		%z = const int 0 @b9.value
+		ret %z @b9

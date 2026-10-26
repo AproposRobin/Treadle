@@ -1,0 +1,6 @@
+# treadle 1
+type IHashable interface
+	namespace Core
+
+function h0001 GetHashCode
+	returns int

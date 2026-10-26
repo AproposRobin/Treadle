@@ -1,0 +1,11 @@
+# tproj 1
+project M3
+	kind console
+	entry M3.Program
+	version 0.1.0
+config Debug
+	checks on
+	optimize 0
+config Release
+	optimize 2
+	checks off

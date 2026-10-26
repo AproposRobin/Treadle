@@ -1,0 +1,90 @@
+# treadle 1
+type TimeMain class
+	namespace Cx
+	static
+	doc "Core Time and Stopwatch: the clock moves forward, a running Stopwatch grows (a 2 ms Sleep: an optimised spin loop can take less than a tick), a stopped one holds, Reset clears it."
+
+function m1 Main
+	static
+	returns int
+local spin int
+sheet body
+node a1 Entry
+node a2 Call Time.Frequency
+node a3 Operator >
+	in b 0
+node a4 Call Console.WriteLine(bool)
+node a5 Call Time.Ticks
+node a6 Local Stopwatch
+	set ctor (bool)
+	in startNow true
+node a7 For
+	in start 0
+	in count 200000
+node a8 Set local:spin
+	set op +=
+node a9 Call Time.Ticks
+node a9s Call Time.Sleep
+	in milliseconds 2
+node b1 Operator >=
+node b2 Call Console.WriteLine(bool)
+node b3 Call Stopwatch.ElapsedTicks
+node b4 Operator >
+	in b 0
+node b5 Call Console.WriteLine(bool)
+node b6 Call Stopwatch.Stop
+node b7 Call Stopwatch.ElapsedTicks
+node b8 Call Stopwatch.ElapsedTicks
+node b9 Operator ==
+node c1 Call Console.WriteLine(bool)
+node c2 Call Stopwatch.ElapsedMicroseconds
+node c3 Operator >=
+	in b 0
+node c4 Call Console.WriteLine(bool)
+node c5 Call Stopwatch.Reset
+node c6 Call Stopwatch.ElapsedMilliseconds
+node c7 Call Console.WriteLine(int)
+node d2 Return
+	in value 0
+wire a1.then a2.in
+wire a2.result a3.a
+wire a2.then a4.in
+wire a3.result a4.value
+wire a4.then a5.in
+wire a5.then a6.in
+wire a6.then a7.in
+wire a7.body a8.in
+wire a7.index a8.value
+wire a7.done a9s.in
+wire a9s.then a9.in
+wire a9.result b1.a
+wire a5.result b1.b
+wire a9.then b2.in
+wire b1.result b2.value
+wire b2.then b3.in
+wire a6.object b3.receiver
+wire b3.result b4.a
+wire b3.then b5.in
+wire b4.result b5.value
+wire b5.then b6.in
+wire a6.object b6.receiver
+wire b6.then b7.in
+wire a6.object b7.receiver
+wire b7.then b8.in
+wire a6.object b8.receiver
+wire b7.result b9.a
+wire b8.result b9.b
+wire b8.then c1.in
+wire b9.result c1.value
+wire c1.then c2.in
+wire a6.object c2.receiver
+wire c2.result c3.a
+wire c2.then c4.in
+wire c3.result c4.value
+wire c4.then c5.in
+wire a6.object c5.receiver
+wire c5.then c6.in
+wire a6.object c6.receiver
+wire c6.then c7.in
+wire c6.result c7.value
+wire c7.then d2.in

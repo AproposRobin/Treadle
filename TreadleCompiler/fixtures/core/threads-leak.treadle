@@ -1,0 +1,46 @@
+# treadle 1
+type ThreadsLeakMain class
+	namespace Cx
+	static
+	doc "A leak on a worker thread: the body Constructs a String it never deletes. Debug's leak report names the Construct node and the thread (`leaker`), and the exit code is the leak count (1); Release has no report."
+
+function m1 Leak
+	static
+	doc "Makes a String and forgets it."
+sheet body
+node la1 Entry
+node la2 Construct String
+	set ctor (StringView)
+	in text "lost on a worker"
+node la3 Return
+wire la1.then la2.in
+wire la2.then la3.in
+
+function m2 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Construct Thread
+	set ctor (StringView)
+	in name "leaker"
+node a3 Bind ThreadsLeakMain.Leak
+	set alloc construct
+node a4 Call Thread.Start
+node a5 Call Thread.Join
+node a6 Delete
+node a7 Call Console.WriteLine(StringView)
+	in text "joined"
+node a8 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a3.value a4.body
+wire a3.then a4.in
+wire a2.object a4.receiver
+wire a4.then a5.in
+wire a2.object a5.receiver
+wire a5.then a6.in
+wire a2.object a6.object
+wire a6.then a7.in
+wire a7.then a8.in

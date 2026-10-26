@@ -1,0 +1,32 @@
+# tir 1
+# The Local array guard's Debug check: a negative length is a fatal error naming the Local node
+# Release checks it too, with the one compare of alloc.array (rt_array_length; arraylength.tir).
+program LocalArrayGuard console
+entry Lg.Program.Main()
+
+unit Lg.Program
+type Lg.Program class
+
+func Lg.Program.Length(int) int static sheet "m2" display "Lg.Program.Length"
+	param n int
+	node a1 Entry
+	node a2 Subtract
+	block b0
+		%ten = const int 10 @a2
+		%r = binop int sub %n %ten @a2
+		ret %r @a2
+
+func Lg.Program.Main() int static sheet "m1" display "Lg.Program.Main"
+	slot sa int[] local node a3.object
+	node a1 Entry
+	node a2 Call Lg.Program.Length
+	node a3 Local int[]
+	node a4 Return 0
+	block b0
+		region.enter r0 @a1
+		%seven = const int 7 @a2.n
+		%len = call int Lg.Program.Length(int) %seven @a2
+		%a = local.array int[] sa %len @a3
+		%z = const int 0 @a4.value
+		region.exit r0 @a4
+		ret %z @a4

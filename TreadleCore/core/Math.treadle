@@ -1,0 +1,618 @@
+# treadle 1
+type Math class
+	namespace Core
+	static
+	doc "Numbers: the constants PI and E, minimum, maximum, clamp, absolute value, roots, powers, rounding and trigonometry (the compiler's LLVM intrinsics, the C runtime's libm underneath)."
+
+field PI double
+	static
+	const
+	init 3.141592653589793
+	doc "The ratio of a circle's circumference to its diameter."
+
+field E double
+	static
+	const
+	init 2.718281828459045
+	doc "The base of natural logarithms."
+
+function m0001 Sqrt
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Sqrt
+	doc "The square root."
+param x double
+
+function m0002 Abs
+	static
+	pure
+	returns int
+	attr Intrinsic Math.Abs(int)
+	doc "The absolute value."
+param x int
+
+function m0003 Abs
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Abs(double)
+	doc "The absolute value."
+param x double
+
+function m0004 Floor
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Floor
+	doc "The largest whole number not above x."
+param x double
+
+function m0005 Ceil
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Ceil
+	doc "The smallest whole number not below x."
+param x double
+
+function m0006 Min
+	static
+	pure
+	returns T
+	generic T operator<
+	attr Intrinsic Math.Min
+	doc "The smaller of a and b."
+param a T
+param b T
+
+function m0007 Max
+	static
+	pure
+	returns T
+	generic T operator<
+	attr Intrinsic Math.Max
+	doc "The larger of a and b."
+param a T
+param b T
+
+function m0008 Clamp
+	static
+	pure
+	returns T
+	generic T operator<
+	attr Intrinsic Math.Clamp
+	doc "x limited to the range min to max."
+param x T
+param min T
+param max T
+
+function m0009 Round
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Round
+	doc "The nearest whole number (halves away from zero)."
+param x double
+
+function m000a Truncate
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Truncate
+	doc "The whole part (towards zero)."
+param x double
+
+function m000b Sin
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Sin
+	doc "The sine of an angle in radians."
+param x double
+
+function m000c Cos
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Cos
+	doc "The cosine of an angle in radians."
+param x double
+
+function m000d Pow
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Pow
+	doc "x to the power y."
+param x double
+param y double
+
+function m000e Exp
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Exp
+	doc "E to the power x."
+param x double
+
+function m000f Log
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Log
+	doc "The natural logarithm."
+param x double
+
+function m0010 Lerp
+	static
+	pure
+	returns double
+	doc "The value `t` of the way from `a` to `b`: a at 0, b at 1 (t is not clamped)."
+param a double
+param b double
+param t double
+sheet body
+node a1 Entry
+node a2 Operator -
+node a3 Operator *
+node a4 Operator +
+node a5 Return
+wire a1.b a2.a
+wire a1.a a2.b
+wire a2.result a3.a
+wire a1.t a3.b
+wire a1.a a4.a
+wire a3.result a4.b
+wire a1.then a5.in
+wire a4.result a5.value
+
+function m0011 Lerp
+	static
+	pure
+	returns float
+	doc "The value `t` of the way from `a` to `b`: a at 0, b at 1 (t is not clamped)."
+param a float
+param b float
+param t float
+sheet body
+node b1 Entry
+node b2 Operator -
+node b3 Operator *
+node b4 Operator +
+node b5 Return
+wire b1.b b2.a
+wire b1.a b2.b
+wire b2.result b3.a
+wire b1.t b3.b
+wire b1.a b4.a
+wire b3.result b4.b
+wire b1.then b5.in
+wire b4.result b5.value
+
+function m0012 Sign
+	static
+	pure
+	returns int
+	doc "-1 for a negative number, 0 for zero, 1 for a positive one."
+param x int
+sheet body
+node c1 Entry
+node c2 Operator >
+	in b 0
+node c3 Operator <
+	in b 0
+node c4 Select
+	in true -1
+	in false 0
+node c5 Select
+	in true 1
+node c6 Return
+wire c1.x c2.a
+wire c1.x c3.a
+wire c3.result c4.condition
+wire c2.result c5.condition
+wire c4.result c5.false
+wire c1.then c6.in
+wire c5.result c6.value
+
+function m0013 Sign
+	static
+	pure
+	returns int
+	doc "-1 for a negative number, 0 for zero (and NaN), 1 for a positive one."
+param x double
+sheet body
+node d1 Entry
+node d2 Operator >
+	in b 0.0
+node d3 Operator <
+	in b 0.0
+node d4 Select
+	in true -1
+	in false 0
+node d5 Select
+	in true 1
+node d6 Return
+wire d1.x d2.a
+wire d1.x d3.a
+wire d3.result d4.condition
+wire d2.result d5.condition
+wire d4.result d5.false
+wire d1.then d6.in
+wire d5.result d6.value
+
+function m0014 IsNaN
+	static
+	pure
+	returns bool
+	doc "True when the number is NaN (not a number: 0.0 / 0.0, the square root of a negative number)."
+param x double
+sheet body
+node e1 Entry
+node e2 Operator !=
+node e3 Return
+wire e1.x e2.a
+wire e1.x e2.b
+wire e1.then e3.in
+wire e2.result e3.value
+
+function m0015 Sqrt
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Sqrt
+	doc "The square root."
+param x float
+
+function m0016 Abs
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Abs(float)
+	doc "The absolute value."
+param x float
+
+function m0017 Floor
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Floor
+	doc "The largest whole number not above x."
+param x float
+
+function m0018 Ceil
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Ceil
+	doc "The smallest whole number not below x."
+param x float
+
+function m0019 Round
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Round
+	doc "The nearest whole number (halves away from zero)."
+param x float
+
+function m001a Truncate
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Truncate
+	doc "The whole part (towards zero)."
+param x float
+
+function m001b Sin
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Sin
+	doc "The sine of an angle in radians."
+param x float
+
+function m001c Cos
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Cos
+	doc "The cosine of an angle in radians."
+param x float
+
+function m001d Pow
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Pow
+	doc "x to the power y."
+param x float
+param y float
+
+function m001e Exp
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Exp
+	doc "E to the power x."
+param x float
+
+function m001f Log
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Log
+	doc "The natural logarithm."
+param x float
+
+function m0020 Sign
+	static
+	pure
+	returns int
+	doc "-1 for a negative number, 0 for zero (and NaN), 1 for a positive one."
+param x float
+sheet body
+node f1 Entry
+node f2 Operator >
+	in b 0.0f
+node f3 Operator <
+	in b 0.0f
+node f4 Select
+	in true -1
+	in false 0
+node f5 Select
+	in true 1
+node f6 Return
+wire f1.x f2.a
+wire f1.x f3.a
+wire f3.result f4.condition
+wire f2.result f5.condition
+wire f4.result f5.false
+wire f1.then f6.in
+wire f5.result f6.value
+
+function m0021 IsNaN
+	static
+	pure
+	returns bool
+	doc "True when the number is NaN (not a number: 0.0f / 0.0f, the square root of a negative number)."
+param x float
+sheet body
+node g1 Entry
+node g2 Operator !=
+node g3 Return
+wire g1.x g2.a
+wire g1.x g2.b
+wire g1.then g3.in
+wire g2.result g3.value
+
+field Tau double
+	static
+	const
+	init 6.283185307179586
+	doc "A full turn in radians: 2 PI."
+
+function q000 Tan
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Tan
+	doc "The tangent of an angle in radians."
+param x double
+
+function q001 Asin
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Asin
+	doc "The arc sine in radians, -PI/2 to PI/2 (NaN outside -1 to 1)."
+param x double
+
+function q002 Acos
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Acos
+	doc "The arc cosine in radians, 0 to PI (NaN outside -1 to 1)."
+param x double
+
+function q003 Atan
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Atan
+	doc "The arc tangent in radians, -PI/2 to PI/2."
+param x double
+
+function q004 Atan2
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Atan2
+	doc "The angle of the point (x, y) from +X in radians, -PI to PI."
+param y double
+param x double
+
+function q005 Fma
+	static
+	pure
+	returns double
+	attr Intrinsic Math.Fma
+	doc "a * b + c with one rounding (fused multiply-add)."
+param a double
+param b double
+param c double
+
+function q006 CopySign
+	static
+	pure
+	returns double
+	attr Intrinsic Math.CopySign
+	doc "The size of `x` with the sign of `sign`."
+param x double
+param sign double
+
+function q007 Radians
+	static
+	pure
+	returns double
+	doc "Degrees converted to radians."
+param degrees double
+sheet body
+node n00700 Entry
+node n00701 Math
+	set expr "d * 0.017453292519943295"
+node n00702 Return
+wire n00700.degrees n00701.d
+wire n00700.then n00702.in
+wire n00701.result n00702.value
+
+function q008 Degrees
+	static
+	pure
+	returns double
+	doc "Radians converted to degrees."
+param radians double
+sheet body
+node n00800 Entry
+node n00801 Math
+	set expr "r * 57.29577951308232"
+node n00802 Return
+wire n00800.radians n00801.r
+wire n00800.then n00802.in
+wire n00801.result n00802.value
+
+function q009 SmoothStep
+	static
+	pure
+	returns double
+	doc "A smooth step from 0 (x at or below e0) to 1 (x at or above e1): t * t * (3 - 2 t) with t clamped."
+param e0 double
+param e1 double
+param x double
+sheet body
+node n00900 Entry
+node n00901 Math
+	set expr "Clamp((x - a) / (b - a), 0.0, 1.0)"
+node n00902 Math
+	set expr "t * t * (3.0 - 2.0 * t)"
+node n00903 Return
+wire n00900.e0 n00901.a
+wire n00900.e1 n00901.b
+wire n00900.x n00901.x
+wire n00901.result n00902.t
+wire n00900.then n00903.in
+wire n00902.result n00903.value
+
+function q00a Tan
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Tan
+	doc "The tangent of an angle in radians."
+param x float
+
+function q00b Asin
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Asin
+	doc "The arc sine in radians, -PI/2 to PI/2 (NaN outside -1 to 1)."
+param x float
+
+function q00c Acos
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Acos
+	doc "The arc cosine in radians, 0 to PI (NaN outside -1 to 1)."
+param x float
+
+function q00d Atan
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Atan
+	doc "The arc tangent in radians, -PI/2 to PI/2."
+param x float
+
+function q00e Atan2
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Atan2
+	doc "The angle of the point (x, y) from +X in radians, -PI to PI."
+param y float
+param x float
+
+function q00f Fma
+	static
+	pure
+	returns float
+	attr Intrinsic Math.Fma
+	doc "a * b + c with one rounding (fused multiply-add)."
+param a float
+param b float
+param c float
+
+function q00g CopySign
+	static
+	pure
+	returns float
+	attr Intrinsic Math.CopySign
+	doc "The size of `x` with the sign of `sign`."
+param x float
+param sign float
+
+function q00h Radians
+	static
+	pure
+	returns float
+	doc "Degrees converted to radians."
+param degrees float
+sheet body
+node n00h00 Entry
+node n00h01 Math
+	set expr "d * 0.0174532925f"
+node n00h02 Return
+wire n00h00.degrees n00h01.d
+wire n00h00.then n00h02.in
+wire n00h01.result n00h02.value
+
+function q00i Degrees
+	static
+	pure
+	returns float
+	doc "Radians converted to degrees."
+param radians float
+sheet body
+node n00i00 Entry
+node n00i01 Math
+	set expr "r * 57.2957795f"
+node n00i02 Return
+wire n00i00.radians n00i01.r
+wire n00i00.then n00i02.in
+wire n00i01.result n00i02.value
+
+function q00j SmoothStep
+	static
+	pure
+	returns float
+	doc "A smooth step from 0 (x at or below e0) to 1 (x at or above e1): t * t * (3 - 2 t) with t clamped."
+param e0 float
+param e1 float
+param x float
+sheet body
+node n00j00 Entry
+node n00j01 Math
+	set expr "Clamp((x - a) / (b - a), 0.0f, 1.0f)"
+node n00j02 Math
+	set expr "t * t * (3.0f - 2.0f * t)"
+node n00j03 Return
+wire n00j00.e0 n00j01.a
+wire n00j00.e1 n00j01.b
+wire n00j00.x n00j01.x
+wire n00j01.result n00j02.t
+wire n00j00.then n00j03.in
+wire n00j02.result n00j03.value

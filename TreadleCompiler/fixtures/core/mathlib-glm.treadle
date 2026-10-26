@@ -1,0 +1,1004 @@
+# treadle 1
+type MathlibGlmMain class
+	namespace Cx
+	static
+	doc "The core math library, mathlib-glm: every check compares the result with a reference computed in double precision by a separate C implementation (Gauss-Jordan inverse, Rodrigues rotations, the GLM conventions), within 1e-5 of the larger of 1 and the reference's size; each line is the check's name and true."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node n00000 Entry
+node n00001 Local String
+	set ctor ()
+node n00002 Call Core.Quat.FromEuler
+	in pitch 0.3f
+	in yaw -0.7f
+	in roll 0.2f
+node n00003 Make Core.Vec3
+	in X 2.0f
+	in Y -1.0f
+	in Z 3.0f
+node n00004 Make Core.Vec3
+	in X 1.5f
+	in Y 1.5f
+	in Z 1.5f
+node n00005 Call Core.Mat4.FromTRS
+node n00006 Make Core.Vec3
+	in X 4.0f
+	in Y 3.0f
+	in Z 6.0f
+node n00007 Make Core.Vec3
+	in X 0.0f
+	in Y 0.5f
+	in Z 0.0f
+node n00008 Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n00009 Call Core.Mat4.LookAt
+node n0000a Call Core.Math.Radians
+	in degrees 60.0f
+node n0000b Math
+	set expr "16.0f / 9.0f"
+node n0000c Call Core.Mat4.Perspective
+	in near 0.1f
+	in far 50.0f
+node n0000d Operator *
+node n0000e Operator *
+node n0000f Make Core.Vec4
+	in X 1.0676605701446533f
+	in Y 0.284694105386734f
+	in Z 1.0144211053848267f
+	in W 0.0f
+node n0000g Make Core.Vec4
+	in X -0.5078026652336121f
+	in Y 1.4044400453567505f
+	in Z 0.14030182361602783f
+	in W 0.0f
+node n0000h Make Core.Vec4
+	in X -0.9231669902801514f
+	in Y -0.44328030943870544f
+	in Z 1.0960224866867065f
+	in W 0.0f
+node n0000i Make Core.Vec4
+	in X 2.0f
+	in Y -1.0f
+	in Z 3.0f
+	in W 1.0f
+node n0000j Make Core.Mat4
+node n0000k Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000029999999242136255f && Abs(a.C0.Y - b.C0.Y) <= 0.000029999999242136255f && Abs(a.C0.Z - b.C0.Z) <= 0.000029999999242136255f && Abs(a.C0.W - b.C0.W) <= 0.000029999999242136255f && Abs(a.C1.X - b.C1.X) <= 0.000029999999242136255f && Abs(a.C1.Y - b.C1.Y) <= 0.000029999999242136255f && Abs(a.C1.Z - b.C1.Z) <= 0.000029999999242136255f && Abs(a.C1.W - b.C1.W) <= 0.000029999999242136255f && Abs(a.C2.X - b.C2.X) <= 0.000029999999242136255f && Abs(a.C2.Y - b.C2.Y) <= 0.000029999999242136255f && Abs(a.C2.Z - b.C2.Z) <= 0.000029999999242136255f && Abs(a.C2.W - b.C2.W) <= 0.000029999999242136255f && Abs(a.C3.X - b.C3.X) <= 0.000029999999242136255f && Abs(a.C3.Y - b.C3.Y) <= 0.000029999999242136255f && Abs(a.C3.Z - b.C3.Z) <= 0.000029999999242136255f && Abs(a.C3.W - b.C3.W) <= 0.000029999999242136255f"
+node n0000l Call String.Clear
+node n0000m Call String.Append(StringView)
+	in text "glm.model "
+node n0000n Call String.Append(bool)
+node n0000o Call Console.WriteLine(StringView)
+node n0000p Make Core.Vec4
+	in X 0.8320503234863281f
+	in Y -0.18169808387756348f
+	in Z 0.5240974426269531f
+	in W 0.0f
+node n0000q Make Core.Vec4
+	in X 0.0f
+	in Y 0.944830060005188f
+	in Z 0.3275609016418457f
+	in W 0.0f
+node n0000r Make Core.Vec4
+	in X -0.5547001957893372f
+	in Y -0.2725471258163452f
+	in Z 0.7861461639404297f
+	in W 0.0f
+node n0000s Make Core.Vec4
+	in X -0.0f
+	in Y -0.472415030002594f
+	in Z -7.7959489822387695f
+	in W 1.0f
+node n0000t Make Core.Mat4
+node n0000u Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00007795949204592034f && Abs(a.C0.Y - b.C0.Y) <= 0.00007795949204592034f && Abs(a.C0.Z - b.C0.Z) <= 0.00007795949204592034f && Abs(a.C0.W - b.C0.W) <= 0.00007795949204592034f && Abs(a.C1.X - b.C1.X) <= 0.00007795949204592034f && Abs(a.C1.Y - b.C1.Y) <= 0.00007795949204592034f && Abs(a.C1.Z - b.C1.Z) <= 0.00007795949204592034f && Abs(a.C1.W - b.C1.W) <= 0.00007795949204592034f && Abs(a.C2.X - b.C2.X) <= 0.00007795949204592034f && Abs(a.C2.Y - b.C2.Y) <= 0.00007795949204592034f && Abs(a.C2.Z - b.C2.Z) <= 0.00007795949204592034f && Abs(a.C2.W - b.C2.W) <= 0.00007795949204592034f && Abs(a.C3.X - b.C3.X) <= 0.00007795949204592034f && Abs(a.C3.Y - b.C3.Y) <= 0.00007795949204592034f && Abs(a.C3.Z - b.C3.Z) <= 0.00007795949204592034f && Abs(a.C3.W - b.C3.W) <= 0.00007795949204592034f"
+node n0000v Call String.Clear
+node n0000w Call String.Append(StringView)
+	in text "glm.view "
+node n0000x Call String.Append(bool)
+node n0000y Call Console.WriteLine(StringView)
+node n0000z Make Core.Vec4
+	in X 0.9742785692214966f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n00010 Make Core.Vec4
+	in X 0.0f
+	in Y 1.7320507764816284f
+	in Z 0.0f
+	in W 0.0f
+node n00011 Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0020040273666382f
+	in W -1.0f
+node n00012 Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z -0.10020039975643158f
+	in W 0.0f
+node n00013 Make Core.Mat4
+node n00014 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000017320508050033823f && Abs(a.C0.Y - b.C0.Y) <= 0.000017320508050033823f && Abs(a.C0.Z - b.C0.Z) <= 0.000017320508050033823f && Abs(a.C0.W - b.C0.W) <= 0.000017320508050033823f && Abs(a.C1.X - b.C1.X) <= 0.000017320508050033823f && Abs(a.C1.Y - b.C1.Y) <= 0.000017320508050033823f && Abs(a.C1.Z - b.C1.Z) <= 0.000017320508050033823f && Abs(a.C1.W - b.C1.W) <= 0.000017320508050033823f && Abs(a.C2.X - b.C2.X) <= 0.000017320508050033823f && Abs(a.C2.Y - b.C2.Y) <= 0.000017320508050033823f && Abs(a.C2.Z - b.C2.Z) <= 0.000017320508050033823f && Abs(a.C2.W - b.C2.W) <= 0.000017320508050033823f && Abs(a.C3.X - b.C3.X) <= 0.000017320508050033823f && Abs(a.C3.Y - b.C3.Y) <= 0.000017320508050033823f && Abs(a.C3.Z - b.C3.Z) <= 0.000017320508050033823f && Abs(a.C3.W - b.C3.W) <= 0.000017320508050033823f"
+node n00015 Call String.Clear
+node n00016 Call String.Append(StringView)
+	in text "glm.proj "
+node n00017 Call String.Append(bool)
+node n00018 Call Console.WriteLine(StringView)
+node n00019 Make Core.Vec4
+	in X 0.3172716200351715f
+	in Y -0.34897691011428833f
+	in Z -1.453202486038208f
+	in W -1.4502960443496704f
+node n0001a Make Core.Vec4
+	in X -0.4874732792377472f
+	in Y 2.3919363021850586f
+	in Z -0.30480891466140747f
+	in W -0.3041992783546448f
+node n0001b Make Core.Vec4
+	in X -1.3406903743743896f
+	in Y -0.9522896409034729f
+	in Z -0.23306924104690552f
+	in W -0.23260310292243958f
+node n0001c Make Core.Vec4
+	in X 2.220446049250313e-16f
+	in Y -4.500357627868652f
+	in Z 4.626129150390625f
+	in W 4.716876983642578f
+node n0001d Make Core.Mat4
+node n0001e Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00009433753439225256f && Abs(a.C0.Y - b.C0.Y) <= 0.00009433753439225256f && Abs(a.C0.Z - b.C0.Z) <= 0.00009433753439225256f && Abs(a.C0.W - b.C0.W) <= 0.00009433753439225256f && Abs(a.C1.X - b.C1.X) <= 0.00009433753439225256f && Abs(a.C1.Y - b.C1.Y) <= 0.00009433753439225256f && Abs(a.C1.Z - b.C1.Z) <= 0.00009433753439225256f && Abs(a.C1.W - b.C1.W) <= 0.00009433753439225256f && Abs(a.C2.X - b.C2.X) <= 0.00009433753439225256f && Abs(a.C2.Y - b.C2.Y) <= 0.00009433753439225256f && Abs(a.C2.Z - b.C2.Z) <= 0.00009433753439225256f && Abs(a.C2.W - b.C2.W) <= 0.00009433753439225256f && Abs(a.C3.X - b.C3.X) <= 0.00009433753439225256f && Abs(a.C3.Y - b.C3.Y) <= 0.00009433753439225256f && Abs(a.C3.Z - b.C3.Z) <= 0.00009433753439225256f && Abs(a.C3.W - b.C3.W) <= 0.00009433753439225256f"
+node n0001f Call String.Clear
+node n0001g Call String.Append(StringView)
+	in text "glm.mvp "
+node n0001h Call String.Append(bool)
+node n0001i Call Console.WriteLine(StringView)
+node n0001j Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n0001k Operator *
+node n0001l Make Core.Vec4
+	in X 2.220446049250313e-16f
+	in Y -4.500357627868652f
+	in Z 4.626129150390625f
+	in W 4.716876983642578f
+node n0001m Math
+	set expr "Abs(a.X - b.X) <= 0.00009433753439225256f && Abs(a.Y - b.Y) <= 0.00009433753439225256f && Abs(a.Z - b.Z) <= 0.00009433753439225256f && Abs(a.W - b.W) <= 0.00009433753439225256f"
+node n0001n Call String.Clear
+node n0001o Call String.Append(StringView)
+	in text "glm.clip.0 "
+node n0001p Call String.Append(bool)
+node n0001q Call Console.WriteLine(StringView)
+node n0001r Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0001s Call Core.Mat4.TransformPerspective
+node n0001t Make Core.Vec3
+	in X 4.707449793581308e-17f
+	in Y -0.9540969133377075f
+	in Z 0.9807610511779785f
+node n0001u Math
+	set expr "Abs(a.X - b.X) <= 0.000019999999494757503f && Abs(a.Y - b.Y) <= 0.000019999999494757503f && Abs(a.Z - b.Z) <= 0.000019999999494757503f"
+node n0001v Call String.Clear
+node n0001w Call String.Append(StringView)
+	in text "glm.ndc.0 "
+node n0001x Call String.Append(bool)
+node n0001y Call Console.WriteLine(StringView)
+node n0001z Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n00020 Call Core.Mat4.TransformPoint
+node n00021 Make Core.Vec3
+	in X 2.0f
+	in Y -1.0f
+	in Z 3.0f
+node n00022 Math
+	set expr "Abs(a.X - b.X) <= 0.000029999999242136255f && Abs(a.Y - b.Y) <= 0.000029999999242136255f && Abs(a.Z - b.Z) <= 0.000029999999242136255f"
+node n00023 Call String.Clear
+node n00024 Call String.Append(StringView)
+	in text "glm.world.0 "
+node n00025 Call String.Append(bool)
+node n00026 Call Console.WriteLine(StringView)
+node n00027 Make Core.Vec4
+	in X 1.0f
+	in Y 1.0f
+	in Z 1.0f
+	in W 1.0f
+node n00028 Operator *
+node n00029 Make Core.Vec4
+	in X -1.5108920335769653f
+	in Y -3.4096877574920654f
+	in Z 2.6350483894348145f
+	in W 2.729778289794922f
+node n0002a Math
+	set expr "Abs(a.X - b.X) <= 0.00006819375266786665f && Abs(a.Y - b.Y) <= 0.00006819375266786665f && Abs(a.Z - b.Z) <= 0.00006819375266786665f && Abs(a.W - b.W) <= 0.00006819375266786665f"
+node n0002b Call String.Clear
+node n0002c Call String.Append(StringView)
+	in text "glm.clip.1 "
+node n0002d Call String.Append(bool)
+node n0002e Call Console.WriteLine(StringView)
+node n0002f Make Core.Vec3
+	in X 1.0f
+	in Y 1.0f
+	in Z 1.0f
+node n0002g Call Core.Mat4.TransformPerspective
+node n0002h Make Core.Vec3
+	in X -0.5534852147102356f
+	in Y -1.2490712404251099f
+	in Z 0.9652975797653198f
+node n0002i Math
+	set expr "Abs(a.X - b.X) <= 0.000024981425667647272f && Abs(a.Y - b.Y) <= 0.000024981425667647272f && Abs(a.Z - b.Z) <= 0.000024981425667647272f"
+node n0002j Call String.Clear
+node n0002k Call String.Append(StringView)
+	in text "glm.ndc.1 "
+node n0002l Call String.Append(bool)
+node n0002m Call Console.WriteLine(StringView)
+node n0002n Make Core.Vec3
+	in X 1.0f
+	in Y 1.0f
+	in Z 1.0f
+node n0002o Call Core.Mat4.TransformPoint
+node n0002p Make Core.Vec3
+	in X 1.6366909742355347f
+	in Y 0.24585382640361786f
+	in Z 5.2507452964782715f
+node n0002q Math
+	set expr "Abs(a.X - b.X) <= 0.00005250745380180888f && Abs(a.Y - b.Y) <= 0.00005250745380180888f && Abs(a.Z - b.Z) <= 0.00005250745380180888f"
+node n0002r Call String.Clear
+node n0002s Call String.Append(StringView)
+	in text "glm.world.1 "
+node n0002t Call String.Append(bool)
+node n0002u Call Console.WriteLine(StringView)
+node n0002v Make Core.Vec4
+	in X -1.0f
+	in Y 0.5f
+	in Z 2.0f
+	in W 1.0f
+node n0002w Operator *
+node n0002x Make Core.Vec4
+	in X -3.242388963699341f
+	in Y -4.859992027282715f
+	in Z 5.460788726806641f
+	in W 5.549867153167725f
+node n0002y Math
+	set expr "Abs(a.X - b.X) <= 0.00011099733819719404f && Abs(a.Y - b.Y) <= 0.00011099733819719404f && Abs(a.Z - b.Z) <= 0.00011099733819719404f && Abs(a.W - b.W) <= 0.00011099733819719404f"
+node n0002z Call String.Clear
+node n00030 Call String.Append(StringView)
+	in text "glm.clip.2 "
+node n00031 Call String.Append(bool)
+node n00032 Call Console.WriteLine(StringView)
+node n00033 Make Core.Vec3
+	in X -1.0f
+	in Y 0.5f
+	in Z 2.0f
+node n00034 Call Core.Mat4.TransformPerspective
+node n00035 Make Core.Vec3
+	in X -0.5842282176017761f
+	in Y -0.8756951689720154f
+	in Z 0.9839494228363037f
+node n00036 Math
+	set expr "Abs(a.X - b.X) <= 0.000019999999494757503f && Abs(a.Y - b.Y) <= 0.000019999999494757503f && Abs(a.Z - b.Z) <= 0.000019999999494757503f"
+node n00037 Call String.Clear
+node n00038 Call String.Append(StringView)
+	in text "glm.ndc.2 "
+node n00039 Call String.Append(bool)
+node n0003a Call Console.WriteLine(StringView)
+node n0003b Make Core.Vec3
+	in X -1.0f
+	in Y 0.5f
+	in Z 2.0f
+node n0003c Call Core.Mat4.TransformPoint
+node n0003d Make Core.Vec3
+	in X -1.1678959131240845f
+	in Y -1.4690346717834473f
+	in Z 4.247774600982666f
+node n0003e Math
+	set expr "Abs(a.X - b.X) <= 0.000042477746319491416f && Abs(a.Y - b.Y) <= 0.000042477746319491416f && Abs(a.Z - b.Z) <= 0.000042477746319491416f"
+node n0003f Call String.Clear
+node n0003g Call String.Append(StringView)
+	in text "glm.world.2 "
+node n0003h Call String.Append(bool)
+node n0003i Call Console.WriteLine(StringView)
+node n0003j Make Core.Vec4
+	in X 0.25f
+	in Y -2.0f
+	in Z -1.0f
+	in W 1.0f
+node n0003k Operator *
+node n0003l Make Core.Vec4
+	in X 2.3949549198150635f
+	in Y -8.419184684753418f
+	in Z 5.105515480041504f
+	in W 5.1953043937683105f
+node n0003m Math
+	set expr "Abs(a.X - b.X) <= 0.00016838370356708765f && Abs(a.Y - b.Y) <= 0.00016838370356708765f && Abs(a.Z - b.Z) <= 0.00016838370356708765f && Abs(a.W - b.W) <= 0.00016838370356708765f"
+node n0003n Call String.Clear
+node n0003o Call String.Append(StringView)
+	in text "glm.clip.3 "
+node n0003p Call String.Append(bool)
+node n0003q Call Console.WriteLine(StringView)
+node n0003r Make Core.Vec3
+	in X 0.25f
+	in Y -2.0f
+	in Z -1.0f
+node n0003s Call Core.Mat4.TransformPerspective
+node n0003t Make Core.Vec3
+	in X 0.4609844982624054f
+	in Y -1.6205374002456665f
+	in Z 0.9827172756195068f
+node n0003u Math
+	set expr "Abs(a.X - b.X) <= 0.000032410745916422457f && Abs(a.Y - b.Y) <= 0.000032410745916422457f && Abs(a.Z - b.Z) <= 0.000032410745916422457f"
+node n0003v Call String.Clear
+node n0003w Call String.Append(StringView)
+	in text "glm.ndc.3 "
+node n0003x Call String.Append(bool)
+node n0003y Call Console.WriteLine(StringView)
+node n0003z Make Core.Vec3
+	in X 0.25f
+	in Y -2.0f
+	in Z -1.0f
+node n00040 Call Core.Mat4.TransformPoint
+node n00041 Make Core.Vec3
+	in X 4.205687522888184f
+	in Y -3.294426202774048f
+	in Z 1.876979112625122f
+node n00042 Math
+	set expr "Abs(a.X - b.X) <= 0.00004205687582725659f && Abs(a.Y - b.Y) <= 0.00004205687582725659f && Abs(a.Z - b.Z) <= 0.00004205687582725659f"
+node n00043 Call String.Clear
+node n00044 Call String.Append(StringView)
+	in text "glm.world.3 "
+node n00045 Call String.Append(bool)
+node n00046 Call Console.WriteLine(StringView)
+node n00047 Call Core.Mat4.Inverted
+node n00048 Operator *
+node n00049 Make Core.Vec4
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n0004a Make Core.Vec4
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+	in W 0.0f
+node n0004b Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+	in W 0.0f
+node n0004c Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n0004d Make Core.Mat4
+node n0004e Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.00009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.00009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.00009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.00009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.00009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.00009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.00009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.00009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.00009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.00009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.00009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.00009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.00009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.00009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.00009999999747378752f"
+node n0004f Call String.Clear
+node n0004g Call String.Append(StringView)
+	in text "glm.mvp.inverse "
+node n0004h Call String.Append(bool)
+node n0004i Call Console.WriteLine(StringView)
+node n0004j Call Core.Mat4.InvertedAffine
+node n0004k Make Core.Vec4
+	in X 0.8320503234863281f
+	in Y -5.551115123125783e-17f
+	in Z -0.5547001957893372f
+	in W 0.0f
+node n0004l Make Core.Vec4
+	in X -0.18169808387756348f
+	in Y 0.944830060005188f
+	in Z -0.2725471258163452f
+	in W 0.0f
+node n0004m Make Core.Vec4
+	in X 0.5240974426269531f
+	in Y 0.3275609016418457f
+	in Z 0.7861461639404297f
+	in W 0.0f
+node n0004n Make Core.Vec4
+	in X 4.0f
+	in Y 3.0f
+	in Z 6.0f
+	in W 1.0f
+node n0004o Make Core.Mat4
+node n0004p Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.00005999999848427251f && Abs(a.C0.Y - b.C0.Y) <= 0.00005999999848427251f && Abs(a.C0.Z - b.C0.Z) <= 0.00005999999848427251f && Abs(a.C0.W - b.C0.W) <= 0.00005999999848427251f && Abs(a.C1.X - b.C1.X) <= 0.00005999999848427251f && Abs(a.C1.Y - b.C1.Y) <= 0.00005999999848427251f && Abs(a.C1.Z - b.C1.Z) <= 0.00005999999848427251f && Abs(a.C1.W - b.C1.W) <= 0.00005999999848427251f && Abs(a.C2.X - b.C2.X) <= 0.00005999999848427251f && Abs(a.C2.Y - b.C2.Y) <= 0.00005999999848427251f && Abs(a.C2.Z - b.C2.Z) <= 0.00005999999848427251f && Abs(a.C2.W - b.C2.W) <= 0.00005999999848427251f && Abs(a.C3.X - b.C3.X) <= 0.00005999999848427251f && Abs(a.C3.Y - b.C3.Y) <= 0.00005999999848427251f && Abs(a.C3.Z - b.C3.Z) <= 0.00005999999848427251f && Abs(a.C3.W - b.C3.W) <= 0.00005999999848427251f"
+node n0004q Call String.Clear
+node n0004r Call String.Append(StringView)
+	in text "glm.view.inverse.affine "
+node n0004s Call String.Append(bool)
+node n0004t Call Console.WriteLine(StringView)
+node n0004u Call Core.Mat4.Upper3x3
+node n0004v Call Core.Mat3.Inverted
+node n0004w Call Core.Mat3.Transposed
+node n0004x Make Core.Vec3
+	in X 0.474515825510025f
+	in Y 0.1265307068824768f
+	in Z 0.4508538246154785f
+node n0004y Make Core.Vec3
+	in X -0.2256900817155838f
+	in Y 0.6241955757141113f
+	in Z 0.062356363981962204f
+node n0004z Make Core.Vec3
+	in X -0.4102964401245117f
+	in Y -0.1970134675502777f
+	in Z 0.4871211051940918f
+node n00050 Make Core.Mat3
+node n00051 Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f"
+node n00052 Call String.Clear
+node n00053 Call String.Append(StringView)
+	in text "glm.normal.matrix "
+node n00054 Call String.Append(bool)
+node n00055 Call Console.WriteLine(StringView)
+node n00056 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n00057 Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n00058 Call Core.Quat.FromAxisAngle
+	in angle 0.5f
+node n00059 Make Core.Vec3
+	in X 2.0f
+	in Y 2.0f
+	in Z 2.0f
+node n0005a Make Core.Transform
+node n0005b Make Core.Vec3
+	in X -0.5f
+	in Y 1.0f
+	in Z 0.0f
+node n0005c Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0005d Call Core.Quat.FromAxisAngle
+	in angle -0.25f
+node n0005e Make Core.Vec3
+	in X 0.5f
+	in Y 0.5f
+	in Z 0.5f
+node n0005f Make Core.Transform
+node n0005g Operator *
+node n0005h Call Core.Transform.ToMat4
+node n0005i Make Core.Vec4
+	in X 0.8775825500488281f
+	in Y 0.0f
+	in Z -0.4794255495071411f
+	in W 0.0f
+node n0005j Make Core.Vec4
+	in X -0.11861177533864975f
+	in Y 0.9689124226570129f
+	in Z -0.21711739897727966f
+	in W 0.0f
+node n0005k Make Core.Vec4
+	in X 0.4645213484764099f
+	in Y 0.24740396440029144f
+	in Z 0.850300669670105f
+	in W 0.0f
+node n0005l Make Core.Vec4
+	in X 0.12241743505001068f
+	in Y 4.0f
+	in Z 3.4794254302978516f
+	in W 1.0f
+node n0005m Make Core.Mat4
+node n0005n Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000039999998989515007f && Abs(a.C0.Y - b.C0.Y) <= 0.000039999998989515007f && Abs(a.C0.Z - b.C0.Z) <= 0.000039999998989515007f && Abs(a.C0.W - b.C0.W) <= 0.000039999998989515007f && Abs(a.C1.X - b.C1.X) <= 0.000039999998989515007f && Abs(a.C1.Y - b.C1.Y) <= 0.000039999998989515007f && Abs(a.C1.Z - b.C1.Z) <= 0.000039999998989515007f && Abs(a.C1.W - b.C1.W) <= 0.000039999998989515007f && Abs(a.C2.X - b.C2.X) <= 0.000039999998989515007f && Abs(a.C2.Y - b.C2.Y) <= 0.000039999998989515007f && Abs(a.C2.Z - b.C2.Z) <= 0.000039999998989515007f && Abs(a.C2.W - b.C2.W) <= 0.000039999998989515007f && Abs(a.C3.X - b.C3.X) <= 0.000039999998989515007f && Abs(a.C3.Y - b.C3.Y) <= 0.000039999998989515007f && Abs(a.C3.Z - b.C3.Z) <= 0.000039999998989515007f && Abs(a.C3.W - b.C3.W) <= 0.000039999998989515007f"
+node n0005o Call String.Clear
+node n0005p Call String.Append(StringView)
+	in text "glm.transform.chain "
+node n0005q Call String.Append(bool)
+node n0005r Call Console.WriteLine(StringView)
+node n0005s Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0005t Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n0005u Call Core.Quat.FromAxisAngle
+	in angle 0.5f
+node n0005v Make Core.Vec3
+	in X 2.0f
+	in Y 2.0f
+	in Z 2.0f
+node n0005w Make Core.Transform
+node n0005x Make Core.Vec3
+	in X -0.5f
+	in Y 1.0f
+	in Z 0.0f
+node n0005y Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0005z Call Core.Quat.FromAxisAngle
+	in angle -0.25f
+node n00060 Make Core.Vec3
+	in X 0.5f
+	in Y 0.5f
+	in Z 0.5f
+node n00061 Make Core.Transform
+node n00062 Operator *
+node n00063 Make Core.Vec3
+	in X 1.0f
+	in Y -1.0f
+	in Z 0.5f
+node n00064 Call Core.Transform.TransformPoint
+node n00065 Make Core.Vec3
+	in X 1.3508723974227905f
+	in Y 3.154789447784424f
+	in Z 3.6422677040100098f
+node n00066 Math
+	set expr "Abs(a.X - b.X) <= 0.000036422676203073934f && Abs(a.Y - b.Y) <= 0.000036422676203073934f && Abs(a.Z - b.Z) <= 0.000036422676203073934f"
+node n00067 Call String.Clear
+node n00068 Call String.Append(StringView)
+	in text "glm.transform.point "
+node n00069 Call String.Append(bool)
+node n0006a Call Console.WriteLine(StringView)
+node n0006b Call Core.Quat.FromEuler
+	in pitch 0.3f
+	in yaw -0.7f
+	in roll 0.2f
+node n0006c Call Core.Quat.FromEuler
+	in pitch -0.4f
+	in yaw 1.1f
+	in roll 0.0f
+node n0006d Call Core.Quat.Slerp
+	in t 0.5f
+node n0006e Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0f
+node n0006f Operator *
+node n0006g Make Core.Vec3
+	in X -0.16820168495178223f
+	in Y -0.09547669440507889f
+	in Z -0.9811179041862488f
+node n0006h Math
+	set expr "Abs(a.X - b.X) <= 0.000009999999747378752f && Abs(a.Y - b.Y) <= 0.000009999999747378752f && Abs(a.Z - b.Z) <= 0.000009999999747378752f"
+node n0006i Call String.Clear
+node n0006j Call String.Append(StringView)
+	in text "glm.slerp.rotate "
+node n0006k Call String.Append(bool)
+node n0006l Call Console.WriteLine(StringView)
+node n0006m Call Core.Mat4.OrthographicGL
+	in left -4.0f
+	in right 4.0f
+	in bottom -3.0f
+	in top 3.0f
+	in near 0.5f
+	in far 20.0f
+node n0006n Operator *
+node n0006o Make Core.Vec3
+	in X 1.0f
+	in Y 1.0f
+	in Z 1.0f
+node n0006p Call Core.Mat4.TransformPoint
+node n0006q Make Core.Vec3
+	in X 0.06933752447366714f
+	in Y 0.006056603044271469f
+	in Z -0.4196774661540985f
+node n0006r Math
+	set expr "Abs(a.X - b.X) <= 0.000009999999747378752f && Abs(a.Y - b.Y) <= 0.000009999999747378752f && Abs(a.Z - b.Z) <= 0.000009999999747378752f"
+node n0006s Call String.Clear
+node n0006t Call String.Append(StringView)
+	in text "glm.ortho.gl "
+node n0006u Call String.Append(bool)
+node n0006v Call Console.WriteLine(StringView)
+node n0006w Make Core.Vec3
+	in X -1.0f
+	in Y -1.0f
+	in Z -1.0f
+node n0006x Make Core.Vec3
+	in X 1.0f
+	in Y 1.0f
+	in Z 1.0f
+node n0006y Make Core.AABB
+node n0006z Call Core.AABB.Transformed
+node n00070 Make Core.Vec3
+	in X -1.3867504596710205f
+	in Y -1.8714903593063354f
+	in Z -9.433753967285156f
+node n00071 Make Core.Vec3
+	in X 1.3867504596710205f
+	in Y 0.9266602396965027f
+	in Z -6.158144950866699f
+node n00072 Make Core.AABB
+node n00073 Math
+	set expr "Abs(a.Min.X - b.Min.X) <= 0.00009433753439225256f && Abs(a.Min.Y - b.Min.Y) <= 0.00009433753439225256f && Abs(a.Min.Z - b.Min.Z) <= 0.00009433753439225256f && Abs(a.Max.X - b.Max.X) <= 0.00009433753439225256f && Abs(a.Max.Y - b.Max.Y) <= 0.00009433753439225256f && Abs(a.Max.Z - b.Max.Z) <= 0.00009433753439225256f"
+node n00074 Call String.Clear
+node n00075 Call String.Append(StringView)
+	in text "glm.aabb.view "
+node n00076 Call String.Append(bool)
+node n00077 Call Console.WriteLine(StringView)
+node n00078 Return
+	in value 0
+wire n00000.then n00001.in
+wire n00002.result n00005.rotation
+wire n00004.value n00005.scale
+wire n00003.value n00005.translation
+wire n00006.value n00009.eye
+wire n00007.value n00009.target
+wire n00008.value n00009.up
+wire n0000b.result n0000c.aspect
+wire n0000a.result n0000c.fovY
+wire n0000c.result n0000d.a
+wire n00009.result n0000d.b
+wire n0000d.result n0000e.a
+wire n00005.result n0000e.b
+wire n0000f.value n0000j.C0
+wire n0000g.value n0000j.C1
+wire n0000h.value n0000j.C2
+wire n0000i.value n0000j.C3
+wire n00005.result n0000k.a
+wire n0000j.value n0000k.b
+wire n00001.then n0000l.in
+wire n00001.object n0000l.receiver
+wire n0000l.then n0000m.in
+wire n00001.object n0000m.receiver
+wire n0000m.then n0000n.in
+wire n00001.object n0000n.receiver
+wire n0000k.result n0000n.value
+wire n0000n.then n0000o.in
+wire n00001.object n0000o.text
+wire n0000p.value n0000t.C0
+wire n0000q.value n0000t.C1
+wire n0000r.value n0000t.C2
+wire n0000s.value n0000t.C3
+wire n00009.result n0000u.a
+wire n0000t.value n0000u.b
+wire n0000o.then n0000v.in
+wire n00001.object n0000v.receiver
+wire n0000v.then n0000w.in
+wire n00001.object n0000w.receiver
+wire n0000w.then n0000x.in
+wire n00001.object n0000x.receiver
+wire n0000u.result n0000x.value
+wire n0000x.then n0000y.in
+wire n00001.object n0000y.text
+wire n0000z.value n00013.C0
+wire n00010.value n00013.C1
+wire n00011.value n00013.C2
+wire n00012.value n00013.C3
+wire n0000c.result n00014.a
+wire n00013.value n00014.b
+wire n0000y.then n00015.in
+wire n00001.object n00015.receiver
+wire n00015.then n00016.in
+wire n00001.object n00016.receiver
+wire n00016.then n00017.in
+wire n00001.object n00017.receiver
+wire n00014.result n00017.value
+wire n00017.then n00018.in
+wire n00001.object n00018.text
+wire n00019.value n0001d.C0
+wire n0001a.value n0001d.C1
+wire n0001b.value n0001d.C2
+wire n0001c.value n0001d.C3
+wire n0000e.result n0001e.a
+wire n0001d.value n0001e.b
+wire n00018.then n0001f.in
+wire n00001.object n0001f.receiver
+wire n0001f.then n0001g.in
+wire n00001.object n0001g.receiver
+wire n0001g.then n0001h.in
+wire n00001.object n0001h.receiver
+wire n0001e.result n0001h.value
+wire n0001h.then n0001i.in
+wire n00001.object n0001i.text
+wire n0000e.result n0001k.a
+wire n0001j.value n0001k.b
+wire n0001k.result n0001m.a
+wire n0001l.value n0001m.b
+wire n0001i.then n0001n.in
+wire n00001.object n0001n.receiver
+wire n0001n.then n0001o.in
+wire n00001.object n0001o.receiver
+wire n0001o.then n0001p.in
+wire n00001.object n0001p.receiver
+wire n0001m.result n0001p.value
+wire n0001p.then n0001q.in
+wire n00001.object n0001q.text
+wire n0001r.value n0001s.point
+wire n0000e.result n0001s.receiver
+wire n0001s.result n0001u.a
+wire n0001t.value n0001u.b
+wire n0001q.then n0001v.in
+wire n00001.object n0001v.receiver
+wire n0001v.then n0001w.in
+wire n00001.object n0001w.receiver
+wire n0001w.then n0001x.in
+wire n00001.object n0001x.receiver
+wire n0001u.result n0001x.value
+wire n0001x.then n0001y.in
+wire n00001.object n0001y.text
+wire n0001z.value n00020.point
+wire n00005.result n00020.receiver
+wire n00020.result n00022.a
+wire n00021.value n00022.b
+wire n0001y.then n00023.in
+wire n00001.object n00023.receiver
+wire n00023.then n00024.in
+wire n00001.object n00024.receiver
+wire n00024.then n00025.in
+wire n00001.object n00025.receiver
+wire n00022.result n00025.value
+wire n00025.then n00026.in
+wire n00001.object n00026.text
+wire n0000e.result n00028.a
+wire n00027.value n00028.b
+wire n00028.result n0002a.a
+wire n00029.value n0002a.b
+wire n00026.then n0002b.in
+wire n00001.object n0002b.receiver
+wire n0002b.then n0002c.in
+wire n00001.object n0002c.receiver
+wire n0002c.then n0002d.in
+wire n00001.object n0002d.receiver
+wire n0002a.result n0002d.value
+wire n0002d.then n0002e.in
+wire n00001.object n0002e.text
+wire n0002f.value n0002g.point
+wire n0000e.result n0002g.receiver
+wire n0002g.result n0002i.a
+wire n0002h.value n0002i.b
+wire n0002e.then n0002j.in
+wire n00001.object n0002j.receiver
+wire n0002j.then n0002k.in
+wire n00001.object n0002k.receiver
+wire n0002k.then n0002l.in
+wire n00001.object n0002l.receiver
+wire n0002i.result n0002l.value
+wire n0002l.then n0002m.in
+wire n00001.object n0002m.text
+wire n0002n.value n0002o.point
+wire n00005.result n0002o.receiver
+wire n0002o.result n0002q.a
+wire n0002p.value n0002q.b
+wire n0002m.then n0002r.in
+wire n00001.object n0002r.receiver
+wire n0002r.then n0002s.in
+wire n00001.object n0002s.receiver
+wire n0002s.then n0002t.in
+wire n00001.object n0002t.receiver
+wire n0002q.result n0002t.value
+wire n0002t.then n0002u.in
+wire n00001.object n0002u.text
+wire n0000e.result n0002w.a
+wire n0002v.value n0002w.b
+wire n0002w.result n0002y.a
+wire n0002x.value n0002y.b
+wire n0002u.then n0002z.in
+wire n00001.object n0002z.receiver
+wire n0002z.then n00030.in
+wire n00001.object n00030.receiver
+wire n00030.then n00031.in
+wire n00001.object n00031.receiver
+wire n0002y.result n00031.value
+wire n00031.then n00032.in
+wire n00001.object n00032.text
+wire n00033.value n00034.point
+wire n0000e.result n00034.receiver
+wire n00034.result n00036.a
+wire n00035.value n00036.b
+wire n00032.then n00037.in
+wire n00001.object n00037.receiver
+wire n00037.then n00038.in
+wire n00001.object n00038.receiver
+wire n00038.then n00039.in
+wire n00001.object n00039.receiver
+wire n00036.result n00039.value
+wire n00039.then n0003a.in
+wire n00001.object n0003a.text
+wire n0003b.value n0003c.point
+wire n00005.result n0003c.receiver
+wire n0003c.result n0003e.a
+wire n0003d.value n0003e.b
+wire n0003a.then n0003f.in
+wire n00001.object n0003f.receiver
+wire n0003f.then n0003g.in
+wire n00001.object n0003g.receiver
+wire n0003g.then n0003h.in
+wire n00001.object n0003h.receiver
+wire n0003e.result n0003h.value
+wire n0003h.then n0003i.in
+wire n00001.object n0003i.text
+wire n0000e.result n0003k.a
+wire n0003j.value n0003k.b
+wire n0003k.result n0003m.a
+wire n0003l.value n0003m.b
+wire n0003i.then n0003n.in
+wire n00001.object n0003n.receiver
+wire n0003n.then n0003o.in
+wire n00001.object n0003o.receiver
+wire n0003o.then n0003p.in
+wire n00001.object n0003p.receiver
+wire n0003m.result n0003p.value
+wire n0003p.then n0003q.in
+wire n00001.object n0003q.text
+wire n0003r.value n0003s.point
+wire n0000e.result n0003s.receiver
+wire n0003s.result n0003u.a
+wire n0003t.value n0003u.b
+wire n0003q.then n0003v.in
+wire n00001.object n0003v.receiver
+wire n0003v.then n0003w.in
+wire n00001.object n0003w.receiver
+wire n0003w.then n0003x.in
+wire n00001.object n0003x.receiver
+wire n0003u.result n0003x.value
+wire n0003x.then n0003y.in
+wire n00001.object n0003y.text
+wire n0003z.value n00040.point
+wire n00005.result n00040.receiver
+wire n00040.result n00042.a
+wire n00041.value n00042.b
+wire n0003y.then n00043.in
+wire n00001.object n00043.receiver
+wire n00043.then n00044.in
+wire n00001.object n00044.receiver
+wire n00044.then n00045.in
+wire n00001.object n00045.receiver
+wire n00042.result n00045.value
+wire n00045.then n00046.in
+wire n00001.object n00046.text
+wire n0000e.result n00047.receiver
+wire n00047.result n00048.a
+wire n0000e.result n00048.b
+wire n00049.value n0004d.C0
+wire n0004a.value n0004d.C1
+wire n0004b.value n0004d.C2
+wire n0004c.value n0004d.C3
+wire n00048.result n0004e.a
+wire n0004d.value n0004e.b
+wire n00046.then n0004f.in
+wire n00001.object n0004f.receiver
+wire n0004f.then n0004g.in
+wire n00001.object n0004g.receiver
+wire n0004g.then n0004h.in
+wire n00001.object n0004h.receiver
+wire n0004e.result n0004h.value
+wire n0004h.then n0004i.in
+wire n00001.object n0004i.text
+wire n00009.result n0004j.receiver
+wire n0004k.value n0004o.C0
+wire n0004l.value n0004o.C1
+wire n0004m.value n0004o.C2
+wire n0004n.value n0004o.C3
+wire n0004j.result n0004p.a
+wire n0004o.value n0004p.b
+wire n0004i.then n0004q.in
+wire n00001.object n0004q.receiver
+wire n0004q.then n0004r.in
+wire n00001.object n0004r.receiver
+wire n0004r.then n0004s.in
+wire n00001.object n0004s.receiver
+wire n0004p.result n0004s.value
+wire n0004s.then n0004t.in
+wire n00001.object n0004t.text
+wire n00005.result n0004u.receiver
+wire n0004u.result n0004v.receiver
+wire n0004v.result n0004w.receiver
+wire n0004x.value n00050.C0
+wire n0004y.value n00050.C1
+wire n0004z.value n00050.C2
+wire n0004w.result n00051.a
+wire n00050.value n00051.b
+wire n0004t.then n00052.in
+wire n00001.object n00052.receiver
+wire n00052.then n00053.in
+wire n00001.object n00053.receiver
+wire n00053.then n00054.in
+wire n00001.object n00054.receiver
+wire n00051.result n00054.value
+wire n00054.then n00055.in
+wire n00001.object n00055.text
+wire n00057.value n00058.axis
+wire n00058.result n0005a.Rotation
+wire n00059.value n0005a.Scale
+wire n00056.value n0005a.Translation
+wire n0005c.value n0005d.axis
+wire n0005d.result n0005f.Rotation
+wire n0005e.value n0005f.Scale
+wire n0005b.value n0005f.Translation
+wire n0005a.value n0005g.a
+wire n0005f.value n0005g.b
+wire n0005g.result n0005h.receiver
+wire n0005i.value n0005m.C0
+wire n0005j.value n0005m.C1
+wire n0005k.value n0005m.C2
+wire n0005l.value n0005m.C3
+wire n0005h.result n0005n.a
+wire n0005m.value n0005n.b
+wire n00055.then n0005o.in
+wire n00001.object n0005o.receiver
+wire n0005o.then n0005p.in
+wire n00001.object n0005p.receiver
+wire n0005p.then n0005q.in
+wire n00001.object n0005q.receiver
+wire n0005n.result n0005q.value
+wire n0005q.then n0005r.in
+wire n00001.object n0005r.text
+wire n0005t.value n0005u.axis
+wire n0005u.result n0005w.Rotation
+wire n0005v.value n0005w.Scale
+wire n0005s.value n0005w.Translation
+wire n0005y.value n0005z.axis
+wire n0005z.result n00061.Rotation
+wire n00060.value n00061.Scale
+wire n0005x.value n00061.Translation
+wire n0005w.value n00062.a
+wire n00061.value n00062.b
+wire n00063.value n00064.point
+wire n00062.result n00064.receiver
+wire n00064.result n00066.a
+wire n00065.value n00066.b
+wire n0005r.then n00067.in
+wire n00001.object n00067.receiver
+wire n00067.then n00068.in
+wire n00001.object n00068.receiver
+wire n00068.then n00069.in
+wire n00001.object n00069.receiver
+wire n00066.result n00069.value
+wire n00069.then n0006a.in
+wire n00001.object n0006a.text
+wire n0006b.result n0006d.receiver
+wire n0006c.result n0006d.to
+wire n0006d.result n0006f.a
+wire n0006e.value n0006f.b
+wire n0006f.result n0006h.a
+wire n0006g.value n0006h.b
+wire n0006a.then n0006i.in
+wire n00001.object n0006i.receiver
+wire n0006i.then n0006j.in
+wire n00001.object n0006j.receiver
+wire n0006j.then n0006k.in
+wire n00001.object n0006k.receiver
+wire n0006h.result n0006k.value
+wire n0006k.then n0006l.in
+wire n00001.object n0006l.text
+wire n0006m.result n0006n.a
+wire n00009.result n0006n.b
+wire n0006o.value n0006p.point
+wire n0006n.result n0006p.receiver
+wire n0006p.result n0006r.a
+wire n0006q.value n0006r.b
+wire n0006l.then n0006s.in
+wire n00001.object n0006s.receiver
+wire n0006s.then n0006t.in
+wire n00001.object n0006t.receiver
+wire n0006t.then n0006u.in
+wire n00001.object n0006u.receiver
+wire n0006r.result n0006u.value
+wire n0006u.then n0006v.in
+wire n00001.object n0006v.text
+wire n0006x.value n0006y.Max
+wire n0006w.value n0006y.Min
+wire n00009.result n0006z.m
+wire n0006y.value n0006z.receiver
+wire n00071.value n00072.Max
+wire n00070.value n00072.Min
+wire n0006z.result n00073.a
+wire n00072.value n00073.b
+wire n0006v.then n00074.in
+wire n00001.object n00074.receiver
+wire n00074.then n00075.in
+wire n00001.object n00075.receiver
+wire n00075.then n00076.in
+wire n00001.object n00076.receiver
+wire n00073.result n00076.value
+wire n00076.then n00077.in
+wire n00001.object n00077.text
+wire n00077.then n00078.in

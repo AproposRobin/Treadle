@@ -1,0 +1,14 @@
+# tproj 1
+project M2
+	kind console
+	entry M2.Program
+	version 0.1.0
+depends lib/M2Lib.tproj
+cimport src/libc.cimport
+config Debug
+	checks on
+	optimize 0
+config Release
+	optimize 2
+	checks off
+source src

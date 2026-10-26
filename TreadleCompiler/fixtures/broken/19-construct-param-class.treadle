@@ -1,0 +1,16 @@
+# treadle 1
+# expect n2 - T2104
+type ConstructParamClass class
+	namespace Broken
+	generic T new
+	doc "Construct T allocates on the heap: T needs the class constraint as well as new."
+
+function f1 Make
+	returns T
+sheet body
+node n1 Entry
+node n2 Construct T
+node n3 Return
+wire n1.then n2.in
+wire n2.then n3.in
+wire n2.object n3.value

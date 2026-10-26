@@ -1,0 +1,15 @@
+# tproj 1
+project Shooter
+	kind console
+	entry App.Program
+	output bin/Shooter
+	version 0.1.0
+depends ../core/Core.tproj
+cimport libc.cimport
+config Debug
+	define DEBUG
+	checks on
+	optimize 0
+config Release
+	optimize 2
+	checks off

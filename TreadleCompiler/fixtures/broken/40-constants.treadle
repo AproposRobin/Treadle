@@ -1,0 +1,60 @@
+# treadle 1
+# expect - - T1080
+# expect - - T1081
+# expect - - T1082
+# expect - - T1083
+# expect - - T1084
+# expect n3 x T2231
+type ConstErrors class
+	namespace Broken
+	doc "Constants that do not fold: an init that reads a field (not constant), two constants naming each other (a cycle), a value out of its type's range, a type a constant cannot have, a value of another type; and a constant passed by ref."
+
+field mCount int
+
+field Live int
+	const
+	init mCount + 1
+
+field Ping int
+	const
+	init Pong + 1
+
+field Pong int
+	const
+	init Ping * 2
+
+field Small uint8
+	const
+	init 200 + 100
+
+field Things Object
+	const
+	init null
+
+field Flag int
+	const
+	init true
+
+field Good int
+	const
+	init 3
+
+function f1 Bump
+	static
+param x int
+	mode ref
+sheet body
+node a1 Entry
+node a2 Return
+wire a1.then a2.in
+
+function f2 Run
+	static
+sheet body
+node n1 Entry
+node n2 Get Broken.ConstErrors.Good
+node n3 Call Broken.ConstErrors.Bump
+node n4 Return
+wire n1.then n3.in
+wire n2.value n3.x
+wire n3.then n4.in

@@ -1,0 +1,6 @@
+# treadle 1
+type StepperBox class
+	namespace M2
+	doc "An object with a struct field: a heap delegate may hold the field's address (it must not outlive the object)."
+
+field mStep Stepper

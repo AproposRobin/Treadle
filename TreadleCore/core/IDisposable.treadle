@@ -1,0 +1,5 @@
+# treadle 1
+type IDisposable interface
+	namespace Core
+
+function d0001 Dispose

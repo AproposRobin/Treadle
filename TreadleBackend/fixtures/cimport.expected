@@ -1,0 +1,10 @@
+== exit
+0
+== stdout
+int32 -12, int 9000000000, uint8 200, char8 K, float 2.500, text treadle, 100%
+div 17/5 = 3 rem 2
+lldiv = 10000000000 rem 7
+sorted -7 0 5 19 42
+strlen = 7
+a StringView through the console intrinsic
+sqrt 2 = 1.414214

@@ -1,0 +1,322 @@
+# treadle 1
+type Disassembler class
+	namespace Mini
+	static
+	doc "Prints a Chunk as text: the function table, then one line per instruction with its index, opcode, operands and, for constants and names, the value."
+
+function m0001 Name
+	static
+	pure
+	returns StringView
+	doc "The name of an opcode."
+param op Mini.Opcode
+sheet body
+node x00000 Entry
+node x00001 Switch
+	case Const
+	case Nil
+	case Pop
+	case LoadLocal
+	case StoreLocal
+	case LoadGlobal
+	case StoreGlobal
+	case Add
+	case Sub
+	case Mul
+	case Div
+	case Mod
+	case Neg
+	case Not
+	case Eq
+	case Ne
+	case Lt
+	case Le
+	case Gt
+	case Ge
+	case Jump
+	case JumpIfFalse
+	case JumpIfFalseKeep
+	case JumpIfTrueKeep
+	case Call
+	case CallNative
+	case Return
+	case Halt
+node x00002 Return
+	in value "Const"
+node x00003 Return
+	in value "Nil"
+node x00004 Return
+	in value "Pop"
+node x00005 Return
+	in value "LoadLocal"
+node x00006 Return
+	in value "StoreLocal"
+node x00007 Return
+	in value "LoadGlobal"
+node x00008 Return
+	in value "StoreGlobal"
+node x00009 Return
+	in value "Add"
+node x0000a Return
+	in value "Sub"
+node x0000b Return
+	in value "Mul"
+node x0000c Return
+	in value "Div"
+node x0000d Return
+	in value "Mod"
+node x0000e Return
+	in value "Neg"
+node x0000f Return
+	in value "Not"
+node x0000g Return
+	in value "Eq"
+node x0000h Return
+	in value "Ne"
+node x0000i Return
+	in value "Lt"
+node x0000j Return
+	in value "Le"
+node x0000k Return
+	in value "Gt"
+node x0000l Return
+	in value "Ge"
+node x0000m Return
+	in value "Jump"
+node x0000n Return
+	in value "JumpIfFalse"
+node x0000o Return
+	in value "JumpIfFalseKeep"
+node x0000p Return
+	in value "JumpIfTrueKeep"
+node x0000q Return
+	in value "Call"
+node x0000r Return
+	in value "CallNative"
+node x0000s Return
+	in value "Return"
+node x0000t Return
+	in value "Halt"
+node x0000u Return
+	in value "?"
+wire x00000.then x00001.in
+wire x00000.op x00001.value
+wire x00001.case:Const x00002.in
+wire x00001.case:Nil x00003.in
+wire x00001.case:Pop x00004.in
+wire x00001.case:LoadLocal x00005.in
+wire x00001.case:StoreLocal x00006.in
+wire x00001.case:LoadGlobal x00007.in
+wire x00001.case:StoreGlobal x00008.in
+wire x00001.case:Add x00009.in
+wire x00001.case:Sub x0000a.in
+wire x00001.case:Mul x0000b.in
+wire x00001.case:Div x0000c.in
+wire x00001.case:Mod x0000d.in
+wire x00001.case:Neg x0000e.in
+wire x00001.case:Not x0000f.in
+wire x00001.case:Eq x0000g.in
+wire x00001.case:Ne x0000h.in
+wire x00001.case:Lt x0000i.in
+wire x00001.case:Le x0000j.in
+wire x00001.case:Gt x0000k.in
+wire x00001.case:Ge x0000l.in
+wire x00001.case:Jump x0000m.in
+wire x00001.case:JumpIfFalse x0000n.in
+wire x00001.case:JumpIfFalseKeep x0000o.in
+wire x00001.case:JumpIfTrueKeep x0000p.in
+wire x00001.case:Call x0000q.in
+wire x00001.case:CallNative x0000r.in
+wire x00001.case:Return x0000s.in
+wire x00001.case:Halt x0000t.in
+wire x00001.done x0000u.in
+
+function m0002 Disassemble
+	static
+	doc "Appends the listing of `chunk` to `into`."
+param chunk Mini.Chunk
+param into String
+local ins Mini.Instr
+sheet body
+node x01000 Entry
+node x01001 Get Mini.Chunk.FuncNames
+node x01002 Get List<StringView>.Count
+node x01003 For
+	in start 0
+node x01004 Get Mini.Chunk.FuncNames
+node x01005 Index
+node x01006 Get Mini.Chunk.FuncEntry
+node x01007 Index
+node x01008 Get Mini.Chunk.FuncArity
+node x01009 Index
+node x0100a Get Mini.Chunk.FuncSlots
+node x0100b Index
+node x0100c Call String.AppendF
+	in format "fn {0}: entry {1}, {2} parameters, {3} slots\n"
+node x0100d Get Mini.Chunk.Code
+node x0100e Get List<Mini.Instr>.Count
+node x0100f For
+	in start 0
+node x0100g Get Mini.Chunk.Code
+node x0100h Index
+node x0100i Set local:ins
+node x0100j Get local:ins
+node x0100k Get Mini.Instr.A
+node x0100l Get local:ins
+node x0100m Get Mini.Instr.Op
+node x0100n Call Mini.Disassembler.Name
+node x0100o Call String.AppendF
+	in format "{0,5}  {1,-16}"
+node x0100p Get local:ins
+node x0100q Get Mini.Instr.Op
+node x0100r Switch
+	case Const
+	case LoadGlobal
+	case StoreGlobal
+	case CallNative
+	case LoadLocal
+	case StoreLocal
+	case Call
+	case Jump
+	case JumpIfFalse
+	case JumpIfFalseKeep
+	case JumpIfTrueKeep
+node x0100s Call String.AppendF
+	in format "{0,-8}; "
+node x0100t Get Mini.Chunk.Constants
+node x0100u Index
+node x0100v Call Mini.Value.Append
+node x0100w Call String.AppendF
+	in format "{0,-8}; "
+node x0100x Get Mini.Chunk.Constants
+node x0100y Index
+node x0100z Call Mini.Value.Append
+node x01010 Call String.AppendF
+	in format "{0,-8}; "
+node x01011 Get Mini.Chunk.Constants
+node x01012 Index
+node x01013 Call Mini.Value.Append
+node x01014 Get local:ins
+node x01015 Get Mini.Instr.B
+node x01016 Call String.AppendF
+	in format "{0} {1}     ; "
+node x01017 Get Mini.Chunk.Constants
+node x01018 Index
+node x01019 Call Mini.Value.Append
+node x0101a Call String.Append(int)
+node x0101b Call String.Append(int)
+node x0101c Call String.Append(int)
+node x0101d Call String.AppendF
+	in format "-> {0}"
+node x0101e Call String.AppendF
+	in format "-> {0}"
+node x0101f Call String.AppendF
+	in format "-> {0}"
+node x0101g Call String.AppendF
+	in format "-> {0}"
+node x0101h Call String.Append(char8)
+	in value 10
+node x0101i Return
+wire x01000.chunk x01001.receiver
+wire x01001.value x01002.receiver
+wire x01002.value x01003.count
+wire x01000.then x01003.in
+wire x01000.chunk x01004.receiver
+wire x01004.value x01005.collection
+wire x01003.index x01005.index
+wire x01000.chunk x01006.receiver
+wire x01006.value x01007.collection
+wire x01003.index x01007.index
+wire x01000.chunk x01008.receiver
+wire x01008.value x01009.collection
+wire x01003.index x01009.index
+wire x01000.chunk x0100a.receiver
+wire x0100a.value x0100b.collection
+wire x01003.index x0100b.index
+wire x01005.value x0100c.arg0
+wire x01007.value x0100c.arg1
+wire x01009.value x0100c.arg2
+wire x0100b.value x0100c.arg3
+wire x01003.body x0100c.in
+wire x01000.into x0100c.receiver
+wire x01000.chunk x0100d.receiver
+wire x0100d.value x0100e.receiver
+wire x0100e.value x0100f.count
+wire x01003.done x0100f.in
+wire x01000.chunk x0100g.receiver
+wire x0100g.value x0100h.collection
+wire x0100f.index x0100h.index
+wire x0100f.body x0100i.in
+wire x0100h.value x0100i.value
+wire x0100j.value x0100k.receiver
+wire x0100l.value x0100m.receiver
+wire x0100m.value x0100n.op
+wire x0100f.index x0100o.arg0
+wire x0100n.result x0100o.arg1
+wire x0100i.then x0100o.in
+wire x01000.into x0100o.receiver
+wire x0100p.value x0100q.receiver
+wire x0100o.then x0100r.in
+wire x0100q.value x0100r.value
+wire x0100k.value x0100s.arg0
+wire x0100r.case:Const x0100s.in
+wire x01000.into x0100s.receiver
+wire x01000.chunk x0100t.receiver
+wire x0100t.value x0100u.collection
+wire x0100k.value x0100u.index
+wire x0100s.then x0100v.in
+wire x01000.into x0100v.into
+wire x0100u.value x0100v.value
+wire x0100k.value x0100w.arg0
+wire x0100r.case:LoadGlobal x0100w.in
+wire x01000.into x0100w.receiver
+wire x01000.chunk x0100x.receiver
+wire x0100x.value x0100y.collection
+wire x0100k.value x0100y.index
+wire x0100w.then x0100z.in
+wire x01000.into x0100z.into
+wire x0100y.value x0100z.value
+wire x0100k.value x01010.arg0
+wire x0100r.case:StoreGlobal x01010.in
+wire x01000.into x01010.receiver
+wire x01000.chunk x01011.receiver
+wire x01011.value x01012.collection
+wire x0100k.value x01012.index
+wire x01010.then x01013.in
+wire x01000.into x01013.into
+wire x01012.value x01013.value
+wire x01014.value x01015.receiver
+wire x0100k.value x01016.arg0
+wire x01015.value x01016.arg1
+wire x0100r.case:CallNative x01016.in
+wire x01000.into x01016.receiver
+wire x01000.chunk x01017.receiver
+wire x01017.value x01018.collection
+wire x0100k.value x01018.index
+wire x01016.then x01019.in
+wire x01000.into x01019.into
+wire x01018.value x01019.value
+wire x0100r.case:LoadLocal x0101a.in
+wire x01000.into x0101a.receiver
+wire x0100k.value x0101a.value
+wire x0100r.case:StoreLocal x0101b.in
+wire x01000.into x0101b.receiver
+wire x0100k.value x0101b.value
+wire x0100r.case:Call x0101c.in
+wire x01000.into x0101c.receiver
+wire x0100k.value x0101c.value
+wire x0100k.value x0101d.arg0
+wire x0100r.case:Jump x0101d.in
+wire x01000.into x0101d.receiver
+wire x0100k.value x0101e.arg0
+wire x0100r.case:JumpIfFalse x0101e.in
+wire x01000.into x0101e.receiver
+wire x0100k.value x0101f.arg0
+wire x0100r.case:JumpIfFalseKeep x0101f.in
+wire x01000.into x0101f.receiver
+wire x0100k.value x0101g.arg0
+wire x0100r.case:JumpIfTrueKeep x0101g.in
+wire x01000.into x0101g.receiver
+wire x0100r.done x0101h.in
+wire x01000.into x0101h.receiver
+wire x0100f.done x0101i.in

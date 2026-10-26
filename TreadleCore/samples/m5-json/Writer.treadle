@@ -1,0 +1,434 @@
+# treadle 1
+type Writer class
+	namespace Json
+	static
+	doc "Writes a JsonValue as JSON text: compact (no white space) or pretty (two spaces per level, one element or member per line). Object members are written sorted by key, so the output is the same on every run; strings are escaped (quotes, backslashes and control characters), other UTF-8 is written as it is."
+
+function m0001 Write
+	static
+	doc "Appends `value` to `into`; `level` is the indentation level of the line it starts on (0 for a document)."
+param value Json.JsonValue
+param into String
+param pretty bool
+param level int
+sheet body
+node a000 Entry
+node a001 Switch
+	case Null
+	case Bool
+	case Number
+	case Text
+	case Array
+	case Object
+node a002 Call String.Append(StringView)
+	in text "null"
+node a003 Call String.Append(bool)
+node a004 Call Json.Writer.WriteNumber
+node a005 Call Json.Writer.WriteString
+node a006 Call Json.Writer.WriteArray
+node a007 Call Json.Writer.WriteObject
+node a008 Return
+wire a000.then a001.in
+wire a000.value a001.value
+wire a001.case:Null a002.in
+wire a000.into a002.receiver
+wire a001.case:Bool a003.in
+wire a000.into a003.receiver
+wire a001.case:Bool.value a003.value
+wire a001.case:Number a004.in
+wire a000.into a004.into
+wire a001.case:Number.value a004.value
+wire a001.case:Text a005.in
+wire a000.into a005.into
+wire a001.case:Text.value a005.text
+wire a001.case:Array a006.in
+wire a000.into a006.into
+wire a001.case:Array.items a006.items
+wire a000.level a006.level
+wire a000.pretty a006.pretty
+wire a001.case:Object a007.in
+wire a000.into a007.into
+wire a000.level a007.level
+wire a001.case:Object.members a007.members
+wire a000.pretty a007.pretty
+wire a001.done a008.in
+
+function m0002 WriteArray
+	static
+	access private
+	doc "Appends `[...]`: `[]` when empty, else one element per line when pretty."
+param items List<Json.JsonValue>
+param into String
+param pretty bool
+param level int
+sheet body
+node b000 Entry
+node b001 Get List<Json.JsonValue>.Count
+node b002 Operator ==
+	in b 0
+node b003 Branch
+node b004 Call String.Append(StringView)
+	in text "[]"
+node b005 Return
+node b006 Call String.Append(char8)
+	in value 91
+node b007 For
+	in start 0
+node b008 Operator >
+	in b 0
+node b009 Branch
+node b00a Call String.Append(char8)
+	in value 44
+node b00b Operator +
+	in b 1
+node b00c Call Json.Writer.NewLine
+node b00d Index
+node b00e Call Json.Writer.Write
+node b00f Call Json.Writer.NewLine
+node b00g Call String.Append(char8)
+	in value 93
+node b00h Return
+wire b000.items b001.receiver
+wire b001.value b002.a
+wire b002.result b003.condition
+wire b000.then b003.in
+wire b003.true b004.in
+wire b000.into b004.receiver
+wire b004.then b005.in
+wire b003.false b006.in
+wire b000.into b006.receiver
+wire b001.value b007.count
+wire b006.then b007.in
+wire b007.index b008.a
+wire b008.result b009.condition
+wire b007.body b009.in
+wire b009.true b00a.in
+wire b000.into b00a.receiver
+wire b000.level b00b.a
+wire b009.false b00c.in
+wire b00a.then b00c.in
+wire b000.into b00c.into
+wire b00b.result b00c.level
+wire b000.pretty b00c.pretty
+wire b000.items b00d.collection
+wire b007.index b00d.index
+wire b00c.then b00e.in
+wire b000.into b00e.into
+wire b00b.result b00e.level
+wire b000.pretty b00e.pretty
+wire b00d.value b00e.value
+wire b007.done b00f.in
+wire b000.into b00f.into
+wire b000.level b00f.level
+wire b000.pretty b00f.pretty
+wire b00f.then b00g.in
+wire b000.into b00g.receiver
+wire b00g.then b00h.in
+
+function m0003 WriteObject
+	static
+	access private
+	doc "Appends `{...}` with the members sorted by key (byte order): `{}` when empty, else one member per line when pretty."
+param members Dictionary<String,Json.JsonValue>
+param into String
+param pretty bool
+param level int
+sheet body
+node c000 Entry
+node c001 Get Dictionary<String,Json.JsonValue>.Count
+node c002 Operator ==
+	in b 0
+node c003 Branch
+node c004 Call String.Append(StringView)
+	in text "{}"
+node c005 Return
+node c006 Local List<String>
+node c007 Call Dictionary<String,Json.JsonValue>.Keys
+node c008 ForEach
+node c009 Call List<String>.Add
+node c00a Lambda
+	set type delegate:int(String,String)
+	set alloc local
+	set inputs a b
+node c00b Call List<String>.Sort
+node c00c Call String.Append(char8)
+	in value 123
+node c00d ForEach
+node c00e Operator >
+	in b 0
+node c00f Branch
+node c00g Call String.Append(char8)
+	in value 44
+node c00h Operator +
+	in b 1
+node c00i Call Json.Writer.NewLine
+node c00j Call Json.Writer.WriteString
+node c00k Literal
+	set type StringView
+	set value ": "
+node c00l Literal
+	set type StringView
+	set value ":"
+node c00m Select
+node c00n Call String.Append(StringView)
+node c00o Index
+node c00p Call Json.Writer.Write
+node c00q Call Json.Writer.NewLine
+node c00r Call String.Append(char8)
+	in value 125
+node c00s Return
+wire c000.members c001.receiver
+wire c001.value c002.a
+wire c002.result c003.condition
+wire c000.then c003.in
+wire c003.true c004.in
+wire c000.into c004.receiver
+wire c004.then c005.in
+wire c003.false c006.in
+wire c006.then c007.in
+wire c000.members c007.receiver
+wire c007.result c008.collection
+wire c007.then c008.in
+wire c008.body c009.in
+wire c006.object c009.receiver
+wire c008.element c009.value
+wire c008.done c00a.in
+wire c00a.value c00b.comparer
+wire c00a.then c00b.in
+wire c006.object c00b.receiver
+wire c00b.then c00c.in
+wire c000.into c00c.receiver
+wire c006.object c00d.collection
+wire c00c.then c00d.in
+wire c00d.index c00e.a
+wire c00e.result c00f.condition
+wire c00d.body c00f.in
+wire c00f.true c00g.in
+wire c000.into c00g.receiver
+wire c000.level c00h.a
+wire c00f.false c00i.in
+wire c00g.then c00i.in
+wire c000.into c00i.into
+wire c00h.result c00i.level
+wire c000.pretty c00i.pretty
+wire c00i.then c00j.in
+wire c000.into c00j.into
+wire c00d.element c00j.text
+wire c000.pretty c00m.condition
+wire c00l.value c00m.false
+wire c00k.value c00m.true
+wire c00j.then c00n.in
+wire c000.into c00n.receiver
+wire c00m.result c00n.text
+wire c000.members c00o.collection
+wire c00d.element c00o.index
+wire c00n.then c00p.in
+wire c000.into c00p.into
+wire c00h.result c00p.level
+wire c000.pretty c00p.pretty
+wire c00o.value c00p.value
+wire c00d.done c00q.in
+wire c000.into c00q.into
+wire c000.level c00q.level
+wire c000.pretty c00q.pretty
+wire c00q.then c00r.in
+wire c000.into c00r.receiver
+wire c00r.then c00s.in
+sheet lambda:c00a
+node d000 Entry
+node d001 Call String.CompareTo
+node d002 Return
+wire d000.b d001.other
+wire d000.a d001.receiver
+wire d000.then d002.in
+wire d001.result d002.value
+
+function m0004 NewLine
+	static
+	access private
+	doc "When pretty: a line feed and two spaces per `level`; nothing otherwise."
+param into String
+param pretty bool
+param level int
+sheet body
+node e000 Entry
+node e001 Branch
+node e002 Call String.Append(char8)
+	in value 10
+node e003 For
+	in start 0
+node e004 Call String.Append(StringView)
+	in text "  "
+node e005 Return
+wire e000.pretty e001.condition
+wire e000.then e001.in
+wire e001.true e002.in
+wire e000.into e002.receiver
+wire e000.level e003.count
+wire e002.then e003.in
+wire e003.body e004.in
+wire e000.into e004.receiver
+wire e001.false e005.in
+wire e003.done e005.in
+
+function m0005 WriteString
+	static
+	doc "Appends `text` as a JSON string: quoted, with \\\" \\\\ \\n \\r \\t \\b \\f escapes and \\u00XX for the other control characters; every other byte as it is."
+param text StringView
+param into String
+sheet body
+node f000 Entry
+node f001 Call String.Append(char8)
+	in value 34
+node f002 Get StringView.Length
+node f003 For
+	in start 0
+node f004 Index
+node f005 Cast int
+node f006 Switch
+	case 34
+	case 92
+	case 10
+	case 13
+	case 9
+	case 8
+	case 12
+node f007 Call String.Append(StringView)
+	in text "\\\""
+node f008 Call String.Append(StringView)
+	in text "\\\\"
+node f009 Call String.Append(StringView)
+	in text "\\n"
+node f00a Call String.Append(StringView)
+	in text "\\r"
+node f00b Call String.Append(StringView)
+	in text "\\t"
+node f00c Call String.Append(StringView)
+	in text "\\b"
+node f00d Call String.Append(StringView)
+	in text "\\f"
+node f00e Operator <
+	in b 32
+node f00f Branch
+node f00g Call String.AppendF
+	in format "\\u{0:x4}"
+node f00h Call String.Append(char8)
+node f00i Call String.Append(char8)
+	in value 34
+node f00j Return
+wire f000.then f001.in
+wire f000.into f001.receiver
+wire f000.text f002.receiver
+wire f002.value f003.count
+wire f001.then f003.in
+wire f000.text f004.collection
+wire f003.index f004.index
+wire f004.value f005.value
+wire f003.body f006.in
+wire f005.result f006.value
+wire f006.case:34 f007.in
+wire f000.into f007.receiver
+wire f006.case:92 f008.in
+wire f000.into f008.receiver
+wire f006.case:10 f009.in
+wire f000.into f009.receiver
+wire f006.case:13 f00a.in
+wire f000.into f00a.receiver
+wire f006.case:9 f00b.in
+wire f000.into f00b.receiver
+wire f006.case:8 f00c.in
+wire f000.into f00c.receiver
+wire f006.case:12 f00d.in
+wire f000.into f00d.receiver
+wire f005.result f00e.a
+wire f00e.result f00f.condition
+wire f006.default f00f.in
+wire f005.result f00g.arg0
+wire f00f.true f00g.in
+wire f000.into f00g.receiver
+wire f00f.false f00h.in
+wire f000.into f00h.receiver
+wire f004.value f00h.value
+wire f003.done f00i.in
+wire f000.into f00i.receiver
+wire f00i.then f00j.in
+
+function m0006 WriteNumber
+	static
+	access private
+	doc "Appends a number: an integer without a fraction when it is one (below 10^15), else the shortest of 15 or 17 significant digits that reads back as the same double. NaN and the infinities have no JSON form and are written as null."
+param value double
+param into String
+sheet body
+node g000 Entry
+node g001 Operator -
+node g002 Call Math.IsNaN
+node g003 Branch
+node g004 Call String.Append(StringView)
+	in text "null"
+node g005 Return
+node g006 Call Math.Floor
+node g007 Operator ==
+node g008 Call Math.Abs(double)
+node g009 Operator <
+	in b 1000000000000000.0
+node g00a Operator &&
+node g00b Branch
+node g00c Cast int
+node g00d Call String.Append(int)
+node g00e Return
+node g00f Local String
+	set ctor ()
+node g00g Call String.AppendNumber(double,StringView)
+	in format "G15"
+node g00h Call Double.TryParse
+node g00i Operator ==
+node g00j Operator &&
+node g00k Branch
+node g00l Call String.Append(StringView)
+node g00m Return
+node g00n Call String.AppendNumber(double,StringView)
+	in format "G17"
+node g00o Return
+wire g000.value g001.a
+wire g000.value g001.b
+wire g001.result g002.x
+wire g002.result g003.condition
+wire g000.then g003.in
+wire g003.true g004.in
+wire g000.into g004.receiver
+wire g004.then g005.in
+wire g000.value g006.x
+wire g006.result g007.a
+wire g000.value g007.b
+wire g000.value g008.x
+wire g008.result g009.a
+wire g007.result g00a.a
+wire g009.result g00a.b
+wire g00a.result g00b.condition
+wire g003.false g00b.in
+wire g000.value g00c.value
+wire g00b.true g00d.in
+wire g000.into g00d.receiver
+wire g00c.result g00d.value
+wire g00d.then g00e.in
+wire g00b.false g00f.in
+wire g00f.then g00g.in
+wire g00f.object g00g.receiver
+wire g000.value g00g.value
+wire g00g.then g00h.in
+wire g00f.object g00h.text
+wire g00h.parsed g00i.a
+wire g000.value g00i.b
+wire g00h.result g00j.a
+wire g00i.result g00j.b
+wire g00j.result g00k.condition
+wire g00h.then g00k.in
+wire g00k.true g00l.in
+wire g000.into g00l.receiver
+wire g00f.object g00l.text
+wire g00l.then g00m.in
+wire g00k.false g00n.in
+wire g000.into g00n.receiver
+wire g000.value g00n.value
+wire g00n.then g00o.in

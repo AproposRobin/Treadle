@@ -1,0 +1,13 @@
+# File and Directory with non-ASCII names in a kfilés folder under the working folder (made and removed by the program).
+== exit
+0
+== stdout
+true true true true
+false true
+3
+one|two|three
+xyz
+ä.txt,日本.dat
+süb
+true true true true
+false

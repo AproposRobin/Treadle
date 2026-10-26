@@ -1,0 +1,152 @@
+# treadle 1
+type SdlContext struct
+	namespace Breakout
+	doc "The SDL window and renderer as a struct with a destructor: a Local of it opens them in its constructor and closes whatever was made when its region ends, also after a failure. Status gives the outcome as a Result."
+
+field Window C.SDL_Window*
+
+field Renderer C.SDL_Renderer*
+
+field Started bool
+
+field Failed StringView
+	doc "The step that failed; empty when all went well."
+
+ctor s0001
+	doc "Starts SDL video, opens a 640x480 window and a renderer synchronised with the display; on a failure it stops and keeps the name of the step in Failed (SDL_GetError says why)."
+sheet body
+node a01 Entry
+node a02 Call C.sdl2.SDL_SetMainReady
+node a03 Get C.sdl2.SDL_INIT_VIDEO
+node a04 Call C.sdl2.SDL_Init
+node a05 Operator !=
+	in b 0
+node a06 Branch
+node a07 Set this.Failed
+	in value "SDL_Init"
+node a08 Return
+node a09 Set this.Started
+	in value true
+node a0a Get C.sdl2.SDL_WINDOWPOS_CENTERED_MASK
+node a0b Cast int32
+node a0c MakeCase C.SDL_WindowFlags.SDL_WINDOW_SHOWN
+node a0d Cast uint32
+node a0e Call C.sdl2.SDL_CreateWindow
+	in title "Treadle Breakout"
+	in w 640
+	in h 480
+node a0f Set this.Window
+node a0g Get this.Window
+node a0h Operator ==
+	in b null
+node a0i Branch
+node a0j Set this.Failed
+	in value "SDL_CreateWindow"
+node a0k Return
+node a0l Get this.Window
+node a0m MakeCase C.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC
+node a0n Cast uint32
+node a0o Call C.sdl2.SDL_CreateRenderer
+	in index -1
+node a0p Set this.Renderer
+node a0q Get this.Renderer
+node a0r Operator ==
+	in b null
+node a0s Branch
+node a0t Set this.Failed
+	in value "SDL_CreateRenderer"
+node a0u Return
+node a0v Return
+wire a01.then a02.in
+wire a03.value a04.flags
+wire a02.then a04.in
+wire a04.result a05.a
+wire a05.result a06.condition
+wire a04.then a06.in
+wire a06.true a07.in
+wire a07.then a08.in
+wire a06.false a09.in
+wire a0a.value a0b.value
+wire a0c.value a0d.value
+wire a0d.result a0e.flags
+wire a09.then a0e.in
+wire a0b.result a0e.x
+wire a0b.result a0e.y
+wire a0e.then a0f.in
+wire a0e.result a0f.value
+wire a0g.value a0h.a
+wire a0h.result a0i.condition
+wire a0f.then a0i.in
+wire a0i.true a0j.in
+wire a0j.then a0k.in
+wire a0m.value a0n.value
+wire a0n.result a0o.flags
+wire a0i.false a0o.in
+wire a0l.value a0o.window
+wire a0o.then a0p.in
+wire a0o.result a0p.value
+wire a0q.value a0r.a
+wire a0r.result a0s.condition
+wire a0p.then a0s.in
+wire a0s.true a0t.in
+wire a0t.then a0u.in
+wire a0s.false a0v.in
+
+function s0003 Status
+	pure
+	returns Result<int,StringView>
+	doc "Ok(0) when the window and renderer are open, else Err with the step that failed."
+sheet body
+node c01 Entry
+node c02 Get this.Failed
+node c03 Call StringView.IsEmpty
+node c04 MakeCase Result<int,StringView>.Ok
+	in value 0
+node c05 MakeCase Result<int,StringView>.Err
+node c06 Select
+node c07 Return
+wire c02.value c03.receiver
+wire c02.value c05.error
+wire c03.result c06.condition
+wire c05.value c06.false
+wire c04.value c06.true
+wire c01.then c07.in
+wire c06.result c07.value
+
+dtor s0002
+	doc "Destroys the renderer and the window when they were made, and quits SDL when it started."
+sheet body
+node b01 Entry
+node b02 Get this.Renderer
+node b03 Operator !=
+	in b null
+node b04 Branch
+node b05 Get this.Renderer
+node b06 Call C.sdl2.SDL_DestroyRenderer
+node b07 Get this.Window
+node b08 Operator !=
+	in b null
+node b09 Branch
+node b0a Get this.Window
+node b0b Call C.sdl2.SDL_DestroyWindow
+node b0c Get this.Started
+node b0d Branch
+node b0e Call C.sdl2.SDL_Quit
+node b0f Return
+wire b02.value b03.a
+wire b03.result b04.condition
+wire b01.then b04.in
+wire b04.true b06.in
+wire b05.value b06.renderer
+wire b07.value b08.a
+wire b08.result b09.condition
+wire b04.false b09.in
+wire b06.then b09.in
+wire b09.true b0b.in
+wire b0a.value b0b.window
+wire b0c.value b0d.condition
+wire b09.false b0d.in
+wire b0b.then b0d.in
+wire b0d.true b0e.in
+wire b0d.false b0f.in
+wire b0e.then b0f.in

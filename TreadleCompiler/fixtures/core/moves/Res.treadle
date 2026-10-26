@@ -1,0 +1,25 @@
+# treadle 1
+type Res struct
+	namespace Cx
+	doc "A struct with a destructor that owns a String: destroyed twice is a double free and never destroyed is a leak, both of which fail the Debug run. Each destruction is counted in MovesMain."
+
+field mId int
+
+field mName String
+	owner owned
+
+dtor r0001
+	doc "Counts the destruction and adds the id to the sum."
+sheet body
+node a1 Entry
+node a2 Set MovesMain.sDestroyed
+	set op +=
+	in value 1
+node a3 Get this.mId
+node a4 Set MovesMain.sSum
+	set op +=
+node a5 Return
+wire a1.then a2.in
+wire a2.then a4.in
+wire a3.value a4.value
+wire a4.then a5.in

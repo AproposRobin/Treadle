@@ -1,0 +1,172 @@
+# tir 1
+# Vectors in memory (SIMD-and-Vectors.md 1.2, 1.4): Vector.Load / Store on the elements of a float[]
+# (unaligned, align 4; vec.spancheck first, a Debug check), a float4[] (stride 16), a float4 field of a
+# class (offset 16, after the header), a double3 and a float8 (over 16 bytes: arrays of 16-byte vectors
+# in memory) and a bool4 (one byte per lane) inside a struct and a tuple, a [Packed] struct's float4
+# field (an unaligned access) and a bool4 kept in a slot.
+program SimdMem console
+entry Sm.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Sm.Program
+type Sm.Body class
+	field mPos float4
+	field mMass float
+type Sm.Wide struct
+	field a int8
+	field d double3
+	field m bool4
+	field e float8
+type Sm.Tight struct packed
+	field a int8
+	field v float4
+type Sm.Program class
+
+func Sm.Program.Main() int static sheet "f1" display "Sm.Program.Main"
+	node a1 Entry
+	node a2 Call Core.Vector.Load
+	node a3 Call Core.Vector.Store
+	slot s0 Sm.Wide variable
+	slot s1 Sm.Tight variable
+	slot s2 bool4 variable
+	block b0
+		%n = const int 8
+		%arr = alloc.array float[] %n
+		%i0 = const int 0
+		%p0 = elem.addr float* %arr %i0
+		%v0 = const float 0
+		store %p0 %v0
+		%i1 = const int 1
+		%p1 = elem.addr float* %arr %i1
+		%v1 = const float 1
+		store %p1 %v1
+		%i2 = const int 2
+		%p2 = elem.addr float* %arr %i2
+		%v2 = const float 2
+		store %p2 %v2
+		%i3 = const int 3
+		%p3 = elem.addr float* %arr %i3
+		%v3 = const float 3
+		store %p3 %v3
+		%i4 = const int 4
+		%p4 = elem.addr float* %arr %i4
+		%v4 = const float 4
+		store %p4 %v4
+		%i5 = const int 5
+		%p5 = elem.addr float* %arr %i5
+		%v5 = const float 5
+		store %p5 %v5
+		%i6 = const int 6
+		%p6 = elem.addr float* %arr %i6
+		%v6 = const float 6
+		store %p6 %v6
+		%i7 = const int 7
+		%p7 = elem.addr float* %arr %i7
+		%v7 = const float 7
+		store %p7 %v7
+		%len = array.len int %arr @a2
+		vec.spancheck %i2 %len 4 @a2
+		%lp = elem.addr float* %arr %i2 @a2
+		%x = vec.load float4 %lp 4 @a2
+		%ten = const float4 10
+		%x2 = binop float4 mul %x %ten
+		vec.spancheck %i4 %len 4 @a3
+		%sp = elem.addr float* %arr %i4 @a3
+		vec.store %sp %x2 4 @a3
+		%e3 = load float %p3
+		%e4 = load float %p4
+		%e7 = load float %p7
+		%e3d = cast double %e3
+		%e4d = cast double %e4
+		%e7d = cast double %e7
+		%f1 = const char8* "floats %g %g %g\n"
+		%r1 = ccall int32 C.libc.printf(char8*,...) %f1 %e3d %e4d %e7d
+		%three = const int 3
+		%va = alloc.array float4[] %three
+		%q1 = elem.addr float4* %va %i1
+		store %q1 %x2
+		%q2 = elem.addr float4* %va %i2
+		%y = const float4 1,1,1,1
+		store %q2 %y
+		%qa = load float4 %q1
+		%qb = load float4 %q2
+		%qs = binop float4 add %qa %qb
+		%qx = vec.get float %qs 3
+		%qxd = cast double %qx
+		%f2 = const char8* "array lane %g\n"
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %qxd
+		%body = alloc Sm.Body
+		%bp = field.addr float4* %body mPos
+		store %bp %qs
+		%bm = field.addr float* %body mMass
+		%mass = const float 2
+		store %bm %mass
+		%pos = load float4 %bp
+		%px = vec.get float %pos 0
+		%pxd = cast double %px
+		%f3 = const char8* "body %g\n"
+		%r3 = ccall int32 C.libc.printf(char8*,...) %f3 %pxd
+		delete %body
+		%a8 = const int8 7
+		%d3 = const double3 1.5,2.5,3.5
+		%m4 = const bool4 true,true,false,true
+		%e8 = const float8 1,2,3,4,5,6,7,8
+		%wide = make Sm.Wide %a8 %d3 %m4 %e8
+		store.slot s0 %wide
+		%wp = slot.addr Sm.Wide* s0
+		%wdp = field.addr double3* %wp d
+		%wd = load double3 %wdp
+		%wd2 = vec.get double %wd 2
+		%wmp = field.addr bool4* %wp m
+		%wm = load bool4 %wmp
+		%wmb = vec.bitmask uint %wm
+		%wep = field.addr float8* %wp e
+		%we = load float8 %wep
+		%we7 = vec.get float %we 7
+		%we7d = cast double %we7
+		%wide2 = load.slot Sm.Wide s0
+		%xd3 = extract double3 %wide2 1
+		%xm = extract bool4 %wide2 2
+		%xe = extract float8 %wide2 3
+		%xd30 = vec.get double %xd3 0
+		%xmb = vec.bitmask uint %xm
+		%xe5 = vec.get float %xe 5
+		%xe5d = cast double %xe5
+		%f4 = const char8* "wide %g %llu %g / %g %llu %g\n"
+		%r4 = ccall int32 C.libc.printf(char8*,...) %f4 %wd2 %wmb %we7d %xd30 %xmb %xe5d
+		%sz = sizeof int Sm.Wide
+		%f5 = const char8* "Wide is %lld bytes\n"
+		%r5 = ccall int32 C.libc.printf(char8*,...) %f5 %sz
+		%tup = make (float8,bool4,int) %e8 %m4 %n
+		%te = extract float8 %tup 0
+		%tm = extract bool4 %tup 1
+		%te0 = vec.get float %te 0
+		%te0d = cast double %te0
+		%tmb = vec.bitmask uint %tm
+		%f6 = const char8* "tuple %g %llu\n"
+		%r6 = ccall int32 C.libc.printf(char8*,...) %f6 %te0d %tmb
+		%tight = make Sm.Tight %a8 %qs
+		store.slot s1 %tight
+		%tp = slot.addr Sm.Tight* s1
+		%tvp = field.addr float4* %tp v
+		%tv = load float4 %tvp
+		%tv2 = binop float4 add %tv %tv
+		store %tvp %tv2
+		%tv3 = load float4 %tvp
+		%tvx = vec.get float %tv3 1
+		%tvxd = cast double %tvx
+		%tsz = sizeof int Sm.Tight
+		%f7 = const char8* "packed %g size %lld\n"
+		%r7 = ccall int32 C.libc.printf(char8*,...) %f7 %tvxd %tsz
+		store.slot s2 %m4
+		%sm = load.slot bool4 s2
+		%smn = binop bool4 xor %sm %m4
+		%sany = vec.any bool %smn
+		%sanyi = cast int32 %sany
+		%f8 = const char8* "slot mask any %d\n"
+		%r8 = ccall int32 C.libc.printf(char8*,...) %f8 %sanyi
+		delete %arr
+		delete %va
+		%z = const int 0
+		ret %z

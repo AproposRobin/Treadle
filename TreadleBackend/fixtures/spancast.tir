@@ -1,0 +1,113 @@
+# tir 1
+# A Span over an array (array.span): the whole array, a range of it (start 1, count 3), an empty range at
+# the end (start 5, count 0), and the same made by `cast Core.Span<int> %arr`; each summed by a function
+# that takes the Span (its Ptr and Length read with extract, the elements with elem.addr on the pointer).
+program SpanCast console
+entry Sc.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+type Core.Span<int> struct
+	field Ptr int*
+	field Length int
+
+unit Sc.Program
+type Sc.Program class
+
+func Sc.Program.Sum(Core.Span<int>) int static sheet "m2" display "Sc.Program.Sum"
+	param s Core.Span<int>
+	slot si int loopvar node a2.index
+	slot st int variable
+	node a1 Entry
+	node a2 For
+	node a3 Return
+	block b0
+		%z = const int 0 @a2.start
+		store.slot si %z @a2
+		store.slot st %z @a2
+		br cond
+	block cond
+		%i = load.slot int si @a2
+		%n = extract int %s 1 @a2.count
+		%more = cmp bool lt %i %n @a2
+		condbr %more body done @a2
+	block body
+		%p = extract int* %s 0 @a2
+		%e = elem.addr int* %p %i @a2
+		%v = load int %e @a2
+		%t = load.slot int st @a2
+		%t2 = binop int add %t %v @a2
+		store.slot st %t2 @a2
+		%one = const int 1 @a2
+		%i2 = binop int add %i %one @a2
+		store.slot si %i2 @a2
+		br cond
+	block done
+		%r = load.slot int st @a3
+		ret %r @a3
+
+func Sc.Program.Show(char8*,Core.Span<int>) void static sheet "m3" display "Sc.Program.Show"
+	param what char8*
+	param s Core.Span<int>
+	node a1 Entry
+	node a2 Call C.libc.printf
+	block b0
+		%sum = call int Sc.Program.Sum(Core.Span<int>) %s @a2
+		%len = extract int %s 1 @a2
+		%f = const char8* "%s: length %lld, sum %lld\n" @a2.format
+		%q = ccall int32 C.libc.printf(char8*,...) %f %what %len %sum @a2
+		ret @a2
+
+func Sc.Program.Main() int static sheet "m1" display "Sc.Program.Main"
+	node a1 Entry
+	node a2 Construct int[]
+	node a3 Call Sc.Program.Show
+	node a4 Call Sc.Program.Show
+	node a5 Call Sc.Program.Show
+	node a6 Call Sc.Program.Show
+	node a7 Delete
+	node a8 Return 0
+	block b0
+		region.enter r0 @a1
+		%len = const int 5 @a2
+		%a = alloc.array int[] %len @a2
+		%i0 = const int 0 @a2
+		%e0 = elem.addr int* %a %i0 @a2
+		%x0 = const int 10 @a2
+		store %e0 %x0 @a2
+		%i1 = const int 1 @a2
+		%e1 = elem.addr int* %a %i1 @a2
+		%x1 = const int 20 @a2
+		store %e1 %x1 @a2
+		%i2 = const int 2 @a2
+		%e2 = elem.addr int* %a %i2 @a2
+		%x2 = const int 30 @a2
+		store %e2 %x2 @a2
+		%i3 = const int 3 @a2
+		%e3 = elem.addr int* %a %i3 @a2
+		%x3 = const int 40 @a2
+		store %e3 %x3 @a2
+		%i4 = const int 4 @a2
+		%e4 = elem.addr int* %a %i4 @a2
+		%x4 = const int 50 @a2
+		store %e4 %x4 @a2
+		%w1 = const char8* "whole" @a3.what
+		%s1 = array.span Core.Span<int> %a @a3.s
+		call void Sc.Program.Show(char8*,Core.Span<int>) %w1 %s1 @a3
+		%w2 = const char8* "range" @a4.what
+		%st2 = const int 1 @a4.s
+		%n2 = const int 3 @a4.s
+		%s2 = array.span Core.Span<int> %a %st2 %n2 @a4.s
+		call void Sc.Program.Show(char8*,Core.Span<int>) %w2 %s2 @a4
+		%w3 = const char8* "empty" @a5.what
+		%st3 = const int 5 @a5.s
+		%n3 = const int 0 @a5.s
+		%s3 = array.span Core.Span<int> %a %st3 %n3 @a5.s
+		call void Sc.Program.Show(char8*,Core.Span<int>) %w3 %s3 @a5
+		%w4 = const char8* "cast" @a6.what
+		%s4 = cast Core.Span<int> %a @a6.s
+		call void Sc.Program.Show(char8*,Core.Span<int>) %w4 %s4 @a6
+		delete %a @a7
+		%z = const int 0 @a8.value
+		region.exit r0 @a8
+		ret %z @a8

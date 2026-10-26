@@ -1,0 +1,58 @@
+# treadle 1
+type Program class
+	namespace M2
+	static
+	doc "Milestone 2 front end: one call per feature, each feature in its own type file."
+
+function m0001 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Call M2.Gates.Run
+node a3 Call M2.Once.Run
+node a4 Call M2.Counted.Run
+node a5 Call M2.Alternate.Run
+node a6 Call M2.Rotation.Run
+node a7 Call M2.Casting.Run
+node a8 Call M2.Range.Run
+node a9 Call M2.Commands.Run
+node b1 Call M2.Tuples.Run
+node b2 Call M2.Config.Run
+node b3 Call M2.Counter.Run
+node b4 Call M2.Factory<Lib.Word>.Make
+node b5 Get Lib.Word.Size
+node b6 Call Console.WriteLine(int)
+node b7 Delete
+node b8 Call M2.Arena.Run
+node b9 Return
+	in value 0
+node c1 Call M2.Extensions.Run
+node c2 Call M2.Events.Run
+node c3 Call M2.BoundStructs.Run
+node c4 Call M2.ArrayArena.Run
+node c5 Call M2.CVars.Run
+wire a1.then a2.in
+wire a2.then a3.in
+wire a3.then a4.in
+wire a4.then a5.in
+wire a5.then a6.in
+wire a6.then a7.in
+wire a7.then a8.in
+wire a8.then a9.in
+wire a9.then b1.in
+wire b1.then b2.in
+wire b2.then b3.in
+wire b3.then b4.in
+wire b4.result b5.receiver
+wire b4.then b6.in
+wire b5.value b6.value
+wire b6.then b7.in
+wire b4.result b7.object
+wire b7.then b8.in
+wire c5.then b9.in
+wire b8.then c1.in
+wire c1.then c2.in
+wire c2.then c3.in
+wire c3.then c4.in
+wire c4.then c5.in

@@ -1,0 +1,18 @@
+== exit
+0
+== stdout
+result 0 = 0
+worker 0
+false
+result 1 = 1
+worker 1
+false
+result 2 = 4
+worker 2
+false
+result 3 = 9
+worker 3
+false
+true
+Main
+4

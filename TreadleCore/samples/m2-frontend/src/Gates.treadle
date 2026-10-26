@@ -1,0 +1,43 @@
+# treadle 1
+type Gates class
+	namespace M2
+	static
+	doc "Gate: Exit runs while the gate is open; Open / Close / Toggle Gate change it. Prints 0 and 2, then the start-closed gate's line once."
+
+function g0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 For
+	in start 0
+	in count 4
+node a3 Sequence
+	set count 2
+node a4 Gate
+node a5 Call Console.WriteLine(int)
+node a6 GateToggle
+	set state __gate_a4
+node b1 For
+	in start 0
+	in count 2
+node b2 Gate
+	set start-closed
+node b3 Call Console.WriteLine(StringView)
+	in text "the closed gate ran after Open Gate"
+node b4 GateOpen
+	set state __gate_b2
+node b5 GateClose
+	set state __gate_b2
+node b6 Return
+wire a1.then a2.in
+wire a2.body a3.in
+wire a3.then0 a4.in
+wire a4.exit a5.in
+wire a2.index a5.value
+wire a3.then1 a6.in
+wire a2.done b1.in
+wire b1.body b2.in
+wire b2.exit b3.in
+wire b2.done b4.in
+wire b1.done b5.in
+wire b5.then b6.in

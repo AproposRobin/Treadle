@@ -1,0 +1,8 @@
+# treadle 1
+type Vec struct
+	namespace M2
+	doc "A 2D vector of floats (MathExprs reads its fields in a Math Expression)."
+
+field X float
+
+field Y float

@@ -1,0 +1,19 @@
+# treadle 1
+# expect n2 name T3010
+type MissingInput class
+	namespace Broken
+	static
+	doc "A Construct whose constructor argument is neither wired nor set."
+
+function f1 Make
+	static
+sheet body
+node n1 Entry
+node n2 Construct Game.Player
+	set ctor (String)
+node n3 DeferDelete
+node n4 Return
+wire n1.then n2.in
+wire n2.then n3.in
+wire n2.object n3.object
+wire n3.then n4.in

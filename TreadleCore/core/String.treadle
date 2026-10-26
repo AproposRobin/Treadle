@@ -1,0 +1,1762 @@
+# treadle 1
+type String class
+	namespace Core
+	implements IHashable
+	sealed
+	doc "A heap string of UTF-8 code units that can grow; it owns its buffer and keeps it zero-terminated. Read it through View() (or wire it where a StringView is taken); numbers, bools and characters become text through the Append overloads."
+
+field mPtr char8*
+	access private
+
+field mLength int
+	access private
+
+field mCapacity int
+	access private
+
+field mInline char8[24]
+	access private
+	doc "The first buffer: a String of up to 23 code units keeps its text here (mPtr points at it) and needs no heap block."
+
+ctor s0001
+	doc "An empty String (no buffer until something is appended)."
+sheet body
+node a1 Entry
+node a2 Return
+wire a1.then a2.in
+
+ctor s0002
+	doc "A String holding a copy of the text."
+param text StringView
+sheet body
+node n1 Entry
+node n2 Call this.Append(StringView)
+node n3 Return
+wire n1.then n2.in
+wire n1.text n2.text
+wire n2.then n3.in
+
+dtor s0003
+	doc "Frees the buffer (a heap block; the inline buffer is part of the object)."
+sheet body
+node o1 Entry
+node o2 Scope
+	unsafe
+node o3 Get this.mPtr
+node o4 Call Memory.Resize
+	in count 0
+node o5 Return
+node o6 This
+node o7 Call String.InlineBuffer
+node o8 Operator !=
+node o9 Operator !=
+	in b null
+node p1 Operator &&
+node p2 Branch
+wire o1.then o2.in
+wire p2.true o4.in
+wire o3.value o4.ptr
+wire o2.done o5.in
+wire o6.value o7.s
+wire o3.value o8.a
+wire o7.result o8.b
+wire o3.value o9.a
+wire o8.result p1.a
+wire o9.result p1.b
+wire p1.result p2.condition
+wire o2.body p2.in
+
+function s0004 Reserve
+	unsafe
+	access private
+	doc "Makes room for at least `need` code units (the terminating zero included). The first room is the inline buffer (24 code units, no heap block); past it the String moves to a heap block and grows it to twice its capacity (at least `need`) each time."
+param need int
+local cap int
+local old char8*
+local none char8*
+sheet body
+node b1 Entry
+node b2 Get this.mCapacity
+node b3 Operator <=
+node b4 Branch
+node b5 Return
+node b6 Operator *
+	in b 2
+node b7 Call Math.Max
+node b8 Call Math.Max
+	in b 16
+node b9 Set local:cap
+node c1 Get local:cap
+node c2 Get local:old
+node c3 Call Memory.Resize
+node c4 Set this.mPtr
+node c5 Set this.mCapacity
+node c6 Return
+node c7 Get this.mPtr
+node c8 Operator ==
+	in b null
+node c9 Operator <=
+	in b 24
+node rd1 Operator &&
+node rd2 Branch
+node rd3 This
+node rd4 Call String.InlineBuffer
+node rd5 Set this.mPtr
+node rd6 Set this.mCapacity
+	in value 24
+node rd7 Call Pointer.Store
+	in value 0
+node rd8 Return
+node rd9 Set local:old
+node re1 Operator ==
+node re2 Get local:none
+node re3 Select
+node re4 Branch
+node re5 Call Memory.Copy
+node re6 Get this.mPtr
+node re7 Get this.mLength
+node re8 Operator +
+	in b 1
+node re9 Return
+wire b1.need b3.a
+wire b2.value b3.b
+wire b3.result b4.condition
+wire b1.then b4.in
+wire b4.true b5.in
+wire b2.value b6.a
+wire b6.result b7.a
+wire b1.need b7.b
+wire b7.result b8.a
+wire rd9.then b9.in
+wire b8.result b9.value
+wire c1.value c3.count
+wire b9.then c3.in
+wire re3.result c3.ptr
+wire c3.then c4.in
+wire c3.result c4.value
+wire c4.then c5.in
+wire c1.value c5.value
+wire re4.false c6.in
+wire c7.value c8.a
+wire b1.need c9.a
+wire c8.result rd1.a
+wire c9.result rd1.b
+wire rd1.result rd2.condition
+wire b4.false rd2.in
+wire rd3.value rd4.s
+wire rd2.true rd5.in
+wire rd4.result rd5.value
+wire rd5.then rd6.in
+wire rd6.then rd7.in
+wire rd4.result rd7.ptr
+wire rd7.then rd8.in
+wire rd2.false rd9.in
+wire c7.value rd9.value
+wire c2.value re1.a
+wire rd4.result re1.b
+wire re1.result re3.condition
+wire c2.value re3.false
+wire re2.value re3.true
+wire re1.result re4.condition
+wire c5.then re4.in
+wire re6.value re5.dest
+wire re4.true re5.in
+wire re8.result re5.size
+wire c2.value re5.src
+wire re7.value re8.a
+wire re5.then re9.in
+
+function s0038 InlineBuffer
+	static
+	pure
+	unsafe
+	access private
+	returns char8*
+	attr Intrinsic String.InlineBuffer
+	doc "The address of the String's inline buffer (mInline)."
+param s String
+
+function s0005 Append
+	doc "Appends a copy of the text."
+param text StringView
+sheet body
+node d0 Scope
+	unsafe
+node d1 Entry
+node d2 Break StringView
+node d3 Get this.mLength
+node d4 Operator +
+node d5 Operator +
+	in b 1
+node d6 Call this.Reserve
+node d7 Get this.mPtr
+node d8 Call Pointer.Add
+node d9 Call Memory.Copy
+node e1 Set this.mLength
+	set op +=
+node e2 Get this.mLength
+node e3 Call Pointer.Add
+node e4 Call Pointer.Store
+	in value 0
+node e5 Return
+wire d1.then d0.in
+wire d1.text d2.value
+wire d3.value d4.a
+wire d2.Length d4.b
+wire d4.result d5.a
+wire d0.body d6.in
+wire d5.result d6.need
+wire d3.value d8.count
+wire d7.value d8.ptr
+wire d8.result d9.dest
+wire d6.then d9.in
+wire d2.Length d9.size
+wire d2.Ptr d9.src
+wire d9.then e1.in
+wire d2.Length e1.value
+wire e2.value e3.count
+wire d7.value e3.ptr
+wire e1.then e4.in
+wire e3.result e4.ptr
+wire d0.done e5.in
+
+function s0006 Append
+	doc "Appends one code unit."
+param value char8
+sheet body
+node h0 Scope
+	unsafe
+node h1 Entry
+node h2 Get this.mLength
+node h3 Operator +
+	in b 2
+node h4 Call this.Reserve
+node h5 Get this.mPtr
+node h6 Call Pointer.Add
+node h7 Call Pointer.Store
+node h8 Set this.mLength
+	set op +=
+	in value 1
+node h9 Get this.mLength
+node i1 Call Pointer.Add
+node i2 Call Pointer.Store
+	in value 0
+node i3 Return
+wire h1.then h0.in
+wire h2.value h3.a
+wire h0.body h4.in
+wire h3.result h4.need
+wire h2.value h6.count
+wire h5.value h6.ptr
+wire h4.then h7.in
+wire h6.result h7.ptr
+wire h1.value h7.value
+wire h7.then h8.in
+wire h9.value i1.count
+wire h5.value i1.ptr
+wire h8.then i2.in
+wire i1.result i2.ptr
+wire h0.done i3.in
+
+function s0007 Append
+	doc "Appends the number in decimal."
+param value int
+sheet body
+node f0 Scope
+	unsafe
+node f1 Entry
+node f2 Get this.mLength
+node f3 Operator +
+	in b 21
+node f4 Call this.Reserve
+node f5 Get this.mPtr
+node f6 Call Pointer.Add
+node f7 Call C.crt.rt_format_int
+node f9 Set this.mLength
+	set op +=
+node g1 Return
+wire f1.then f0.in
+wire f2.value f3.a
+wire f0.body f4.in
+wire f3.result f4.need
+wire f2.value f6.count
+wire f5.value f6.ptr
+wire f6.result f7.buf
+wire f4.then f7.in
+wire f1.value f7.v
+wire f7.then f9.in
+wire f7.result f9.value
+wire f0.done g1.in
+
+function s0009 Append
+	doc "Appends the number (up to 15 significant digits, no trailing zeros: 0.1, 2.5, 1e+20)."
+param value double
+sheet body
+node w0 Scope
+	unsafe
+node w1 Entry
+node w2 Get this.mLength
+node w3 Operator +
+	in b 32
+node w4 Call this.Reserve
+node w5 Get this.mPtr
+node w6 Call Pointer.Add
+node w7 Call C.crt.snprintf
+	in count 32
+	in format "%.15g"
+node w8 Cast int
+node w9 Set this.mLength
+	set op +=
+node x0 Return
+wire w1.then w0.in
+wire w2.value w3.a
+wire w0.body w4.in
+wire w3.result w4.need
+wire w2.value w6.count
+wire w5.value w6.ptr
+wire w6.result w7.buffer
+wire w4.then w7.in
+wire w1.value w7.va0
+wire w7.result w8.value
+wire w7.then w9.in
+wire w8.result w9.value
+wire w0.done x0.in
+
+function s000a Append
+	doc "Appends the number (up to 7 significant digits: 0.1, 3.14)."
+param value float
+sheet body
+node y0 Scope
+	unsafe
+node y1 Entry
+node y2 Get this.mLength
+node y3 Operator +
+	in b 32
+node y4 Call this.Reserve
+node y5 Get this.mPtr
+node y6 Call Pointer.Add
+node y7 Call C.crt.snprintf
+	in count 32
+	in format "%.7g"
+node y8 Cast int
+node y9 Set this.mLength
+	set op +=
+node z0 Return
+wire y1.then y0.in
+wire y2.value y3.a
+wire y0.body y4.in
+wire y3.result y4.need
+wire y2.value y6.count
+wire y5.value y6.ptr
+wire y6.result y7.buffer
+wire y4.then y7.in
+wire y1.value y7.va0
+wire y7.result y8.value
+wire y7.then y9.in
+wire y8.result y9.value
+wire y0.done z0.in
+
+function s000b Append
+	doc "Appends true or false."
+param value bool
+sheet body
+node ba Entry
+node bb Literal
+	set type StringView
+	set value "true"
+node bc Literal
+	set type StringView
+	set value "false"
+node bd Select
+node be Call this.Append(StringView)
+node bf Return
+wire ba.value bd.condition
+wire bc.value bd.false
+wire bb.value bd.true
+wire ba.then be.in
+wire bd.result be.text
+wire be.then bf.in
+
+function s000c Clear
+	doc "Empties the String (the buffer is kept)."
+sheet body
+node j1 Entry
+node j2 Set this.mLength
+	in value 0
+node j3 Get this.mPtr
+node j4 Operator !=
+	in b null
+node j5 Branch
+node j6 Scope
+	unsafe
+node j7 Call Pointer.Store
+	in value 0
+node j8 Return
+wire j1.then j2.in
+wire j3.value j4.a
+wire j4.result j5.condition
+wire j2.then j5.in
+wire j5.true j6.in
+wire j6.body j7.in
+wire j3.value j7.ptr
+wire j5.false j8.in
+wire j6.done j8.in
+
+function s000d Set
+	doc "Replaces the text with a copy of `text`."
+param text StringView
+sheet body
+node ca Entry
+node cb Call this.Clear
+node cc Call this.Append(StringView)
+node cd Return
+wire ca.then cb.in
+wire cb.then cc.in
+wire ca.text cc.text
+wire cc.then cd.in
+
+function s000e CStr
+	pure
+	returns char8*
+	doc "The text as a zero-terminated C string, valid while the String lives and is not changed."
+sheet body
+node k1 Entry
+node k2 Get this.mPtr
+node k3 Operator !=
+	in b null
+node k4 Select
+node k5 Return
+node k6 Literal
+	set type char8*
+	set value ""
+wire k2.value k3.a
+wire k3.result k4.condition
+wire k6.value k4.false
+wire k2.value k4.true
+wire k1.then k5.in
+wire k4.result k5.value
+
+function s000f Length
+	pure
+	returns int
+	doc "The number of UTF-8 code units."
+sheet body
+node l1 Entry
+node l2 Get this.mLength
+node l3 Return
+wire l1.then l3.in
+wire l2.value l3.value
+
+function s0010 IsEmpty
+	pure
+	returns bool
+	doc "True when the String has no characters."
+sheet body
+node da Entry
+node db Get this.mLength
+node dc Operator ==
+	in b 0
+node dd Return
+wire db.value dc.a
+wire da.then dd.in
+wire dc.result dd.value
+
+function s0011 View
+	pure
+	returns StringView
+	doc "The text as a StringView, valid while the String lives and is not changed."
+sheet body
+node m1 Entry
+node m2 Make StringView
+node m3 Get this.mPtr
+node m4 Get this.mLength
+node m5 Return
+wire m4.value m2.Length
+wire m3.value m2.Ptr
+wire m1.then m5.in
+wire m2.value m5.value
+
+function s0012 Equals
+	pure
+	returns bool
+	doc "True when the String holds the same text."
+param other StringView
+sheet body
+node ea Entry
+node eb Call this.View
+node ec Call StringView.Equals
+node ed Return
+wire ea.other ec.other
+wire eb.result ec.receiver
+wire ea.then ed.in
+wire ec.result ed.value
+
+function s0013 IndexOf
+	pure
+	returns int
+	doc "The position of the first `c`, or -1."
+param c char8
+sheet body
+node fa Entry
+node fb Call this.View
+node fc Call StringView.IndexOf(char8)
+node fd Return
+wire fa.c fc.c
+wire fb.result fc.receiver
+wire fa.then fd.in
+wire fc.result fd.value
+
+function s0014 IndexOf
+	pure
+	returns int
+	doc "The position of the first occurrence of `text`, or -1."
+param text StringView
+sheet body
+node ga Entry
+node gb Call this.View
+node gc Call StringView.IndexOf(StringView)
+node gd Return
+wire gb.result gc.receiver
+wire ga.text gc.text
+wire ga.then gd.in
+wire gc.result gd.value
+
+function s0015 Contains
+	pure
+	returns bool
+	doc "True when `text` appears in the String."
+param text StringView
+sheet body
+node ha Entry
+node hb Call this.View
+node hc Call StringView.Contains
+node hd Return
+wire hb.result hc.receiver
+wire ha.text hc.text
+wire ha.then hd.in
+wire hc.result hd.value
+
+function s0016 StartsWith
+	pure
+	returns bool
+	doc "True when the String begins with `text`."
+param text StringView
+sheet body
+node ia Entry
+node ib Call this.View
+node ic Call StringView.StartsWith
+node id Return
+wire ib.result ic.receiver
+wire ia.text ic.text
+wire ia.then id.in
+wire ic.result id.value
+
+function s0017 EndsWith
+	pure
+	returns bool
+	doc "True when the String ends with `text`."
+param text StringView
+sheet body
+node ja Entry
+node jb Call this.View
+node jc Call StringView.EndsWith
+node jd Return
+wire jb.result jc.receiver
+wire ja.text jc.text
+wire ja.then jd.in
+wire jc.result jd.value
+
+function s0018 Substring
+	pure
+	returns StringView
+	doc "A view of `length` characters from position `start`, valid while the String lives and is not changed."
+param start int
+param length int
+sheet body
+node ka Entry
+node kb Call this.View
+node kc Call StringView.Substring
+node kd Return
+wire ka.length kc.length
+wire kb.result kc.receiver
+wire ka.start kc.start
+wire ka.then kd.in
+wire kc.result kd.value
+
+function s0019 Split
+	doc "Adds the pieces between the separators to `into` (views of this String's text, valid while it lives and is not changed). With `skipEmpty` empty pieces are left out."
+param separator char8
+param into List<StringView>
+param skipEmpty bool
+	default false
+sheet body
+node la Entry
+node lb Call this.View
+node lc Call StringView.Split
+node ld Return
+wire la.then lc.in
+wire la.into lc.into
+wire lb.result lc.receiver
+wire la.separator lc.separator
+wire la.skipEmpty lc.skipEmpty
+wire lc.then ld.in
+
+function s001a GetHashCode
+	pure
+	returns int
+	doc "A hash of the text: equal texts give equal hashes (IHashable)."
+sheet body
+node ma Entry
+node mb Call this.View
+node mc Call StringView.GetHashCode
+node md Return
+wire mb.result mc.receiver
+wire ma.then md.in
+wire mc.result md.value
+
+function s001b Concat
+	static
+	returns String
+	doc "A new String holding `a` then `b`, its buffer allocated once at the exact size. The caller owns it (Delete it)."
+param a StringView
+param b StringView
+sheet body
+node na Entry
+node nb Construct String
+	set ctor ()
+node nc Call String.Append(StringView)
+node nd Return
+node ne Scope
+	unsafe
+node nf Call String.Reserve
+node ng Break StringView
+node nh Break StringView
+node ni Operator +
+node nj Operator +
+	in b 1
+node nk Call String.Append(StringView)
+wire na.then nb.in
+wire nk.then nc.in
+wire nb.object nc.receiver
+wire na.b nc.text
+wire nc.then nd.in
+wire nb.object nd.value
+wire nb.then ne.in
+wire ne.body nf.in
+wire nj.result nf.need
+wire nb.object nf.receiver
+wire na.a ng.value
+wire na.b nh.value
+wire ng.Length ni.a
+wire nh.Length ni.b
+wire ni.result nj.a
+wire ne.done nk.in
+wire nb.object nk.receiver
+wire na.a nk.text
+
+function s001c FormatNext
+	access private
+	returns int
+	doc "Appends `format` from `start` up to what comes next and gives it: a placeholder's argument number (its alignment in `width`, its spec in `spec`), -2 after {{ or }} (one brace appended), -1 at the end of the format. `next` is the position after it."
+param format StringView
+param start int
+out next int
+out width int
+out spec StringView
+local litEnd int64
+local after int64
+local align int64
+local specStart int64
+local specLength int64
+sheet body
+node x01 Entry
+node x02 Break StringView
+node x03 Get local:litEnd
+node x04 Get local:after
+node x05 Get local:align
+node x06 Get local:specStart
+node x07 Get local:specLength
+node x08 Call C.crt.rt_format_scan
+node x09 Get local:litEnd
+node x10 Operator -
+node x11 Call StringView.Substring
+node x12 Call this.Append(StringView)
+node x13 Get local:specStart
+node x14 Get local:specLength
+node x15 Call StringView.Substring
+node x16 Get local:after
+node x17 Get local:align
+node x18 Return
+wire x01.format x02.value
+wire x01.then x08.in
+wire x03.value x08.litEnd
+wire x02.Length x08.n
+wire x04.value x08.next
+wire x02.Ptr x08.p
+wire x01.start x08.pos
+wire x07.value x08.specLen
+wire x06.value x08.specStart
+wire x05.value x08.width
+wire x09.value x10.a
+wire x01.start x10.b
+wire x10.result x11.length
+wire x01.format x11.receiver
+wire x01.start x11.start
+wire x08.then x12.in
+wire x11.result x12.text
+wire x14.value x15.length
+wire x01.format x15.receiver
+wire x13.value x15.start
+wire x12.then x18.in
+wire x16.value x18.next
+wire x15.result x18.spec
+wire x08.result x18.value
+wire x17.value x18.width
+
+function s0020 AppendF
+	doc "Appends `format` with {{ and }} as single braces (a placeholder without an argument appends nothing)."
+param format StringView
+local pos int
+local n int
+sheet body
+node aa01 Entry
+node aa02 Get local:n
+node aa03 Operator !=
+	in b -1
+node aa04 While
+node aa05 Get local:pos
+node aa06 Call this.FormatNext
+node aa07 Set local:n
+node aa08 Set local:pos
+node aa09 Return
+wire aa02.value aa03.a
+wire aa03.result aa04.condition
+wire aa01.then aa04.in
+wire aa01.format aa06.format
+wire aa04.body aa06.in
+wire aa05.value aa06.start
+wire aa06.then aa07.in
+wire aa06.result aa07.value
+wire aa07.then aa08.in
+wire aa06.next aa08.value
+wire aa04.done aa09.in
+
+function s0021 AppendF
+	generic A0
+	doc "Appends `format` with {0} replaced by the argument ({{ and }} give a brace; a placeholder past the arguments appends nothing). A placeholder is {index[,width][:spec]}: a positive width right-aligns in that many characters, a negative one left-aligns; the spec formats a number (F2, E3, G, N0, D4, X8, B; Core-Library.md): {0,8:F2}. Arguments: numbers (any integer type, float, double), bool, char8, char32, String and StringView, each without a spec as its own Append writes it."
+param format StringView
+param arg0 A0
+local pos int
+local n int
+sheet body
+node ab01 Entry
+node ab02 Get local:n
+node ab03 Operator !=
+	in b -1
+node ab04 While
+node ab05 Get local:pos
+node ab06 Call this.FormatNext
+node ab07 Set local:n
+node ab08 Set local:pos
+node ab09 Operator ==
+	in b 0
+node ab10 Branch
+node ab11 Call this.AppendSlot
+node ab12 Return
+wire ab02.value ab03.a
+wire ab03.result ab04.condition
+wire ab01.then ab04.in
+wire ab01.format ab06.format
+wire ab04.body ab06.in
+wire ab05.value ab06.start
+wire ab06.then ab07.in
+wire ab06.result ab07.value
+wire ab07.then ab08.in
+wire ab06.next ab08.value
+wire ab02.value ab09.a
+wire ab09.result ab10.condition
+wire ab08.then ab10.in
+wire ab10.true ab11.in
+wire ab06.spec ab11.spec
+wire ab01.arg0 ab11.value
+wire ab06.width ab11.width
+wire ab04.done ab12.in
+
+function s0022 AppendF
+	generic A0
+	generic A1
+	doc "Appends `format` with {0} to {1} replaced by the arguments ({{ and }} give a brace; a placeholder past the arguments appends nothing). A placeholder is {index[,width][:spec]}: a positive width right-aligns in that many characters, a negative one left-aligns; the spec formats a number (F2, E3, G, N0, D4, X8, B; Core-Library.md): {0,8:F2}. Arguments: numbers (any integer type, float, double), bool, char8, char32, String and StringView, each without a spec as its own Append writes it."
+param format StringView
+param arg0 A0
+param arg1 A1
+local pos int
+local n int
+sheet body
+node ac01 Entry
+node ac02 Get local:n
+node ac03 Operator !=
+	in b -1
+node ac04 While
+node ac05 Get local:pos
+node ac06 Call this.FormatNext
+node ac07 Set local:n
+node ac08 Set local:pos
+node ac09 Operator ==
+	in b 0
+node ac10 Branch
+node ac11 Call this.AppendSlot
+node ac12 Operator ==
+	in b 1
+node ac13 Branch
+node ac14 Call this.AppendSlot
+node ac15 Return
+wire ac02.value ac03.a
+wire ac03.result ac04.condition
+wire ac01.then ac04.in
+wire ac01.format ac06.format
+wire ac04.body ac06.in
+wire ac05.value ac06.start
+wire ac06.then ac07.in
+wire ac06.result ac07.value
+wire ac07.then ac08.in
+wire ac06.next ac08.value
+wire ac02.value ac09.a
+wire ac09.result ac10.condition
+wire ac08.then ac10.in
+wire ac10.true ac11.in
+wire ac06.spec ac11.spec
+wire ac01.arg0 ac11.value
+wire ac06.width ac11.width
+wire ac02.value ac12.a
+wire ac12.result ac13.condition
+wire ac10.false ac13.in
+wire ac13.true ac14.in
+wire ac06.spec ac14.spec
+wire ac01.arg1 ac14.value
+wire ac06.width ac14.width
+wire ac04.done ac15.in
+
+function s0023 AppendF
+	generic A0
+	generic A1
+	generic A2
+	doc "Appends `format` with {0} to {2} replaced by the arguments ({{ and }} give a brace; a placeholder past the arguments appends nothing). A placeholder is {index[,width][:spec]}: a positive width right-aligns in that many characters, a negative one left-aligns; the spec formats a number (F2, E3, G, N0, D4, X8, B; Core-Library.md): {0,8:F2}. Arguments: numbers (any integer type, float, double), bool, char8, char32, String and StringView, each without a spec as its own Append writes it."
+param format StringView
+param arg0 A0
+param arg1 A1
+param arg2 A2
+local pos int
+local n int
+sheet body
+node ad01 Entry
+node ad02 Get local:n
+node ad03 Operator !=
+	in b -1
+node ad04 While
+node ad05 Get local:pos
+node ad06 Call this.FormatNext
+node ad07 Set local:n
+node ad08 Set local:pos
+node ad09 Operator ==
+	in b 0
+node ad10 Branch
+node ad11 Call this.AppendSlot
+node ad12 Operator ==
+	in b 1
+node ad13 Branch
+node ad14 Call this.AppendSlot
+node ad15 Operator ==
+	in b 2
+node ad16 Branch
+node ad17 Call this.AppendSlot
+node ad18 Return
+wire ad02.value ad03.a
+wire ad03.result ad04.condition
+wire ad01.then ad04.in
+wire ad01.format ad06.format
+wire ad04.body ad06.in
+wire ad05.value ad06.start
+wire ad06.then ad07.in
+wire ad06.result ad07.value
+wire ad07.then ad08.in
+wire ad06.next ad08.value
+wire ad02.value ad09.a
+wire ad09.result ad10.condition
+wire ad08.then ad10.in
+wire ad10.true ad11.in
+wire ad06.spec ad11.spec
+wire ad01.arg0 ad11.value
+wire ad06.width ad11.width
+wire ad02.value ad12.a
+wire ad12.result ad13.condition
+wire ad10.false ad13.in
+wire ad13.true ad14.in
+wire ad06.spec ad14.spec
+wire ad01.arg1 ad14.value
+wire ad06.width ad14.width
+wire ad02.value ad15.a
+wire ad15.result ad16.condition
+wire ad13.false ad16.in
+wire ad16.true ad17.in
+wire ad06.spec ad17.spec
+wire ad01.arg2 ad17.value
+wire ad06.width ad17.width
+wire ad04.done ad18.in
+
+function s0024 AppendF
+	generic A0
+	generic A1
+	generic A2
+	generic A3
+	doc "Appends `format` with {0} to {3} replaced by the arguments ({{ and }} give a brace; a placeholder past the arguments appends nothing). A placeholder is {index[,width][:spec]}: a positive width right-aligns in that many characters, a negative one left-aligns; the spec formats a number (F2, E3, G, N0, D4, X8, B; Core-Library.md): {0,8:F2}. Arguments: numbers (any integer type, float, double), bool, char8, char32, String and StringView, each without a spec as its own Append writes it."
+param format StringView
+param arg0 A0
+param arg1 A1
+param arg2 A2
+param arg3 A3
+local pos int
+local n int
+sheet body
+node ae01 Entry
+node ae02 Get local:n
+node ae03 Operator !=
+	in b -1
+node ae04 While
+node ae05 Get local:pos
+node ae06 Call this.FormatNext
+node ae07 Set local:n
+node ae08 Set local:pos
+node ae09 Operator ==
+	in b 0
+node ae10 Branch
+node ae11 Call this.AppendSlot
+node ae12 Operator ==
+	in b 1
+node ae13 Branch
+node ae14 Call this.AppendSlot
+node ae15 Operator ==
+	in b 2
+node ae16 Branch
+node ae17 Call this.AppendSlot
+node ae18 Operator ==
+	in b 3
+node ae19 Branch
+node ae20 Call this.AppendSlot
+node ae21 Return
+wire ae02.value ae03.a
+wire ae03.result ae04.condition
+wire ae01.then ae04.in
+wire ae01.format ae06.format
+wire ae04.body ae06.in
+wire ae05.value ae06.start
+wire ae06.then ae07.in
+wire ae06.result ae07.value
+wire ae07.then ae08.in
+wire ae06.next ae08.value
+wire ae02.value ae09.a
+wire ae09.result ae10.condition
+wire ae08.then ae10.in
+wire ae10.true ae11.in
+wire ae06.spec ae11.spec
+wire ae01.arg0 ae11.value
+wire ae06.width ae11.width
+wire ae02.value ae12.a
+wire ae12.result ae13.condition
+wire ae10.false ae13.in
+wire ae13.true ae14.in
+wire ae06.spec ae14.spec
+wire ae01.arg1 ae14.value
+wire ae06.width ae14.width
+wire ae02.value ae15.a
+wire ae15.result ae16.condition
+wire ae13.false ae16.in
+wire ae16.true ae17.in
+wire ae06.spec ae17.spec
+wire ae01.arg2 ae17.value
+wire ae06.width ae17.width
+wire ae02.value ae18.a
+wire ae18.result ae19.condition
+wire ae16.false ae19.in
+wire ae19.true ae20.in
+wire ae06.spec ae20.spec
+wire ae01.arg3 ae20.value
+wire ae06.width ae20.width
+wire ae04.done ae21.in
+
+function s0025 AppendValue
+	static
+	access internal
+	generic T
+	attr Intrinsic String.AppendValue
+	doc "Appends the value with the Append overload for its type (AppendF's arguments; the compiler picks it per instance)."
+param into String
+param value T
+
+function s001d CompareTo
+	pure
+	returns int
+	doc "Orders two texts by their bytes: negative when this String comes first, 0 when equal, positive when `other` comes first."
+param other StringView
+sheet body
+node pa Entry
+node pb Call this.View
+node pc Call StringView.CompareTo
+node pd Return
+wire pa.other pc.other
+wire pb.result pc.receiver
+wire pa.then pd.in
+wire pc.result pd.value
+
+function s0026 Replace
+	doc "Replaces every occurrence of `from` with `to`, left to right, without overlaps; an empty `from` changes nothing."
+param from StringView
+param to StringView
+local i int
+sheet body
+node ra Entry
+node rb Break StringView
+node rc Operator ==
+	in b 0
+node rd Branch
+node re Return
+node rf Local String
+node rg Call this.View
+node rh Break StringView
+node ri Get local:i
+node rj Operator <
+node rk While
+node rl Call StringView.MatchesAt
+node rm Branch
+node rn Call String.Append(StringView)
+node ro Set local:i
+	set op +=
+node rp Index
+node rq Call String.Append(char8)
+node rr Set local:i
+	set op +=
+	in value 1
+node rs Call this.Set
+node rt Return
+wire ra.from rb.value
+wire rb.Length rc.a
+wire rc.result rd.condition
+wire ra.then rd.in
+wire rd.true re.in
+wire rd.false rf.in
+wire rg.result rh.value
+wire ri.value rj.a
+wire rh.Length rj.b
+wire rj.result rk.condition
+wire rf.then rk.in
+wire ri.value rl.pos
+wire rg.result rl.receiver
+wire ra.from rl.text
+wire rl.result rm.condition
+wire rk.body rm.in
+wire rm.true rn.in
+wire rf.object rn.receiver
+wire ra.to rn.text
+wire rn.then ro.in
+wire rb.Length ro.value
+wire rg.result rp.collection
+wire ri.value rp.index
+wire rm.false rq.in
+wire rf.object rq.receiver
+wire rp.value rq.value
+wire rq.then rr.in
+wire rk.done rs.in
+wire rf.object rs.text
+wire rs.then rt.in
+
+function s0027 ToUpper
+	doc "Changes the letters a to z into A to Z in place (other bytes, UTF-8 sequences included, stay as they are)."
+sheet body
+node ua Entry
+node ub Get this.mLength
+node uc For
+	in start 0
+node ud Scope
+	unsafe
+node ue Get this.mPtr
+node uf Call Pointer.Add
+node ug Call Pointer.Load
+node uh Operator >=
+	in b 97
+node ui Operator <=
+	in b 122
+node uj Operator &&
+node uk Branch
+node ul Cast int
+node um Operator -
+	in b 32
+node un Cast char8
+node uo Call Pointer.Store
+node up Return
+wire ub.value uc.count
+wire ua.then uc.in
+wire uc.body ud.in
+wire uc.index uf.count
+wire ue.value uf.ptr
+wire uf.result ug.ptr
+wire ug.result uh.a
+wire ug.result ui.a
+wire uh.result uj.a
+wire ui.result uj.b
+wire uj.result uk.condition
+wire ud.body uk.in
+wire ug.result ul.value
+wire ul.result um.a
+wire um.result un.value
+wire uk.true uo.in
+wire uf.result uo.ptr
+wire un.result uo.value
+wire uc.done up.in
+
+function s0028 ToLower
+	doc "Changes the letters A to Z into a to z in place (other bytes, UTF-8 sequences included, stay as they are)."
+sheet body
+node va Entry
+node vb Get this.mLength
+node vc For
+	in start 0
+node vd Scope
+	unsafe
+node ve Get this.mPtr
+node vf Call Pointer.Add
+node vg Call Pointer.Load
+node vh Operator >=
+	in b 65
+node vi Operator <=
+	in b 90
+node vj Operator &&
+node vk Branch
+node vl Cast int
+node vm Operator +
+	in b 32
+node vn Cast char8
+node vo Call Pointer.Store
+node vp Return
+wire vb.value vc.count
+wire va.then vc.in
+wire vc.body vd.in
+wire vc.index vf.count
+wire ve.value vf.ptr
+wire vf.result vg.ptr
+wire vg.result vh.a
+wire vg.result vi.a
+wire vh.result vj.a
+wire vi.result vj.b
+wire vj.result vk.condition
+wire vd.body vk.in
+wire vg.result vl.value
+wire vl.result vm.a
+wire vm.result vn.value
+wire vk.true vo.in
+wire vf.result vo.ptr
+wire vn.result vo.value
+wire vc.done vp.in
+
+function s0029 Trim
+	doc "Removes the spaces, tabs and line breaks at both ends, in place."
+sheet body
+node ta Entry
+node tb Call this.View
+node tc Call StringView.Trim
+node td Local String
+	set ctor (StringView)
+node te Call this.Set
+node tf Return
+wire tb.result tc.receiver
+wire ta.then td.in
+wire tc.result td.text
+wire td.then te.in
+wire td.object te.text
+wire te.then tf.in
+
+function s002a Join
+	static
+	returns String
+	doc "A new String holding the parts with `separator` between them. The caller owns it (Delete it)."
+param separator StringView
+param parts List<StringView>
+sheet body
+node b0 ForEach
+node by Entry
+node bz Construct String
+node ce Operator >
+	in b 0
+node je Branch
+node jf Call String.Append(StringView)
+node jg Call String.Append(StringView)
+node jh Return
+wire by.parts b0.collection
+wire bz.then b0.in
+wire by.then bz.in
+wire b0.index ce.a
+wire ce.result je.condition
+wire b0.body je.in
+wire je.true jf.in
+wire bz.object jf.receiver
+wire by.separator jf.text
+wire je.false jg.in
+wire jf.then jg.in
+wire bz.object jg.receiver
+wire b0.element jg.text
+wire b0.done jh.in
+wire bz.object jh.value
+
+function s002b Join
+	static
+	returns String
+	doc "A new String holding the texts of the parts with `separator` between them. The caller owns it (Delete it)."
+param separator StringView
+param parts List<String>
+sheet body
+node cf Entry
+node cg Construct String
+node ch ForEach
+node ci Operator >
+	in b 0
+node ke Branch
+node kf Call String.Append(StringView)
+node kg Call String.Append(StringView)
+node kh Return
+wire cf.then cg.in
+wire cf.parts ch.collection
+wire cg.then ch.in
+wire ch.index ci.a
+wire ci.result ke.condition
+wire ch.body ke.in
+wire ke.true kf.in
+wire cg.object kf.receiver
+wire cf.separator kf.text
+wire ke.false kg.in
+wire kf.then kg.in
+wire cg.object kg.receiver
+wire ch.element kg.text
+wire ch.done kh.in
+wire cg.object kh.value
+
+function s002c AppendNumber
+	doc "Appends the number as `format` says (a letter and an optional precision, as in an AppendF placeholder {0:F2}): F fixed (2 decimals by default: F2), E or e scientific (6), G general (significant digits: 15, a float 7), N fixed with , between thousands (2 decimals, an integer 0), D decimal with at least that many digits, X or x hex and B binary with at least that many digits (D, X and B round a float to an integer; X and B of a negative integer give its 64-bit two's complement); an empty or unknown spec writes the plain form."
+param value int
+param format StringView
+sheet body
+node na01 Scope
+	unsafe
+node na02 Entry
+node na03 Get this.mLength
+node na04 Operator +
+	in b 512
+node na05 Call this.Reserve
+node na06 Get this.mPtr
+node na07 Call Pointer.Add
+node na08 Break StringView
+node na09 Call C.crt.rt_format_number
+	in cap 512
+	in kind 0
+	in d 0.0
+node na10 Set this.mLength
+	set op +=
+node na11 Return
+node na12 Operator ==
+	in b 0
+node na13 Branch
+node na14 Call this.Append(int)
+node na15 Return
+wire na13.false na01.in
+wire na03.value na04.a
+wire na01.body na05.in
+wire na04.result na05.need
+wire na03.value na07.count
+wire na06.value na07.ptr
+wire na02.format na08.value
+wire na07.result na09.buf
+wire na02.value na09.i
+wire na05.then na09.in
+wire na08.Ptr na09.spec
+wire na08.Length na09.specLen
+wire na09.then na10.in
+wire na09.result na10.value
+wire na01.done na11.in
+wire na08.Length na12.a
+wire na12.result na13.condition
+wire na02.then na13.in
+wire na13.true na14.in
+wire na02.value na14.value
+wire na14.then na15.in
+
+function s002d AppendNumber
+	doc "Appends the number as `format` says (a letter and an optional precision, as in an AppendF placeholder {0:F2}): F fixed (2 decimals by default: F2), E or e scientific (6), G general (significant digits: 15, a float 7), N fixed with , between thousands (2 decimals, an integer 0), D decimal with at least that many digits, X or x hex and B binary with at least that many digits (D, X and B round a float to an integer; X and B of a negative integer give its 64-bit two's complement); an empty or unknown spec writes the plain form."
+param value double
+param format StringView
+sheet body
+node nb01 Scope
+	unsafe
+node nb02 Entry
+node nb03 Get this.mLength
+node nb04 Operator +
+	in b 512
+node nb05 Call this.Reserve
+node nb06 Get this.mPtr
+node nb07 Call Pointer.Add
+node nb08 Break StringView
+node nb09 Call C.crt.rt_format_number
+	in cap 512
+	in kind 1
+	in i 0
+node nb10 Set this.mLength
+	set op +=
+node nb11 Return
+node nb12 Operator ==
+	in b 0
+node nb13 Branch
+node nb14 Call this.Append(double)
+node nb15 Return
+wire nb13.false nb01.in
+wire nb03.value nb04.a
+wire nb01.body nb05.in
+wire nb04.result nb05.need
+wire nb03.value nb07.count
+wire nb06.value nb07.ptr
+wire nb02.format nb08.value
+wire nb07.result nb09.buf
+wire nb02.value nb09.d
+wire nb05.then nb09.in
+wire nb08.Ptr nb09.spec
+wire nb08.Length nb09.specLen
+wire nb09.then nb10.in
+wire nb09.result nb10.value
+wire nb01.done nb11.in
+wire nb08.Length nb12.a
+wire nb12.result nb13.condition
+wire nb02.then nb13.in
+wire nb13.true nb14.in
+wire nb02.value nb14.value
+wire nb14.then nb15.in
+
+function s002e AppendNumber
+	doc "Appends the number as `format` says (a letter and an optional precision, as in an AppendF placeholder {0:F2}): F fixed (2 decimals by default: F2), E or e scientific (6), G general (significant digits: 15, a float 7), N fixed with , between thousands (2 decimals, an integer 0), D decimal with at least that many digits, X or x hex and B binary with at least that many digits (D, X and B round a float to an integer; X and B of a negative integer give its 64-bit two's complement); an empty or unknown spec writes the plain form."
+param value float
+param format StringView
+sheet body
+node nc01 Scope
+	unsafe
+node nc02 Entry
+node nc03 Get this.mLength
+node nc04 Operator +
+	in b 512
+node nc05 Call this.Reserve
+node nc06 Get this.mPtr
+node nc07 Call Pointer.Add
+node nc08 Break StringView
+node nc09 Cast double
+node nc10 Call C.crt.rt_format_number
+	in cap 512
+	in kind 2
+	in i 0
+node nc11 Set this.mLength
+	set op +=
+node nc12 Return
+node nc13 Operator ==
+	in b 0
+node nc14 Branch
+node nc15 Call this.Append(float)
+node nc16 Return
+wire nc14.false nc01.in
+wire nc03.value nc04.a
+wire nc01.body nc05.in
+wire nc04.result nc05.need
+wire nc03.value nc07.count
+wire nc06.value nc07.ptr
+wire nc02.format nc08.value
+wire nc02.value nc09.value
+wire nc07.result nc10.buf
+wire nc09.result nc10.d
+wire nc05.then nc10.in
+wire nc08.Ptr nc10.spec
+wire nc08.Length nc10.specLen
+wire nc10.then nc11.in
+wire nc10.result nc11.value
+wire nc01.done nc12.in
+wire nc08.Length nc13.a
+wire nc13.result nc14.condition
+wire nc02.then nc14.in
+wire nc14.true nc15.in
+wire nc02.value nc15.value
+wire nc15.then nc16.in
+
+function s002f AppendFormatted
+	static
+	access internal
+	generic T
+	attr Intrinsic String.AppendFormatted
+	doc "Appends the value as an AppendF placeholder with `format` writes it: a number through the AppendNumber overload for its type, anything else as AppendValue appends it (the format ignored)."
+param into String
+param value T
+param format StringView
+
+function s0030 AppendSlot
+	access private
+	generic T
+	doc "One AppendF placeholder: the value with its spec, padded with spaces to `width` characters (code points, so a non-ASCII character counts one): on the left (right-aligned) for a positive width, on the right for a negative one; a longer value is not cut. The value is formatted straight into this String and padded in place (AlignFrom), without a temporary String."
+param value T
+param width int
+param spec StringView
+local start int
+sheet body
+node y01 Entry
+node y02 This
+node y03 Operator ==
+	in b 0
+node y04 Branch
+node y05 Call String.AppendFormatted
+node y06 Return
+node y07 Set local:start
+node y08 Call String.AppendFormatted
+node y09 Get this.mLength
+node y10 Get local:start
+node y11 Call this.AlignFrom
+node y12 Return
+wire y01.width y03.a
+wire y03.result y04.condition
+wire y01.then y04.in
+wire y01.spec y05.format
+wire y04.true y05.in
+wire y02.value y05.into
+wire y01.value y05.value
+wire y05.then y06.in
+wire y04.false y07.in
+wire y09.value y07.value
+wire y01.spec y08.format
+wire y07.then y08.in
+wire y02.value y08.into
+wire y01.value y08.value
+wire y08.then y11.in
+wire y10.value y11.start
+wire y01.width y11.width
+wire y11.then y12.in
+
+function s0039 AlignFrom
+	access private
+	doc "Pads the text appended since `start` with spaces to `width` code points, as AppendSlot says (in front for a positive width, after it for a negative one)."
+param start int
+param width int
+sheet body
+node z01 Entry
+node z02 Get this.mLength
+node z03 Call Math.Abs(int)
+node z04 Operator +
+node z05 Operator +
+	in b 1
+node z06 Call this.Reserve
+node z07 Get this.mPtr
+node z08 Call Pointer.Add
+node z09 Get this.mLength
+node z10 Operator -
+node z11 Call C.crt.rt_format_align
+node z12 Operator +
+node z13 Set this.mLength
+node z14 Return
+node z15 Scope
+	unsafe
+wire z01.width z03.x
+wire z02.value z04.a
+wire z03.result z04.b
+wire z04.result z05.a
+wire z15.body z06.in
+wire z05.result z06.need
+wire z01.start z08.count
+wire z07.value z08.ptr
+wire z09.value z10.a
+wire z01.start z10.b
+wire z06.then z11.in
+wire z10.result z11.n
+wire z08.result z11.p
+wire z01.width z11.width
+wire z01.start z12.a
+wire z11.result z12.b
+wire z11.then z13.in
+wire z12.result z13.value
+wire z15.done z14.in
+wire z01.then z15.in
+
+function s0032 AppendF
+	generic A0
+	generic A1
+	generic A2
+	generic A3
+	generic A4
+	doc "Appends `format` with {0} to {4} replaced by the arguments ({{ and }} give a brace; a placeholder past the arguments appends nothing). A placeholder is {index[,width][:spec]}: a positive width right-aligns in that many characters, a negative one left-aligns; the spec formats a number (F2, E3, G, N0, D4, X8, B; Core-Library.md): {0,8:F2}. Arguments: numbers (any integer type, float, double), bool, char8, char32, String and StringView, each without a spec as its own Append writes it."
+param format StringView
+param arg0 A0
+param arg1 A1
+param arg2 A2
+param arg3 A3
+param arg4 A4
+local pos int
+local n int
+sheet body
+node af01 Entry
+node af02 Get local:n
+node af03 Operator !=
+	in b -1
+node af04 While
+node af05 Get local:pos
+node af06 Call this.FormatNext
+node af07 Set local:n
+node af08 Set local:pos
+node af09 Operator ==
+	in b 0
+node af10 Branch
+node af11 Call this.AppendSlot
+node af12 Operator ==
+	in b 1
+node af13 Branch
+node af14 Call this.AppendSlot
+node af15 Operator ==
+	in b 2
+node af16 Branch
+node af17 Call this.AppendSlot
+node af18 Operator ==
+	in b 3
+node af19 Branch
+node af20 Call this.AppendSlot
+node af21 Operator ==
+	in b 4
+node af22 Branch
+node af23 Call this.AppendSlot
+node af24 Return
+wire af02.value af03.a
+wire af03.result af04.condition
+wire af01.then af04.in
+wire af01.format af06.format
+wire af04.body af06.in
+wire af05.value af06.start
+wire af06.then af07.in
+wire af06.result af07.value
+wire af07.then af08.in
+wire af06.next af08.value
+wire af02.value af09.a
+wire af09.result af10.condition
+wire af08.then af10.in
+wire af10.true af11.in
+wire af06.spec af11.spec
+wire af01.arg0 af11.value
+wire af06.width af11.width
+wire af02.value af12.a
+wire af12.result af13.condition
+wire af10.false af13.in
+wire af13.true af14.in
+wire af06.spec af14.spec
+wire af01.arg1 af14.value
+wire af06.width af14.width
+wire af02.value af15.a
+wire af15.result af16.condition
+wire af13.false af16.in
+wire af16.true af17.in
+wire af06.spec af17.spec
+wire af01.arg2 af17.value
+wire af06.width af17.width
+wire af02.value af18.a
+wire af18.result af19.condition
+wire af16.false af19.in
+wire af19.true af20.in
+wire af06.spec af20.spec
+wire af01.arg3 af20.value
+wire af06.width af20.width
+wire af02.value af21.a
+wire af21.result af22.condition
+wire af19.false af22.in
+wire af22.true af23.in
+wire af06.spec af23.spec
+wire af01.arg4 af23.value
+wire af06.width af23.width
+wire af04.done af24.in
+
+function s0033 AppendF
+	generic A0
+	generic A1
+	generic A2
+	generic A3
+	generic A4
+	generic A5
+	doc "Appends `format` with {0} to {5} replaced by the arguments ({{ and }} give a brace; a placeholder past the arguments appends nothing). A placeholder is {index[,width][:spec]}: a positive width right-aligns in that many characters, a negative one left-aligns; the spec formats a number (F2, E3, G, N0, D4, X8, B; Core-Library.md): {0,8:F2}. Arguments: numbers (any integer type, float, double), bool, char8, char32, String and StringView, each without a spec as its own Append writes it."
+param format StringView
+param arg0 A0
+param arg1 A1
+param arg2 A2
+param arg3 A3
+param arg4 A4
+param arg5 A5
+local pos int
+local n int
+sheet body
+node ag01 Entry
+node ag02 Get local:n
+node ag03 Operator !=
+	in b -1
+node ag04 While
+node ag05 Get local:pos
+node ag06 Call this.FormatNext
+node ag07 Set local:n
+node ag08 Set local:pos
+node ag09 Operator ==
+	in b 0
+node ag10 Branch
+node ag11 Call this.AppendSlot
+node ag12 Operator ==
+	in b 1
+node ag13 Branch
+node ag14 Call this.AppendSlot
+node ag15 Operator ==
+	in b 2
+node ag16 Branch
+node ag17 Call this.AppendSlot
+node ag18 Operator ==
+	in b 3
+node ag19 Branch
+node ag20 Call this.AppendSlot
+node ag21 Operator ==
+	in b 4
+node ag22 Branch
+node ag23 Call this.AppendSlot
+node ag24 Operator ==
+	in b 5
+node ag25 Branch
+node ag26 Call this.AppendSlot
+node ag27 Return
+wire ag02.value ag03.a
+wire ag03.result ag04.condition
+wire ag01.then ag04.in
+wire ag01.format ag06.format
+wire ag04.body ag06.in
+wire ag05.value ag06.start
+wire ag06.then ag07.in
+wire ag06.result ag07.value
+wire ag07.then ag08.in
+wire ag06.next ag08.value
+wire ag02.value ag09.a
+wire ag09.result ag10.condition
+wire ag08.then ag10.in
+wire ag10.true ag11.in
+wire ag06.spec ag11.spec
+wire ag01.arg0 ag11.value
+wire ag06.width ag11.width
+wire ag02.value ag12.a
+wire ag12.result ag13.condition
+wire ag10.false ag13.in
+wire ag13.true ag14.in
+wire ag06.spec ag14.spec
+wire ag01.arg1 ag14.value
+wire ag06.width ag14.width
+wire ag02.value ag15.a
+wire ag15.result ag16.condition
+wire ag13.false ag16.in
+wire ag16.true ag17.in
+wire ag06.spec ag17.spec
+wire ag01.arg2 ag17.value
+wire ag06.width ag17.width
+wire ag02.value ag18.a
+wire ag18.result ag19.condition
+wire ag16.false ag19.in
+wire ag19.true ag20.in
+wire ag06.spec ag20.spec
+wire ag01.arg3 ag20.value
+wire ag06.width ag20.width
+wire ag02.value ag21.a
+wire ag21.result ag22.condition
+wire ag19.false ag22.in
+wire ag22.true ag23.in
+wire ag06.spec ag23.spec
+wire ag01.arg4 ag23.value
+wire ag06.width ag23.width
+wire ag02.value ag24.a
+wire ag24.result ag25.condition
+wire ag22.false ag25.in
+wire ag25.true ag26.in
+wire ag06.spec ag26.spec
+wire ag01.arg5 ag26.value
+wire ag06.width ag26.width
+wire ag04.done ag27.in
+
+function s0034 Append
+	doc "Appends the code point as UTF-8 (1 to 4 bytes); a surrogate or a value past U+10FFFF appends U+FFFD."
+param value char32
+sheet body
+node ua01 Scope
+	unsafe
+node ua02 Entry
+node ua03 Get this.mLength
+node ua04 Get this.mPtr
+node ua05 Operator +
+	in b 5
+node ua06 Call this.Reserve
+node ua07 Cast int32
+node ua08 Call Pointer.Add
+node ua09 Call C.crt.rt_utf8_encode
+node ua10 Set this.mLength
+	set op +=
+node ua11 Get this.mLength
+node ua12 Call Pointer.Add
+node ua13 Call Pointer.Store
+	in value 0
+node ua14 Return
+wire ua02.then ua01.in
+wire ua03.value ua05.a
+wire ua01.body ua06.in
+wire ua05.result ua06.need
+wire ua02.value ua07.value
+wire ua03.value ua08.count
+wire ua04.value ua08.ptr
+wire ua08.result ua09.buf
+wire ua07.result ua09.c
+wire ua06.then ua09.in
+wire ua09.then ua10.in
+wire ua09.result ua10.value
+wire ua11.value ua12.count
+wire ua04.value ua12.ptr
+wire ua10.then ua13.in
+wire ua12.result ua13.ptr
+wire ua01.done ua14.in
+
+function s0035 CodePointCount
+	pure
+	returns int
+	doc "The number of Unicode code points (Length() is the number of bytes); a byte that starts no valid UTF-8 sequence counts as one."
+sheet body
+node ub01 Entry
+node ub02 Call this.View
+node ub03 Call StringView.CodePointCount
+node ub04 Return
+wire ub02.result ub03.receiver
+wire ub01.then ub04.in
+wire ub03.result ub04.value
+
+function s0036 CodePoints
+	pure
+	returns CodePointEnumerator
+	doc "The text's code points for For Each (char32 elements), decoded from UTF-8; valid while the String lives and is not changed."
+sheet body
+node uc01 Entry
+node uc02 Call this.View
+node uc03 Call StringView.CodePoints
+node uc04 Return
+wire uc02.result uc03.receiver
+wire uc01.then uc04.in
+wire uc03.result uc04.value
+
+function s0037 IndexOf
+	pure
+	returns int
+	doc "The byte position of the first `c` (encoded as UTF-8), or -1."
+param c char32
+sheet body
+node ud01 Entry
+node ud02 Call this.View
+node ud03 Call StringView.IndexOf(char32)
+node ud04 Return
+wire ud01.c ud03.c
+wire ud02.result ud03.receiver
+wire ud01.then ud04.in
+wire ud03.result ud04.value

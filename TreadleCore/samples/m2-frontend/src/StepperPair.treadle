@@ -1,0 +1,6 @@
+# treadle 1
+type StepperPair struct
+	namespace M2
+	doc "A struct with a struct field: a Mutating call on mInner of a place changes the place (StructMut)."
+
+field mInner Stepper

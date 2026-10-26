@@ -1,0 +1,53 @@
+# treadle 1
+type StructLocals class
+	namespace M2
+	static
+	doc "Local variables of a struct type with a destructor (Language.md 5.4): destroyed when the function returns, and the old value destroyed when a Set replaces it (a local starts as the default value, so the first Set destroys that). Run prints ~Res 0, kept, ~Res 4, ~Res 0, ~Res 5, replaced, ~Res 6."
+
+function l0001 Keep
+	static
+local r Res
+sheet body
+node a1 Entry
+node a2 Make M2.Res
+	in mId 4
+node a3 Set local:r
+node a4 Call Console.WriteLine(StringView)
+	in text "kept"
+node a5 Return
+wire a1.then a3.in
+wire a2.value a3.value
+wire a3.then a4.in
+wire a4.then a5.in
+
+function l0002 Replace
+	static
+local r Res
+sheet body
+node b1 Entry
+node b2 Make M2.Res
+	in mId 5
+node b3 Set local:r
+node b4 Make M2.Res
+	in mId 6
+node b5 Set local:r
+node b6 Call Console.WriteLine(StringView)
+	in text "replaced"
+node b7 Return
+wire b1.then b3.in
+wire b2.value b3.value
+wire b3.then b5.in
+wire b4.value b5.value
+wire b5.then b6.in
+wire b6.then b7.in
+
+function l0003 Run
+	static
+sheet body
+node c1 Entry
+node c2 Call M2.StructLocals.Keep
+node c3 Call M2.StructLocals.Replace
+node c4 Return
+wire c1.then c2.in
+wire c2.then c3.in
+wire c3.then c4.in

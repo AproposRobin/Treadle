@@ -1,0 +1,129 @@
+# treadle 1
+type ResultMain class
+	namespace Cx
+	static
+	doc "Core Result and Option helpers: IsOk, IsErr, Unwrap, UnwrapOr, Map with a Lambda; IsSome, IsNone, Unwrap, UnwrapOr."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Call this.Half
+	in n 10
+node a3 Call Result<int,int>.IsOk
+node a4 Call Console.WriteLine(bool)
+node a5 Call Result<int,int>.Unwrap
+node a6 Call Console.WriteLine(int)
+node a7 Call this.Half
+	in n 7
+node a8 Call Result<int,int>.IsErr
+node a9 Call Console.WriteLine(bool)
+node b1 Call Result<int,int>.UnwrapOr
+	in fallback -1
+node b2 Call Console.WriteLine(int)
+node b3 Lambda
+	set type delegate:int(int)
+	set alloc local
+	set inputs x
+node b4 Call Result<int,int>.Map
+node b5 Call Result<int,int>.UnwrapOr
+	in fallback 0
+node b6 Call Console.WriteLine(int)
+node b7 Call Result<int,int>.Map
+node b8 Call Result<int,int>.IsErr
+node b9 Call Console.WriteLine(bool)
+node c1 MakeCase Option<int>.Some
+	in value 9
+node c2 Call Option<int>.IsSome
+node c3 Call Console.WriteLine(bool)
+node c4 Call Option<int>.Unwrap
+node c5 Call Console.WriteLine(int)
+node c6 MakeCase Option<int>.None
+node c7 Call Option<int>.IsNone
+node c8 Call Console.WriteLine(bool)
+node c9 Call Option<int>.UnwrapOr
+	in fallback 3
+node d1 Call Console.WriteLine(int)
+node d2 Return
+	in value 0
+wire a1.then a2.in
+wire a2.result a3.receiver
+wire a2.then a4.in
+wire a3.result a4.value
+wire a4.then a5.in
+wire a2.result a5.receiver
+wire a5.then a6.in
+wire a5.result a6.value
+wire a6.then a7.in
+wire a7.result a8.receiver
+wire a7.then a9.in
+wire a8.result a9.value
+wire a7.result b1.receiver
+wire a9.then b2.in
+wire b1.result b2.value
+wire b2.then b3.in
+wire b3.then b4.in
+wire b3.value b4.mapper
+wire a2.result b4.receiver
+wire b4.result b5.receiver
+wire b4.then b6.in
+wire b5.result b6.value
+wire b6.then b7.in
+wire b3.value b7.mapper
+wire a7.result b7.receiver
+wire b7.result b8.receiver
+wire b7.then b9.in
+wire b8.result b9.value
+wire c1.value c2.receiver
+wire b9.then c3.in
+wire c2.result c3.value
+wire c3.then c4.in
+wire c1.value c4.receiver
+wire c4.then c5.in
+wire c4.result c5.value
+wire c6.value c7.receiver
+wire c5.then c8.in
+wire c7.result c8.value
+wire c6.value c9.receiver
+wire c8.then d1.in
+wire c9.result d1.value
+wire d1.then d2.in
+sheet lambda:b3
+node l1 Entry
+node l2 Operator *
+	in b 100
+node l3 Return
+wire l1.x l2.a
+wire l1.then l3.in
+wire l2.result l3.value
+
+function m2 Half
+	static
+	returns Result<int,int>
+	doc "n / 2 for an even n, the remainder as an error for an odd one."
+param n int
+sheet body
+node h1 Entry
+node h2 Operator %
+	in b 2
+node h3 Operator ==
+	in b 0
+node h4 Branch
+node h5 Operator /
+	in b 2
+node h6 MakeCase Result<int,int>.Ok
+node h7 Return
+node h8 MakeCase Result<int,int>.Err
+node h9 Return
+wire h1.n h2.a
+wire h2.result h3.a
+wire h3.result h4.condition
+wire h1.then h4.in
+wire h1.n h5.a
+wire h5.result h6.value
+wire h4.true h7.in
+wire h6.value h7.value
+wire h2.result h8.error
+wire h4.false h9.in
+wire h8.value h9.value

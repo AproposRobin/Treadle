@@ -1,0 +1,322 @@
+# treadle 1
+type crt class
+	namespace C
+	static
+	doc "The C functions the core library calls: libc (UCRT), kernel32 and the runtime's own (treadle_rt: the command line, files and directories, number parsing and formats, UTF-8, the environment, processes, the calendar clock). Written by hand; the core's Sheets reach them as C.crt.<name>."
+
+function c0001 realloc
+	static
+	returns void*
+param ptr void*
+param size uint
+
+function c0002 free
+	static
+param ptr void*
+
+function c0031 memcmp
+	static
+	pure
+	returns int32
+param a void*
+param b void*
+param n uint
+
+function c0003 strlen
+	static
+	returns uint
+param s char8*
+
+function c0004 snprintf
+	static
+	returns int32
+	attr Variadic
+param buffer char8*
+param count uint
+param format char8*
+
+function c0005 getchar
+	static
+	returns int32
+
+function c0006 exit
+	static
+param status int32
+
+function c0007 QueryPerformanceCounter
+	static
+	returns int32
+param count int64*
+
+function c0008 QueryPerformanceFrequency
+	static
+	returns int32
+param frequency int64*
+
+function c0009 rt_arg_count
+	static
+	returns int32
+
+function c000a rt_arg
+	static
+	returns char8*
+param index int32
+
+function c000b fopen
+	static
+	returns void*
+param path char8*
+param mode char8*
+
+function c000c fclose
+	static
+	returns int32
+param stream void*
+
+function c000d fread
+	static
+	returns uint
+param buffer void*
+param size uint
+param count uint
+param stream void*
+
+function c000e fwrite
+	static
+	returns uint
+param buffer void*
+param size uint
+param count uint
+param stream void*
+
+function c000f remove
+	static
+	returns int32
+param path char8*
+
+function c0010 rt_file_exists
+	static
+	returns int32
+param path char8*
+
+function c0011 rt_dir_exists
+	static
+	returns int32
+param path char8*
+
+function c0012 rt_dir_create
+	static
+	returns int32
+param path char8*
+
+function c0013 rt_dir_open
+	static
+	returns void*
+param path char8*
+
+function c0014 rt_dir_next
+	static
+	returns char8*
+param handle void*
+param dirs int32
+
+function c0015 rt_dir_close
+	static
+param handle void*
+
+function c0016 rt_dir_delete
+	static
+	returns int32
+param path char8*
+
+function c0017 rt_parse_int
+	static
+	returns int32
+param p char8*
+param n int64
+param out int64*
+param pos int64*
+
+function c0018 rt_parse_double
+	static
+	returns int32
+param p char8*
+param n int64
+param out double*
+param pos int64*
+
+function c0019 rt_ascii_ieq
+	static
+	pure
+	returns int32
+param a char8*
+param an int64
+param b char8*
+param bn int64
+
+function c001a rt_format_scan
+	static
+	returns int32
+param p char8*
+param n int64
+param pos int64
+param litEnd int64*
+param next int64*
+param width int64*
+param specStart int64*
+param specLen int64*
+
+function c001b rt_format_number
+	static
+	returns int64
+param buf char8*
+param cap int64
+param kind int32
+param i int64
+param d double
+param spec char8*
+param specLen int64
+
+function c002f rt_format_int
+	static
+	returns int64
+param buf char8*
+param v int64
+
+function c0030 rt_format_align
+	static
+	returns int64
+param p char8*
+param n int64
+param width int64
+
+function c001c rt_utf8_decode
+	static
+	pure
+	returns int32
+param text char8*
+param n int64
+param pos int64
+param cp int32*
+
+function c001d rt_utf8_encode
+	static
+	returns int32
+param c int32
+param buf char8*
+
+function c001e rt_utf8_check
+	static
+	pure
+	returns int64
+param p char8*
+param n int64
+
+function c001f rt_utf8_count
+	static
+	pure
+	returns int64
+param p char8*
+param n int64
+
+function c0020 rt_env_get
+	static
+	returns char8*
+param name char8*
+
+function c0021 rt_env_set
+	static
+	returns int32
+param name char8*
+param value char8*
+
+function c0022 rt_cwd_get
+	static
+	returns char8*
+
+function c0023 rt_cwd_set
+	static
+	returns int32
+param path char8*
+
+function c0024 rt_exe_path
+	static
+	returns char8*
+
+function c0025 rt_machine_name
+	static
+	returns char8*
+
+function c0026 rt_is_windows
+	static
+	pure
+	returns int32
+
+function c0027 rt_proc_start
+	static
+	returns void*
+param path char8*
+param args char8*
+param capture int32
+param error int32*
+
+function c0028 rt_proc_wait
+	static
+	returns int32
+param handle void*
+
+function c0029 rt_proc_exited
+	static
+	returns int32
+param handle void*
+
+function c002a rt_proc_kill
+	static
+	returns int32
+param handle void*
+
+function c002b rt_proc_output
+	static
+	returns char8*
+param handle void*
+param length int64*
+
+function c002c rt_proc_close
+	static
+param handle void*
+
+function c002d rt_time_now
+	static
+param utc int32
+param year int64*
+param month int64*
+param day int64*
+param hour int64*
+param minute int64*
+param second int64*
+param ms int64*
+
+function c002e rt_sleep
+	static
+param ms int64
+
+function c0032 rt_proc_start_list
+	static
+	returns void*
+param path char8*
+param block char8*
+param length int64
+param count int64
+param capture int32
+param error int32*
+
+function c0033 rt_fopen
+	static
+	returns void*
+param path char8*
+param mode char8*
+
+function c0034 rt_remove
+	static
+	returns int32
+param path char8*

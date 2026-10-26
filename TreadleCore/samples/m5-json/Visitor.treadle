@@ -1,0 +1,76 @@
+# treadle 1
+type Visitor class
+	namespace Json
+	generic T
+	doc "A fold over a JsonValue tree: Visit calls the folder on each value, parents before children (arrays in order, objects in their slot order), with its nesting depth and the running result, and gives the last result. The visitor does not own the folder delegate."
+
+field mFolder delegate:T(T,Json.JsonValue,int)
+	doc "Called as folder(result so far, value, depth) for each value; gives the new result."
+
+ctor m0001
+	doc "A visitor that folds with `folder`."
+param folder delegate:T(T,Json.JsonValue,int)
+sheet body
+node a000 Entry
+node a001 Set this.mFolder
+node a002 Return
+wire a000.then a001.in
+wire a000.folder a001.value
+wire a001.then a002.in
+
+function m0002 Visit
+	returns T
+	doc "Folds `value` (at `depth`) and everything under it into `acc`."
+param value Json.JsonValue
+param depth int
+param acc T
+local result T
+sheet body
+node b000 Entry
+node b001 Get this.mFolder
+node b002 Invoke
+node b003 Set local:result
+node b004 Switch
+	case Array
+	case Object
+node b005 Get local:result
+node b006 Operator +
+	in b 1
+node b007 ForEach
+node b008 Call this.Visit
+node b009 Set local:result
+node b00a Call Dictionary<String,Json.JsonValue>.Values
+node b00b ForEach
+node b00c Call this.Visit
+node b00d Set local:result
+node b00e Return
+wire b000.acc b002.arg0
+wire b000.value b002.arg1
+wire b000.depth b002.arg2
+wire b001.value b002.delegate
+wire b000.then b002.in
+wire b002.then b003.in
+wire b002.result b003.value
+wire b003.then b004.in
+wire b000.value b004.value
+wire b000.depth b006.a
+wire b004.case:Array.items b007.collection
+wire b004.case:Array b007.in
+wire b005.value b008.acc
+wire b006.result b008.depth
+wire b007.body b008.in
+wire b007.element b008.value
+wire b008.then b009.in
+wire b008.result b009.value
+wire b004.case:Object b00a.in
+wire b004.case:Object.members b00a.receiver
+wire b00a.result b00b.collection
+wire b00a.then b00b.in
+wire b005.value b00c.acc
+wire b006.result b00c.depth
+wire b00b.body b00c.in
+wire b00b.element b00c.value
+wire b00c.then b00d.in
+wire b00c.result b00d.value
+wire b004.done b00e.in
+wire b005.value b00e.value

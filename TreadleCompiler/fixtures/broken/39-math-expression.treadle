@@ -1,0 +1,37 @@
+# treadle 1
+# expect n2 - T2210
+# expect n3 - T2211
+# expect n4 - T2212
+# expect n5 - T2213
+# expect n6 - T2214
+type MathErrors class
+	namespace Broken
+	static
+	doc "Math Expressions that do not bind, each message saying where: a syntax error, operands that do not meet (a bool and an int), a function Math lacks, a field an int does not have, a literal that does not fit its side."
+
+function f1 Run
+	static
+	returns int
+param i int
+param ok bool
+sheet body
+node n1 Entry
+node n2 Math
+	set expr "i + * 2"
+node n3 Math
+	set expr "ok + i"
+node n4 Math
+	set expr "Cube(i)"
+node n5 Math
+	set expr "i.x * 2"
+node n6 Math
+	set expr "i & 1.5"
+node n7 Return
+	in value 0
+wire n1.i n2.i
+wire n1.i n3.i
+wire n1.ok n3.ok
+wire n1.i n4.i
+wire n1.i n5.i
+wire n1.i n6.i
+wire n1.then n7.in

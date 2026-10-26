@@ -1,0 +1,70 @@
+# treadle 1
+type vectors class
+	namespace C
+	static
+	doc "C declarations of the import set vectors (vectors.cimport), written by the C header import. Do not edit: the import rewrites this file."
+
+function dzpjq vec_add
+	static
+	returns float4
+param a float4
+param b float4
+
+function aje0r vec_addi
+	static
+	returns int32x4
+param a int32x4
+param b int32x4
+
+function tn0nf vec_bits
+	static
+	returns int64x2
+param v int64x2
+
+function dver8 vec_bytes
+	static
+	returns uint8x16
+param v uint8x16
+
+function pbp6k vec_cross
+	static
+	returns float3
+param a float3
+param b float3
+
+function jtj4h vec_d2
+	static
+	returns double2
+param v double2
+
+function z5gwg vec_odd
+	static
+	returns int16x3
+param v int16x3
+
+function gs7c5 vec_scale
+	static
+	returns float4
+param v float4
+param k float
+
+function jhwsa vec_twice
+	static
+	returns double2
+param v double2
+
+function v4pft vec_wide
+	static
+	returns float8
+param v float8
+
+function a76p4 vec_wide_bits
+	static
+	returns int64x4
+param v int64x4
+ctypedef vb16 uint8x16
+ctypedef vd2 double2
+ctypedef vf3 float3
+ctypedef vf4 float4
+ctypedef vi4 int32x4
+ctypedef vs3 int16x3

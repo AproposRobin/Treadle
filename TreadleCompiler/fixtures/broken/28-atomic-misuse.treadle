@@ -1,0 +1,26 @@
+# treadle 1
+# expect n3 - T2260
+# expect n4 location T2261
+type AtomicMisuse class
+	namespace Broken
+	static
+	doc "An atomic Load with a release order, and an atomic Add on a bool."
+
+function f1 Run
+	static
+local flag bool
+local n int
+sheet body
+node n1 Entry
+node n2 Get local:n
+node n3 Call Atomic.Load
+	set order release
+node n4 Call Atomic.Add
+	in value true
+node n5 Get local:flag
+node n6 Return
+wire n1.then n3.in
+wire n2.value n3.location
+wire n3.then n4.in
+wire n5.value n4.location
+wire n4.then n6.in

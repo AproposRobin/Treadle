@@ -1,0 +1,7 @@
+FileVersion = 1
+Dependencies = {corlib = "*", TreadleCore = "*"}
+
+[Project]
+Name = "TreadleBackend"
+TargetType = "BeefLib"
+DefaultNamespace = "Treadle.Backend"

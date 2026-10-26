@@ -1,0 +1,87 @@
+# treadle 1
+type BoxMain class
+	namespace Fx
+	static
+	doc "Runs the Lambdas of M2.Box<T> for two instances, Box<int> and Box<int16> (TreadleCore/samples/m2-frontend)."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Construct M2.Box<int>
+node a3 Call M2.Box<int>.Replace
+	in v 5
+node a4 Call Console.WriteLine(int)
+node a5 Call M2.Box<int>.Replace
+	in v 7
+node a6 Call Console.WriteLine(int)
+node a7 Call M2.Box<int>.Max
+	in other 3
+node a8 Call Console.WriteLine(int)
+node a9 Call M2.Box<int>.Max
+	in other 9
+node b1 Call Console.WriteLine(int)
+node b2 Call M2.Box<int>.Twice
+	in v 21
+node b3 Call Console.WriteLine(int)
+node b4 Construct M2.Box<int16>
+node b5 Call M2.Box<int16>.Replace
+	in v 4
+node b6 Call Console.WriteLine(int)
+node b7 Call M2.Box<int16>.Replace
+	in v 6
+node b8 Call Console.WriteLine(int)
+node b9 Call M2.Box<int16>.Max
+	in other 2
+node c1 Call Console.WriteLine(int)
+node c2 Call M2.Box<int16>.Twice
+	in v 11
+node c3 Call Console.WriteLine(int)
+node c4 Delete
+node c5 Delete
+node c6 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.receiver
+wire a3.then a4.in
+wire a3.result a4.value
+wire a4.then a5.in
+wire a2.object a5.receiver
+wire a5.then a6.in
+wire a5.result a6.value
+wire a6.then a7.in
+wire a2.object a7.receiver
+wire a7.then a8.in
+wire a7.result a8.value
+wire a8.then a9.in
+wire a2.object a9.receiver
+wire a9.then b1.in
+wire a9.result b1.value
+wire b1.then b2.in
+wire a2.object b2.receiver
+wire b2.then b3.in
+wire b2.result b3.value
+wire b3.then b4.in
+wire b4.then b5.in
+wire b4.object b5.receiver
+wire b5.then b6.in
+wire b5.result b6.value
+wire b6.then b7.in
+wire b4.object b7.receiver
+wire b7.then b8.in
+wire b7.result b8.value
+wire b8.then b9.in
+wire b4.object b9.receiver
+wire b9.then c1.in
+wire b9.result c1.value
+wire c1.then c2.in
+wire b4.object c2.receiver
+wire c2.then c3.in
+wire c2.result c3.value
+wire c3.then c4.in
+wire a2.object c4.object
+wire c4.then c5.in
+wire b4.object c5.object
+wire c5.then c6.in

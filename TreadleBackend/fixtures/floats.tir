@@ -1,0 +1,33 @@
+# tir 1
+# Float literals: `f` / `F` (float), `d` / `D` (double) and the plain form (double), in decimal and
+# exponent form. The op's type decides the width; a float constant is rounded to float precision.
+program Floats console
+entry Fl.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Fl.Program
+type Fl.Program class
+
+func Fl.Program.Main() int static
+	block b0
+		%a = const float 1.25f
+		%b = const float 3F
+		%c = const double 2.5d
+		%d = const double 0.125
+		%e = const double 1e3D
+		%g = const float 0.1f
+		%h = const double 0.1
+		%s = binop float add %a %b
+		%t = binop double mul %c %e
+		%f1 = const char8* "%g %g %g %g\n"
+		%r1 = ccall int32 C.libc.printf(char8*,...) %f1 %s %t %d %e
+		%gd = cast double %g
+		%dd = binop double sub %gd %h
+		%z0 = const double 0
+		%ne = cmp bool ne %dd %z0
+		%f2 = const char8* "float 0.1f differs from double 0.1: %d\n"
+		%ni = cast int32 %ne
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %ni
+		%z = const int 0
+		ret %z

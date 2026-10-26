@@ -1,0 +1,10 @@
+# cimport 1
+import libc
+	header stdio.h
+	header stdlib.h
+	header string.h
+	lib msvcrt
+	pure strlen strcmp memcmp
+	hide _*
+	only puts printf malloc free strlen strcmp memcmp
+	category "C / libc"

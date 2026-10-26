@@ -1,0 +1,74 @@
+# treadle 1
+type Option enum
+	namespace Core
+	generic T
+	doc "A value or nothing: Some(value) or None. Switch or Is Case reads it; IsSome, Unwrap and UnwrapOr are the short ways."
+
+case Some
+	payload value T
+
+case None
+
+function o0001 IsSome
+	pure
+	returns bool
+	doc "True when there is a value."
+sheet body
+node a1 Entry
+node a2 This
+node a3 IsCase Option<T>.Some
+node a4 Return
+wire a2.value a3.value
+wire a1.then a4.in
+wire a3.result a4.value
+
+function o0002 IsNone
+	pure
+	returns bool
+	doc "True when there is no value."
+sheet body
+node b1 Entry
+node b2 This
+node b3 IsCase Option<T>.None
+node b4 Return
+wire b2.value b3.value
+wire b1.then b4.in
+wire b3.result b4.value
+
+function o0003 Unwrap
+	returns T
+	doc "The value; None is a fatal error."
+sheet body
+node c1 Entry
+node c2 This
+node c3 IsCase Option<T>.Some
+node c4 Branch
+node c5 Return
+node c6 Fatal
+	in message "Option.Unwrap: there is no value (None)"
+wire c2.value c3.value
+wire c3.result c4.condition
+wire c1.then c4.in
+wire c4.true c5.in
+wire c3.value c5.value
+wire c4.false c6.in
+
+function o0004 UnwrapOr
+	pure
+	returns T
+	doc "The value, or `fallback` when there is none."
+param fallback T
+sheet body
+node d1 Entry
+node d2 This
+node d3 IsCase Option<T>.Some
+node d4 Branch
+node d5 Return
+node d6 Return
+wire d2.value d3.value
+wire d3.result d4.condition
+wire d1.then d4.in
+wire d4.true d5.in
+wire d3.value d5.value
+wire d4.false d6.in
+wire d1.fallback d6.value

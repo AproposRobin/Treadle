@@ -1,0 +1,15 @@
+# treadle_init ran the static constructor (sBase 100); treadle_shutdown reports the Box kl_keep made
+# (Debug) and returns the count.
+== exit
+0
+== stdout Debug
+add 103
+flip 40 3
+leaks 1
+== stdout Release
+add 103
+flip 40 3
+leaks 0
+== stderr Debug
+leak: Kl.Box (
+made at Kl.Lib.Keep node a2

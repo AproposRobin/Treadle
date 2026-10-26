@@ -1,0 +1,8 @@
+# treadle 1
+type IComparable interface
+	namespace Core
+	generic T
+
+function k0001 CompareTo
+	returns int
+param other T

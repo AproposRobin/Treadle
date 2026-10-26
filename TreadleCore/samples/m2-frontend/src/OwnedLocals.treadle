@@ -1,0 +1,74 @@
+# treadle 1
+type OwnedLocals class
+	namespace M2
+	static
+	doc "Owned local variables (Language.md 5.4) are deleted when the function returns, by every Return; one never set holds null, which Delete ignores. Run prints made 1, ~Tracked 1, ~Tracked 2, late, ~Tracked 3; the Debug leak report stays empty."
+
+function o0001 Make
+	static
+param id int
+local t Tracked
+	owner owned
+sheet body
+node a1 Entry
+node a2 Construct M2.Tracked
+	set ctor (int)
+node a3 Set local:t
+node a4 Call Console.Write(StringView)
+	in text "made "
+node a5 Call Console.WriteLine(int)
+node a6 Return
+wire a1.id a2.id
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value
+wire a3.then a4.in
+wire a4.then a5.in
+wire a1.id a5.value
+wire a5.then a6.in
+
+function o0002 Early
+	static
+param id int
+param early bool
+local t Tracked
+	owner owned
+local unused Tracked
+	owner owned
+sheet body
+node b1 Entry
+node b2 Construct M2.Tracked
+	set ctor (int)
+node b3 Set local:t
+node b4 Branch
+node b5 Return
+node b6 Call Console.WriteLine(StringView)
+	in text "late"
+node b7 Return
+wire b1.id b2.id
+wire b1.then b2.in
+wire b2.then b3.in
+wire b2.object b3.value
+wire b1.early b4.condition
+wire b3.then b4.in
+wire b4.true b5.in
+wire b4.false b6.in
+wire b6.then b7.in
+
+function o0003 Run
+	static
+sheet body
+node c1 Entry
+node c2 Call M2.OwnedLocals.Make
+	in id 1
+node c3 Call M2.OwnedLocals.Early
+	in id 2
+	in early true
+node c4 Call M2.OwnedLocals.Early
+	in id 3
+	in early false
+node c5 Return
+wire c1.then c2.in
+wire c2.then c3.in
+wire c3.then c4.in
+wire c4.then c5.in

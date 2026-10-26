@@ -1,0 +1,54 @@
+# treadle 1
+type PureOuts class
+	namespace M2
+	static
+	doc "A Pure function with an out parameter read as a value node: its out pin alone, both pins by two flow nodes, both pins by one. Prints 2, 5, 3 and 8."
+
+function u0001 DivMod
+	static
+	pure
+	returns int
+	doc "The quotient of a by b, and the remainder in rem."
+param a int
+param b int
+out rem int
+sheet body
+node a1 Entry
+node a2 Operator /
+node a3 Operator %
+node a4 Return
+wire a1.a a2.a
+wire a1.b a2.b
+wire a1.a a3.a
+wire a1.b a3.b
+wire a1.then a4.in
+wire a3.result a4.rem
+wire a2.result a4.value
+
+function u0002 Run
+	static
+sheet body
+node b1 Entry
+node b2 Call M2.PureOuts.DivMod
+	in a 17
+	in b 5
+node b3 Call Console.WriteLine(int)
+node b4 Call M2.PureOuts.DivMod
+	in a 23
+	in b 4
+node b5 Call Console.WriteLine(int)
+node b6 Call Console.WriteLine(int)
+node b7 Operator +
+node b8 Call Console.WriteLine(int)
+node b9 Return
+wire b1.then b3.in
+wire b2.rem b3.value
+wire b3.then b5.in
+wire b4.result b5.value
+wire b5.then b6.in
+wire b4.rem b6.value
+wire b4.result b7.a
+wire b4.rem b7.b
+wire b6.then b8.in
+wire b7.result b8.value
+wire b8.then b9.in

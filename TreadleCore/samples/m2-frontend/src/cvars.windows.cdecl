@@ -1,0 +1,41 @@
+# treadle 1
+type cvars class
+	namespace C
+	static
+	doc "C declarations of the import set cvars (cvars.cimport), written by the C header import. Do not edit: the import rewrites this file."
+
+function smvsk __acrt_iob_func
+	static
+	returns FILE*
+param index uint32
+
+function c6td8 _errno
+	static
+	returns int32*
+
+function v8428 fflush
+	static
+	returns int32
+param file FILE*
+
+function sj2ym fputs
+	static
+	returns int32
+param str char8*
+param file FILE*
+
+function z340r treadle_limit_get
+	static
+	returns int32
+cstruct _iobuf
+	size 8
+	align 8
+	field _Placeholder void* 0
+ctypedef FILE _iobuf
+cvar errno int32
+	via _errno deref
+cvar stdout FILE*
+	via __acrt_iob_func 1
+cvar treadle_counter int32
+cvar treadle_limit int32
+	via treadle_limit_get

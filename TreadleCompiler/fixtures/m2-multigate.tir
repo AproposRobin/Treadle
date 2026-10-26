@@ -1,0 +1,277 @@
+# tir 1
+program m2-multigate console
+entry Fx.RotationMain.Main()
+
+unit Fx.RotationMain "RotationMain.treadle"
+
+type Fx.RotationMain class
+
+func Fx.RotationMain.Main() int static sheet "m1" display "Fx.RotationMain.Main"
+	node a1 Entry
+	node a2 Call M2.Rotation.Run
+	node a3 Return
+	block b0
+		br b1
+	block b1
+		call void M2.Rotation.Run() @a2
+		br b2
+	block b2
+		%_0 = const int 0 @a3.value
+		region.exit r0 @a3
+		ret %_0 @a3
+
+unit M2.Rotation "Rotation.treadle"
+
+type M2.Rotation class
+
+global M2.Rotation.__multiGate_a4 int
+
+global M2.Rotation.__multiGateSeed_b3 uint 88172645463325252
+
+global M2.Rotation.__multiGate_b3 int
+
+func M2.Rotation.Run() void static sheet "r0001" display "M2.Rotation.Run"
+	region r1
+	region r2 parent r1
+	region r3 parent r1
+	region r4 parent r1
+	region r5
+	region r6 parent r5
+	region r7 parent r6
+	region r8 parent r6
+	region r9 parent r5
+	region r10 parent r9
+	region r11 parent r9
+	region r12 parent r9
+	slot s0 int loopvar "a2.index" pin node a2.index
+	slot s1 int loopvar "a2.count" pin node a2.count
+	slot s2 int loopvar "b2.index" pin node b2.index
+	slot s3 int loopvar "b2.count" pin node b2.count
+	slot s4 int outtemp "b3.pick" pin node b3.pick
+	node a1 Entry
+	node a2 For
+	node a3 Sequence
+	node a4 MultiGate
+	node a5 Call Console.WriteLine(StringView)
+	node a6 Call Console.WriteLine(StringView)
+	node a7 Call Console.WriteLine(StringView)
+	node a8 Operator ==
+	node a9 Branch
+	node b1 ResetMultiGate
+	node b2 For
+	node b3 MultiGate
+	node b4 Call Console.WriteLine(StringView)
+	node b5 Call Console.WriteLine(StringView)
+	node b6 Call Console.WriteLine(StringView)
+	node b7 Return
+	block b0
+		br b1
+	block b1
+		%_0 = const int 0 @a2.start
+		%_1 = const int 5 @a2.count
+		store.slot s0 %_0 @a2.start
+		store.slot s1 %_1 @a2.count
+		br b2
+	block b2
+		%_2 = load.slot int s1 @a2.count
+		%_3 = const int 0 @a2.count
+		%_4 = cmp bool gt %_2 %_3 @a2.count
+		condbr %_4 b5 b4 @a2
+	block b3
+		%_5 = const int 1 @a2.step
+		%_6 = load.slot int s0 @a2.index
+		%_7 = binop int add %_6 %_5 @a2.index
+		store.slot s0 %_7 @a2.index
+		%_8 = load.slot int s1 @a2.count
+		%_9 = const int 1 @a2.count
+		%_10 = binop int sub %_8 %_9 @a2.count
+		store.slot s1 %_10 @a2.count
+		br b2
+	block b4
+		br b7
+	block b5
+		region.enter r5 @a2.body
+		br b6
+	block b6
+		region.enter r9 @a3.then0
+		br b8
+	block b7
+		%_11 = const int 0 @b2.start
+		%_12 = const int 4 @b2.count
+		store.slot s2 %_11 @b2.start
+		store.slot s3 %_12 @b2.count
+		br b9
+	block b8
+		%_22 = global.addr int* M2.Rotation.__multiGate_a4 @a4.state
+		%_23 = load int %_22 @a4.state
+		%_24 = const int 3 @a4.state
+		%_25 = cmp bool lt %_23 %_24 @a4.state
+		condbr %_25 b15 b16 @a4
+	block b9
+		%_13 = load.slot int s3 @b2.count
+		%_14 = const int 0 @b2.count
+		%_15 = cmp bool gt %_13 %_14 @b2.count
+		condbr %_15 b12 b11 @b2
+	block b10
+		%_16 = const int 1 @b2.step
+		%_17 = load.slot int s2 @b2.index
+		%_18 = binop int add %_17 %_16 @b2.index
+		store.slot s2 %_18 @b2.index
+		%_19 = load.slot int s3 @b2.count
+		%_20 = const int 1 @b2.count
+		%_21 = binop int sub %_19 %_20 @b2.count
+		store.slot s3 %_21 @b2.count
+		br b9
+	block b11
+		br b14
+	block b12
+		region.enter r1 @b2.body
+		br b13
+	block b13
+		%_28 = global.addr int* M2.Rotation.__multiGate_b3 @b3.state
+		%_29 = load int %_28 @b3.state
+		%_30 = const int 7 @b3.state
+		%_31 = cmp bool eq %_29 %_30 @b3.state
+		%_32 = const int 0 @b3.state
+		%_33 = select int %_31 %_32 %_29 @b3.state
+		%_34 = cmp bool eq %_33 %_30 @b3.state
+		condbr %_34 b25 b26 @b3
+	block b14
+		region.exit r0 @b7
+		ret @b7
+	block b15
+		%_26 = const int 1 @a4.state
+		%_27 = binop int add %_23 %_26 @a4.state
+		store %_22 %_27 @a4.state
+		switch %_23 b20 0 b17 1 b18 2 b19 @a4
+	block b16
+		region.exit r9 @a4
+		region.enter r6 @a3.then1
+		br b24
+	block b17
+		region.enter r12 @a4.out0
+		br b21
+	block b18
+		region.enter r11 @a4.out1
+		br b22
+	block b19
+		region.enter r10 @a4.out2
+		br b23
+	block b20
+		region.exit r9 @a4
+		region.enter r6 @a3.then1
+		br b24
+	block b21
+		%_61 = const StringView "red" @a5.text
+		intrinsic void console.writeline %_61 @a5
+		region.exit r12 @a5
+		region.exit r9 @a4
+		region.enter r6 @a3.then1
+		br b24
+	block b22
+		%_62 = const StringView "green" @a6.text
+		intrinsic void console.writeline %_62 @a6
+		region.exit r11 @a6
+		region.exit r9 @a4
+		region.enter r6 @a3.then1
+		br b24
+	block b23
+		%_63 = const StringView "blue" @a7.text
+		intrinsic void console.writeline %_63 @a7
+		region.exit r10 @a7
+		region.exit r9 @a4
+		region.enter r6 @a3.then1
+		br b24
+	block b24
+		%_64 = load.slot int s0 @a2.index
+		%_65 = const int 3 @a8.b
+		%_66 = cmp bool eq %_64 %_65 @a8.result
+		condbr %_66 b37 b38 @a9
+	block b25
+		region.exit r1 @b3
+		br b10
+	block b26
+		%_35 = global.addr uint* M2.Rotation.__multiGateSeed_b3 @b3.state
+		%_36 = load uint %_35 @b3.state
+		%_37 = const uint 6364136223846793005 @b3.state
+		%_38 = binop uint mul %_36 %_37 @b3.state
+		%_39 = const uint 1442695040888963407 @b3.state
+		%_40 = binop uint add %_38 %_39 @b3.state
+		store %_35 %_40 @b3.state
+		%_41 = const uint 33 @b3.state
+		%_42 = binop uint shr %_40 %_41 @b3.state
+		%_43 = const uint 3 @b3.state
+		%_44 = binop uint rem %_42 %_43 @b3.state
+		%_45 = cast int %_44 @b3.state
+		store.slot s4 %_45 @b3.state
+		br b27
+	block b27
+		%_46 = load.slot int s4 @b3.state
+		%_47 = binop int shr %_33 %_46 @b3.state
+		%_48 = const int 1 @b3.state
+		%_49 = binop int and %_47 %_48 @b3.state
+		%_50 = const int 0 @b3.state
+		%_51 = cmp bool eq %_49 %_50 @b3.state
+		condbr %_51 b29 b28 @b3
+	block b28
+		%_52 = load.slot int s4 @b3.state
+		%_53 = const int 1 @b3.state
+		%_54 = binop int add %_52 %_53 @b3.state
+		%_55 = const int 3 @b3.state
+		%_56 = binop int rem %_54 %_55 @b3.state
+		store.slot s4 %_56 @b3.state
+		br b27
+	block b29
+		%_57 = load.slot int s4 @b3.state
+		%_58 = const int 1 @b3.state
+		%_59 = binop int shl %_58 %_57 @b3.state
+		%_60 = binop int or %_33 %_59 @b3.state
+		store %_28 %_60 @b3.state
+		switch %_57 b33 0 b30 1 b31 2 b32 @b3
+	block b30
+		region.enter r4 @b3.out0
+		br b34
+	block b31
+		region.enter r3 @b3.out1
+		br b35
+	block b32
+		region.enter r2 @b3.out2
+		br b36
+	block b33
+		region.exit r1 @b3
+		br b10
+	block b34
+		%_67 = const StringView "one" @b4.text
+		intrinsic void console.writeline %_67 @b4
+		region.exit r4 @b4
+		region.exit r1 @b3
+		br b10
+	block b35
+		%_68 = const StringView "two" @b5.text
+		intrinsic void console.writeline %_68 @b5
+		region.exit r3 @b5
+		region.exit r1 @b3
+		br b10
+	block b36
+		%_69 = const StringView "three" @b6.text
+		intrinsic void console.writeline %_69 @b6
+		region.exit r2 @b6
+		region.exit r1 @b3
+		br b10
+	block b37
+		region.enter r8 @a9.true
+		br b39
+	block b38
+		region.enter r7 @a9.false
+		region.exit r7 @a9
+		region.exit r6 @a9
+		region.exit r5 @a9
+		br b3
+	block b39
+		%_70 = global.addr int* M2.Rotation.__multiGate_a4 @b1.state
+		%_71 = const int 0 @b1.state
+		store %_70 %_71 @b1.state
+		region.exit r8 @b1
+		region.exit r6 @b1
+		region.exit r5 @b1
+		br b3

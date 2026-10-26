@@ -1,0 +1,13 @@
+# AppendF with numbers, bools and characters; String Trim, Replace, ToUpper, ToLower, Join; Path; Console.ErrorLine.
+== exit
+0
+== stdout
+n=-7 f=1.25 d=0.1 b=true
+k:v
+THE COG SOG ON THE MOG
+the c s on the m
+a + b
+file.tar.gz|dir/sub|.gz
+base/name.txt base/name.md base/x
+== stderr
+to stderr

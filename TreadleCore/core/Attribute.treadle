@@ -1,0 +1,4 @@
+# treadle 1
+type Attribute class
+	namespace Core
+	doc "The base of user-defined attributes."

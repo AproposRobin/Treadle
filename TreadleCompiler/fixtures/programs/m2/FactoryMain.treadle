@@ -1,0 +1,24 @@
+# treadle 1
+type FactoryMain class
+	namespace Fx
+	static
+	doc "Construct of a generic parameter with the new constraint: M2.Factory<Lib.Word>.Make (TreadleCore/samples/m2-frontend)."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Call M2.Factory<Lib.Word>.Make
+node a3 Get Lib.Word.Size
+node a4 Call Console.WriteLine(int)
+node a5 Delete
+node a6 Return
+	in value 0
+wire a1.then a2.in
+wire a2.result a3.receiver
+wire a2.then a4.in
+wire a3.value a4.value
+wire a4.then a5.in
+wire a2.result a5.object
+wire a5.then a6.in

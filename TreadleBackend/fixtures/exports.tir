@@ -1,0 +1,97 @@
+# tir 1
+# [Export] functions with aggregate parameters and results get the win64 C ABI: an 8-byte struct as
+# an integer, a 24-byte struct through a pointer to the caller's copy, a 24-byte result through a
+# hidden sret pointer, an 8-byte result in a register. Another unit calls them through C imports of
+# the exported names, so both sides of the C ABI meet (imports are proven against libc in cimport).
+program Exports console
+entry Ex.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+func C.self.kx_combine(Ex.P2,Ex.Big,int32) Ex.Big import "kx_combine"
+func C.self.kx_swap(Ex.P2) Ex.P2 import "kx_swap"
+func C.self.kx_sum(Ex.Big) int import "kx_sum"
+
+unit Ex.Lib
+type Ex.P2 struct
+	field x int32
+	field y int32
+type Ex.Big struct
+	field a int
+	field b int
+	field c int
+type Ex.Lib class
+
+func Ex.Lib.Combine(Ex.P2,Ex.Big,int32) Ex.Big static export "kx_combine" sheet "f1" display "Ex.Lib.Combine"
+	param p Ex.P2
+	param big Ex.Big
+	param k int32
+	node a1 Entry
+	node a2 Make Ex.Big
+	block b0
+		%x = extract int32 %p 0 @a2
+		%y = extract int32 %p 1 @a2
+		%xa = cast int %x @a2
+		%ya = cast int %y @a2
+		%ka = cast int %k @a2
+		%a = extract int %big 0 @a2
+		%b = extract int %big 1 @a2
+		%c = extract int %big 2 @a2
+		%na = binop int add %a %xa @a2
+		%nb = binop int add %b %ya @a2
+		%nc = binop int mul %c %ka @a2
+		%r = make Ex.Big %na %nb %nc @a2
+		ret %r @a2
+
+func Ex.Lib.Swap(Ex.P2) Ex.P2 static export "kx_swap" sheet "f2" display "Ex.Lib.Swap"
+	param p Ex.P2
+	node a1 Entry
+	node a2 Make Ex.P2
+	block b0
+		%x = extract int32 %p 0 @a2
+		%y = extract int32 %p 1 @a2
+		%r = make Ex.P2 %y %x @a2
+		ret %r @a2
+
+func Ex.Lib.Sum(Ex.Big) int static export "kx_sum" sheet "f3" display "Ex.Lib.Sum"
+	param big Ex.Big
+	node a1 Entry
+	node a2 Add
+	block b0
+		%a = extract int %big 0 @a2
+		%b = extract int %big 1 @a2
+		%c = extract int %big 2 @a2
+		%s1 = binop int add %a %b @a2
+		%s = binop int add %s1 %c @a2
+		ret %s @a2
+
+unit Ex.Program
+type Ex.Program class
+
+func Ex.Program.Main() int static sheet "m1" display "Ex.Program.Main"
+	node a1 Entry
+	node a2 Call C.self.kx_combine
+	node a3 Call C.self.kx_swap
+	node a4 Call C.self.kx_sum
+	node a5 Call C.libc.printf
+	node a6 Return 0
+	block b0
+		%x = const int32 3 @a2
+		%y = const int32 -4 @a2
+		%p = make Ex.P2 %x %y @a2
+		%a = const int 100 @a2
+		%b = const int 200000000000 @a2
+		%c = const int 7 @a2
+		%big = make Ex.Big %a %b %c @a2
+		%k = const int32 6 @a2
+		%r = ccall Ex.Big C.self.kx_combine(Ex.P2,Ex.Big,int32) %p %big %k @a2
+		%ra = extract int %r 0 @a5
+		%rb = extract int %r 1 @a5
+		%rc = extract int %r 2 @a5
+		%s = ccall Ex.P2 C.self.kx_swap(Ex.P2) %p @a3
+		%sx = extract int32 %s 0 @a5
+		%sy = extract int32 %s 1 @a5
+		%sum = ccall int C.self.kx_sum(Ex.Big) %r @a4
+		%f = const char8* "combine %lld %lld %lld swap %d %d sum %lld\n" @a5.format
+		%pr = ccall int32 C.libc.printf(char8*,...) %f %ra %rb %rc %sx %sy %sum @a5
+		%z = const int 0 @a6.value
+		ret %z @a6

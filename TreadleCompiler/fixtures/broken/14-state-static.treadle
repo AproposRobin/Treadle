@@ -1,0 +1,15 @@
+# treadle 1
+# expect n2 - T2246
+type StateStatic class
+	namespace Broken
+	doc "A static function cannot keep its Do Once state in a field of an object."
+
+field mDone bool
+
+function f1 Run
+	static
+sheet body
+node n1 Entry
+node n2 DoOnce
+	set state mDone
+wire n1.then n2.in

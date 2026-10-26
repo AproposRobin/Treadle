@@ -1,0 +1,5 @@
+# tproj 1
+project Core
+	kind library
+	version 0.1.0
+cimport crt.cimport

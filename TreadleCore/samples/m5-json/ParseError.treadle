@@ -1,0 +1,28 @@
+# treadle 1
+type ParseError struct
+	namespace Json
+	doc "Why a text is not JSON: the line and column (1-based; the column counts bytes) where the parser stopped, and a message. The message is a constant text, so the struct owns nothing."
+
+field Line int
+
+field Column int
+
+field Message StringView
+
+function m0001 Describe
+	doc "Appends `line L, column C: message` to `into`."
+param into String
+sheet body
+node a000 Entry
+node a001 Get this.Line
+node a002 Get this.Column
+node a003 Get this.Message
+node a004 Call String.AppendF
+	in format "line {0}, column {1}: {2}"
+node a005 Return
+wire a001.value a004.arg0
+wire a002.value a004.arg1
+wire a003.value a004.arg2
+wire a000.then a004.in
+wire a000.into a004.receiver
+wire a004.then a005.in

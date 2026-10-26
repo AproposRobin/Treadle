@@ -1,0 +1,16 @@
+# treadle 1
+# expect n2 - T2219
+type CVarSet class
+	namespace Broken
+	static
+	doc "A C variable read through a function by value (treadle_limit, small.h's macro over treadle_limit_get()) cannot be set."
+
+function f1 Run
+	static
+sheet body
+node n1 Entry
+node n2 Set C.cvars.treadle_limit
+	in value 1
+node n3 Return
+wire n1.then n2.in
+wire n2.then n3.in

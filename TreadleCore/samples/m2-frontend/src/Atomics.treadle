@@ -1,0 +1,73 @@
+# treadle 1
+type Atomics class
+	namespace M2
+	static
+	doc "Atomic operations of Core.Atomic on a variable passed by ref, each with its memory order (set order): Store, Add, Load, CompareExchange, Exchange, Max, Fence, Load. Run prints 5, 15, 15, 1, 100, 3, 9."
+
+field sCount int
+	static
+
+function t0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 Get M2.Atomics.sCount
+node a3 Call Atomic.Store
+	in value 5
+node a4 Call Atomic.Add
+	in value 10
+node a5 Call Console.WriteLine(int)
+node a6 Call Atomic.Load
+	set order acquire
+node a7 Call Console.WriteLine(int)
+node a8 Call Atomic.CompareExchange
+	set order acqrel
+	in expected 15
+	in desired 100
+node a9 Call Console.WriteLine(int)
+node b1 Select
+	in true 1
+	in false 0
+node b2 Call Console.WriteLine(int)
+node b3 Call Atomic.Exchange
+	set order relaxed
+	in value 3
+node b4 Call Console.WriteLine(int)
+node b5 Call Atomic.Max
+	in value 9
+node b6 Call Console.WriteLine(int)
+node b7 Call Atomic.Fence
+node b8 Call Atomic.Load
+node b9 Call Console.WriteLine(int)
+node c1 Return
+wire a1.then a3.in
+wire a2.value a3.location
+wire a3.then a4.in
+wire a2.value a4.location
+wire a4.then a5.in
+wire a4.result a5.value
+wire a5.then a6.in
+wire a2.value a6.location
+wire a6.then a7.in
+wire a6.result a7.value
+wire a7.then a8.in
+wire a2.value a8.location
+wire a8.then a9.in
+wire a8.result a9.value
+wire a8.replaced b1.condition
+wire a9.then b2.in
+wire b1.result b2.value
+wire b2.then b3.in
+wire a2.value b3.location
+wire b3.then b4.in
+wire b3.result b4.value
+wire b4.then b5.in
+wire a2.value b5.location
+wire b5.then b6.in
+wire b5.result b6.value
+wire b6.then b7.in
+wire b7.then b8.in
+wire a2.value b8.location
+wire b8.then b9.in
+wire b8.result b9.value
+wire b9.then c1.in

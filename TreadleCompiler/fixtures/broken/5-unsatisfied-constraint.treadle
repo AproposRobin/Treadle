@@ -1,0 +1,20 @@
+# treadle 1
+# expect n2 - T1007
+type UnsatisfiedConstraint class
+	namespace Broken
+	static
+	doc "Math.Min needs operator< on T; a Player has none."
+
+function f1 Smaller
+	static
+	returns Game.Player
+param a Game.Player
+param b Game.Player
+sheet body
+node n1 Entry
+node n2 Call Math.Min
+node n3 Return
+wire n1.a n2.a
+wire n1.b n2.b
+wire n1.then n3.in
+wire n2.result n3.value

@@ -1,0 +1,17 @@
+# treadle 1
+type Factory class
+	namespace M2
+	generic T new class
+	static
+	doc "Construct of a generic parameter: T has the new constraint, so Make builds a T with its constructor without inputs."
+
+function y0001 Make
+	static
+	returns T
+sheet body
+node a1 Entry
+node a2 Construct T
+node a3 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value

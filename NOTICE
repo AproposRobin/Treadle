@@ -1,0 +1,17 @@
+Treadle
+Copyright 2026 AproposRobin
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+project except in compliance with the License. See LICENSE in this folder.
+
+Treadle contains code derived from VisualBeef (Copyright 2026 AproposRobin, licensed
+under the Apache License, Version 2.0): the editor shell, the native host and the graph
+editing model were forked from it and changed (docs/Editor-Model.md, section 8, lists what
+was kept, removed and replaced).
+
+This product includes software developed by third parties; see THIRD_PARTY.md.
+The native host Native/bin/win64/treadlehost.dll (built from Native/host and Native/third_party)
+statically links Dear ImGui, cimgui, imnodes, cimnodes (MIT), SDL2 (zlib), the LLVM C++ runtime
+(Apache-2.0 with LLVM Exceptions) and the mingw-w64 runtime;
+Native/bin/linux64/libtreadlehost.so links the same ImGui/imnodes code and loads SDL2 dynamically.
+Their notices are in THIRD_PARTY.md and must accompany any distribution of those binaries.

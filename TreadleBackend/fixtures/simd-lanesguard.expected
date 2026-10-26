@@ -1,0 +1,6 @@
+# lane 4 of a float4
+== only Debug
+== exit
+3
+== stderr
+fatal: index 4 out of range (length 4) at Lg.Program.Main node a2

@@ -1,0 +1,29 @@
+# treadle 1
+# expect n2 - T2198
+type LambdaByRefHeap class
+	namespace Broken
+	static
+	doc "A heap Lambda that captures a local by reference: the variable dies with the function, the closure may outlive it."
+
+function f1 Run
+	static
+local count int
+sheet body
+node n1 Entry
+node n2 Lambda
+	set type delegate:void()
+	set alloc construct
+	capture count by-ref
+node n3 Delete
+node n4 Return
+wire n1.then n2.in
+wire n2.then n3.in
+wire n2.value n3.object
+wire n3.then n4.in
+sheet lambda:n2
+node m1 Entry
+node m2 Set local:count
+	in value 1
+node m3 Return
+wire m1.then m2.in
+wire m2.then m3.in

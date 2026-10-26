@@ -1,0 +1,169 @@
+# tir 1
+# Virtual dispatch: an abstract base class with two derived classes, called through the base type;
+# an interface call through the class's interface table; Class Casts that succeed and fail.
+program VDispatch console
+entry Shapes.Program.Main()
+
+unit Shapes.Shape
+type Shapes.Shape class abstract
+	field mW int32
+	field mH int32
+	vslot Shapes.Shape.Area() abstract
+	vslot Shapes.Shape.Name() Shapes.Shape.Name()
+
+func Shapes.Shape.Area() int32 virtual abstract
+
+func Shapes.Shape.Name() char8* virtual sheet "f2" display "Shapes.Shape.Name"
+	node a1 Entry
+	node a2 Return "shape"
+	block b0
+		%s = const char8* "shape" @a2.value
+		ret %s @a2
+
+unit Shapes.IHasCorners
+type Shapes.IHasCorners interface
+	islot Shapes.IHasCorners.Corners()
+
+func Shapes.IHasCorners.Corners() int32 abstract
+
+unit Shapes.Rect
+type Shapes.Rect class
+	base Shapes.Shape
+	vslot Shapes.Shape.Area() Shapes.Rect.Area()
+	vslot Shapes.Shape.Name() Shapes.Rect.Name()
+	itable Shapes.IHasCorners Shapes.Rect.Corners()
+
+func Shapes.Rect.this(int32,int32) void sheet "c1" display "Shapes.Rect.this"
+	param w int32
+	param h int32
+	node a1 Entry
+	node a2 Set this.mW
+	node a3 Set this.mH
+	block b0
+		%wp = field.addr int32* %this mW @a2
+		store %wp %w @a2
+		%hp = field.addr int32* %this mH @a3
+		store %hp %h @a3
+		ret @a3
+
+func Shapes.Rect.Area() int32 virtual sheet "f1" display "Shapes.Rect.Area"
+	node a1 Entry
+	node a2 Get this.mW
+	node a3 Get this.mH
+	node a4 Multiply
+	node a5 Return
+	block b0
+		%wp = field.addr int32* %this mW @a2
+		%w = load int32 %wp @a2
+		%hp = field.addr int32* %this mH @a3
+		%h = load int32 %hp @a3
+		%a = binop int32 mul %w %h @a4
+		ret %a @a5
+
+func Shapes.Rect.Name() char8* virtual sheet "f2" display "Shapes.Rect.Name"
+	node a1 Entry
+	node a2 Return "Rect"
+	block b0
+		%s = const char8* "Rect" @a2.value
+		ret %s @a2
+
+func Shapes.Rect.Corners() int32 sheet "f3" display "Shapes.Rect.Corners"
+	node a1 Entry
+	node a2 Return 4
+	block b0
+		%c = const int32 4 @a2.value
+		ret %c @a2
+
+unit Shapes.Square
+type Shapes.Square class
+	base Shapes.Shape
+	vslot Shapes.Shape.Area() Shapes.Square.Area()
+	vslot Shapes.Shape.Name() Shapes.Square.Name()
+
+func Shapes.Square.this(int32) void sheet "c1" display "Shapes.Square.this"
+	param side int32
+	node a1 Entry
+	node a2 Set this.mW
+	block b0
+		%wp = field.addr int32* %this mW @a2
+		store %wp %side @a2
+		ret @a2
+
+func Shapes.Square.Area() int32 virtual sheet "f1" display "Shapes.Square.Area"
+	node a1 Entry
+	node a2 Get this.mW
+	node a3 Multiply
+	node a4 Return
+	block b0
+		%wp = field.addr int32* %this mW @a2
+		%w = load int32 %wp @a2
+		%a = binop int32 mul %w %w @a3
+		ret %a @a4
+
+func Shapes.Square.Name() char8* virtual sheet "f2" display "Shapes.Square.Name"
+	node a1 Entry
+	node a2 Return "Square"
+	block b0
+		%s = const char8* "Square" @a2.value
+		ret %s @a2
+
+unit Shapes.Program
+type Shapes.Program class
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+func Shapes.Program.Main() int static sheet "m1" display "Shapes.Program.Main"
+	slot shapes Shapes.Shape[] variable
+	node a1 Entry
+	node a2 Construct Shapes.Rect
+	node a3 Construct Shapes.Square
+	node a4 Call Shapes.Shape.Area
+	node a5 Call Shapes.Shape.Name
+	node a6 Call C.libc.printf
+	node a7 Call Shapes.Shape.Area
+	node a8 Call Shapes.Shape.Name
+	node a9 Call C.libc.printf
+	node b1 Cast Shapes.IHasCorners
+	node b2 Call Shapes.IHasCorners.Corners
+	node b3 Call C.libc.printf
+	node b4 Cast Shapes.Rect
+	node b5 Call C.libc.printf
+	node b6 Delete
+	node b7 Delete
+	node b8 Return 0
+	block b0
+		%three = const int32 3 @a2.w
+		%four = const int32 4 @a2.h
+		%r = alloc Shapes.Rect @a2
+		call void Shapes.Rect.this(int32,int32) %r %three %four @a2
+		%five = const int32 5 @a3.side
+		%q = alloc Shapes.Square @a3
+		call void Shapes.Square.this(int32) %q %five @a3
+		%rs = cast Shapes.Shape %r @a4.receiver
+		%qs = cast Shapes.Shape %q @a7.receiver
+		nullcheck %rs @a4
+		%ar = vcall int32 Shapes.Shape.Area() %rs @a4
+		nullcheck %rs @a5
+		%nr = vcall char8* Shapes.Shape.Name() %rs @a5
+		%fmt = const char8* "%s area = %d\n" @a6.format
+		%p1 = ccall int32 C.libc.printf(char8*,...) %fmt %nr %ar @a6
+		nullcheck %qs @a7
+		%aq = vcall int32 Shapes.Shape.Area() %qs @a7
+		nullcheck %qs @a8
+		%nq = vcall char8* Shapes.Shape.Name() %qs @a8
+		%p2 = ccall int32 C.libc.printf(char8*,...) %fmt %nq %aq @a9
+		%ic = dyncast Shapes.IHasCorners %rs @b1
+		nullcheck %ic @b2
+		%c = icall int32 Shapes.IHasCorners.Corners() %ic @b2
+		%cf = const char8* "Rect corners = %d\n" @b3.format
+		%p3 = ccall int32 C.libc.printf(char8*,...) %cf %c @b3
+		%qr = dyncast Shapes.Rect %qs @b4
+		%nul = const Shapes.Rect null @b4
+		%isr = cmp bool ne %qr %nul @b5.value
+		%isri = cast int32 %isr @b5.value
+		%sf = const char8* "square is a rect: %d\n" @b5.format
+		%p4 = ccall int32 C.libc.printf(char8*,...) %sf %isri @b5
+		delete %r @b6
+		delete %q @b7
+		%zero = const int 0 @b8.value
+		ret %zero @b8

@@ -1,0 +1,25 @@
+== exit
+0
+== stdout
+ray.At true
+ray.IntersectAABB true
+ray.IntersectAABB.t true
+ray.IntersectAABB.miss true
+ray.IntersectAABB.inside true
+ray.IntersectAABB.behind true
+ray.IntersectAABB.slant.t true
+ray.IntersectPlane true
+ray.IntersectPlane.t true
+ray.IntersectPlane.parallel true
+ray.IntersectPlane.behind true
+ray.IntersectSphere true
+ray.IntersectSphere.t true
+ray.IntersectSphere.scaled.t true
+ray.IntersectSphere.miss true
+ray.IntersectSphere.inside true
+ray.IntersectSphere.behind true
+ray.IntersectTriangle true
+ray.IntersectTriangle.t true
+ray.IntersectTriangle.back true
+ray.IntersectTriangle.miss true
+ray.IntersectTriangle.parallel true

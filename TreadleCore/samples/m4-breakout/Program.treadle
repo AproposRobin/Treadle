@@ -1,0 +1,170 @@
+# treadle 1
+type Program class
+	namespace Breakout
+	static
+	doc "Program Start: reads --headless and --frames <n>, makes the Game (seed 7), runs it headless or in an SDL window, and prints a summary line."
+
+function m0001 Main
+	static
+	returns int
+	doc "Exit code 0 after a run, 1 when SDL could not start."
+param args String[]
+local frames int
+local headless bool
+local seed int
+	init 7
+local ran int
+sheet body
+node a01 Entry
+node a02 Get String[].Length
+node a03 For
+	in start 0
+node a04 Index
+node a05 Call String.Equals
+	in other "--headless"
+node a06 Branch
+node a07 Set local:headless
+	in value true
+node a08 Operator +
+	in b 1
+node a09 Call String.Equals
+	in other "--frames"
+node a0a Operator <
+node a0b Operator &&
+node a0c Branch
+node a0d Index
+node a0e Call Int.TryParse
+node a0f Set local:frames
+node a0g Get local:headless
+node a0h Get local:frames
+node a0i Operator <=
+	in b 0
+node a0j Operator &&
+node a0k Branch
+node a0l Set local:frames
+	in value 600
+node a0m Get local:seed
+node a0n Construct Breakout.Game
+	set ctor (int)
+node a0o DeferDelete
+node a0p Get local:headless
+node a0q Branch
+node a0r Get local:frames
+node a0s Call Breakout.Game.RunHeadless
+node a0t Set local:ran
+node a0u Local Breakout.SdlContext
+node a0v Call Breakout.SdlContext.Status
+node a0w ResultMatch
+node a0x Get Breakout.SdlContext.Renderer
+node a0y Call Breakout.Game.RunWindowed
+node a0z Set local:ran
+node a10 Call Console.ErrorLine
+node a11 Call C.sdl2.SDL_GetError
+node a12 Call C.sdl2.SDL_Log
+	in fmt "SDL: %s"
+node a13 Return
+	in value 1
+node a14 Local String
+node a15 Get local:ran
+node a16 Get Breakout.Game.mScore
+node a17 Get Breakout.Game.mLives
+node a18 Get Breakout.Game.mBricks
+node a19 Get List<Breakout.Brick>.Count
+node a1a Call String.AppendF
+	in format "frames {0} score {1} lives {2} bricks {3}"
+node a1b Call Console.WriteLine(String)
+node a1c Get Breakout.Game.mEffects
+node a1d Local String
+node a1e Get Breakout.Game.mPaddleHits
+node a1f Call Breakout.Effects.Spawned
+node a1g Call Breakout.Effects.PoolCreated
+node a1h Call String.AppendF
+	in format "paddle hits {0}, flashes {1} from {2} pooled objects"
+node a1i Call Console.WriteLine(String)
+node a1j Return
+	in value 0
+wire a01.args a02.receiver
+wire a02.value a03.count
+wire a01.then a03.in
+wire a01.args a04.collection
+wire a03.index a04.index
+wire a04.value a05.receiver
+wire a05.result a06.condition
+wire a03.body a06.in
+wire a06.true a07.in
+wire a03.index a08.a
+wire a04.value a09.receiver
+wire a08.result a0a.a
+wire a02.value a0a.b
+wire a09.result a0b.a
+wire a0a.result a0b.b
+wire a0b.result a0c.condition
+wire a06.false a0c.in
+wire a01.args a0d.collection
+wire a08.result a0d.index
+wire a0c.true a0e.in
+wire a0d.value a0e.text
+wire a0e.then a0f.in
+wire a0e.parsed a0f.value
+wire a0h.value a0i.a
+wire a0g.value a0j.a
+wire a0i.result a0j.b
+wire a0j.result a0k.condition
+wire a03.done a0k.in
+wire a0k.true a0l.in
+wire a0k.false a0n.in
+wire a0l.then a0n.in
+wire a0m.value a0n.seed
+wire a0n.then a0o.in
+wire a0n.object a0o.object
+wire a0p.value a0q.condition
+wire a0o.then a0q.in
+wire a0r.value a0s.frames
+wire a0q.true a0s.in
+wire a0n.object a0s.receiver
+wire a0s.then a0t.in
+wire a0r.value a0t.value
+wire a0q.false a0u.in
+wire a0u.object a0v.receiver
+wire a0u.then a0w.in
+wire a0v.result a0w.result
+wire a0u.object a0x.receiver
+wire a0w.ok a0y.in
+wire a0r.value a0y.maxFrames
+wire a0n.object a0y.receiver
+wire a0x.value a0y.renderer
+wire a0y.then a0z.in
+wire a0y.result a0z.value
+wire a0w.err a10.in
+wire a0w.error a10.text
+wire a10.then a11.in
+wire a11.then a12.in
+wire a11.result a12.va0
+wire a12.then a13.in
+wire a0t.then a14.in
+wire a0w.done a14.in
+wire a0n.object a16.receiver
+wire a0n.object a17.receiver
+wire a0n.object a18.receiver
+wire a18.value a19.receiver
+wire a15.value a1a.arg0
+wire a16.value a1a.arg1
+wire a17.value a1a.arg2
+wire a19.value a1a.arg3
+wire a14.then a1a.in
+wire a14.object a1a.receiver
+wire a1a.then a1b.in
+wire a14.object a1b.value
+wire a0n.object a1c.receiver
+wire a1b.then a1d.in
+wire a0n.object a1e.receiver
+wire a1c.value a1f.receiver
+wire a1c.value a1g.receiver
+wire a1e.value a1h.arg0
+wire a1f.result a1h.arg1
+wire a1g.result a1h.arg2
+wire a1d.then a1h.in
+wire a1d.object a1h.receiver
+wire a1h.then a1i.in
+wire a1d.object a1i.value
+wire a1i.then a1j.in

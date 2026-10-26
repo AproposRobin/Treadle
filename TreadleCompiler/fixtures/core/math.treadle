@@ -1,0 +1,142 @@
+# treadle 1
+type MathMain class
+	namespace Cx
+	static
+	doc "Core Math: Min, Max, Clamp on ints and doubles, Abs, Sqrt, Pow, Floor, Ceil, Round, Truncate, Sin, Cos, Exp, Log, PI and E; the float overloads (Abs, Sqrt, Floor, Sign, Pow, Clamp) and an int to Sqrt (the double overload)."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Call Math.Min
+	in a 7
+	in b -3
+node a3 Call Console.WriteLine(int)
+node a4 Call Math.Max
+	in a 2.5
+	in b 1.5
+node a5 Call Console.WriteLine(double)
+node a6 Call Math.Clamp
+	in x 15
+	in min 0
+	in max 10
+node a7 Call Console.WriteLine(int)
+node a8 Call Math.Clamp
+	in x -0.5
+	in min 0.0
+	in max 1.0
+node a9 Call Console.WriteLine(double)
+node b1 Call Math.Abs(int)
+	in x -12
+node b2 Call Console.WriteLine(int)
+node b3 Call Math.Sqrt
+	in x 144.0
+node b4 Call Console.WriteLine(double)
+node b5 Call Math.Pow
+	in x 2.0
+	in y 10.0
+node b6 Call Console.WriteLine(double)
+node b7 Call Math.Floor
+	in x -2.5
+node b8 Call Console.WriteLine(double)
+node b9 Call Math.Ceil
+	in x 2.1
+node c1 Call Console.WriteLine(double)
+node c2 Call Math.Round
+	in x 2.5
+node c3 Call Console.WriteLine(double)
+node c4 Call Math.Truncate
+	in x -7.9
+node c5 Call Console.WriteLine(double)
+node c6 Get Math.PI
+node c8 Operator /
+	in b 2.0
+node c9 Call Math.Sin
+node d1 Call Console.WriteLine(double)
+node d2 Call Math.Cos
+node d3 Call Console.WriteLine(double)
+node d4 Call Math.Exp
+	in x 0.0
+node d5 Call Console.WriteLine(double)
+node d6 Get Math.E
+node d7 Call Math.Log
+node d8 Call Console.WriteLine(double)
+node d9 Call Console.WriteLine(double)
+node e2 Call Math.Abs(float)
+	in x -2.5f
+node e3 Call Console.WriteLine(float)
+node e4 Call Math.Sqrt
+	in x 2.25f
+node e5 Call Console.WriteLine(float)
+node e6 Call Math.Floor
+	in x -1.5f
+node e7 Call Console.WriteLine(float)
+node e8 Call Math.Sign
+	in x -0.5f
+node e9 Call Console.WriteLine(int)
+node f1 Call Math.Pow
+	in x 2.0f
+	in y 3.0f
+node f2 Call Console.WriteLine(float)
+node f3 Call Math.Clamp
+	in x 3.5f
+	in min 0.0f
+	in max 1.0f
+node f4 Call Console.WriteLine(float)
+node f5 Call Math.Sqrt
+	in x 16
+node f6 Call Console.WriteLine(double)
+node e1 Return
+	in value 0
+wire a1.then a3.in
+wire a2.result a3.value
+wire a3.then a5.in
+wire a4.result a5.value
+wire a5.then a7.in
+wire a6.result a7.value
+wire a7.then a9.in
+wire a8.result a9.value
+wire a9.then b2.in
+wire b1.result b2.value
+wire b2.then b4.in
+wire b3.result b4.value
+wire b4.then b6.in
+wire b5.result b6.value
+wire b6.then b8.in
+wire b7.result b8.value
+wire b8.then c1.in
+wire b9.result c1.value
+wire c1.then c3.in
+wire c2.result c3.value
+wire c3.then c5.in
+wire c4.result c5.value
+wire c6.value c8.a
+wire c8.result c9.x
+wire c5.then d1.in
+wire c9.result d1.value
+wire c6.value d2.x
+wire d1.then d3.in
+wire d2.result d3.value
+wire d3.then d5.in
+wire d4.result d5.value
+wire d6.value d7.x
+wire d5.then d8.in
+wire d7.result d8.value
+wire d8.then d9.in
+wire c6.value d9.value
+wire d9.then e3.in
+wire e2.result e3.value
+wire e3.then e5.in
+wire e4.result e5.value
+wire e5.then e7.in
+wire e6.result e7.value
+wire e7.then e9.in
+wire e8.result e9.value
+wire e9.then f2.in
+wire f1.result f2.value
+wire f2.then f4.in
+wire f3.result f4.value
+wire f4.then f6.in
+wire f5.result f6.value
+wire f6.then e1.in

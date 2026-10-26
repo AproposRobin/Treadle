@@ -1,0 +1,22 @@
+# A sample script for the m6-vm virtual machine.
+fn fib(n) {
+  if n < 2 { return n; }
+  return fib(n - 1) + fib(n - 2);
+}
+
+fn map3(f, a, b, c) {
+  print(f(a), f(b), f(c));
+}
+
+fn double(x) { return x * 2; }
+
+let total = 0;
+let i = 1;
+while i <= 10 {
+  total = total + fib(i);
+  i = i + 1;
+}
+print("sum of fib(1..10) =", total);
+map3(double, 1, 2.5, -4);
+let name = "mini";
+print("len(" + name + ") =", len(name), "and", str(len(name)) + "!" == "4!");

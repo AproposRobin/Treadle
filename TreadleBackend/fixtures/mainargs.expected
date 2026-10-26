@@ -1,0 +1,12 @@
+# The arguments arrive as UTF-8 (héllo is 6 bytes; a space stays inside its argument).
+== args
+one
+two words
+héllo
+== exit
+0
+== stdout
+3 args
+[one] 3 bytes
+[two words] 9 bytes
+[héllo] 6 bytes

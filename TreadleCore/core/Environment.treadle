@@ -1,0 +1,262 @@
+# treadle 1
+type Environment class
+	namespace Core
+	static
+	doc "The program's command line and exit (the same arguments Main(String[] args) gets)."
+
+function n0001 ArgCount
+	static
+	returns int
+	doc "How many arguments the program got after its own name."
+sheet body
+node a1 Entry
+node a2 Call C.crt.rt_arg_count
+node a3 Cast int
+node a4 Operator -
+	in b 1
+node a5 Return
+wire a1.then a2.in
+wire a2.result a3.value
+wire a3.result a4.a
+wire a2.then a5.in
+wire a4.result a5.value
+
+function n0002 GetArg
+	static
+	returns StringView
+	doc "Argument `index` (0 is the first after the program's name) as UTF-8 text; empty when there is no such argument. The view stays valid until the program ends."
+param index int
+sheet body
+node b1 Entry
+node b2 Operator +
+	in b 1
+node b3 Cast int32
+node b4 Call C.crt.rt_arg
+node b5 Call C.crt.strlen
+node b6 Cast int
+node b7 Make StringView
+node b8 Return
+wire b1.index b2.a
+wire b2.result b3.value
+wire b1.then b4.in
+wire b3.result b4.index
+wire b4.then b5.in
+wire b4.result b5.s
+wire b5.result b6.value
+wire b6.result b7.Length
+wire b4.result b7.Ptr
+wire b5.then b8.in
+wire b7.value b8.value
+
+function n0003 Exit
+	static
+	doc "Ends the program now with `code` (no Defers run and no destructors; the Debug leak report is skipped)."
+param code int
+sheet body
+node c1 Entry
+node c2 Cast int32
+node c3 Call C.crt.exit
+node c4 Return
+wire c1.code c2.value
+wire c1.then c3.in
+wire c2.result c3.status
+wire c3.then c4.in
+
+function n0004 GetVariable
+	static
+	returns Option<String>
+	doc "The environment variable `name`: Some(a new String holding its value; the caller owns it: Delete it), or None when it is not set."
+param name StringView
+sheet body
+node d01 Entry
+node d02 Local String
+	set ctor (StringView)
+node d03 Call String.CStr
+node d04 Call C.crt.rt_env_get
+node d05 Operator !=
+	in b null
+node d06 Branch
+node d07 Construct String
+node d08 Call Environment.AppendC
+node d09 MakeCase Option<String>.Some
+node d10 Return
+node d11 MakeCase Option<String>.None
+node d12 Return
+wire d01.then d02.in
+wire d01.name d02.text
+wire d02.object d03.receiver
+wire d02.then d04.in
+wire d03.result d04.name
+wire d04.result d05.a
+wire d05.result d06.condition
+wire d04.then d06.in
+wire d06.true d07.in
+wire d07.then d08.in
+wire d07.object d08.into
+wire d04.result d08.text
+wire d07.object d09.value
+wire d08.then d10.in
+wire d09.value d10.value
+wire d06.false d12.in
+wire d11.value d12.value
+
+function n0005 SetVariable
+	static
+	returns bool
+	doc "Sets the environment variable for this program and the processes it starts. False when the name is empty or has a =. On Windows an empty value removes the variable."
+param name StringView
+param value StringView
+sheet body
+node f01 Entry
+node f02 Local String
+	set ctor (StringView)
+node f03 Call String.CStr
+node f04 Local String
+	set ctor (StringView)
+node f05 Call String.CStr
+node f06 Call C.crt.rt_env_set
+node f07 Operator !=
+	in b 0
+node f08 Return
+wire f01.then f02.in
+wire f01.name f02.text
+wire f02.object f03.receiver
+wire f02.then f04.in
+wire f01.value f04.text
+wire f04.object f05.receiver
+wire f04.then f06.in
+wire f03.result f06.name
+wire f05.result f06.value
+wire f06.result f07.a
+wire f06.then f08.in
+wire f07.result f08.value
+
+function n0006 RemoveVariable
+	static
+	returns bool
+	doc "Removes the environment variable (true also when it was not set; false for an empty name or one with a =)."
+param name StringView
+sheet body
+node g01 Entry
+node g02 Local String
+	set ctor (StringView)
+node g03 Call String.CStr
+node g04 Call C.crt.rt_env_set
+	in value null
+node g05 Operator !=
+	in b 0
+node g06 Return
+wire g01.then g02.in
+wire g01.name g02.text
+wire g02.object g03.receiver
+wire g02.then g04.in
+wire g03.result g04.name
+wire g04.result g05.a
+wire g04.then g06.in
+wire g05.result g06.value
+
+function n0007 GetCurrentDirectory
+	static
+	doc "Appends the working directory (an absolute path) to `into`."
+param into String
+sheet body
+node m01 Entry
+node m02 Call C.crt.rt_cwd_get
+node m03 Call Environment.AppendC
+node m04 Return
+wire m01.then m02.in
+wire m02.then m03.in
+wire m01.into m03.into
+wire m02.result m03.text
+wire m03.then m04.in
+
+function n0008 SetCurrentDirectory
+	static
+	returns bool
+	doc "Makes `path` the working directory (relative paths resolve against it from then on); false when it cannot."
+param path StringView
+sheet body
+node h01 Entry
+node h02 Local String
+	set ctor (StringView)
+node h03 Call String.CStr
+node h04 Call C.crt.rt_cwd_set
+node h05 Operator !=
+	in b 0
+node h06 Return
+wire h01.then h02.in
+wire h01.path h02.text
+wire h02.object h03.receiver
+wire h02.then h04.in
+wire h03.result h04.path
+wire h04.result h05.a
+wire h04.then h06.in
+wire h05.result h06.value
+
+function n0009 GetExecutablePath
+	static
+	doc "Appends the running program's full path to `into`."
+param into String
+sheet body
+node p01 Entry
+node p02 Call C.crt.rt_exe_path
+node p03 Call Environment.AppendC
+node p04 Return
+wire p01.then p02.in
+wire p02.then p03.in
+wire p01.into p03.into
+wire p02.result p03.text
+wire p03.then p04.in
+
+function n000a GetMachineName
+	static
+	doc "Appends the computer's name to `into`."
+param into String
+sheet body
+node r01 Entry
+node r02 Call C.crt.rt_machine_name
+node r03 Call Environment.AppendC
+node r04 Return
+wire r01.then r02.in
+wire r02.then r03.in
+wire r01.into r03.into
+wire r02.result r03.text
+wire r03.then r04.in
+
+function n000b IsWindows
+	static
+	pure
+	returns bool
+	doc "True when the program runs on Windows (false on Linux)."
+sheet body
+node j01 Entry
+node j02 Call C.crt.rt_is_windows
+node j03 Operator !=
+	in b 0
+node j04 Return
+wire j02.result j03.a
+wire j01.then j04.in
+wire j03.result j04.value
+
+function n000c AppendC
+	static
+	access private
+	doc "Appends a zero-terminated UTF-8 C string to `into`."
+param into String
+param text char8*
+sheet body
+node k01 Entry
+node k02 Call C.crt.strlen
+node k03 Cast int
+node k04 Make StringView
+node k05 Call String.Append(StringView)
+node k06 Return
+wire k01.then k02.in
+wire k01.text k02.s
+wire k02.result k03.value
+wire k03.result k04.Length
+wire k01.text k04.Ptr
+wire k02.then k05.in
+wire k01.into k05.receiver
+wire k04.value k05.text
+wire k05.then k06.in

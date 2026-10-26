@@ -1,0 +1,145 @@
+# treadle 1
+type ProcessArgsMain class
+	namespace Cx
+	static
+	doc "Process.Start with an argument list (no shell, Core-Library.md): this program as its own child gets eight arguments (a space, quotes, backslashes, shell syntax, a variable, an empty one, non-ASCII text) and prints each in brackets: every one arrives exactly as it was given."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a01 Entry
+node a02 Call Environment.ArgCount
+node a03 Operator >
+	in b 0
+node a04 Branch
+node c01 For
+	in start 0
+node c02 Call Environment.GetArg
+node c03 Call Console.Write(StringView)
+	in text "["
+node c04 Call Console.Write(StringView)
+node c05 Call Console.WriteLine(StringView)
+	in text "]"
+node c06 Return
+	in value 5
+node d01 Call List<String>.Add
+node d02 Call List<String>.Add
+node d03 Call List<String>.Add
+node d04 Call List<String>.Add
+node d05 Call List<String>.Add
+node d06 Call List<String>.Add
+node d07 Call List<String>.Add
+node d08 Call List<String>.Add
+node e01 Call Process.Start
+node e02 ResultMatch
+node e03 Call ProcessHandle.Wait
+node e04 Call Console.WriteLine(int)
+node e05 Local String
+node e06 Call ProcessHandle.GetOutput
+node e07 Call String.Replace
+	in from "\r"
+	in to ""
+node e08 Call Console.Write(String)
+node e09 Delete
+node e10 Call Console.WriteLine(StringView)
+	in text "start failed"
+node e11 Return
+	in value 0
+node p01 Local String
+node p02 Call Environment.GetExecutablePath
+node p03 Local List<String>
+node s01 Local String
+	set ctor (StringView)
+	in text "a b"
+node s02 Local String
+	set ctor (StringView)
+	in text "say \"hi\""
+node s03 Local String
+	set ctor (StringView)
+	in text "back\\slash\\"
+node s04 Local String
+	set ctor (StringView)
+	in text "C:\\dir with space\\"
+node s05 Local String
+	set ctor (StringView)
+	in text "; echo injected & echo twice | more"
+node s06 Local String
+	set ctor (StringView)
+	in text "$HOME %PATH% `id`"
+node s07 Local String
+	set ctor (StringView)
+	in text ""
+node s08 Local String
+	set ctor (StringView)
+	in text "é ✓"
+wire a01.then a02.in
+wire a02.result a03.a
+wire a03.result a04.condition
+wire a02.then a04.in
+wire a02.result c01.count
+wire a04.true c01.in
+wire c01.body c02.in
+wire c01.index c02.index
+wire c02.then c03.in
+wire c03.then c04.in
+wire c02.result c04.text
+wire c04.then c05.in
+wire c01.done c06.in
+wire s08.then d01.in
+wire p03.object d01.receiver
+wire s01.object d01.value
+wire d01.then d02.in
+wire p03.object d02.receiver
+wire s02.object d02.value
+wire d02.then d03.in
+wire p03.object d03.receiver
+wire s03.object d03.value
+wire d03.then d04.in
+wire p03.object d04.receiver
+wire s04.object d04.value
+wire d04.then d05.in
+wire p03.object d05.receiver
+wire s05.object d05.value
+wire d05.then d06.in
+wire p03.object d06.receiver
+wire s06.object d06.value
+wire d06.then d07.in
+wire p03.object d07.receiver
+wire s07.object d07.value
+wire d07.then d08.in
+wire p03.object d08.receiver
+wire s08.object d08.value
+wire p03.object e01.args
+wire d08.then e01.in
+wire p01.object e01.path
+wire e01.then e02.in
+wire e01.result e02.result
+wire e02.ok e03.in
+wire e02.value e03.receiver
+wire e03.then e04.in
+wire e03.result e04.value
+wire e04.then e05.in
+wire e05.then e06.in
+wire e05.object e06.into
+wire e02.value e06.receiver
+wire e06.then e07.in
+wire e05.object e07.receiver
+wire e07.then e08.in
+wire e05.object e08.value
+wire e08.then e09.in
+wire e02.value e09.object
+wire e02.err e10.in
+wire e02.done e11.in
+wire a04.false p01.in
+wire p01.then p02.in
+wire p01.object p02.into
+wire p02.then p03.in
+wire p03.then s01.in
+wire s01.then s02.in
+wire s02.then s03.in
+wire s03.then s04.in
+wire s04.then s05.in
+wire s05.then s06.in
+wire s06.then s07.in
+wire s07.then s08.in

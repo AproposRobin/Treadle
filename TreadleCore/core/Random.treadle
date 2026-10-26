@@ -1,0 +1,199 @@
+# treadle 1
+type Random class
+	namespace Core
+	doc "Pseudo-random numbers (xorshift64*): the same seed gives the same numbers on every run and machine. Not for cryptography."
+
+field mState uint64
+	access private
+
+ctor q0001
+	doc "Seeded from the clock (Time.Ticks): different numbers each run."
+sheet body
+node a1 Entry
+node a2 Call Time.Ticks
+node a3 Call this.Seed
+node a4 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.result a3.seed
+wire a3.then a4.in
+
+ctor q0002
+	doc "Seeded with `seed`: the same numbers every run."
+param seed int
+sheet body
+node b1 Entry
+node b2 Call this.Seed
+node b3 Return
+wire b1.then b2.in
+wire b1.seed b2.seed
+wire b2.then b3.in
+
+function q0003 Seed
+	doc "Starts the sequence again from `seed`."
+param seed int
+sheet body
+node c1 Entry
+node c2 Cast uint64
+node c3 Operator ^
+	in b 2685821657736338717
+node c4 Set this.mState
+node c5 Get this.mState
+node c6 Operator ==
+	in b 0
+node c7 Branch
+node c8 Set this.mState
+	in value 1
+node c9 Return
+wire c1.seed c2.value
+wire c2.result c3.a
+wire c1.then c4.in
+wire c3.result c4.value
+wire c5.value c6.a
+wire c6.result c7.condition
+wire c4.then c7.in
+wire c7.true c8.in
+wire c7.false c9.in
+wire c8.then c9.in
+
+function q0004 Next
+	returns int
+	doc "The next number, 0 or more (63 bits)."
+local x uint64
+sheet body
+node d1 Entry
+node d2 Get this.mState
+node d3 Set local:x
+node d4 Get local:x
+node d5 Operator >>
+	in b 12
+node d6 Set local:x
+	set op ^=
+node d7 Operator <<
+	in b 25
+node d8 Set local:x
+	set op ^=
+node d9 Operator >>
+	in b 27
+node e1 Set local:x
+	set op ^=
+node e2 Set this.mState
+node e3 Operator *
+	in b 2685821657736338717
+node e4 Operator >>
+	in b 1
+node e5 Cast int
+node e6 Return
+wire d1.then d3.in
+wire d2.value d3.value
+wire d4.value d5.a
+wire d3.then d6.in
+wire d5.result d6.value
+wire d4.value d7.a
+wire d6.then d8.in
+wire d7.result d8.value
+wire d4.value d9.a
+wire d8.then e1.in
+wire d9.result e1.value
+wire e1.then e2.in
+wire d4.value e2.value
+wire d4.value e3.a
+wire e3.result e4.a
+wire e4.result e5.value
+wire e2.then e6.in
+wire e5.result e6.value
+
+function q0005 Next
+	returns int
+	doc "The next number from 0 to maxExclusive - 1 (maxExclusive above 0)."
+param maxExclusive int
+sheet body
+node f1 Entry
+node f2 Call this.Next()
+node f3 Operator %
+node f4 Return
+wire f1.then f2.in
+wire f2.result f3.a
+wire f1.maxExclusive f3.b
+wire f2.then f4.in
+wire f3.result f4.value
+
+function q0006 Next
+	returns int
+	doc "The next number from min to maxExclusive - 1 (maxExclusive above min)."
+param min int
+param maxExclusive int
+sheet body
+node g1 Entry
+node g2 Operator -
+node g3 Call this.Next(int)
+node g4 Operator +
+node g5 Return
+wire g1.maxExclusive g2.a
+wire g1.min g2.b
+wire g1.then g3.in
+wire g2.result g3.maxExclusive
+wire g1.min g4.a
+wire g3.result g4.b
+wire g3.then g5.in
+wire g4.result g5.value
+
+function q0007 NextDouble
+	returns double
+	doc "The next number from 0 up to (not including) 1."
+sheet body
+node h1 Entry
+node h2 Call this.Next()
+node h3 Operator >>
+	in b 10
+node h4 Cast double
+node h5 Operator *
+	in b 1.1102230246251565e-16
+node h6 Return
+wire h1.then h2.in
+wire h2.result h3.a
+wire h3.result h4.value
+wire h4.result h5.a
+wire h2.then h6.in
+wire h5.result h6.value
+
+function q0008 NextFloat
+	returns float
+	doc "The next number from 0 up to (not including) 1, as a float (24 random bits)."
+sheet body
+node j1 Entry
+node j2 Call this.Next()
+node j3 Operator >>
+	in b 39
+node j4 Cast float
+node j5 Operator *
+	in b 5.9604645e-08f
+node j6 Return
+wire j1.then j2.in
+wire j2.result j3.a
+wire j3.result j4.value
+wire j4.result j5.a
+wire j2.then j6.in
+wire j5.result j6.value
+
+function q0009 Range
+	returns float
+	doc "The next number from min up to (not including) max."
+param min float
+param max float
+sheet body
+node k1 Entry
+node k2 Call this.NextFloat
+node k3 Operator -
+node k4 Operator *
+node k5 Operator +
+node k6 Return
+wire k1.then k2.in
+wire k1.max k3.a
+wire k1.min k3.b
+wire k2.result k4.a
+wire k3.result k4.b
+wire k1.min k5.a
+wire k4.result k5.b
+wire k2.then k6.in
+wire k5.result k6.value

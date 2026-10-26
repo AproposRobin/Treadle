@@ -1,0 +1,7 @@
+# treadle 1
+type IDamageable interface
+	namespace Game.Core
+	doc "Anything that takes damage."
+
+function h4n6c TakeDamage
+param amount int

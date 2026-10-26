@@ -1,0 +1,12 @@
+# treadle 1
+type Instr struct
+	namespace Mini
+	doc "One instruction: the opcode, two operands and the script position it came from (line * 65536 + column, 0 when it has none) for runtime errors."
+
+field Op Mini.Opcode
+
+field A int
+
+field B int
+
+field Pos int

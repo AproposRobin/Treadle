@@ -1,0 +1,5 @@
+# The Console line comes through the runner's pipe although the exe has no console.
+== exit
+0
+== stdout
+hello from a windowed program

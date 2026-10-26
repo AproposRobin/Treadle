@@ -1,0 +1,67 @@
+# treadle 1
+type Memory class
+	namespace Core
+	static
+
+function y0001 Copy
+	static
+	unsafe
+	attr Intrinsic Memory.Copy
+param dest void*
+param src void*
+param size int
+
+function y0002 Set
+	static
+	unsafe
+	attr Intrinsic Memory.Set
+param dest void*
+param value uint8
+param size int
+
+function y0003 Compare
+	static
+	pure
+	unsafe
+	returns int32
+	attr Intrinsic Memory.Compare
+param a void*
+param b void*
+param size int
+
+function y0004 ElementSize
+	static
+	pure
+	returns int
+	generic T
+	attr Intrinsic Memory.ElementSize
+	doc "The size in bytes of the element type `ptr` points at (the pointer itself is not read)."
+param ptr T*
+
+function y0005 Resize
+	static
+	unsafe
+	returns T*
+	generic T
+	doc "A block of `count` elements with the contents of `ptr` (null: a new block): the C runtime's realloc. A count of 0 frees the block and gives null. The caller owns the block."
+param ptr T*
+param count int
+sheet body
+node r1 Entry
+node r2 Call Memory.ElementSize
+node r3 Operator *
+node r4 Cast uint
+node r5 Call C.crt.realloc
+node r6 Cast T*
+	set kind unchecked
+node r7 Return
+wire r1.ptr r2.ptr
+wire r1.count r3.a
+wire r2.result r3.b
+wire r3.result r4.value
+wire r1.then r5.in
+wire r1.ptr r5.ptr
+wire r4.result r5.size
+wire r5.result r6.value
+wire r5.then r7.in
+wire r6.result r7.value

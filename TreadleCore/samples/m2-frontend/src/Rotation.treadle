@@ -1,0 +1,58 @@
+# treadle 1
+type Rotation class
+	namespace M2
+	static
+	doc "Multi Gate runs its next output each time: in order (nothing after the last until Reset Multi Gate), or at random with Loop."
+
+function r0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 For
+	in start 0
+	in count 5
+node a3 Sequence
+	set count 2
+node a4 MultiGate
+	set count 3
+node a5 Call Console.WriteLine(StringView)
+	in text "red"
+node a6 Call Console.WriteLine(StringView)
+	in text "green"
+node a7 Call Console.WriteLine(StringView)
+	in text "blue"
+node a8 Operator ==
+	in b 3
+node a9 Branch
+node b1 ResetMultiGate
+	set state __multiGate_a4
+node b2 For
+	in start 0
+	in count 4
+node b3 MultiGate
+	set count 3
+	set loop
+	set random
+node b4 Call Console.WriteLine(StringView)
+	in text "one"
+node b5 Call Console.WriteLine(StringView)
+	in text "two"
+node b6 Call Console.WriteLine(StringView)
+	in text "three"
+node b7 Return
+wire a1.then a2.in
+wire a2.body a3.in
+wire a3.then0 a4.in
+wire a4.out0 a5.in
+wire a4.out1 a6.in
+wire a4.out2 a7.in
+wire a2.index a8.a
+wire a8.result a9.condition
+wire a3.then1 a9.in
+wire a9.true b1.in
+wire a2.done b2.in
+wire b2.body b3.in
+wire b3.out0 b4.in
+wire b3.out1 b5.in
+wire b3.out2 b6.in
+wire b2.done b7.in

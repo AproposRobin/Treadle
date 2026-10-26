@@ -1,0 +1,29 @@
+# treadle 1
+type Tracked class
+	namespace M2
+	doc "A class whose destructor prints its id: OwnedLocals shows when an Owned local variable is deleted."
+
+field mId int
+
+ctor k0001
+param id int
+sheet body
+node a1 Entry
+node a2 Set this.mId
+node a3 Return
+wire a1.then a2.in
+wire a1.id a2.value
+wire a2.then a3.in
+
+dtor k0002
+sheet body
+node b1 Entry
+node b2 Call Console.Write(StringView)
+	in text "~Tracked "
+node b3 Get this.mId
+node b4 Call Console.WriteLine(int)
+node b5 Return
+wire b1.then b2.in
+wire b2.then b4.in
+wire b3.value b4.value
+wire b4.then b5.in

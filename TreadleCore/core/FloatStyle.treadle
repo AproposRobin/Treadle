@@ -1,0 +1,13 @@
+# treadle 1
+type FloatStyle enum
+	namespace Core
+	doc "How Double.ToString and Float.ToString write a number: Fixed (decimals), Scientific (an exponent) or General (the shorter of the two, significant digits)."
+
+case Fixed
+	doc "A fixed number of decimals: 3.14 (spec F)."
+
+case Scientific
+	doc "One digit before the point and an exponent: 3.14e+00 (spec e)."
+
+case General
+	doc "Significant digits, an exponent only for very large or small numbers, no trailing zeros (spec G)."

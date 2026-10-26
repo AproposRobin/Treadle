@@ -1,0 +1,9 @@
+# cimport 1
+import sdl2
+	prefix SDL_
+	header SDL.h
+	include ${TREADLE_SDL2:-/usr}/include/SDL2
+	define SDL_MAIN_HANDLED
+	lib SDL2
+	only SDL_SetMainReady SDL_Init SDL_Quit SDL_GetError SDL_Log SDL_CreateWindow SDL_DestroyWindow SDL_CreateRenderer SDL_DestroyRenderer SDL_SetRenderDrawColor SDL_RenderClear SDL_RenderPresent SDL_RenderFillRect SDL_RenderDrawRect SDL_PollEvent SDL_Delay SDL_Rect SDL_INIT_VIDEO SDL_WINDOWPOS_CENTERED_MASK SDL_EventType SDL_WindowFlags SDL_KeyCode SDL_RendererFlags
+	category "C / SDL2"

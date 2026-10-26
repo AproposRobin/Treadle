@@ -1,0 +1,58 @@
+# treadle 1
+type small class
+	namespace C
+	static
+	doc "C declarations of the import set small (small.cimport), written by the C header import. Do not edit: the import rewrites this file."
+
+function y2800 small_area
+	static
+	returns int32
+param r small_rect*
+
+function wx3y8 small_count
+	static
+	returns uint
+
+function yvc4r small_printf
+	static
+	returns int32
+	attr Variadic
+param fmt char8*
+
+function yr332 small_register
+	static
+	returns uint32
+param name char8*
+param cb small_callback
+param user void*
+
+function nahm1 small_unregister
+	static
+param id uint32
+
+function z340r treadle_limit_get
+	static
+	returns int32
+cconst SMALL_NAME char8* "small"
+cconst SMALL_VERSION int32 3
+cenum small_kind uint32
+	value SMALL_NONE 0
+	value SMALL_POINT 1
+	value SMALL_RECT 10
+cstruct small_point
+	size 8
+	align 4
+	field x int32 0
+	field y int32 4
+cstruct small_rect
+	size 24
+	align 8
+	field origin small_point 0
+	field size small_point 8
+	field label char8* 16
+ctypedef small_callback function:int32(void*,uint32)
+ctypedef small_id uint32
+cvar small_global int32
+cvar treadle_counter int32
+cvar treadle_limit int32
+	via treadle_limit_get

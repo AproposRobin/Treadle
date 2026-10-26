@@ -1,0 +1,12 @@
+# treadle 1
+# expect - - T1071
+# expect - - T1073
+type StringFields extension
+	namespace Broken
+	extends Core.String
+	doc "An extension of a core type adds no fields; its functions have Sheets."
+
+field mExtra int
+
+function f1 Missing
+	returns int

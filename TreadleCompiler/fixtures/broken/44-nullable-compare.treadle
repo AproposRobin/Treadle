@@ -1,0 +1,21 @@
+# treadle 1
+# expect n2 - T2133
+type NullableCompare class
+	namespace Broken
+	static
+	doc "A T? compares with == against null; against another T? only when T has the operator (DateTime has none)."
+
+function f1 Same
+	static
+	pure
+	returns bool
+param a DateTime?
+param b DateTime?
+sheet body
+node n1 Entry
+node n2 Operator ==
+node n3 Return
+wire n1.a n2.a
+wire n1.b n2.b
+wire n1.then n3.in
+wire n2.result n3.value

@@ -1,0 +1,163 @@
+# treadle 1
+type Process class
+	namespace Core
+	static
+	doc "Starts other programs: Start gives a ProcessHandle to wait for, read or kill."
+
+function r0001 Start
+	static
+	returns Result<ProcessHandle,ProcessError>
+	doc "Starts the program at `path` (or a name found on the PATH, such as cmd) with the command-line text `args`: on Windows the program splits it (quote arguments with spaces); on Linux /bin/sh reads it, so the shell's quoting applies. With `captureOutput` its stdout is kept for GetOutput (its stdin and stderr are this program's); without, it writes to this program's stdout. Ok(a ProcessHandle the caller owns: Delete it), or Err(NotFound / Failed)."
+param path StringView
+param args StringView
+	default ""
+param captureOutput bool
+	default true
+local error int32
+sheet body
+node a01 Entry
+node a02 Local String
+	set ctor (StringView)
+node a03 Call String.CStr
+node a04 Local String
+	set ctor (StringView)
+node a05 Call String.CStr
+node a06 Select
+	in true 1
+	in false 0
+node a07 Cast int32
+node a08 Get local:error
+node a09 Call C.crt.rt_proc_start
+node a10 Operator !=
+	in b null
+node a11 Branch
+node a12 Construct ProcessHandle
+	set ctor (void*)
+node a13 MakeCase Result<ProcessHandle,ProcessError>.Ok
+node a14 Return
+node a15 Get local:error
+node a16 Operator ==
+	in b 1
+node a17 Branch
+node a18 MakeCase ProcessError.NotFound
+node a19 MakeCase Result<ProcessHandle,ProcessError>.Err
+node a20 Return
+node a21 MakeCase ProcessError.Failed
+node a22 MakeCase Result<ProcessHandle,ProcessError>.Err
+node a23 Return
+wire a01.then a02.in
+wire a01.path a02.text
+wire a02.object a03.receiver
+wire a02.then a04.in
+wire a01.args a04.text
+wire a04.object a05.receiver
+wire a01.captureOutput a06.condition
+wire a06.result a07.value
+wire a05.result a09.args
+wire a07.result a09.capture
+wire a08.value a09.error
+wire a04.then a09.in
+wire a03.result a09.path
+wire a09.result a10.a
+wire a10.result a11.condition
+wire a09.then a11.in
+wire a09.result a12.handle
+wire a11.true a12.in
+wire a12.object a13.value
+wire a12.then a14.in
+wire a13.value a14.value
+wire a15.value a16.a
+wire a16.result a17.condition
+wire a11.false a17.in
+wire a18.value a19.error
+wire a17.true a20.in
+wire a19.value a20.value
+wire a21.value a22.error
+wire a17.false a23.in
+wire a22.value a23.value
+
+function r0002 Start
+	static
+	returns Result<ProcessHandle,ProcessError>
+	doc "Starts the program at `path` (or a name found on the PATH) with the argument list `args`, each one given to the program exactly as it is: no shell reads them (Linux: execvp; Windows: each argument quoted for the program's splitter). Use it when an argument comes from outside the program (a file name, user text). With `captureOutput` its stdout is kept for GetOutput. Ok(a ProcessHandle the caller owns: Delete it), or Err(NotFound / Failed; Failed also when an argument holds a zero byte)."
+param path StringView
+param args List<String>
+param captureOutput bool
+	default true
+local error int32
+sheet body
+node q01 Entry
+node q02 Local String
+	set ctor (StringView)
+node q03 Call String.CStr
+node q04 Local String
+node q05 Call String.CStr
+node q06 Select
+	in true 1
+	in false 0
+node q07 Cast int32
+node q08 Get local:error
+node q09 Call C.crt.rt_proc_start_list
+node q10 Operator !=
+	in b null
+node q11 Branch
+node q12 Construct ProcessHandle
+	set ctor (void*)
+node q13 MakeCase Result<ProcessHandle,ProcessError>.Ok
+node q14 Return
+node q15 Get local:error
+node q16 Operator ==
+	in b 1
+node q17 Branch
+node q18 MakeCase ProcessError.NotFound
+node q19 MakeCase Result<ProcessHandle,ProcessError>.Err
+node q20 Return
+node q21 MakeCase ProcessError.Failed
+node q22 MakeCase Result<ProcessHandle,ProcessError>.Err
+node q23 Return
+node r01 ForEach
+node r02 Call String.Append(StringView)
+node r03 Call String.Append(char8)
+	in value 0
+node r04 Call String.Length
+node r05 Get List<String>.Count
+wire q01.then q02.in
+wire q01.path q02.text
+wire q02.object q03.receiver
+wire q02.then q04.in
+wire q04.object q05.receiver
+wire q01.captureOutput q06.condition
+wire q06.result q07.value
+wire q05.result q09.block
+wire q07.result q09.capture
+wire r05.value q09.count
+wire q08.value q09.error
+wire r01.done q09.in
+wire r04.result q09.length
+wire q03.result q09.path
+wire q09.result q10.a
+wire q10.result q11.condition
+wire q09.then q11.in
+wire q09.result q12.handle
+wire q11.true q12.in
+wire q12.object q13.value
+wire q12.then q14.in
+wire q13.value q14.value
+wire q15.value q16.a
+wire q16.result q17.condition
+wire q11.false q17.in
+wire q18.value q19.error
+wire q17.true q20.in
+wire q19.value q20.value
+wire q21.value q22.error
+wire q17.false q23.in
+wire q22.value q23.value
+wire q01.args r01.collection
+wire q04.then r01.in
+wire r01.body r02.in
+wire q04.object r02.receiver
+wire r01.element r02.text
+wire r02.then r03.in
+wire q04.object r03.receiver
+wire q04.object r04.receiver
+wire q01.args r05.receiver

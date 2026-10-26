@@ -1,0 +1,37 @@
+# treadle 1
+# expect n2 receiver T2273
+# expect m3 receiver T2273
+type ReadOnlyThis struct
+	namespace Broken
+	doc "A function that is not Mutating calls a Mutating one on its own this (unwired Receiver, and This wired): this is read-only there, as in Beef."
+
+field mValue int
+
+function f1 Bump
+	mutating
+sheet body
+node b1 Entry
+node b2 Set this.mValue
+	set op +=
+	in value 1
+node b3 Return
+wire b1.then b2.in
+wire b2.then b3.in
+
+function f2 Peek
+sheet body
+node n1 Entry
+node n2 Call Broken.ReadOnlyThis.Bump
+node n3 Return
+wire n1.then n2.in
+wire n2.then n3.in
+
+function f3 PeekThis
+sheet body
+node m1 Entry
+node m2 This
+node m3 Call Broken.ReadOnlyThis.Bump
+node m4 Return
+wire m1.then m3.in
+wire m2.value m3.receiver
+wire m3.then m4.in

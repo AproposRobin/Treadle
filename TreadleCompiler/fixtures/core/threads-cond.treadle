@@ -1,0 +1,211 @@
+# treadle 1
+type ThreadsCondMain class
+	namespace Cx
+	static
+	doc "A producer and a consumer over a Queue<int> guarded by a Mutex: the producer enqueues 1..1000 and then -1, signalling a Condition after each; the consumer waits on the Condition while the queue is empty (in a loop, holding a Local LockGuard), sums what it takes and stops at -1, then sets a WaitEvent Main waits for. The sum is 500500 from 1000 values."
+
+field sQueue Queue<int>
+	static
+
+field sLock Mutex
+	static
+
+field sNotEmpty Condition
+	static
+
+field sDone WaitEvent
+	static
+
+field sSum int
+	static
+
+field sCount int
+	static
+
+function m1 Produce
+	static
+	doc "Enqueues 1..1000, then -1; one Signal after each."
+sheet body
+node pa1 Entry
+node pa2 For
+	in start 1
+	in count 1001
+node pa3 Get ThreadsCondMain.sLock
+node pa4 Local LockGuard
+	set ctor (Mutex)
+node pa5 Get ThreadsCondMain.sQueue
+node pa6 Operator ==
+	in b 1001
+node pa7 Select
+	in true -1
+node pa8 Call Queue<int>.Enqueue
+node pa9 Get ThreadsCondMain.sNotEmpty
+node pb1 Call Condition.Signal
+node pb2 Return
+wire pa1.then pa2.in
+wire pa2.body pa4.in
+wire pa3.value pa4.mutex
+wire pa2.index pa6.a
+wire pa6.result pa7.condition
+wire pa2.index pa7.false
+wire pa4.then pa8.in
+wire pa5.value pa8.receiver
+wire pa7.result pa8.value
+wire pa8.then pb1.in
+wire pa9.value pb1.receiver
+wire pa2.done pb2.in
+
+function m2 Consume
+	static
+	doc "Takes values until -1: waits while the queue is empty, holding the lock otherwise; then sets sDone."
+local v int
+sheet body
+node ca1 Entry
+node ca2 While
+	in condition true
+node ca3 Get ThreadsCondMain.sLock
+node ca4 Local LockGuard
+	set ctor (Mutex)
+node ca5 Get ThreadsCondMain.sQueue
+node ca6 Get Queue<int>.Count
+node ca7 Operator ==
+	in b 0
+node ca8 While
+node ca9 Get ThreadsCondMain.sNotEmpty
+node cb1 Get ThreadsCondMain.sLock
+node cb2 Call Condition.Wait
+node cb3 Call Queue<int>.Dequeue
+node cb4 Set local:v
+node cb5 Get local:v
+node cb6 Operator ==
+	in b -1
+node cb7 Branch
+node cb8 Break
+node cb9 Set ThreadsCondMain.sSum
+	set op +=
+node cc1 Get local:v
+node cc2 Set ThreadsCondMain.sCount
+	set op +=
+	in value 1
+node cc3 Get ThreadsCondMain.sDone
+node cc4 Call WaitEvent.Set
+node cc5 Return
+wire ca1.then ca2.in
+wire ca2.body ca4.in
+wire ca3.value ca4.mutex
+wire ca5.value ca6.receiver
+wire ca6.value ca7.a
+wire ca7.result ca8.condition
+wire ca4.then ca8.in
+wire ca8.body cb2.in
+wire cb1.value cb2.mutex
+wire ca9.value cb2.receiver
+wire ca8.done cb3.in
+wire ca5.value cb3.receiver
+wire cb3.then cb4.in
+wire cb3.result cb4.value
+wire cb5.value cb6.a
+wire cb6.result cb7.condition
+wire cb4.then cb7.in
+wire cb7.true cb8.in
+wire cb7.false cb9.in
+wire cc1.value cb9.value
+wire cb9.then cc2.in
+wire ca2.done cc4.in
+wire cc3.value cc4.receiver
+wire cc4.then cc5.in
+
+function m3 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Construct Queue<int>
+node a3 Set ThreadsCondMain.sQueue
+node a4 Construct Mutex
+node a5 Set ThreadsCondMain.sLock
+node a6 Construct Condition
+node a7 Set ThreadsCondMain.sNotEmpty
+node a8 Construct WaitEvent
+node a9 Set ThreadsCondMain.sDone
+node b1 Construct Thread
+	set ctor (StringView)
+	in name "consumer"
+node b2 Bind ThreadsCondMain.Consume
+	set alloc construct
+node b3 Call Thread.Start
+node b4 Construct Thread
+	set ctor (StringView)
+	in name "producer"
+node b5 Bind ThreadsCondMain.Produce
+	set alloc construct
+node b6 Call Thread.Start
+node b7 Get ThreadsCondMain.sDone
+node b8 Call WaitEvent.WaitFor
+	in milliseconds 30000
+node b9 Call Console.WriteLine(bool)
+node c1 Get ThreadsCondMain.sSum
+node c2 Call Console.WriteLine(int)
+node c3 Get ThreadsCondMain.sCount
+node c4 Call Console.WriteLine(int)
+node c5 Delete
+node c6 Delete
+node c7 Get ThreadsCondMain.sQueue
+node c8 Get Queue<int>.Count
+node c9 Call Console.WriteLine(int)
+node d1 Get ThreadsCondMain.sQueue
+node d2 Delete
+node d3 Get ThreadsCondMain.sLock
+node d4 Delete
+node d5 Get ThreadsCondMain.sNotEmpty
+node d6 Delete
+node d7 Get ThreadsCondMain.sDone
+node d8 Delete
+node d9 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.value
+wire a3.then a4.in
+wire a4.then a5.in
+wire a4.object a5.value
+wire a5.then a6.in
+wire a6.then a7.in
+wire a6.object a7.value
+wire a7.then a8.in
+wire a8.then a9.in
+wire a8.object a9.value
+wire a9.then b1.in
+wire b1.then b2.in
+wire b2.value b3.body
+wire b2.then b3.in
+wire b1.object b3.receiver
+wire b3.then b4.in
+wire b4.then b5.in
+wire b5.value b6.body
+wire b5.then b6.in
+wire b4.object b6.receiver
+wire b6.then b8.in
+wire b7.value b8.receiver
+wire b8.then b9.in
+wire b8.result b9.value
+wire b9.then c2.in
+wire c1.value c2.value
+wire c2.then c4.in
+wire c3.value c4.value
+wire c4.then c5.in
+wire b1.object c5.object
+wire c5.then c6.in
+wire b4.object c6.object
+wire c7.value c8.receiver
+wire c6.then c9.in
+wire c8.value c9.value
+wire c9.then d2.in
+wire d1.value d2.object
+wire d2.then d4.in
+wire d3.value d4.object
+wire d4.then d6.in
+wire d5.value d6.object
+wire d6.then d8.in
+wire d7.value d8.object
+wire d8.then d9.in

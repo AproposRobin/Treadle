@@ -1,0 +1,32 @@
+# treadle 1
+type Config class
+	namespace M2
+	static
+	doc "A static constructor: it runs once before Program Start and sets the static field. Run prints 42."
+
+field sLevel int
+	static
+
+ctor q0001
+	static
+sheet body
+node a1 Entry
+node a2 Set this.sLevel
+	in value 42
+node a3 Call Console.WriteLine(StringView)
+	in text "the static constructor ran first"
+node a4 Return
+wire a1.then a2.in
+wire a2.then a3.in
+wire a3.then a4.in
+
+function q0002 Run
+	static
+sheet body
+node b1 Entry
+node b2 Get this.sLevel
+node b3 Call Console.WriteLine(int)
+node b4 Return
+wire b1.then b3.in
+wire b2.value b3.value
+wire b3.then b4.in

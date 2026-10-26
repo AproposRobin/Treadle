@@ -1,0 +1,115 @@
+# treadle 1
+type Pool class
+	namespace Breakout
+	generic T class new delete
+	doc "A generic object pool: Rent gives a free T or makes one (T has a constructor without inputs), Release keeps it for the next Rent. The pool owns the free objects and deletes them with itself; a rented one is the renter's until it is released."
+
+field mFree List<T>
+	owner owned
+
+field mCreated int
+
+field mReused int
+
+ctor p0001
+sheet body
+node a01 Entry
+node a02 Construct List<T>
+node a03 Set this.mFree
+node a04 Return
+wire a01.then a02.in
+wire a02.then a03.in
+wire a02.object a03.value
+wire a03.then a04.in
+
+dtor p0002
+	doc "Deletes the free objects; the owned list goes after this Sheet."
+sheet body
+node b01 Entry
+node b02 Get this.mFree
+node b03 Call List<T>.DeleteAll
+node b04 Return
+wire b01.then b03.in
+wire b02.value b03.receiver
+wire b03.then b04.in
+
+function p0003 Rent
+	returns T
+	doc "A free object when there is one (the last released), else a new one."
+local item T
+sheet body
+node c01 Entry
+node c02 Get this.mFree
+node c03 Get List<T>.Count
+node c04 Operator >
+	in b 0
+node c05 Branch
+node c06 Operator -
+	in b 1
+node c07 Index
+node c08 Set local:item
+node c09 Call List<T>.RemoveAt
+node c0a Set this.mReused
+	set op +=
+	in value 1
+node c0b Get local:item
+node c0c Return
+node c0d Construct T
+node c0e Set this.mCreated
+	set op +=
+	in value 1
+node c0f Return
+wire c02.value c03.receiver
+wire c03.value c04.a
+wire c04.result c05.condition
+wire c01.then c05.in
+wire c03.value c06.a
+wire c02.value c07.collection
+wire c06.result c07.index
+wire c05.true c08.in
+wire c07.value c08.value
+wire c08.then c09.in
+wire c06.result c09.index
+wire c02.value c09.receiver
+wire c09.then c0a.in
+wire c0a.then c0c.in
+wire c0b.value c0c.value
+wire c05.false c0d.in
+wire c0d.then c0e.in
+wire c0e.then c0f.in
+wire c0d.object c0f.value
+
+function p0004 Release
+	doc "Gives a rented object back."
+param item T
+sheet body
+node d01 Entry
+node d02 Get this.mFree
+node d03 Call List<T>.Add
+node d04 Return
+wire d01.then d03.in
+wire d02.value d03.receiver
+wire d01.item d03.value
+wire d03.then d04.in
+
+function p0005 Created
+	pure
+	returns int
+	doc "How many objects the pool has made."
+sheet body
+node e01 Entry
+node e02 Get this.mCreated
+node e03 Return
+wire e01.then e03.in
+wire e02.value e03.value
+
+function p0006 Reused
+	pure
+	returns int
+	doc "How many Rents were served from the free list."
+sheet body
+node f01 Entry
+node f02 Get this.mReused
+node f03 Return
+wire f01.then f03.in
+wire f02.value f03.value

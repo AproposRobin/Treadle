@@ -1,0 +1,18 @@
+# treadle 1
+type ArgsMain class
+	namespace Fx
+	static
+	doc "Main(String[] args): passes the command line to M2.Args.Show (TreadleCore/samples/m2-frontend)."
+
+function m1 Main
+	static
+	returns int
+param args String[]
+sheet body
+node a1 Entry
+node a2 Call M2.Args.Show
+node a3 Return
+	in value 0
+wire a1.then a2.in
+wire a1.args a2.args
+wire a2.then a3.in

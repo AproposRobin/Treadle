@@ -1,0 +1,67 @@
+# treadle 1
+type BoundStructs class
+	namespace M2
+	static
+	doc "Bind Function of a struct's function (Language.md 4.2): the delegate holds the struct's address, so Invoke changes the variable itself. A local variable needs a Local delegate; a field of an object may be held by a heap one. Run prints 12, 3, 3."
+
+function b0001 Run
+	static
+local s Stepper
+sheet body
+node n1 Entry
+node n2 Get local:s
+node n3 Bind M2.Stepper.Step
+	set alloc local
+node n4 Invoke
+	in arg0 5
+node n5 Invoke
+	in arg0 7
+node n6 Get local:s
+node n7 Call M2.Stepper.Read
+node n8 Call Console.WriteLine(int)
+node n9 Construct M2.StepperBox
+node p1 Get M2.StepperBox.mStep
+node p2 Bind M2.Stepper.Step
+	set alloc construct
+node p3 Invoke
+	in arg0 3
+node p4 Get M2.StepperBox.mStep
+node p5 Call M2.Stepper.Read
+node p6 Call Console.WriteLine(int)
+node p7 Bind M2.Stepper.Read
+	set alloc local
+node p8 Invoke
+node p9 Call Console.WriteLine(int)
+node q1 Delete
+node q2 Delete
+node q3 Return
+wire n1.then n3.in
+wire n2.value n3.receiver
+wire n3.value n4.delegate
+wire n3.then n4.in
+wire n3.value n5.delegate
+wire n4.then n5.in
+wire n6.value n7.receiver
+wire n5.then n8.in
+wire n7.result n8.value
+wire n8.then n9.in
+wire n9.object p1.receiver
+wire n9.then p2.in
+wire p1.value p2.receiver
+wire p2.value p3.delegate
+wire p2.then p3.in
+wire n9.object p4.receiver
+wire p4.value p5.receiver
+wire p3.then p6.in
+wire p5.result p6.value
+wire p6.then p7.in
+wire p1.value p7.receiver
+wire p7.value p8.delegate
+wire p7.then p8.in
+wire p8.then p9.in
+wire p8.result p9.value
+wire p9.then q1.in
+wire p2.value q1.object
+wire q1.then q2.in
+wire n9.object q2.object
+wire q2.then q3.in

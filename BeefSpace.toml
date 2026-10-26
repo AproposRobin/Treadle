@@ -1,0 +1,12 @@
+FileVersion = 1
+Projects = {TreadleNative = {Path = "Native"}, TreadleCore = {Path = "TreadleCore"}, TreadleCompiler = {Path = "TreadleCompiler"}, TreadleBackend = {Path = "TreadleBackend"}, TreadleEditor = {Path = "TreadleEditor"}, TreadleCImport = {Path = "TreadleCImport"}, TreadleDebug = {Path = "TreadleDebug"}}
+
+[Workspace]
+StartupProject = "TreadleEditor"
+
+# The configuration the packages are built from (scripts/package.ps1, scripts/package-linux.sh): Release
+# settings (Beef derives them from "Release" in the name) without the TREADLE_SELFTEST define, so the
+# self tests are not in the shipped exe (docs/Releasing.md, "Self tests and the package build").
+[Configs.ReleasePackage.Win64]
+
+[Configs.ReleasePackage.Linux64]

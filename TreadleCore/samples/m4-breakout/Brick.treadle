@@ -1,0 +1,72 @@
+# treadle 1
+type Brick struct
+	namespace Breakout
+	doc "One brick of the wall: its rectangle in pixels, the hits it still takes, the points it gives and its row (for the colour)."
+
+field X int
+
+field Y int
+
+field W int
+
+field H int
+
+field Hits int
+
+field Points int
+
+field Row int
+
+function k0001 Overlaps
+	pure
+	returns bool
+	doc "True when the square at (x, y) with sides `size` overlaps this brick."
+param x float
+param y float
+param size int
+sheet body
+node a01 Entry
+node a02 Cast int
+node a03 Cast int
+node a04 Get this.X
+node a05 Get this.Y
+node a06 Get this.W
+node a07 Get this.H
+node a08 Operator +
+node a09 Operator >
+node a0a Operator +
+node a0b Operator <
+node a0c Operator +
+node a0d Operator >
+node a0e Operator +
+node a0f Operator <
+node a0g Operator &&
+node a0h Operator &&
+node a0i Operator &&
+node a0j Return
+wire a01.x a02.value
+wire a01.y a03.value
+wire a02.result a08.a
+wire a01.size a08.b
+wire a08.result a09.a
+wire a04.value a09.b
+wire a04.value a0a.a
+wire a06.value a0a.b
+wire a02.result a0b.a
+wire a0a.result a0b.b
+wire a03.result a0c.a
+wire a01.size a0c.b
+wire a0c.result a0d.a
+wire a05.value a0d.b
+wire a05.value a0e.a
+wire a07.value a0e.b
+wire a03.result a0f.a
+wire a0e.result a0f.b
+wire a09.result a0g.a
+wire a0b.result a0g.b
+wire a0d.result a0h.a
+wire a0f.result a0h.b
+wire a0g.result a0i.a
+wire a0h.result a0i.b
+wire a01.then a0j.in
+wire a0i.result a0j.value

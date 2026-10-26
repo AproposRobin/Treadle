@@ -1,0 +1,119 @@
+# treadle 1
+type Box class
+	namespace M2
+	generic T operator> operator+
+	doc "Lambdas in a generic type (Language.md 4.2): each instance has its own closure classes. Replace swaps the value through a Local Lambda over T (this and a by-reference capture of a local T), Max hands a Local comparer Lambda of T to Best, Twice calls a function pointer Lambda of T."
+
+field mValue T
+
+function g0001 Replace
+	returns T
+param v T
+local old T
+sheet body
+node a1 Entry
+node a2 Lambda
+	set type delegate:T(T)
+	set alloc local
+	set inputs x
+	capture old by-ref
+node a3 Invoke
+node a4 Get local:old
+node a5 Return
+wire a1.then a2.in
+wire a1.v a3.arg0
+wire a2.value a3.delegate
+wire a2.then a3.in
+wire a3.then a5.in
+wire a4.value a5.value
+sheet lambda:a2
+node b1 Entry
+node b2 Get this.mValue
+node b3 Set local:old
+node b4 Set this.mValue
+node b5 Return
+wire b1.then b3.in
+wire b2.value b3.value
+wire b3.then b4.in
+wire b1.x b4.value
+wire b4.then b5.in
+wire b1.x b5.value
+
+function g0002 Best
+	static
+	returns T
+param a T
+param b T
+param better delegate:bool(T,T)
+sheet body
+node c1 Entry
+node c2 Invoke
+node c3 Select
+node c4 Return
+wire c1.a c2.arg0
+wire c1.b c2.arg1
+wire c1.better c2.delegate
+wire c1.then c2.in
+wire c2.result c3.condition
+wire c1.b c3.false
+wire c1.a c3.true
+wire c2.then c4.in
+wire c3.result c4.value
+
+function g0003 Max
+	returns T
+param other T
+sheet body
+node d1 Entry
+node d2 Lambda
+	set type delegate:bool(T,T)
+	set alloc local
+	set inputs a b
+node d3 Get this.mValue
+node d4 Call M2.Box<T>.Best
+node d5 Return
+wire d1.then d2.in
+wire d3.value d4.a
+wire d1.other d4.b
+wire d2.value d4.better
+wire d2.then d4.in
+wire d4.then d5.in
+wire d4.result d5.value
+sheet lambda:d2
+node e1 Entry
+node e2 Operator >
+node e3 Return
+wire e1.a e2.a
+wire e1.b e2.b
+wire e1.then e3.in
+wire e2.result e3.value
+
+function g0004 Twice
+	returns T
+param v T
+sheet body
+node f1 Entry
+node f2 Lambda
+	set type function:T(T)
+	set inputs n
+node f3 Scope
+	unsafe
+node f4 Invoke
+node f5 Return
+node f6 Return
+wire f1.then f3.in
+wire f1.v f4.arg0
+wire f2.value f4.delegate
+wire f3.body f4.in
+wire f4.then f5.in
+wire f4.result f5.value
+wire f3.done f6.in
+wire f1.v f6.value
+sheet lambda:f2
+node h1 Entry
+node h2 Operator +
+node h3 Return
+wire h1.n h2.a
+wire h1.n h2.b
+wire h1.then h3.in
+wire h2.result h3.value

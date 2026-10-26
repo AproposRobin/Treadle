@@ -1,0 +1,11 @@
+# treadle 1
+type libc class
+	namespace C
+	static
+	doc "C declarations of the import set libc (libc.cimport), written by the C header import. Do not edit: the import rewrites this file."
+
+function esy4a printf
+	static
+	returns int32
+	attr Variadic
+param format char8*

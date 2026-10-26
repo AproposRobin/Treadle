@@ -1,0 +1,103 @@
+# tir 1
+# Construct and Delete with an allocator: `alloc C %allocator` allocates through Core.IAllocator.Alloc
+# (rt_alloc_with), `delete %o %allocator` runs the destructor and gives the memory back through
+# Core.IAllocator.Free (rt_free_with). The allocator counts what it hands out.
+program Allocator console
+entry Al.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+func C.libc.malloc(uint) void* import "malloc"
+func C.libc.free(void*) void import "free"
+
+type Core.IAllocator interface
+	islot Core.IAllocator.Alloc(int,int)
+	islot Core.IAllocator.Free(void*)
+
+func Core.IAllocator.Alloc(int,int) void* abstract
+func Core.IAllocator.Free(void*) void abstract
+
+unit Al.Counting
+type Al.Counting class
+	field mLive int
+	field mTotal int
+	itable Core.IAllocator Al.Counting.Alloc(int,int) Al.Counting.Free(void*)
+
+func Al.Counting.Alloc(int,int) void* sheet "f1" display "Al.Counting.Alloc"
+	param size int
+	param align int
+	node a1 Entry
+	node a2 Call C.libc.malloc
+	node a3 Call C.libc.printf
+	block b0
+		%us = cast uint %size @a2
+		%p = ccall void* C.libc.malloc(uint) %us @a2
+		%lp = field.addr int* %this mLive @a2
+		%l = load int %lp @a2
+		%one = const int 1 @a2
+		%l2 = binop int add %l %one @a2
+		store %lp %l2 @a2
+		%tp = field.addr int* %this mTotal @a2
+		%t = load int %tp @a2
+		%t2 = binop int add %t %one @a2
+		store %tp %t2 @a2
+		%f = const char8* "alloc %lld (align %lld)\n" @a3.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %size %align @a3
+		ret %p @a3
+
+func Al.Counting.Free(void*) void sheet "f2" display "Al.Counting.Free"
+	param ptr void*
+	node a1 Entry
+	node a2 Call C.libc.free
+	node a3 Call C.libc.printf
+	block b0
+		ccall void C.libc.free(void*) %ptr @a2
+		%lp = field.addr int* %this mLive @a2
+		%l = load int %lp @a2
+		%one = const int 1 @a2
+		%l2 = binop int sub %l %one @a2
+		store %lp %l2 @a2
+		%f = const char8* "free\n" @a3.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f @a3
+		ret @a3
+
+unit Al.Program
+type Al.Node class
+	field mId int
+	dtor Al.Node.~this()
+type Al.Program class
+
+func Al.Node.~this() void sheet "d1" display "Al.Node.~this"
+	node a1 Entry
+	node a2 Call C.libc.printf
+	block b0
+		%p = field.addr int* %this mId @a2
+		%id = load int %p @a2
+		%f = const char8* "~Node %lld\n" @a2.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %id @a2
+		ret @a2
+
+func Al.Program.Main() int static sheet "m1" display "Al.Program.Main"
+	node a1 Entry
+	node a2 Construct Al.Counting
+	node a3 Construct Al.Node
+	node a4 Delete
+	node a5 Call C.libc.printf
+	node a6 Delete
+	node a7 Return 0
+	block b0
+		%al = alloc Al.Counting @a2
+		%ia = cast Core.IAllocator %al @a3.allocator
+		%n = alloc Al.Node %ia @a3
+		%ip = field.addr int* %n mId @a3
+		%four = const int 4 @a3
+		store %ip %four @a3
+		delete %n %ia @a4
+		%lp = field.addr int* %al mLive @a5
+		%live = load int %lp @a5
+		%tp = field.addr int* %al mTotal @a5
+		%total = load int %tp @a5
+		%f = const char8* "live %lld total %lld\n" @a5.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %live %total @a5
+		delete %al @a6
+		%z = const int 0 @a7.value
+		ret %z @a7

@@ -1,0 +1,265 @@
+# treadle 1
+type Program class
+	namespace M3Text
+	static
+	doc "Milestone 3 text sample: Int / Double TryParse and Parse errors, an AppendF table with alignment and number specs, UTF-8 code points, Process.Start with captured output, Time.Now as a DateTime."
+
+function m1 Main
+	static
+	returns int
+	doc "Parses the arguments (or a built-in list) as numbers into an aligned table with their total, counts the code points of a non-ASCII text, prints what a child process (cmd /c echo on Windows, echo on Linux) wrote and the current year."
+param args String[]
+local sum double
+sheet body
+node a01 Entry
+node a02 Local List<StringView>
+node a03 Get String[].Length
+node a04 Operator >
+	in b 0
+node a05 Branch
+node a06 ForEach
+node a07 Call List<StringView>.Add
+node a08 Literal
+	set type StringView
+	set value "12 3.5 0x1F -7 abc 1e3 1'000 4x2 zwölf"
+node a09 Call StringView.Split
+	in separator 32
+node a10 Local String
+node a11 Call String.AppendF
+	in format "{0,-8}|{1,-7}|{2,10}"
+	in arg0 "text"
+	in arg1 "kind"
+	in arg2 "value"
+node a12 Call Console.WriteLine(String)
+node a13 Call String.Clear
+node a14 Call Console.WriteLine(StringView)
+	in text "--------+-------+----------"
+node a15 ForEach
+node a16 Call Program.Row
+node a17 Set local:sum
+	set op +=
+node a18 Call Console.WriteLine(String)
+node a19 Call String.Clear
+node a20 Get local:sum
+node a21 Call String.AppendF
+	in format "{0,-8}|{1,-7}|{2,10:N2}"
+	in arg0 "total"
+	in arg1 ""
+node a22 Call Console.WriteLine(String)
+node a23 Call String.Clear
+node a24 Literal
+	set type StringView
+	set value "Grüße aus Köln ✓"
+node a25 Get StringView.Length
+node a26 Call StringView.CodePointCount
+node a27 Call String.AppendF
+	in format "\"{0}\": {1} bytes, {2} code points"
+node a28 Call Console.WriteLine(String)
+node a29 Call String.Clear
+node a30 Call Environment.IsWindows
+node a31 Literal
+	set type StringView
+	set value "cmd"
+node a32 Literal
+	set type StringView
+	set value "echo"
+node a33 Select
+node a34 Literal
+	set type StringView
+	set value "/c echo hello from a child process"
+node a35 Literal
+	set type StringView
+	set value "hello from a child process"
+node a36 Select
+node a37 Call Process.Start
+node a38 ResultMatch
+node a39 Local String
+node a40 Call ProcessHandle.GetOutput
+node a41 Call String.Trim
+node a42 Call ProcessHandle.ExitCode
+node a43 Call String.AppendF
+	in format "child said \"{0}\", exit code {1}"
+node a44 Call Console.WriteLine(String)
+node a45 Call String.Clear
+node a46 Delete
+node a47 Call Console.WriteLine(StringView)
+	in text "the child could not be started"
+node a48 Call Time.Now
+node a49 Break DateTime
+node a50 Call String.AppendF
+	in format "year {0}"
+node a51 Call Console.WriteLine(String)
+node a52 Call String.Clear
+node a53 Return
+	in value 0
+wire a01.then a02.in
+wire a01.args a03.receiver
+wire a03.value a04.a
+wire a04.result a05.condition
+wire a02.then a05.in
+wire a01.args a06.collection
+wire a05.true a06.in
+wire a06.body a07.in
+wire a02.object a07.receiver
+wire a06.element a07.value
+wire a05.false a09.in
+wire a02.object a09.into
+wire a08.value a09.receiver
+wire a06.done a10.in
+wire a09.then a10.in
+wire a10.then a11.in
+wire a10.object a11.receiver
+wire a11.then a12.in
+wire a10.object a12.value
+wire a12.then a13.in
+wire a10.object a13.receiver
+wire a13.then a14.in
+wire a02.object a15.collection
+wire a14.then a15.in
+wire a15.body a16.in
+wire a10.object a16.into
+wire a15.element a16.text
+wire a16.then a17.in
+wire a16.result a17.value
+wire a17.then a18.in
+wire a10.object a18.value
+wire a18.then a19.in
+wire a10.object a19.receiver
+wire a20.value a21.arg2
+wire a15.done a21.in
+wire a10.object a21.receiver
+wire a21.then a22.in
+wire a10.object a22.value
+wire a22.then a23.in
+wire a10.object a23.receiver
+wire a24.value a25.receiver
+wire a24.value a26.receiver
+wire a24.value a27.arg0
+wire a25.value a27.arg1
+wire a26.result a27.arg2
+wire a23.then a27.in
+wire a10.object a27.receiver
+wire a27.then a28.in
+wire a10.object a28.value
+wire a28.then a29.in
+wire a10.object a29.receiver
+wire a30.result a33.condition
+wire a32.value a33.false
+wire a31.value a33.true
+wire a30.result a36.condition
+wire a35.value a36.false
+wire a34.value a36.true
+wire a36.result a37.args
+wire a29.then a37.in
+wire a33.result a37.path
+wire a37.then a38.in
+wire a37.result a38.result
+wire a38.ok a39.in
+wire a39.then a40.in
+wire a39.object a40.into
+wire a38.value a40.receiver
+wire a40.then a41.in
+wire a39.object a41.receiver
+wire a41.then a42.in
+wire a38.value a42.receiver
+wire a39.object a43.arg0
+wire a42.result a43.arg1
+wire a42.then a43.in
+wire a10.object a43.receiver
+wire a43.then a44.in
+wire a10.object a44.value
+wire a44.then a45.in
+wire a10.object a45.receiver
+wire a45.then a46.in
+wire a38.value a46.object
+wire a38.err a47.in
+wire a38.done a48.in
+wire a48.result a49.value
+wire a49.Year a50.arg0
+wire a48.then a50.in
+wire a10.object a50.receiver
+wire a50.then a51.in
+wire a10.object a51.value
+wire a51.then a52.in
+wire a10.object a52.receiver
+wire a52.then a53.in
+
+function m2 Row
+	static
+	returns double
+	doc "Appends one table row for `text` to `into`: an int (thousands grouped), a double (two decimals) or not a number; gives its value (0 when it is none)."
+param text StringView
+param into String
+sheet body
+node b01 Entry
+node b02 Call Int.TryParse
+node b03 Branch
+node b04 Call String.AppendF
+	in format "{0,-8}|{1,-7}|{2,10:N0}"
+	in arg1 "int"
+node b05 Cast double
+node b06 Return
+node b07 Call Double.TryParse
+node b08 Branch
+node b09 Call String.AppendF
+	in format "{0,-8}|{1,-7}|{2,10:N2}"
+	in arg1 "double"
+node b10 Return
+node b11 Call Int.Parse
+node b12 ResultMatch
+node b13 Return
+	in value 0.0
+node b14 Switch
+	case InvalidChar
+node b15 Call String.AppendF
+	in format "{0,-8}|{1,-7}|{2,10}"
+	in arg1 "-"
+	in arg2 "no number"
+node b16 Return
+	in value 0.0
+node b17 Call String.AppendF
+	in format "{0,-8}|{1,-7}|{2,4} at {3}"
+	in arg1 "-"
+	in arg2 "bad"
+node b18 Return
+	in value 0.0
+node b19 Return
+	in value 0.0
+wire b01.then b02.in
+wire b01.text b02.text
+wire b02.result b03.condition
+wire b02.then b03.in
+wire b01.text b04.arg0
+wire b02.parsed b04.arg2
+wire b03.true b04.in
+wire b01.into b04.receiver
+wire b02.parsed b05.value
+wire b04.then b06.in
+wire b05.result b06.value
+wire b03.false b07.in
+wire b01.text b07.text
+wire b07.result b08.condition
+wire b07.then b08.in
+wire b01.text b09.arg0
+wire b07.parsed b09.arg2
+wire b08.true b09.in
+wire b01.into b09.receiver
+wire b09.then b10.in
+wire b07.parsed b10.value
+wire b08.false b11.in
+wire b01.text b11.text
+wire b11.then b12.in
+wire b11.result b12.result
+wire b12.ok b13.in
+wire b12.err b14.in
+wire b12.error b14.value
+wire b01.text b15.arg0
+wire b14.default b15.in
+wire b01.into b15.receiver
+wire b15.then b16.in
+wire b01.text b17.arg0
+wire b14.case:InvalidChar.position b17.arg3
+wire b14.case:InvalidChar b17.in
+wire b01.into b17.receiver
+wire b17.then b18.in
+wire b12.done b19.in

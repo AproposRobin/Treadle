@@ -1,0 +1,30 @@
+FileVersion = 1
+Dependencies = {corlib = "*"}
+
+[Project]
+Name = "TreadleNative"
+TargetType = "BeefLib"
+DefaultNamespace = "ImGui"
+
+[Configs.Debug.Win64]
+LibPaths = ["$(ProjectDir)/bin/win64/treadlehost.lib"]
+PostBuildCmds = ["CopyToDependents(\"$(ProjectDir)/bin/win64/treadlehost.dll\")"]
+
+[Configs.Release.Win64]
+LibPaths = ["$(ProjectDir)/bin/win64/treadlehost.lib"]
+PostBuildCmds = ["CopyToDependents(\"$(ProjectDir)/bin/win64/treadlehost.dll\")"]
+
+[Configs.ReleasePackage.Win64]
+LibPaths = ["$(ProjectDir)/bin/win64/treadlehost.lib"]
+PostBuildCmds = ["CopyToDependents(\"$(ProjectDir)/bin/win64/treadlehost.dll\")"]
+
+[Configs.Debug.Linux64]
+OtherLinkFlags = "$(LinkFlags) -L$(ProjectDir)/bin/linux64 -ltreadlehost -Wl,-rpath,$(ProjectDir)/bin/linux64"
+
+[Configs.Release.Linux64]
+OtherLinkFlags = "$(LinkFlags) -L$(ProjectDir)/bin/linux64 -ltreadlehost -Wl,-rpath,$ORIGIN"
+PostBuildCmds = ["CopyToDependents(\"$(ProjectDir)/bin/linux64/libtreadlehost.so\")"]
+
+[Configs.ReleasePackage.Linux64]
+OtherLinkFlags = "$(LinkFlags) -L$(ProjectDir)/bin/linux64 -ltreadlehost -Wl,-rpath,$ORIGIN"
+PostBuildCmds = ["CopyToDependents(\"$(ProjectDir)/bin/linux64/libtreadlehost.so\")"]

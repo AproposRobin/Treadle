@@ -1,0 +1,45 @@
+# treadle 1
+type Animal class
+	namespace Zoo
+	doc "The base of the zoo's animals: Speak is virtual, Legs reads the field."
+
+field mLegs int
+
+ctor a0001
+param legs int
+sheet body
+node a1 Entry
+node a2 Set this.mLegs
+node a3 Return
+wire a1.then a2.in
+wire a1.legs a2.value
+wire a2.then a3.in
+
+dtor a0002
+sheet body
+node d1 Entry
+node d2 Call C.libc.puts
+	in s "an animal is freed"
+node d3 Return
+wire d1.then d2.in
+wire d2.then d3.in
+
+function a0003 Speak
+	virtual
+sheet body
+node b1 Entry
+node b2 Call C.libc.puts
+	in s "..."
+node b3 Return
+wire b1.then b2.in
+wire b2.then b3.in
+
+function a0004 Legs
+	pure
+	returns int
+sheet body
+node c1 Entry
+node c2 Get this.mLegs
+node c3 Return
+wire c1.then c3.in
+wire c2.value c3.value

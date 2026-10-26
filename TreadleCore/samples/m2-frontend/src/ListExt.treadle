@@ -1,0 +1,41 @@
+# treadle 1
+type ListExt extension
+	namespace M2
+	extends Core.List<T>
+	doc "An extension of a generic core type (Language.md 4, Extension): compiled per instance of List, T is the List's own parameter."
+
+function x0001 CountPlus
+	returns int
+param extra int
+sheet body
+node a1 Entry
+node a2 Get this.Count
+node a3 Operator +
+node a4 Return
+wire a2.value a3.a
+wire a1.extra a3.b
+wire a1.then a4.in
+wire a3.result a4.value
+
+function x0002 FirstOr
+	returns T
+param fallback T
+sheet body
+node b1 Entry
+node b2 Get this.Count
+node b3 Operator >
+	in b 0
+node b4 Branch
+node b5 This
+node b6 Index
+	in index 0
+node b7 Return
+node b8 Return
+wire b2.value b3.a
+wire b3.result b4.condition
+wire b1.then b4.in
+wire b5.value b6.collection
+wire b4.true b7.in
+wire b6.value b7.value
+wire b4.false b8.in
+wire b1.fallback b8.value

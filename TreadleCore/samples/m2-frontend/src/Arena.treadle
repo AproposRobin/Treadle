@@ -1,0 +1,81 @@
+# treadle 1
+type Arena class
+	namespace M2
+	implements IAllocator
+	doc "An allocator (Core.IAllocator) over libc malloc / free that counts what it holds. Run prints 1, 5, 0."
+
+field mLive int
+
+function z0001 Alloc
+	returns void*
+param size int
+param align int
+sheet body
+node a1 Entry
+node a2 Set this.mLive
+	set op +=
+	in value 1
+node a3 Cast uint
+node a4 Call C.libc.malloc
+node a5 Return
+wire a1.then a2.in
+wire a1.size a3.value
+wire a2.then a4.in
+wire a3.result a4.size
+wire a4.then a5.in
+wire a4.result a5.value
+
+function z0002 Free
+param ptr void*
+sheet body
+node b1 Entry
+node b2 Set this.mLive
+	set op -=
+	in value 1
+node b3 Call C.libc.free
+node b4 Return
+wire b1.then b2.in
+wire b2.then b3.in
+wire b1.ptr b3.ptr
+wire b3.then b4.in
+
+function z0003 Live
+	pure
+	returns int
+sheet body
+node c1 Entry
+node c2 Get this.mLive
+node c3 Return
+wire c1.then c3.in
+wire c2.value c3.value
+
+function z0004 Run
+	static
+sheet body
+node d1 Entry
+node d2 Local M2.Arena
+node d3 Construct Lib.Word
+node d4 Call M2.Arena.Live
+node d5 Call Console.WriteLine(int)
+node d6 Get Lib.Word.Size
+node d7 Call Console.WriteLine(int)
+node d8 Delete
+node d9 Call M2.Arena.Live
+node e1 Call Console.WriteLine(int)
+node e2 Return
+wire d1.then d2.in
+wire d2.object d3.allocator
+wire d2.then d3.in
+wire d2.object d4.receiver
+wire d3.then d5.in
+wire d4.result d5.value
+wire d3.object d6.receiver
+wire d5.then d7.in
+wire d6.value d7.value
+wire d2.object d8.allocator
+wire d7.then d8.in
+wire d3.object d8.object
+wire d2.object d9.receiver
+wire d8.then e1.in
+wire d9.result e1.value
+wire e1.then e2.in

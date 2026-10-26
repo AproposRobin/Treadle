@@ -1,0 +1,199 @@
+# tir 1
+# Delegates: `bind` of a static function (through its thunk, target null), of an instance function
+# (state kept in the target), of a virtual function through a base reference (resolved from the
+# target's vtable when bound), of an interface function (resolved from its interface table); a
+# `bind.local` delegate freed at its region's exit; closures (a class derived from Core.Delegate with
+# the captures as fields, one by value and one by reference) made on the heap and as a Local; a
+# delegate passed to a function and invoked there; Delete of delegates and of a closure.
+program Delegates console
+entry Dg.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Dg.Program
+type Dg.Animal class abstract
+	field mLegs int
+	vslot Dg.Animal.Speak(int) abstract
+type Dg.Dog class
+	base Dg.Animal
+	vslot Dg.Animal.Speak(int) Dg.Dog.Speak(int)
+type Dg.IShape interface
+	islot Dg.IShape.Area(int)
+type Dg.Square class
+	field mSide int
+	itable Dg.IShape Dg.Square.Area(int)
+type Dg.Counter class
+	field mTotal int
+type Dg.Lambda1 class
+	base Core.Delegate
+	field mBase int
+	field mOut int*
+type Dg.Program class
+
+func Dg.Animal.Speak(int) int virtual abstract
+
+func Dg.Dog.Speak(int) int virtual sheet "s1" display "Dg.Dog.Speak"
+	param x int
+	node a1 Entry
+	node a2 Multiply
+	block b0
+		%lp = field.addr int* %this mLegs @a2
+		%legs = load int %lp @a2
+		%h = const int 100 @a2
+		%m = binop int mul %legs %h @a2
+		%r = binop int add %m %x @a2
+		ret %r @a2
+
+func Dg.IShape.Area(int) int abstract
+
+func Dg.Square.Area(int) int sheet "s2" display "Dg.Square.Area"
+	param extra int
+	node a1 Entry
+	node a2 Multiply
+	block b0
+		%sp = field.addr int* %this mSide @a2
+		%s = load int %sp @a2
+		%sq = binop int mul %s %s @a2
+		%r = binop int add %sq %extra @a2
+		ret %r @a2
+
+func Dg.Counter.Add(int) int sheet "s3" display "Dg.Counter.Add"
+	param x int
+	node a1 Entry
+	node a2 Add
+	block b0
+		%tp = field.addr int* %this mTotal @a2
+		%t = load int %tp @a2
+		%n = binop int add %t %x @a2
+		store %tp %n @a2
+		ret %n @a2
+
+func Dg.Lambda1.Invoke(int) int sheet "lambda:a9" display "Dg.Program.Main.Lambda"
+	param x int
+	node a1 Entry
+	node a2 Set out
+	node a3 Add
+	block b0
+		%op = field.addr int** %this mOut @a2
+		%o = load int* %op @a2
+		%two = const int 2 @a2
+		%dx = binop int mul %x %two @a2
+		store %o %dx @a2
+		%bp = field.addr int* %this mBase @a3
+		%b = load int %bp @a3
+		%r = binop int add %b %x @a3
+		ret %r @a3
+
+func Dg.Program.Twice(int) int static sheet "s4" display "Dg.Program.Twice"
+	param x int
+	node a1 Entry
+	block b0
+		%two = const int 2 @a1
+		%r = binop int mul %x %two @a1
+		ret %r @a1
+
+func Dg.Program.Show(int) void static sheet "s5" display "Dg.Program.Show"
+	param x int
+	node a1 Entry
+	node a2 Call C.libc.printf
+	block b0
+		%f = const char8* "show %lld\n" @a2.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %x @a2
+		ret @a2
+
+func Dg.Program.Apply(delegate int(int),int) int static sheet "s6" display "Dg.Program.Apply"
+	param fn delegate int(int)
+	param x int
+	node a1 Entry
+	node a2 Invoke
+	block b0
+		nullcheck %fn @a2
+		%r = invoke int %fn %x @a2
+		ret %r @a2
+
+func Dg.Program.Main() int static sheet "m1" display "Dg.Program.Main"
+	region r1
+	slot sl Core.Delegate local region r1 node a6.object
+	slot sc Dg.Lambda1 local node b1.object
+	slot sv int variable
+	node a1 Entry
+	node a2 Bind Dg.Program.Twice
+	node a3 Bind Dg.Counter.Add
+	node a4 Bind Dg.Animal.Speak
+	node a5 Bind Dg.IShape.Area
+	node a6 Bind Dg.Program.Show
+	node a7 Call C.libc.printf
+	node a8 Lambda
+	node a9 Invoke
+	node b1 Lambda
+	node b2 Call Dg.Program.Apply
+	node b3 Return 0
+	block b0
+		region.enter r0 @a1
+		%d1 = bind delegate int(int) Dg.Program.Twice(int) @a2
+		%k21 = const int 21 @a2
+		%r1 = invoke int %d1 %k21 @a2
+		delete %d1 @a2
+		%cnt = alloc Dg.Counter @a3
+		%d2 = bind delegate int(int) Dg.Counter.Add(int) %cnt @a3
+		%k5 = const int 5 @a3
+		%r2a = invoke int %d2 %k5 @a3
+		%k7 = const int 7 @a3
+		%r2b = invoke int %d2 %k7 @a3
+		delete %d2 @a3
+		delete %cnt @a3
+		%dog = alloc Dg.Dog @a4
+		%lp = field.addr int* %dog mLegs @a4
+		%four = const int 4 @a4
+		store %lp %four @a4
+		%an = cast Dg.Animal %dog @a4
+		%d3 = bind delegate int(int) Dg.Animal.Speak(int) %an @a4
+		%k2 = const int 2 @a4
+		%r3a = invoke int %d3 %k2 @a4
+		%k3 = const int 3 @a4
+		%r3b = call int Dg.Program.Apply(delegate int(int),int) %d3 %k3 @a4
+		delete %d3 @a4
+		%sq = alloc Dg.Square @a5
+		%sp = field.addr int* %sq mSide @a5
+		%five = const int 5 @a5
+		store %sp %five @a5
+		%is = cast Dg.IShape %sq @a5
+		%d4 = bind delegate int(int) Dg.IShape.Area(int) %is @a5
+		%one = const int 1 @a5
+		%r4 = invoke int %d4 %one @a5
+		delete %d4 @a5
+		%f = const char8* "twice %lld add %lld %lld speak %lld %lld area %lld\n" @a7.format
+		%p1 = ccall int32 C.libc.printf(char8*,...) %f %r1 %r2a %r2b %r3a %r3b %r4 @a7
+		region.enter r1 @a6
+		%d5 = bind.local delegate void(int) sl Dg.Program.Show(int) @a6
+		%k9 = const int 9 @a6
+		invoke void %d5 %k9 @a6
+		region.exit r1 @a6
+		%c = alloc Dg.Lambda1 @a8
+		%cb = field.addr int* %c mBase @a8
+		%k1000 = const int 1000 @a8
+		store %cb %k1000 @a8
+		%co = field.addr int** %c mOut @a8
+		%svp = slot.addr int* sv @a8
+		store %co %svp @a8
+		%d6 = closure delegate int(int) %c Dg.Lambda1.Invoke(int) @a8
+		%r6 = invoke int %d6 %k5 @a9
+		%v6 = load.slot int sv @a9
+		delete %d6 @a9
+		%c2 = local Dg.Lambda1 sc @b1
+		%cb2 = field.addr int* %c2 mBase @b1
+		%k2000 = const int 2000 @b1
+		store %cb2 %k2000 @b1
+		%co2 = field.addr int** %c2 mOut @b1
+		store %co2 %svp @b1
+		%d7 = closure delegate int(int) %c2 Dg.Lambda1.Invoke(int) @b1
+		%k8 = const int 8 @b2
+		%r7 = call int Dg.Program.Apply(delegate int(int),int) %d7 %k8 @b2
+		%v7 = load.slot int sv @b2
+		%f2 = const char8* "closure %lld out %lld local closure %lld out %lld\n" @a7.format
+		%p2 = ccall int32 C.libc.printf(char8*,...) %f2 %r6 %v6 %r7 %v7 @a7
+		delete %dog @b3
+		delete %sq @b3
+		%z = const int 0 @b3.value
+		region.exit r0 @b3
+		ret %z @b3

@@ -1,0 +1,16 @@
+# treadle 1
+# expect n2 allocator T2099
+type LocalAllocator class
+	namespace Broken
+	static
+	doc "A Local lives in its region: it takes no allocator."
+
+function f1 Run
+	static
+param a IAllocator
+sheet body
+node n1 Entry
+node n2 Local String
+	set ctor ()
+wire n1.a n2.allocator
+wire n1.then n2.in

@@ -1,0 +1,12 @@
+# Pass i adds i + 2i + 2000: 3 * (0 + ... + 499) + 500 * 2000 = 374250 + 1000000. The 5000-int array
+# went to the heap and is freed at the body region's exit (Debug: exit 0 means no leak). The struct
+# arrays (3 elements on the stack, 2100 on the heap) destroy the elements that were set.
+== exit
+0
+== stdout
+loop total 1374250
+heap array 5000 7
+~Res 10
+~Res 12
+~Res 20
+~Res 21

@@ -1,0 +1,33 @@
+# treadle 1
+type Int64Args class
+	namespace M2
+	static
+	doc "A generic core function reached with an int and with an int64 (AppendF's AppendSlot<int> and AppendSlot<int64>): int64 is int at the IR level, so it is one instance. Run prints 5 7 and 12."
+
+function i0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 Local String
+node a3 Cast int64
+	in value 7
+node a4 Call Core.String.AppendF
+	in format "{0} {1}"
+	in arg0 5
+node a5 Call Console.WriteLine(StringView)
+node a6 Call Core.String.View
+node a7 Operator +
+	in a 5
+node a8 Call Console.WriteLine(int)
+node a9 Return
+wire a1.then a2.in
+wire a3.result a4.arg1
+wire a2.then a4.in
+wire a2.object a4.receiver
+wire a4.then a5.in
+wire a6.result a5.text
+wire a2.object a6.receiver
+wire a3.result a7.b
+wire a5.then a8.in
+wire a7.result a8.value
+wire a8.then a9.in

@@ -1,0 +1,167 @@
+# treadle 1
+type Stopwatch class
+	namespace Core
+	doc "Measures elapsed time with Time's clock: Start, Stop, Reset, Restart; ElapsedTicks, ElapsedMilliseconds and ElapsedMicroseconds read it (running or stopped)."
+
+field mStart int64
+	access private
+
+field mElapsed int64
+	access private
+
+field mRunning bool
+	access private
+
+ctor w0001
+	doc "A stopped Stopwatch at zero."
+sheet body
+node a1 Entry
+node a2 Return
+wire a1.then a2.in
+
+ctor w0002
+	doc "A Stopwatch at zero, started when `startNow` is true."
+param startNow bool
+sheet body
+node b1 Entry
+node b2 Branch
+node b3 Call this.Start
+node b4 Return
+wire b1.startNow b2.condition
+wire b1.then b2.in
+wire b2.true b3.in
+wire b2.false b4.in
+wire b3.then b4.in
+
+function w0003 Start
+	doc "Starts (or goes on) measuring."
+sheet body
+node c1 Entry
+node c2 Get this.mRunning
+node c3 Branch
+node c4 Call Time.Ticks
+node c5 Set this.mStart
+node c6 Set this.mRunning
+	in value true
+node c7 Return
+wire c2.value c3.condition
+wire c1.then c3.in
+wire c3.false c4.in
+wire c4.then c5.in
+wire c4.result c5.value
+wire c5.then c6.in
+wire c3.true c7.in
+wire c6.then c7.in
+
+function w0004 Stop
+	doc "Stops measuring; the elapsed time is kept."
+sheet body
+node d1 Entry
+node d2 Get this.mRunning
+node d3 Branch
+node d4 Call Time.Ticks
+node d5 Get this.mStart
+node d6 Operator -
+node d7 Set this.mElapsed
+	set op +=
+node d8 Set this.mRunning
+	in value false
+node d9 Return
+wire d2.value d3.condition
+wire d1.then d3.in
+wire d3.true d4.in
+wire d4.result d6.a
+wire d5.value d6.b
+wire d4.then d7.in
+wire d6.result d7.value
+wire d7.then d8.in
+wire d3.false d9.in
+wire d8.then d9.in
+
+function w0005 Reset
+	doc "Stops and sets the elapsed time to zero."
+sheet body
+node e1 Entry
+node e2 Set this.mElapsed
+	in value 0
+node e3 Set this.mRunning
+	in value false
+node e4 Return
+wire e1.then e2.in
+wire e2.then e3.in
+wire e3.then e4.in
+
+function w0006 Restart
+	doc "Sets the elapsed time to zero and starts."
+sheet body
+node f1 Entry
+node f2 Call this.Reset
+node f3 Call this.Start
+node f4 Return
+wire f1.then f2.in
+wire f2.then f3.in
+wire f3.then f4.in
+
+function w0007 ElapsedTicks
+	returns int64
+	doc "The time measured so far, in Time's ticks."
+sheet body
+node g1 Entry
+node g2 Get this.mRunning
+node g3 Branch
+node g4 Get this.mElapsed
+node g5 Return
+node g6 Call Time.Ticks
+node g7 Get this.mStart
+node g8 Operator -
+node g9 Operator +
+node h1 Return
+wire g2.value g3.condition
+wire g1.then g3.in
+wire g3.false g5.in
+wire g4.value g5.value
+wire g3.true g6.in
+wire g6.result g8.a
+wire g7.value g8.b
+wire g4.value g9.a
+wire g8.result g9.b
+wire g6.then h1.in
+wire g9.result h1.value
+
+function w0008 ElapsedMilliseconds
+	returns int64
+	doc "The time measured so far, in whole milliseconds."
+sheet body
+node j1 Entry
+node j2 Call this.ElapsedTicks
+node j3 Call Time.Frequency
+node j4 Operator *
+	in b 1000
+node j5 Operator /
+node j6 Return
+wire j1.then j2.in
+wire j2.then j3.in
+wire j2.result j4.a
+wire j4.result j5.a
+wire j3.result j5.b
+wire j3.then j6.in
+wire j5.result j6.value
+
+function w0009 ElapsedMicroseconds
+	returns int64
+	doc "The time measured so far, in whole microseconds."
+sheet body
+node k1 Entry
+node k2 Call this.ElapsedTicks
+node k3 Call Time.Frequency
+node k4 Operator *
+	in b 1000000
+node k5 Operator /
+node k6 Return
+wire k1.then k2.in
+wire k2.then k3.in
+wire k2.result k4.a
+wire k4.result k5.a
+wire k3.result k5.b
+wire k3.then k6.in
+wire k5.result k6.value

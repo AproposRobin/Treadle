@@ -1,0 +1,66 @@
+# treadle 1
+type Extensions class
+	namespace M2
+	static
+	doc "Extensions (Language.md 4, Extension): GaugeExt on a type of this project (a field and two functions), StringExt on the core String, ListExt on the generic core List (per instance), DivExt on an imported C record. Run prints 16, 14, 41, 7, 5."
+
+function e0001 Run
+	static
+sheet body
+node e1 Entry
+node e2 Construct M2.Gauge
+node e3 Call M2.Gauge.Bump
+	in by 10
+node e4 Call M2.Gauge.Boosted
+node e5 Call Console.WriteLine(int)
+node e6 Delete
+node e7 Local String
+	set ctor (StringView)
+	in text "treadle"
+node e8 Call String.Doubled
+node e9 Call Console.WriteLine(int)
+node f1 Local Core.List<int>
+node f2 Call Core.List<int>.Add
+	in value 7
+node f3 Call Core.List<int>.CountPlus
+	in extra 40
+node f4 Call Console.WriteLine(int)
+node f5 Call Core.List<int>.FirstOr
+	in fallback 0
+node f6 Call Console.WriteLine(int)
+node f7 Call C.cstd.div
+	in numerator 17
+	in denominator 5
+node f8 Call C.div_t.Total
+node f9 Call Console.WriteLine(int)
+node g1 Return
+wire e1.then e2.in
+wire e2.then e3.in
+wire e2.object e3.receiver
+wire e2.object e4.receiver
+wire e3.then e5.in
+wire e4.result e5.value
+wire e5.then e6.in
+wire e2.object e6.object
+wire e6.then e7.in
+wire e7.then e8.in
+wire e7.object e8.receiver
+wire e8.then e9.in
+wire e8.result e9.value
+wire e9.then f1.in
+wire f1.then f2.in
+wire f1.object f2.receiver
+wire f2.then f3.in
+wire f1.object f3.receiver
+wire f3.then f4.in
+wire f3.result f4.value
+wire f4.then f5.in
+wire f1.object f5.receiver
+wire f5.then f6.in
+wire f5.result f6.value
+wire f6.then f7.in
+wire f7.then f8.in
+wire f7.result f8.receiver
+wire f8.then f9.in
+wire f8.result f9.value
+wire f9.then g1.in

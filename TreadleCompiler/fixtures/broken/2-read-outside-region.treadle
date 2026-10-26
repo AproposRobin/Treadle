@@ -1,0 +1,23 @@
+# treadle 1
+# expect n4 receiver T3022
+type ReadOutsideRegion class
+	namespace Broken
+	static
+	doc "A Local made in a loop body read after the loop: outside its region."
+
+function f1 Run
+	static
+sheet body
+node n1 Entry
+node n2 For
+	in start 0
+	in count 2
+node n3 Local String
+	set ctor ()
+node n4 Call String.Clear()
+node n5 Return
+wire n1.then n2.in
+wire n2.body n3.in
+wire n2.done n4.in
+wire n3.object n4.receiver
+wire n4.then n5.in

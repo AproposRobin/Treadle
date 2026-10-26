@@ -1,0 +1,12 @@
+# cimport 1
+# The cvars set on Linux (the platform variant of cvars.cimport: the same names, read with cvars.linux.cdecl).
+# glibc spells errno as (*__errno_location ()) and stdout as a plain extern FILE* stdout.
+import cvars
+	header ../../../../tools/probe/headers/small.h
+	header errno.h
+	header stdio.h
+	only treadle_counter treadle_limit errno stdout fputs fflush
+	param fputs str file
+	param fflush file
+	csource counter.c
+	category "C / cvars"

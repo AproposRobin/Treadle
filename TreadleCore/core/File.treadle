@@ -1,0 +1,286 @@
+# treadle 1
+type File class
+	namespace Core
+	static
+	doc "Whole-file reads and writes through the C runtime (fopen, fread, fwrite, fclose). Paths are UTF-8 text, relative to the program's working folder unless absolute; both separators work. Text is bytes: no line-break conversion, no byte order mark handling."
+
+function f0001 Exists
+	static
+	returns bool
+	doc "True when a file (not a directory) is there."
+param path StringView
+sheet body
+node a1 Entry
+node a2 Local String
+	set ctor (StringView)
+node a3 Call String.CStr
+node a4 Call C.crt.rt_file_exists
+node a5 Operator !=
+	in b 0
+node a6 Return
+wire a1.then a2.in
+wire a1.path a2.text
+wire a2.object a3.receiver
+wire a2.then a4.in
+wire a3.result a4.path
+wire a4.result a5.a
+wire a4.then a6.in
+wire a5.result a6.value
+
+function f0002 Delete
+	static
+	returns bool
+	doc "Deletes the file; false when it could not be deleted (or was not there)."
+param path StringView
+sheet body
+node b1 Entry
+node b2 Local String
+	set ctor (StringView)
+node b3 Call String.CStr
+node b4 Call C.crt.rt_remove
+node b5 Operator ==
+	in b 0
+node b6 Return
+wire b1.then b2.in
+wire b1.path b2.text
+wire b2.object b3.receiver
+wire b2.then b4.in
+wire b3.result b4.path
+wire b4.result b5.a
+wire b4.then b6.in
+wire b5.result b6.value
+
+function f0003 ReadAllText
+	static
+	returns bool
+	doc "Appends the whole file to `into`; false (into unchanged) when it cannot be opened."
+param path StringView
+param into String
+local f void*
+local buf char8*
+local n int
+sheet body
+node c1 Entry
+node c2 Local String
+	set ctor (StringView)
+node c3 Scope
+	unsafe
+node c4 Call String.CStr
+node c5 Call C.crt.rt_fopen
+	in mode "rb"
+node c6 Set local:f
+node c7 Get local:f
+node c8 Operator ==
+	in b null
+node c9 Branch
+node d1 Return
+	in value false
+node d2 Literal
+	set type char8*
+	set value null
+node d3 Call Memory.Resize
+	in count 4096
+node d4 Set local:buf
+node d5 Get local:buf
+node d6 Call C.crt.fread
+	in size 1
+	in count 4096
+node d7 Cast int
+node d8 Set local:n
+node d9 Get local:n
+node e1 Operator >
+	in b 0
+node e2 While
+node e3 Make StringView
+node e4 Call String.Append(StringView)
+node e5 Call C.crt.fread
+	in size 1
+	in count 4096
+node e6 Cast int
+node e7 Set local:n
+node e8 Call Memory.Resize
+	in count 0
+node e9 Call C.crt.fclose
+node f1 Return
+	in value true
+node zz1 Return
+	in value false
+wire c1.then c2.in
+wire c1.path c2.text
+wire c2.then c3.in
+wire c2.object c4.receiver
+wire c3.body c5.in
+wire c4.result c5.path
+wire c5.then c6.in
+wire c5.result c6.value
+wire c7.value c8.a
+wire c8.result c9.condition
+wire c6.then c9.in
+wire c9.true d1.in
+wire c9.false d3.in
+wire d2.value d3.ptr
+wire d3.then d4.in
+wire d3.result d4.value
+wire d5.value d6.buffer
+wire d4.then d6.in
+wire c7.value d6.stream
+wire d6.result d7.value
+wire d6.then d8.in
+wire d7.result d8.value
+wire d9.value e1.a
+wire e1.result e2.condition
+wire d8.then e2.in
+wire d9.value e3.Length
+wire d5.value e3.Ptr
+wire e2.body e4.in
+wire c1.into e4.receiver
+wire e3.value e4.text
+wire d5.value e5.buffer
+wire e4.then e5.in
+wire c7.value e5.stream
+wire e5.result e6.value
+wire e5.then e7.in
+wire e6.result e7.value
+wire e2.done e8.in
+wire d5.value e8.ptr
+wire e8.then e9.in
+wire c7.value e9.stream
+wire e9.then f1.in
+wire c3.done zz1.in
+
+function f0004 WriteAllText
+	static
+	returns bool
+	doc "Writes the text as the whole file (made, or replaced); false when it cannot be written."
+param path StringView
+param text StringView
+sheet body
+node g1 Entry
+node g2 Local String
+	set ctor (StringView)
+node g3 Scope
+	unsafe
+node g4 Call String.CStr
+node g5 Call C.crt.rt_fopen
+	in mode "wb"
+node g6 Operator ==
+	in b null
+node g7 Branch
+node g8 Return
+	in value false
+node g9 Break StringView
+node h1 Cast uint
+node h2 Call C.crt.fwrite
+	in size 1
+node h3 Call C.crt.fclose
+node h4 Operator ==
+node h5 Return
+node zz2 Return
+	in value false
+wire g1.then g2.in
+wire g1.path g2.text
+wire g2.then g3.in
+wire g2.object g4.receiver
+wire g3.body g5.in
+wire g4.result g5.path
+wire g5.result g6.a
+wire g6.result g7.condition
+wire g5.then g7.in
+wire g7.true g8.in
+wire g1.text g9.value
+wire g9.Length h1.value
+wire g9.Ptr h2.buffer
+wire h1.result h2.count
+wire g7.false h2.in
+wire g5.result h2.stream
+wire h2.then h3.in
+wire g5.result h3.stream
+wire h2.result h4.a
+wire h1.result h4.b
+wire h3.then h5.in
+wire h4.result h5.value
+wire g3.done zz2.in
+
+function f0005 ReadLines
+	static
+	returns bool
+	doc "Adds each line of the file to `into` as a new String the caller owns (List.DeleteAll), without its line break (a line feed, or a carriage return and a line feed); the empty piece after a final line break is not added. False when the file cannot be opened."
+param path StringView
+param into List<String>
+sheet body
+node j1 Entry
+node j2 Local String
+node j3 Call File.ReadAllText
+node j4 Branch
+node j5 Return
+	in value false
+node j6 Local List<StringView>
+node j7 Call String.Split
+	in separator 10
+node j8 ForEach
+node j9 Break StringView
+node k1 Operator >
+	in b 0
+node k2 Operator -
+	in b 1
+node k3 Index
+node k4 Operator ==
+	in b 13
+node k5 Operator &&
+node k6 Select
+node k7 Call StringView.Substring
+	in start 0
+node k8 Get List<StringView>.Count
+node k9 Operator -
+	in b 1
+node m1 Operator ==
+node m2 Operator ==
+	in b 0
+node m3 Operator &&
+node m4 Branch
+node m5 Construct String
+	set ctor (StringView)
+node m6 Call List<String>.Add
+node m7 Return
+	in value true
+wire j1.then j2.in
+wire j2.then j3.in
+wire j2.object j3.into
+wire j1.path j3.path
+wire j3.result j4.condition
+wire j3.then j4.in
+wire j4.false j5.in
+wire j4.true j6.in
+wire j6.then j7.in
+wire j6.object j7.into
+wire j2.object j7.receiver
+wire j6.object j8.collection
+wire j7.then j8.in
+wire j8.element j9.value
+wire j9.Length k1.a
+wire j9.Length k2.a
+wire j8.element k3.collection
+wire k2.result k3.index
+wire k3.value k4.a
+wire k1.result k5.a
+wire k4.result k5.b
+wire k5.result k6.condition
+wire j9.Length k6.false
+wire k2.result k6.true
+wire k6.result k7.length
+wire j8.element k7.receiver
+wire j6.object k8.receiver
+wire k8.value k9.a
+wire j8.index m1.a
+wire k9.result m1.b
+wire j9.Length m2.a
+wire m1.result m3.a
+wire m2.result m3.b
+wire m3.result m4.condition
+wire j8.body m4.in
+wire m4.false m5.in
+wire k7.result m5.text
+wire m5.then m6.in
+wire j1.into m6.receiver
+wire m5.object m6.value
+wire j8.done m7.in

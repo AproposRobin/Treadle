@@ -1,0 +1,27 @@
+# treadle 1
+type PairsMain class
+	namespace App
+	static
+	doc "Runs the Pair sample: prints whether swapping twice gives the same Pair."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Call App.PairDemo.SwapTwice
+	in a 3
+	in b 1.5
+node a3 Branch
+node a4 Call C.libc.puts
+	in s "same"
+node a5 Call C.libc.puts
+	in s "different"
+node a6 Return
+	in value 0
+wire a1.then a3.in
+wire a2.result a3.condition
+wire a3.true a4.in
+wire a3.false a5.in
+wire a4.then a6.in
+wire a5.then a6.in

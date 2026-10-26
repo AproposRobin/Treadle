@@ -1,0 +1,33 @@
+# treadle 1
+type NullUnwrap class
+	namespace M2
+	static
+	doc "Cast of a null int? to int (Language.md 2.3): a fatal error naming the Cast node; Run prints before, then the program stops."
+
+function u0001 Value
+	static
+	pure
+	returns int
+param v int?
+sheet body
+node a1 Entry
+node a2 Cast int
+node a3 Return
+wire a1.v a2.value
+wire a1.then a3.in
+wire a2.result a3.value
+
+function u0002 Run
+	static
+sheet body
+node b1 Entry
+node b2 Call Console.WriteLine(StringView)
+	in text "before"
+node b3 Call M2.NullUnwrap.Value
+	in v null
+node b4 Call Console.WriteLine(int)
+node b5 Return
+wire b1.then b2.in
+wire b2.then b4.in
+wire b3.result b4.value
+wire b4.then b5.in

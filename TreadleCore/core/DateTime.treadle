@@ -1,0 +1,61 @@
+# treadle 1
+type DateTime struct
+	namespace Core
+	doc "A calendar date and time as its parts (Time.Now in local time, Time.UtcNow in UTC). ToString writes ISO 8601."
+
+field Year int
+	doc "The year (2026)."
+
+field Month int
+	doc "The month, 1 to 12."
+
+field Day int
+	doc "The day of the month, 1 to 31."
+
+field Hour int
+	doc "The hour, 0 to 23."
+
+field Minute int
+	doc "The minute, 0 to 59."
+
+field Second int
+	doc "The second, 0 to 59 (60 for a leap second where the system reports one)."
+
+field Millisecond int
+	doc "The millisecond, 0 to 999."
+
+field IsUtc bool
+	doc "True for UTC (Time.UtcNow), false for local time (Time.Now)."
+
+function t0001 ToString
+	doc "Appends the date and time in ISO 8601 form, to the second: 2026-10-25T14:03:07, with a Z for UTC (2026-10-25T13:03:07Z)."
+param into String
+sheet body
+node a01 Entry
+node a02 Get this.Year
+node a03 Get this.Month
+node a04 Get this.Day
+node a05 Get this.Hour
+node a06 Get this.Minute
+node a07 Get this.Second
+node a08 Call String.AppendF
+	in format "{0:D4}-{1:D2}-{2:D2}T{3:D2}:{4:D2}:{5:D2}"
+node a09 Get this.IsUtc
+node a10 Branch
+node a11 Call String.Append(StringView)
+	in text "Z"
+node a12 Return
+wire a02.value a08.arg0
+wire a03.value a08.arg1
+wire a04.value a08.arg2
+wire a05.value a08.arg3
+wire a06.value a08.arg4
+wire a07.value a08.arg5
+wire a01.then a08.in
+wire a01.into a08.receiver
+wire a09.value a10.condition
+wire a08.then a10.in
+wire a10.true a11.in
+wire a01.into a11.receiver
+wire a10.false a12.in
+wire a11.then a12.in

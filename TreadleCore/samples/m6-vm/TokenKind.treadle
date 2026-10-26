@@ -1,0 +1,27 @@
+# treadle 1
+type TokenKind enum
+	namespace Mini
+	doc "What a token is. Numbers, texts and names carry their value; every operator, bracket and keyword is a Sym with a code: the character itself for one-character symbols (+ is 43, ( is 40, { is 123), 256-261 for == != <= >= && ||, and 300-307 for the keywords let fn if else while return true false."
+
+case Int
+	payload value int
+	doc "A whole number such as 42."
+
+case Float
+	payload value double
+	doc "A number with a fraction such as 2.5."
+
+case Str
+	payload text StringView
+	doc "A text between double quotes, without the quotes (a view of the script)."
+
+case Name
+	payload text StringView
+	doc "A name: a letter or _ followed by letters, digits or _."
+
+case Sym
+	payload code int
+	doc "An operator, a bracket or a keyword, by its code."
+
+case End
+	doc "The end of the script; the last token of every list."

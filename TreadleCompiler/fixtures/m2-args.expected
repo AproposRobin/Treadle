@@ -1,0 +1,9 @@
+== args
+alpha
+two words
+== exit
+0
+== stdout
+2
+alpha
+two words

@@ -1,0 +1,9 @@
+# Debug: one leak, reported with the Construct node and the thread that made it; the exit code is the leak count
+== exit Debug
+1
+== exit Release
+0
+== stdout
+joined
+== stderr Debug
+leak: Core.String (56 bytes) made at Cx.ThreadsLeakMain.Leak node la2 on thread "leaker"

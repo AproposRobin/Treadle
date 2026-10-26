@@ -1,0 +1,19 @@
+# treadle 1
+type DivExt extension
+	namespace M2
+	uses C
+	extends _div_t
+	doc "An extension of an imported C record (Language.md 4, Extension): a function of C._div_t, reached as C.div_t too (the typedef names it)."
+
+function x0001 Total
+	returns int32
+sheet body
+node a1 Entry
+node a2 Get this.quot
+node a3 Get this.rem
+node a4 Operator +
+node a5 Return
+wire a2.value a4.a
+wire a3.value a4.b
+wire a1.then a5.in
+wire a4.result a5.value

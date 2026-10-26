@@ -1,0 +1,152 @@
+# treadle 1
+type StructMut class
+	namespace M2
+	doc "Mutating calls change the place their Receiver names (Language.md 2.2): a field of an object, a local, a parameter (the function's own copy), a struct Local's object, an array element, a field of a struct local, a field of a struct field, a static field. Run prints 1, 2, 5, 2, 4, 6, 7, 8, 9."
+
+field mStep Stepper
+
+field mPair StepperPair
+
+field sStep Stepper
+	static
+
+function m0001 Run
+	static
+local s Stepper
+local pair StepperPair
+sheet body
+node a1 Entry
+node a2 Construct M2.StructMut
+node a3 Get M2.StructMut.mStep
+node a4 Call M2.Stepper.Step
+	in by 1
+node a5 Get M2.StructMut.mStep
+node a6 Call M2.Stepper.Read
+node a7 Call Console.WriteLine(int)
+node b1 Get local:s
+node b2 Call M2.Stepper.Step
+	in by 2
+node b3 Get local:s
+node b4 Call M2.Stepper.Read
+node b5 Call Console.WriteLine(int)
+node c1 Get local:s
+node c2 Call M2.StructMut.Bump
+node c3 Call Console.WriteLine(int)
+node c4 Get local:s
+node c5 Call M2.Stepper.Read
+node c6 Call Console.WriteLine(int)
+node d1 Local M2.Stepper
+node d2 Call M2.Stepper.Step
+	in by 4
+node d3 Call M2.Stepper.Read
+node d4 Call Console.WriteLine(int)
+node e1 Local M2.Stepper
+	set count
+	in count 3
+node e2 Index
+	in index 1
+node e3 Call M2.Stepper.Step
+	in by 6
+node e4 Index
+	in index 1
+node e5 Call M2.Stepper.Read
+node e6 Call Console.WriteLine(int)
+node f1 Get local:pair
+node f2 Get M2.StepperPair.mInner
+node f3 Call M2.Stepper.Step
+	in by 7
+node f4 Get local:pair
+node f5 Get M2.StepperPair.mInner
+node f6 Call M2.Stepper.Read
+node f7 Call Console.WriteLine(int)
+node g1 Get M2.StructMut.mPair
+node g2 Get M2.StepperPair.mInner
+node g3 Call M2.Stepper.Step
+	in by 8
+node g4 Get M2.StructMut.mPair
+node g5 Get M2.StepperPair.mInner
+node g6 Call M2.Stepper.Read
+node g7 Call Console.WriteLine(int)
+node h1 Get M2.StructMut.sStep
+node h2 Call M2.Stepper.Step
+	in by 9
+node h3 Get M2.StructMut.sStep
+node h4 Call M2.Stepper.Read
+node h5 Call Console.WriteLine(int)
+node h6 Delete
+node h7 Return
+wire a1.then a2.in
+wire a2.object a3.receiver
+wire a2.then a4.in
+wire a3.value a4.receiver
+wire a2.object a5.receiver
+wire a5.value a6.receiver
+wire a4.then a7.in
+wire a6.result a7.value
+wire a7.then b2.in
+wire b1.value b2.receiver
+wire b3.value b4.receiver
+wire b2.then b5.in
+wire b4.result b5.value
+wire b5.then c2.in
+wire c1.value c2.st
+wire c2.then c3.in
+wire c2.result c3.value
+wire c4.value c5.receiver
+wire c3.then c6.in
+wire c5.result c6.value
+wire c6.then d1.in
+wire d1.then d2.in
+wire d1.object d2.receiver
+wire d1.object d3.receiver
+wire d2.then d4.in
+wire d3.result d4.value
+wire d4.then e1.in
+wire e1.object e2.collection
+wire e1.then e3.in
+wire e2.value e3.receiver
+wire e1.object e4.collection
+wire e4.value e5.receiver
+wire e3.then e6.in
+wire e5.result e6.value
+wire f1.value f2.receiver
+wire e6.then f3.in
+wire f2.value f3.receiver
+wire f4.value f5.receiver
+wire f5.value f6.receiver
+wire f3.then f7.in
+wire f6.result f7.value
+wire a2.object g1.receiver
+wire g1.value g2.receiver
+wire f7.then g3.in
+wire g2.value g3.receiver
+wire a2.object g4.receiver
+wire g4.value g5.receiver
+wire g5.value g6.receiver
+wire g3.then g7.in
+wire g6.result g7.value
+wire g7.then h2.in
+wire h1.value h2.receiver
+wire h3.value h4.receiver
+wire h2.then h5.in
+wire h4.result h5.value
+wire h5.then h6.in
+wire a2.object h6.object
+wire h6.then h7.in
+
+function m0002 Bump
+	static
+	returns int
+	doc "Steps its own copy of the Stepper by 3 and gives the result; the caller's variable keeps its value."
+param st Stepper
+sheet body
+node k1 Entry
+node k2 Call M2.Stepper.Step
+	in by 3
+node k3 Call M2.Stepper.Read
+node k4 Return
+wire k1.then k2.in
+wire k1.st k2.receiver
+wire k1.st k3.receiver
+wire k2.then k4.in
+wire k3.result k4.value

@@ -1,0 +1,27 @@
+# treadle 1
+type Meter class
+	namespace M2
+	doc "A running total whose Add is bound to an event."
+
+field mTotal int
+
+function m0001 Add
+param x int
+sheet body
+node a1 Entry
+node a2 Set this.mTotal
+	set op +=
+node a3 Return
+wire a1.then a2.in
+wire a1.x a2.value
+wire a2.then a3.in
+
+function m0002 Read
+	pure
+	returns int
+sheet body
+node b1 Entry
+node b2 Get this.mTotal
+node b3 Return
+wire b1.then b3.in
+wire b2.value b3.value

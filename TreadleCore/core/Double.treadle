@@ -1,0 +1,139 @@
+# treadle 1
+type Double class
+	namespace Core
+	static
+	doc "Doubles from text and to text: Parse and TryParse, ToString with a precision and a style."
+
+function d0001 Parse
+	static
+	returns Result<double,ParseError>
+	doc "The number the text holds: an optional - or +, digits with an optional . and fraction (a digit on at least one side), an optional exponent (e or E, a sign, digits); or Infinity, Inf or NaN in any case. A . is the only decimal separator. No white space (Trim first). A value past the range is an infinity. Err: NoValue (empty), InvalidChar(position)."
+param text StringView
+local value double
+local pos int64
+sheet body
+node a01 Entry
+node a02 Break StringView
+node a03 Get local:value
+node a04 Get local:pos
+node a05 Call C.crt.rt_parse_double
+node a06 Switch
+	case 0
+	case 1
+	case 2
+node a07 Get local:value
+node a08 MakeCase Result<double,ParseError>.Ok
+node a09 Return
+node a10 MakeCase ParseError.NoValue
+node a11 MakeCase Result<double,ParseError>.Err
+node a12 Return
+node a13 MakeCase ParseError.Overflow
+node a14 MakeCase Result<double,ParseError>.Err
+node a15 Return
+node a16 Get local:pos
+node a17 MakeCase ParseError.InvalidChar
+node a18 MakeCase Result<double,ParseError>.Err
+node a19 Return
+wire a01.text a02.value
+wire a01.then a05.in
+wire a02.Length a05.n
+wire a03.value a05.out
+wire a02.Ptr a05.p
+wire a04.value a05.pos
+wire a05.then a06.in
+wire a05.result a06.value
+wire a07.value a08.value
+wire a06.case:0 a09.in
+wire a08.value a09.value
+wire a10.value a11.error
+wire a06.case:1 a12.in
+wire a11.value a12.value
+wire a13.value a14.error
+wire a06.case:2 a15.in
+wire a14.value a15.value
+wire a16.value a17.position
+wire a17.value a18.error
+wire a06.done a19.in
+wire a18.value a19.value
+
+function d0002 TryParse
+	static
+	returns bool
+	doc "True and the number in `parsed` when Parse succeeds; false and 0 otherwise."
+param text StringView
+out parsed double
+sheet body
+node b01 Entry
+node b02 Call Double.Parse
+node b03 Call Result<double,ParseError>.IsOk
+node b04 Call Result<double,ParseError>.UnwrapOr
+	in fallback 0
+node b05 Return
+wire b01.then b02.in
+wire b01.text b02.text
+wire b02.result b03.receiver
+wire b02.result b04.receiver
+wire b02.then b05.in
+wire b04.result b05.parsed
+wire b03.result b05.value
+
+function d0003 ToString
+	static
+	doc "Appends the double to `into` with `precision` decimals (Fixed), digits after the point (Scientific) or significant digits (General); -1 is the style's default (2, 6, and 15). String.AppendNumber takes the same as a spec."
+param value double
+param into String
+param precision int
+	default -1
+param style FloatStyle
+	default .Fixed
+sheet body
+node c01 Entry
+node c02 Local String
+node c03 Literal
+	set type StringView
+	set value "F"
+node c04 Literal
+	set type StringView
+	set value "e"
+node c05 Literal
+	set type StringView
+	set value "G"
+node c06 Cast int
+node c07 Operator ==
+	in b 0
+node c08 Operator ==
+	in b 1
+node c09 Select
+node c10 Select
+node c11 Call String.Append(StringView)
+node c12 Operator >=
+	in b 0
+node c13 Branch
+node c14 Call String.Append(int)
+node c15 Call String.AppendNumber(double,StringView)
+node c16 Return
+wire c01.then c02.in
+wire c01.style c06.value
+wire c06.result c07.a
+wire c06.result c08.a
+wire c08.result c09.condition
+wire c05.value c09.false
+wire c04.value c09.true
+wire c07.result c10.condition
+wire c09.result c10.false
+wire c03.value c10.true
+wire c02.then c11.in
+wire c02.object c11.receiver
+wire c10.result c11.text
+wire c01.precision c12.a
+wire c12.result c13.condition
+wire c11.then c13.in
+wire c13.true c14.in
+wire c02.object c14.receiver
+wire c01.precision c14.value
+wire c02.object c15.format
+wire c13.false c15.in
+wire c14.then c15.in
+wire c01.into c15.receiver
+wire c01.value c15.value
+wire c15.then c16.in

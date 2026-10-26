@@ -1,0 +1,72 @@
+# treadle 1
+type cvars class
+	namespace C
+	static
+	doc "C declarations of the import set cvars (cvars.cimport), written by the C header import. Do not edit: the import rewrites this file."
+
+function shsjt __errno_location
+	static
+	returns int32*
+
+function v8428 fflush
+	static
+	returns int32
+param file FILE*
+
+function sj2ym fputs
+	static
+	returns int32
+param str char8*
+param file FILE*
+
+function z340r treadle_limit_get
+	static
+	returns int32
+cstruct _IO_FILE
+	size 216
+	align 8
+	field _flags int32 0
+	field _IO_read_ptr char8* 8
+	field _IO_read_end char8* 16
+	field _IO_read_base char8* 24
+	field _IO_write_base char8* 32
+	field _IO_write_ptr char8* 40
+	field _IO_write_end char8* 48
+	field _IO_buf_base char8* 56
+	field _IO_buf_end char8* 64
+	field _IO_save_base char8* 72
+	field _IO_backup_base char8* 80
+	field _IO_save_end char8* 88
+	field _markers _IO_marker* 96
+	field _chain _IO_FILE* 104
+	field _fileno int32 112
+	field _bits0 uint8[3] 116
+	field _short_backupbuf char8[1] 119
+	field _old_offset int64 120
+	field _cur_column uint16 128
+	field _vtable_offset int8 130
+	field _shortbuf char8[1] 131
+	field _lock void* 136
+	field _offset int64 144
+	field _codecvt _IO_codecvt* 152
+	field _wide_data _IO_wide_data* 160
+	field _freeres_list _IO_FILE* 168
+	field _freeres_buf void* 176
+	field _prevchain _IO_FILE** 184
+	field _mode int32 192
+	field _unused3 int32 196
+	field _total_written uint64 200
+	field _unused2 char8[8] 208
+cstruct _IO_codecvt
+	opaque
+cstruct _IO_marker
+	opaque
+cstruct _IO_wide_data
+	opaque
+ctypedef FILE _IO_FILE
+cvar errno int32
+	via __errno_location deref
+cvar stdout FILE*
+cvar treadle_counter int32
+cvar treadle_limit int32
+	via treadle_limit_get

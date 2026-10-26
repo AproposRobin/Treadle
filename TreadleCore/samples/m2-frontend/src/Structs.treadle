@@ -1,0 +1,28 @@
+# treadle 1
+type Structs class
+	namespace M2
+	static
+	doc "Struct destructors (Language.md 2.5): a Local struct is destroyed when its region ends, a struct field with its owner. Run prints 1, ~Res 7, 2, ~Res 0."
+
+function s0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 Scope
+node a3 Local M2.Res
+	in id 7
+node a4 Call Console.WriteLine(int)
+	in value 1
+node a5 Call Console.WriteLine(int)
+	in value 2
+node a6 Construct M2.ResHolder
+node a7 Delete
+node a8 Return
+wire a1.then a2.in
+wire a2.body a3.in
+wire a3.then a4.in
+wire a2.done a5.in
+wire a5.then a6.in
+wire a6.then a7.in
+wire a6.object a7.object
+wire a7.then a8.in

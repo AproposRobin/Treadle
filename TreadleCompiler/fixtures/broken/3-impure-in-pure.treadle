@@ -1,0 +1,21 @@
+# treadle 1
+# expect n2 - T3042
+type ImpureInPure class
+	namespace Broken
+	static
+	doc "A Pure function that calls a function with side effects."
+
+function f1 Hit
+	static
+	pure
+	returns int
+param p Game.Player
+sheet body
+node n1 Entry
+node n2 Call Game.Player.TakeDamage(int)
+	in amount 1
+node n3 Return
+	in value 0
+wire n1.then n2.in
+wire n1.p n2.receiver
+wire n2.then n3.in

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Treadle (16 and 24 px)</title>
+  <!-- The small-size cut of Treadle.svg: no thread or pin holes, thicker parts, so 16 and 24 px stay legible. -->
+  <rect x="0" y="0" width="256" height="256" rx="48" fill="#1b1a1f"/>
+  <rect x="104" y="72" width="48" height="128" fill="#f0f0f0"/>
+  <rect x="32" y="40" width="192" height="56" rx="16" fill="#26bbff"/>
+  <rect x="40" y="184" width="176" height="40" rx="12" fill="#fe9b07" transform="rotate(-10 128 204)"/>
+</svg>

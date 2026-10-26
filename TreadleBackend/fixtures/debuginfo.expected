@@ -1,0 +1,7 @@
+# Two calls of Speak (legs 2 times 0, then times 1): exit code 2.
+== exit
+2
+== stdout
+Tweet
+Tweet
+bye

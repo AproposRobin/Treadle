@@ -1,0 +1,90 @@
+# treadle 1
+type Ball struct
+	namespace Breakout
+	doc "The ball: its top-left corner and its velocity, both Vec2 values. Its functions are Pure and give a new Ball, which the Game stores back into its field with a Set."
+
+field Pos Vec2
+
+field Vel Vec2
+
+function b0001 Stepped
+	pure
+	returns Ball
+	doc "The ball one fixed step later: moved by its velocity."
+sheet body
+node a01 Entry
+node a02 Get this.Vel
+node a03 Get this.Pos
+node a04 Call Breakout.Vec2.Plus
+node a05 Make Breakout.Ball
+node a06 Return
+wire a02.value a04.other
+wire a03.value a04.receiver
+wire a04.result a05.Pos
+wire a02.value a05.Vel
+wire a01.then a06.in
+wire a05.value a06.value
+
+function b0002 BouncedX
+	pure
+	returns Ball
+	doc "The ball with its velocity's X negated."
+sheet body
+node b01 Entry
+node b02 Get this.Vel
+node b03 Call Breakout.Vec2.FlippedX
+node b04 Get this.Pos
+node b05 Make Breakout.Ball
+node b06 Return
+wire b02.value b03.receiver
+wire b04.value b05.Pos
+wire b03.result b05.Vel
+wire b01.then b06.in
+wire b05.value b06.value
+
+function b0003 BouncedY
+	pure
+	returns Ball
+	doc "The ball with its velocity's Y negated."
+sheet body
+node c01 Entry
+node c02 Get this.Vel
+node c03 Call Breakout.Vec2.FlippedY
+node c04 Get this.Pos
+node c05 Make Breakout.Ball
+node c06 Return
+wire c02.value c03.receiver
+wire c04.value c05.Pos
+wire c03.result c05.Vel
+wire c01.then c06.in
+wire c05.value c06.value
+
+function b0004 WithVel
+	pure
+	returns Ball
+	doc "The ball with another velocity."
+param vel Vec2
+sheet body
+node d01 Entry
+node d02 Get this.Pos
+node d03 Make Breakout.Ball
+node d04 Return
+wire d02.value d03.Pos
+wire d01.vel d03.Vel
+wire d01.then d04.in
+wire d03.value d04.value
+
+function b0005 At
+	pure
+	returns Ball
+	doc "The ball moved to another place."
+param pos Vec2
+sheet body
+node e01 Entry
+node e02 Get this.Vel
+node e03 Make Breakout.Ball
+node e04 Return
+wire e01.pos e03.Pos
+wire e02.value e03.Vel
+wire e01.then e04.in
+wire e03.value e04.value

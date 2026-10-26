@@ -1,0 +1,1437 @@
+# treadle 1
+type MathQuatMain class
+	namespace Cx
+	static
+	doc "The core math library, quat: every check compares the result with a reference computed in double precision by a separate C implementation (Gauss-Jordan inverse, Rodrigues rotations, the GLM conventions), within 1e-5 of the larger of 1 and the reference's size; each line is the check's name and true."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node n00000 Entry
+node n00001 Local String
+	set ctor ()
+node n00002 Get Core.Quat.Identity
+node n00003 Make Core.Quat
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n00004 Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n00005 Call String.Clear
+node n00006 Call String.Append(StringView)
+	in text "quat.Identity "
+node n00007 Call String.Append(bool)
+node n00008 Call Console.WriteLine(StringView)
+node n00009 Make Core.Vec3
+	in X 0.3333333432674408f
+	in Y 0.6666666865348816f
+	in Z 0.6666666865348816f
+node n0000a Call Core.Quat.FromAxisAngle
+	in angle 0.8999999761581421f
+node n0000b Make Core.Quat
+	in X 0.1449885070323944f
+	in Y 0.2899770140647888f
+	in Z 0.2899770140647888f
+	in W 0.9004471302032471f
+node n0000c Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0000d Call String.Clear
+node n0000e Call String.Append(StringView)
+	in text "quat.FromAxisAngle "
+node n0000f Call String.Append(bool)
+node n0000g Call Console.WriteLine(StringView)
+node n0000h Call Core.Quat.ToMat3
+node n0000i Make Core.Vec3
+	in X 0.6636533141136169f
+	in Y 0.6063045859336853f
+	in Z -0.43813127279281616f
+node n0000j Make Core.Vec3
+	in X -0.43813127279281616f
+	in Y 0.7897832989692688f
+	in Z 0.4292823076248169f
+node n0000k Make Core.Vec3
+	in X 0.6063045859336853f
+	in Y -0.09293562173843384f
+	in Z 0.7897832989692688f
+node n0000l Make Core.Mat3
+node n0000m Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f"
+node n0000n Call String.Clear
+node n0000o Call String.Append(StringView)
+	in text "quat.FromAxisAngle.matrix "
+node n0000p Call String.Append(bool)
+node n0000q Call Console.WriteLine(StringView)
+node n0000r Make Core.Vec3
+	in X 0.0f
+	in Y 0.6000000238418579f
+	in Z -0.800000011920929f
+node n0000s Call Core.Quat.FromAxisAngle
+	in angle -1.7000000476837158f
+node n0000t Operator *
+node n0000u Make Core.Quat
+	in X 0.4006856381893158f
+	in Y -0.3016546368598938f
+	in Z 0.6672143340110779f
+	in W 0.5507091283798218f
+node n0000v Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0000w Call String.Clear
+node n0000x Call String.Append(StringView)
+	in text "quat.mul "
+node n0000y Call String.Append(bool)
+node n0000z Call Console.WriteLine(StringView)
+node n00010 Call Core.Quat.Multiply
+node n00011 Make Core.Quat
+	in X 0.4006856381893158f
+	in Y -0.3016546368598938f
+	in Z 0.6672143340110779f
+	in W 0.5507091283798218f
+node n00012 Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n00013 Call String.Clear
+node n00014 Call String.Append(StringView)
+	in text "quat.Multiply "
+node n00015 Call String.Append(bool)
+node n00016 Call Console.WriteLine(StringView)
+node n00017 Operator *
+node n00018 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n00019 Call Core.Quat.Rotate
+node n0001a Make Core.Vec3
+	in X -1.4182641506195068f
+	in Y -2.4613285064697266f
+	in Z 2.43523907661438f
+node n0001b Math
+	set expr "Abs(a.X - b.X) <= 0.000024613284040242434f && Abs(a.Y - b.Y) <= 0.000024613284040242434f && Abs(a.Z - b.Z) <= 0.000024613284040242434f"
+node n0001c Call String.Clear
+node n0001d Call String.Append(StringView)
+	in text "quat.mul.order "
+node n0001e Call String.Append(bool)
+node n0001f Call Console.WriteLine(StringView)
+node n0001g Make Core.Quat
+	in X 0.5f
+	in Y 0.5f
+	in Z 0.5f
+	in W 0.5f
+node n0001h Make Core.Quat
+	in X 0.5f
+	in Y 0.5f
+	in Z 0.5f
+	in W 0.5f
+node n0001i Operator ==
+node n0001j Operator ==
+	in b true
+node n0001k Call String.Clear
+node n0001l Call String.Append(StringView)
+	in text "quat.eq "
+node n0001m Call String.Append(bool)
+node n0001n Call Console.WriteLine(StringView)
+node n0001o Make Core.Quat
+	in X 0.5f
+	in Y 0.5f
+	in Z 0.5f
+	in W 0.5f
+node n0001p Make Core.Quat
+	in X -0.5f
+	in Y -0.5f
+	in Z -0.5f
+	in W -0.5f
+node n0001q Operator ==
+node n0001r Operator ==
+	in b false
+node n0001s Call String.Clear
+node n0001t Call String.Append(StringView)
+	in text "quat.eq.false "
+node n0001u Call String.Append(bool)
+node n0001v Call Console.WriteLine(StringView)
+node n0001w Make Core.Vec3
+	in X 1.0f
+	in Y -2.0f
+	in Z 0.5f
+node n0001x Operator *
+node n0001y Make Core.Vec3
+	in X 1.8430681228637695f
+	in Y -1.0197298526763916f
+	in Z -0.9018042683601379f
+node n0001z Math
+	set expr "Abs(a.X - b.X) <= 0.000018430680938763544f && Abs(a.Y - b.Y) <= 0.000018430680938763544f && Abs(a.Z - b.Z) <= 0.000018430680938763544f"
+node n00020 Call String.Clear
+node n00021 Call String.Append(StringView)
+	in text "quat.mul.vec3 "
+node n00022 Call String.Append(bool)
+node n00023 Call Console.WriteLine(StringView)
+node n00024 Make Core.Vec3
+	in X 1.0f
+	in Y -2.0f
+	in Z 0.5f
+node n00025 Call Core.Quat.Rotate
+node n00026 Make Core.Vec3
+	in X 1.8430681228637695f
+	in Y -1.0197298526763916f
+	in Z -0.9018042683601379f
+node n00027 Math
+	set expr "Abs(a.X - b.X) <= 0.000018430680938763544f && Abs(a.Y - b.Y) <= 0.000018430680938763544f && Abs(a.Z - b.Z) <= 0.000018430680938763544f"
+node n00028 Call String.Clear
+node n00029 Call String.Append(StringView)
+	in text "quat.Rotate "
+node n0002a Call String.Append(bool)
+node n0002b Call Console.WriteLine(StringView)
+node n0002c Make Core.Quat
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+	in W 4.0f
+node n0002d Call Core.Quat.Conjugate
+node n0002e Make Core.Quat
+	in X -1.0f
+	in Y -2.0f
+	in Z -3.0f
+	in W 4.0f
+node n0002f Call Core.Quat.ApproxEquals
+	in epsilon 0.000039999998989515007f
+node n0002g Call String.Clear
+node n0002h Call String.Append(StringView)
+	in text "quat.Conjugate "
+node n0002i Call String.Append(bool)
+node n0002j Call Console.WriteLine(StringView)
+node n0002k Make Core.Quat
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+	in W 4.0f
+node n0002l Call Core.Quat.Inverse
+node n0002m Make Core.Quat
+	in X -0.03333333507180214f
+	in Y -0.06666667014360428f
+	in Z -0.10000000149011612f
+	in W 0.13333334028720856f
+node n0002n Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0002o Call String.Clear
+node n0002p Call String.Append(StringView)
+	in text "quat.Inverse "
+node n0002q Call String.Append(bool)
+node n0002r Call Console.WriteLine(StringView)
+node n0002s Make Core.Quat
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+	in W 4.0f
+node n0002t Call Core.Quat.Normalized
+node n0002u Make Core.Quat
+	in X 0.18257418274879456f
+	in Y 0.3651483654975891f
+	in Z 0.547722578048706f
+	in W 0.7302967309951782f
+node n0002v Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0002w Call String.Clear
+node n0002x Call String.Append(StringView)
+	in text "quat.Normalized "
+node n0002y Call String.Append(bool)
+node n0002z Call Console.WriteLine(StringView)
+node n00030 Make Core.Quat
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.0f
+node n00031 Call Core.Quat.Normalized
+node n00032 Make Core.Quat
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n00033 Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n00034 Call String.Clear
+node n00035 Call String.Append(StringView)
+	in text "quat.Normalized.zero "
+node n00036 Call String.Append(bool)
+node n00037 Call Console.WriteLine(StringView)
+node n00038 Make Core.Quat
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+	in W 4.0f
+node n00039 Make Core.Quat
+	in X -1.0f
+	in Y 0.5f
+	in Z 2.0f
+	in W 1.0f
+node n0003a Call Core.Quat.Dot
+node n0003b Math
+	set expr "Abs(a - b) <= 0.00009999999747378752f"
+	in b 10.0f
+node n0003c Call String.Clear
+node n0003d Call String.Append(StringView)
+	in text "quat.Dot "
+node n0003e Call String.Append(bool)
+node n0003f Call Console.WriteLine(StringView)
+node n0003g Make Core.Quat
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+	in W 4.0f
+node n0003h Call Core.Quat.Length
+node n0003i Math
+	set expr "Abs(a - b) <= 0.00005477225568029098f"
+	in b 5.4772257804870605f
+node n0003j Call String.Clear
+node n0003k Call String.Append(StringView)
+	in text "quat.Length "
+node n0003l Call String.Append(bool)
+node n0003m Call Console.WriteLine(StringView)
+node n0003n Call Core.Quat.Slerp
+	in t 0.30000001192092896f
+node n0003o Make Core.Quat
+	in X 0.10867287218570709f
+	in Y 0.06477129459381104f
+	in Z 0.4207783639431f
+	in W 0.8982986211776733f
+node n0003p Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0003q Call String.Clear
+node n0003r Call String.Append(StringView)
+	in text "quat.Slerp "
+node n0003s Call String.Append(bool)
+node n0003t Call Console.WriteLine(StringView)
+node n0003u Call Core.Quat.Slerp
+	in t 0.0f
+node n0003v Make Core.Quat
+	in X 0.1449885070323944f
+	in Y 0.2899770140647888f
+	in Z 0.2899770140647888f
+	in W 0.9004471302032471f
+node n0003w Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0003x Call String.Clear
+node n0003y Call String.Append(StringView)
+	in text "quat.Slerp.0 "
+node n0003z Call String.Append(bool)
+node n00040 Call Console.WriteLine(StringView)
+node n00041 Call Core.Quat.Slerp
+	in t 1.0f
+node n00042 Make Core.Quat
+	in X -0.0f
+	in Y -0.45076823234558105f
+	in Z 0.601024329662323f
+	in W 0.6599831581115723f
+node n00043 Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n00044 Call String.Clear
+node n00045 Call String.Append(StringView)
+	in text "quat.Slerp.1 "
+node n00046 Call String.Append(bool)
+node n00047 Call Console.WriteLine(StringView)
+node n00048 Make Core.Vec3
+	in X 0.3333333432674408f
+	in Y 0.6666666865348816f
+	in Z 0.6666666865348816f
+node n00049 Call Core.Quat.FromAxisAngle
+	in angle 0.9100000262260437f
+node n0004a Call Core.Quat.Slerp
+	in t 0.5f
+node n0004b Make Core.Quat
+	in X 0.145738422870636f
+	in Y 0.291476845741272f
+	in Z 0.291476845741272f
+	in W 0.8993569016456604f
+node n0004c Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0004d Call String.Clear
+node n0004e Call String.Append(StringView)
+	in text "quat.Slerp.near "
+node n0004f Call String.Append(bool)
+node n0004g Call Console.WriteLine(StringView)
+node n0004h Math
+	set expr "-q.X"
+node n0004i Math
+	set expr "-q.Y"
+node n0004j Math
+	set expr "-q.Z"
+node n0004k Math
+	set expr "-q.W"
+node n0004l Make Core.Quat
+node n0004m Call Core.Quat.Slerp
+	in t 0.30000001192092896f
+node n0004n Make Core.Quat
+	in X 0.10867287218570709f
+	in Y 0.06477129459381104f
+	in Z 0.4207783639431f
+	in W 0.8982986211776733f
+node n0004o Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0004p Call String.Clear
+node n0004q Call String.Append(StringView)
+	in text "quat.Slerp.shortest "
+node n0004r Call String.Append(bool)
+node n0004s Call Console.WriteLine(StringView)
+node n0004t Call Core.Quat.Slerp
+	in t 0.5f
+node n0004u Call Core.Quat.AngleTo
+node n0004v Math
+	set expr "Abs(a - b) <= 0.000009999999747378752f"
+	in b 0.8790919780731201f
+node n0004w Call String.Clear
+node n0004x Call String.Append(StringView)
+	in text "quat.Slerp.half.angle "
+node n0004y Call String.Append(bool)
+node n0004z Call Console.WriteLine(StringView)
+node n00050 Call Core.Quat.Nlerp
+	in t 0.30000001192092896f
+node n00051 Make Core.Quat
+	in X 0.11021989583969116f
+	in Y 0.07357998937368393f
+	in Z 0.41625285148620605f
+	in W 0.8995394110679626f
+node n00052 Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n00053 Call String.Clear
+node n00054 Call String.Append(StringView)
+	in text "quat.Nlerp "
+node n00055 Call String.Append(bool)
+node n00056 Call Console.WriteLine(StringView)
+node n00057 Call Core.Quat.AngleTo
+node n00058 Math
+	set expr "Abs(a - b) <= 0.000017581840438651852f"
+	in b 1.7581839561462402f
+node n00059 Call String.Clear
+node n0005a Call String.Append(StringView)
+	in text "quat.AngleTo "
+node n0005b Call String.Append(bool)
+node n0005c Call Console.WriteLine(StringView)
+node n0005d Call Core.Quat.ToMat3
+node n0005e Make Core.Vec3
+	in X -0.1288444995880127f
+	in Y 0.7933318614959717f
+	in Z 0.5949988961219788f
+node n0005f Make Core.Vec3
+	in X -0.7933318614959717f
+	in Y 0.27753952145576477f
+	in Z -0.5418453812599182f
+node n0005g Make Core.Vec3
+	in X -0.5949988961219788f
+	in Y -0.5418453812599182f
+	in Z 0.5936160087585449f
+node n0005h Make Core.Mat3
+node n0005i Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f"
+node n0005j Call String.Clear
+node n0005k Call String.Append(StringView)
+	in text "quat.ToMat3 "
+node n0005l Call String.Append(bool)
+node n0005m Call Console.WriteLine(StringView)
+node n0005n Call Core.Quat.ToMat4
+node n0005o Make Core.Vec4
+	in X -0.1288444995880127f
+	in Y 0.7933318614959717f
+	in Z 0.5949988961219788f
+	in W 0.0f
+node n0005p Make Core.Vec4
+	in X -0.7933318614959717f
+	in Y 0.27753952145576477f
+	in Z -0.5418453812599182f
+	in W 0.0f
+node n0005q Make Core.Vec4
+	in X -0.5949988961219788f
+	in Y -0.5418453812599182f
+	in Z 0.5936160087585449f
+	in W 0.0f
+node n0005r Make Core.Vec4
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n0005s Make Core.Mat4
+node n0005t Math
+	set expr "Abs(a.C0.X - b.C0.X) <= 0.000009999999747378752f && Abs(a.C0.Y - b.C0.Y) <= 0.000009999999747378752f && Abs(a.C0.Z - b.C0.Z) <= 0.000009999999747378752f && Abs(a.C0.W - b.C0.W) <= 0.000009999999747378752f && Abs(a.C1.X - b.C1.X) <= 0.000009999999747378752f && Abs(a.C1.Y - b.C1.Y) <= 0.000009999999747378752f && Abs(a.C1.Z - b.C1.Z) <= 0.000009999999747378752f && Abs(a.C1.W - b.C1.W) <= 0.000009999999747378752f && Abs(a.C2.X - b.C2.X) <= 0.000009999999747378752f && Abs(a.C2.Y - b.C2.Y) <= 0.000009999999747378752f && Abs(a.C2.Z - b.C2.Z) <= 0.000009999999747378752f && Abs(a.C2.W - b.C2.W) <= 0.000009999999747378752f && Abs(a.C3.X - b.C3.X) <= 0.000009999999747378752f && Abs(a.C3.Y - b.C3.Y) <= 0.000009999999747378752f && Abs(a.C3.Z - b.C3.Z) <= 0.000009999999747378752f && Abs(a.C3.W - b.C3.W) <= 0.000009999999747378752f"
+node n0005u Call String.Clear
+node n0005v Call String.Append(StringView)
+	in text "quat.ToMat4 "
+node n0005w Call String.Append(bool)
+node n0005x Call Console.WriteLine(StringView)
+node n0005y Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+node n0005z Make Core.Vec3
+	in X -1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n00060 Make Core.Vec3
+	in X 0.0f
+	in Y -1.0f
+	in Z 0.0f
+node n00061 Make Core.Mat3
+node n00062 Call Core.Quat.FromMat3
+node n00063 Make Core.Quat
+	in X 0.5f
+	in Y -0.5f
+	in Z 0.5f
+	in W 0.5f
+node n00064 Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n00065 Call String.Clear
+node n00066 Call String.Append(StringView)
+	in text "quat.FromMat3 "
+node n00067 Call String.Append(bool)
+node n00068 Call Console.WriteLine(StringView)
+node n00069 Call Core.Quat.ToMat3
+node n0006a Call Core.Quat.FromMat3
+node n0006b Make Core.Quat
+	in X -0.0f
+	in Y -0.45076823234558105f
+	in Z 0.601024329662323f
+	in W 0.6599831581115723f
+node n0006c Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0006d Call String.Clear
+node n0006e Call String.Append(StringView)
+	in text "quat.FromMat3.round "
+node n0006f Call String.Append(bool)
+node n0006g Call Console.WriteLine(StringView)
+node n0006h Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0006i Call Core.Quat.FromAxisAngle
+	in angle 3.0f
+node n0006j Call Core.Quat.ToMat3
+node n0006k Call Core.Quat.FromMat3
+node n0006l Make Core.Quat
+	in X 0.9974949955940247f
+	in Y 0.0f
+	in Z 0.0f
+	in W 0.07073719799518585f
+node n0006m Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0006n Call String.Clear
+node n0006o Call String.Append(StringView)
+	in text "quat.FromMat3.x "
+node n0006p Call String.Append(bool)
+node n0006q Call Console.WriteLine(StringView)
+node n0006r Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n0006s Call Core.Quat.FromAxisAngle
+	in angle 3.0f
+node n0006t Call Core.Quat.ToMat3
+node n0006u Call Core.Quat.FromMat3
+node n0006v Make Core.Quat
+	in X 0.0f
+	in Y 0.9974949955940247f
+	in Z 0.0f
+	in W 0.07073719799518585f
+node n0006w Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0006x Call String.Clear
+node n0006y Call String.Append(StringView)
+	in text "quat.FromMat3.y "
+node n0006z Call String.Append(bool)
+node n00070 Call Console.WriteLine(StringView)
+node n00071 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+node n00072 Call Core.Quat.FromAxisAngle
+	in angle 3.0f
+node n00073 Call Core.Quat.ToMat3
+node n00074 Call Core.Quat.FromMat3
+node n00075 Make Core.Quat
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.9974949955940247f
+	in W 0.07073719799518585f
+node n00076 Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n00077 Call String.Clear
+node n00078 Call String.Append(StringView)
+	in text "quat.FromMat3.z "
+node n00079 Call String.Append(bool)
+node n0007a Call Console.WriteLine(StringView)
+node n0007b Call Core.Quat.FromEuler
+	in pitch 0.30000001192092896f
+	in yaw -1.2000000476837158f
+	in roll 0.800000011920929f
+node n0007c Make Core.Quat
+	in X -0.1038125529885292f
+	in Y -0.5622598528862f
+	in Z 0.39551016688346863f
+	in W 0.7187896370887756f
+node n0007d Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0007e Call String.Clear
+node n0007f Call String.Append(StringView)
+	in text "quat.FromEuler "
+node n0007g Call String.Append(bool)
+node n0007h Call Console.WriteLine(StringView)
+node n0007i Call Core.Quat.FromEuler
+	in pitch 0.30000001192092896f
+	in yaw -1.2000000476837158f
+	in roll 0.800000011920929f
+node n0007j Call Core.Quat.ToEuler
+node n0007k Make Core.Vec3
+	in X 0.30000001192092896f
+	in Y -1.2000000476837158f
+	in Z 0.800000011920929f
+node n0007l Math
+	set expr "Abs(a.X - b.X) <= 0.000024000000848900527f && Abs(a.Y - b.Y) <= 0.000024000000848900527f && Abs(a.Z - b.Z) <= 0.000024000000848900527f"
+node n0007m Call String.Clear
+node n0007n Call String.Append(StringView)
+	in text "quat.ToEuler "
+node n0007o Call String.Append(bool)
+node n0007p Call Console.WriteLine(StringView)
+node n0007q Call Core.Quat.ToEuler
+node n0007r Make Core.Vec3
+	in X 0.09306992590427399f
+	in Y 0.654723584651947f
+	in Z 0.654723584651947f
+node n0007s Math
+	set expr "Abs(a.X - b.X) <= 0.000019999999494757503f && Abs(a.Y - b.Y) <= 0.000019999999494757503f && Abs(a.Z - b.Z) <= 0.000019999999494757503f"
+node n0007t Call String.Clear
+node n0007u Call String.Append(StringView)
+	in text "quat.ToEuler.ref "
+node n0007v Call String.Append(bool)
+node n0007w Call Console.WriteLine(StringView)
+node n0007x Call Core.Quat.FromEuler
+	in pitch 1.5707963705062866f
+	in yaw 0.5f
+	in roll 0.0f
+node n0007y Call Core.Quat.ToEuler
+node n0007z Make Core.Vec3
+	in X 1.5707963705062866f
+	in Y 0.5f
+	in Z 0.0f
+node n00080 Math
+	set expr "Abs(a.X - b.X) <= 0.0031415927223861217f && Abs(a.Y - b.Y) <= 0.0031415927223861217f && Abs(a.Z - b.Z) <= 0.0031415927223861217f"
+node n00081 Call String.Clear
+node n00082 Call String.Append(StringView)
+	in text "quat.ToEuler.pole "
+node n00083 Call String.Append(bool)
+node n00084 Call Console.WriteLine(StringView)
+node n00085 Call Core.Quat.ToAxisAngle
+node n00086 Math
+	set expr "Abs(a - b) <= 0.000009999999747378752f"
+	in b 0.8999999761581421f
+node n00087 Call String.Clear
+node n00088 Call String.Append(StringView)
+	in text "quat.ToAxisAngle "
+node n00089 Call String.Append(bool)
+node n0008a Call Console.WriteLine(StringView)
+node n0008b Call Core.Quat.ToAxisAngle
+node n0008c Make Core.Vec3
+	in X 0.3333333432674408f
+	in Y 0.6666666865348816f
+	in Z 0.6666666865348816f
+node n0008d Math
+	set expr "Abs(a.X - b.X) <= 0.000009999999747378752f && Abs(a.Y - b.Y) <= 0.000009999999747378752f && Abs(a.Z - b.Z) <= 0.000009999999747378752f"
+node n0008e Call String.Clear
+node n0008f Call String.Append(StringView)
+	in text "quat.ToAxisAngle.axis "
+node n0008g Call String.Append(bool)
+node n0008h Call Console.WriteLine(StringView)
+node n0008i Make Core.Quat
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n0008j Call Core.Quat.ToAxisAngle
+node n0008k Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0008l Math
+	set expr "Abs(a.X - b.X) <= 0.000009999999747378752f && Abs(a.Y - b.Y) <= 0.000009999999747378752f && Abs(a.Z - b.Z) <= 0.000009999999747378752f"
+node n0008m Call String.Clear
+node n0008n Call String.Append(StringView)
+	in text "quat.ToAxisAngle.none "
+node n0008o Call String.Append(bool)
+node n0008p Call Console.WriteLine(StringView)
+node n0008q Make Core.Vec3
+	in X 1.0f
+	in Y -1.0f
+	in Z -2.0f
+node n0008r Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n0008s Call Core.Quat.LookRotation
+node n0008t Make Core.Quat
+	in X -0.20313768088817596f
+	in Y -0.22469265758991241f
+	in Z -0.04795430228114128f
+	in W 0.9518133401870728f
+node n0008u Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0008v Call String.Clear
+node n0008w Call String.Append(StringView)
+	in text "quat.LookRotation "
+node n0008x Call String.Append(bool)
+node n0008y Call Console.WriteLine(StringView)
+node n0008z Make Core.Vec3
+	in X 1.0f
+	in Y -1.0f
+	in Z -2.0f
+node n00090 Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n00091 Call Core.Quat.LookRotation
+node n00092 Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z -1.0f
+node n00093 Call Core.Quat.Rotate
+node n00094 Make Core.Vec3
+	in X 0.40824830532073975f
+	in Y -0.40824830532073975f
+	in Z -0.8164966106414795f
+node n00095 Math
+	set expr "Abs(a.X - b.X) <= 0.000009999999747378752f && Abs(a.Y - b.Y) <= 0.000009999999747378752f && Abs(a.Z - b.Z) <= 0.000009999999747378752f"
+node n00096 Call String.Clear
+node n00097 Call String.Append(StringView)
+	in text "quat.LookRotation.forward "
+node n00098 Call String.Append(bool)
+node n00099 Call Console.WriteLine(StringView)
+node n0009a Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0009b Make Core.Vec3
+	in X 0.0f
+	in Y 3.0f
+	in Z 4.0f
+node n0009c Call Core.Quat.FromTo
+node n0009d Make Core.Quat
+	in X 0.0f
+	in Y -0.5656854510307312f
+	in Z 0.4242640733718872f
+	in W 0.7071067690849304f
+node n0009e Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0009f Call String.Clear
+node n0009g Call String.Append(StringView)
+	in text "quat.FromTo "
+node n0009h Call String.Append(bool)
+node n0009i Call Console.WriteLine(StringView)
+node n0009j Make Core.Vec3
+	in X 2.0f
+	in Y 1.0f
+	in Z 0.0f
+node n0009k Make Core.Vec3
+	in X 0.0f
+	in Y 3.0f
+	in Z 4.0f
+node n0009l Call Core.Quat.FromTo
+node n0009m Make Core.Vec3
+	in X 2.0f
+	in Y 1.0f
+	in Z 0.0f
+node n0009n Call Core.Quat.Rotate
+node n0009o Make Core.Vec3
+	in X 0.0f
+	in Y 1.341640830039978f
+	in Z 1.7888543605804443f
+node n0009p Math
+	set expr "Abs(a.X - b.X) <= 0.000017888543879962526f && Abs(a.Y - b.Y) <= 0.000017888543879962526f && Abs(a.Z - b.Z) <= 0.000017888543879962526f"
+node n0009q Call String.Clear
+node n0009r Call String.Append(StringView)
+	in text "quat.FromTo.rotates "
+node n0009s Call String.Append(bool)
+node n0009t Call Console.WriteLine(StringView)
+node n0009u Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n0009v Make Core.Vec3
+	in X 2.0f
+	in Y 4.0f
+	in Z 6.0f
+node n0009w Call Core.Quat.FromTo
+node n0009x Make Core.Quat
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+	in W 1.0f
+node n0009y Call Core.Quat.ApproxEquals
+	in epsilon 0.000009999999747378752f
+node n0009z Call String.Clear
+node n000a0 Call String.Append(StringView)
+	in text "quat.FromTo.same "
+node n000a1 Call String.Append(bool)
+node n000a2 Call Console.WriteLine(StringView)
+node n000a3 Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n000a4 Make Core.Vec3
+	in X -1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n000a5 Call Core.Quat.FromTo
+node n000a6 Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n000a7 Call Core.Quat.Rotate
+node n000a8 Make Core.Vec3
+	in X -1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n000a9 Math
+	set expr "Abs(a.X - b.X) <= 0.000009999999747378752f && Abs(a.Y - b.Y) <= 0.000009999999747378752f && Abs(a.Z - b.Z) <= 0.000009999999747378752f"
+node n000aa Call String.Clear
+node n000ab Call String.Append(StringView)
+	in text "quat.FromTo.opposite "
+node n000ac Call String.Append(bool)
+node n000ad Call Console.WriteLine(StringView)
+node n000ae Make Core.Quat
+	in X 0.5f
+	in Y -0.5f
+	in Z 0.5f
+	in W 0.5f
+node n000af Make Core.Quat
+	in X -0.5f
+	in Y 0.5f
+	in Z -0.5f
+	in W -0.5f
+node n000ag Call Core.Quat.ApproxEquals
+node n000ah Operator ==
+	in b true
+node n000ai Call String.Clear
+node n000aj Call String.Append(StringView)
+	in text "quat.ApproxEquals.negated "
+node n000ak Call String.Append(bool)
+node n000al Call Console.WriteLine(StringView)
+node n000am Make Core.Quat
+	in X 0.5f
+	in Y -0.5f
+	in Z 0.5f
+	in W 0.5f
+node n000an Make Core.Quat
+	in X 0.5f
+	in Y 0.5f
+	in Z 0.5f
+	in W 0.5f
+node n000ao Call Core.Quat.ApproxEquals
+node n000ap Operator ==
+	in b false
+node n000aq Call String.Clear
+node n000ar Call String.Append(StringView)
+	in text "quat.ApproxEquals.false "
+node n000as Call String.Append(bool)
+node n000at Call Console.WriteLine(StringView)
+node n000au Return
+	in value 0
+wire n00000.then n00001.in
+wire n00003.value n00004.other
+wire n00002.value n00004.receiver
+wire n00001.then n00005.in
+wire n00001.object n00005.receiver
+wire n00005.then n00006.in
+wire n00001.object n00006.receiver
+wire n00006.then n00007.in
+wire n00001.object n00007.receiver
+wire n00004.result n00007.value
+wire n00007.then n00008.in
+wire n00001.object n00008.text
+wire n00009.value n0000a.axis
+wire n0000b.value n0000c.other
+wire n0000a.result n0000c.receiver
+wire n00008.then n0000d.in
+wire n00001.object n0000d.receiver
+wire n0000d.then n0000e.in
+wire n00001.object n0000e.receiver
+wire n0000e.then n0000f.in
+wire n00001.object n0000f.receiver
+wire n0000c.result n0000f.value
+wire n0000f.then n0000g.in
+wire n00001.object n0000g.text
+wire n0000a.result n0000h.receiver
+wire n0000i.value n0000l.C0
+wire n0000j.value n0000l.C1
+wire n0000k.value n0000l.C2
+wire n0000h.result n0000m.a
+wire n0000l.value n0000m.b
+wire n0000g.then n0000n.in
+wire n00001.object n0000n.receiver
+wire n0000n.then n0000o.in
+wire n00001.object n0000o.receiver
+wire n0000o.then n0000p.in
+wire n00001.object n0000p.receiver
+wire n0000m.result n0000p.value
+wire n0000p.then n0000q.in
+wire n00001.object n0000q.text
+wire n0000r.value n0000s.axis
+wire n0000a.result n0000t.a
+wire n0000s.result n0000t.b
+wire n0000u.value n0000v.other
+wire n0000t.result n0000v.receiver
+wire n0000q.then n0000w.in
+wire n00001.object n0000w.receiver
+wire n0000w.then n0000x.in
+wire n00001.object n0000x.receiver
+wire n0000x.then n0000y.in
+wire n00001.object n0000y.receiver
+wire n0000v.result n0000y.value
+wire n0000y.then n0000z.in
+wire n00001.object n0000z.text
+wire n0000s.result n00010.b
+wire n0000a.result n00010.receiver
+wire n00011.value n00012.other
+wire n00010.result n00012.receiver
+wire n0000z.then n00013.in
+wire n00001.object n00013.receiver
+wire n00013.then n00014.in
+wire n00001.object n00014.receiver
+wire n00014.then n00015.in
+wire n00001.object n00015.receiver
+wire n00012.result n00015.value
+wire n00015.then n00016.in
+wire n00001.object n00016.text
+wire n0000a.result n00017.a
+wire n0000s.result n00017.b
+wire n00017.result n00019.receiver
+wire n00018.value n00019.v
+wire n00019.result n0001b.a
+wire n0001a.value n0001b.b
+wire n00016.then n0001c.in
+wire n00001.object n0001c.receiver
+wire n0001c.then n0001d.in
+wire n00001.object n0001d.receiver
+wire n0001d.then n0001e.in
+wire n00001.object n0001e.receiver
+wire n0001b.result n0001e.value
+wire n0001e.then n0001f.in
+wire n00001.object n0001f.text
+wire n0001g.value n0001i.a
+wire n0001h.value n0001i.b
+wire n0001i.result n0001j.a
+wire n0001f.then n0001k.in
+wire n00001.object n0001k.receiver
+wire n0001k.then n0001l.in
+wire n00001.object n0001l.receiver
+wire n0001l.then n0001m.in
+wire n00001.object n0001m.receiver
+wire n0001j.result n0001m.value
+wire n0001m.then n0001n.in
+wire n00001.object n0001n.text
+wire n0001o.value n0001q.a
+wire n0001p.value n0001q.b
+wire n0001q.result n0001r.a
+wire n0001n.then n0001s.in
+wire n00001.object n0001s.receiver
+wire n0001s.then n0001t.in
+wire n00001.object n0001t.receiver
+wire n0001t.then n0001u.in
+wire n00001.object n0001u.receiver
+wire n0001r.result n0001u.value
+wire n0001u.then n0001v.in
+wire n00001.object n0001v.text
+wire n0000a.result n0001x.a
+wire n0001w.value n0001x.b
+wire n0001x.result n0001z.a
+wire n0001y.value n0001z.b
+wire n0001v.then n00020.in
+wire n00001.object n00020.receiver
+wire n00020.then n00021.in
+wire n00001.object n00021.receiver
+wire n00021.then n00022.in
+wire n00001.object n00022.receiver
+wire n0001z.result n00022.value
+wire n00022.then n00023.in
+wire n00001.object n00023.text
+wire n0000a.result n00025.receiver
+wire n00024.value n00025.v
+wire n00025.result n00027.a
+wire n00026.value n00027.b
+wire n00023.then n00028.in
+wire n00001.object n00028.receiver
+wire n00028.then n00029.in
+wire n00001.object n00029.receiver
+wire n00029.then n0002a.in
+wire n00001.object n0002a.receiver
+wire n00027.result n0002a.value
+wire n0002a.then n0002b.in
+wire n00001.object n0002b.text
+wire n0002c.value n0002d.receiver
+wire n0002e.value n0002f.other
+wire n0002d.result n0002f.receiver
+wire n0002b.then n0002g.in
+wire n00001.object n0002g.receiver
+wire n0002g.then n0002h.in
+wire n00001.object n0002h.receiver
+wire n0002h.then n0002i.in
+wire n00001.object n0002i.receiver
+wire n0002f.result n0002i.value
+wire n0002i.then n0002j.in
+wire n00001.object n0002j.text
+wire n0002k.value n0002l.receiver
+wire n0002m.value n0002n.other
+wire n0002l.result n0002n.receiver
+wire n0002j.then n0002o.in
+wire n00001.object n0002o.receiver
+wire n0002o.then n0002p.in
+wire n00001.object n0002p.receiver
+wire n0002p.then n0002q.in
+wire n00001.object n0002q.receiver
+wire n0002n.result n0002q.value
+wire n0002q.then n0002r.in
+wire n00001.object n0002r.text
+wire n0002s.value n0002t.receiver
+wire n0002u.value n0002v.other
+wire n0002t.result n0002v.receiver
+wire n0002r.then n0002w.in
+wire n00001.object n0002w.receiver
+wire n0002w.then n0002x.in
+wire n00001.object n0002x.receiver
+wire n0002x.then n0002y.in
+wire n00001.object n0002y.receiver
+wire n0002v.result n0002y.value
+wire n0002y.then n0002z.in
+wire n00001.object n0002z.text
+wire n00030.value n00031.receiver
+wire n00032.value n00033.other
+wire n00031.result n00033.receiver
+wire n0002z.then n00034.in
+wire n00001.object n00034.receiver
+wire n00034.then n00035.in
+wire n00001.object n00035.receiver
+wire n00035.then n00036.in
+wire n00001.object n00036.receiver
+wire n00033.result n00036.value
+wire n00036.then n00037.in
+wire n00001.object n00037.text
+wire n00039.value n0003a.b
+wire n00038.value n0003a.receiver
+wire n0003a.result n0003b.a
+wire n00037.then n0003c.in
+wire n00001.object n0003c.receiver
+wire n0003c.then n0003d.in
+wire n00001.object n0003d.receiver
+wire n0003d.then n0003e.in
+wire n00001.object n0003e.receiver
+wire n0003b.result n0003e.value
+wire n0003e.then n0003f.in
+wire n00001.object n0003f.text
+wire n0003g.value n0003h.receiver
+wire n0003h.result n0003i.a
+wire n0003f.then n0003j.in
+wire n00001.object n0003j.receiver
+wire n0003j.then n0003k.in
+wire n00001.object n0003k.receiver
+wire n0003k.then n0003l.in
+wire n00001.object n0003l.receiver
+wire n0003i.result n0003l.value
+wire n0003l.then n0003m.in
+wire n00001.object n0003m.text
+wire n0000a.result n0003n.receiver
+wire n0000s.result n0003n.to
+wire n0003o.value n0003p.other
+wire n0003n.result n0003p.receiver
+wire n0003m.then n0003q.in
+wire n00001.object n0003q.receiver
+wire n0003q.then n0003r.in
+wire n00001.object n0003r.receiver
+wire n0003r.then n0003s.in
+wire n00001.object n0003s.receiver
+wire n0003p.result n0003s.value
+wire n0003s.then n0003t.in
+wire n00001.object n0003t.text
+wire n0000a.result n0003u.receiver
+wire n0000s.result n0003u.to
+wire n0003v.value n0003w.other
+wire n0003u.result n0003w.receiver
+wire n0003t.then n0003x.in
+wire n00001.object n0003x.receiver
+wire n0003x.then n0003y.in
+wire n00001.object n0003y.receiver
+wire n0003y.then n0003z.in
+wire n00001.object n0003z.receiver
+wire n0003w.result n0003z.value
+wire n0003z.then n00040.in
+wire n00001.object n00040.text
+wire n0000a.result n00041.receiver
+wire n0000s.result n00041.to
+wire n00042.value n00043.other
+wire n00041.result n00043.receiver
+wire n00040.then n00044.in
+wire n00001.object n00044.receiver
+wire n00044.then n00045.in
+wire n00001.object n00045.receiver
+wire n00045.then n00046.in
+wire n00001.object n00046.receiver
+wire n00043.result n00046.value
+wire n00046.then n00047.in
+wire n00001.object n00047.text
+wire n00048.value n00049.axis
+wire n0000a.result n0004a.receiver
+wire n00049.result n0004a.to
+wire n0004b.value n0004c.other
+wire n0004a.result n0004c.receiver
+wire n00047.then n0004d.in
+wire n00001.object n0004d.receiver
+wire n0004d.then n0004e.in
+wire n00001.object n0004e.receiver
+wire n0004e.then n0004f.in
+wire n00001.object n0004f.receiver
+wire n0004c.result n0004f.value
+wire n0004f.then n0004g.in
+wire n00001.object n0004g.text
+wire n0000s.result n0004h.q
+wire n0000s.result n0004i.q
+wire n0000s.result n0004j.q
+wire n0000s.result n0004k.q
+wire n0004k.result n0004l.W
+wire n0004h.result n0004l.X
+wire n0004i.result n0004l.Y
+wire n0004j.result n0004l.Z
+wire n0000a.result n0004m.receiver
+wire n0004l.value n0004m.to
+wire n0004n.value n0004o.other
+wire n0004m.result n0004o.receiver
+wire n0004g.then n0004p.in
+wire n00001.object n0004p.receiver
+wire n0004p.then n0004q.in
+wire n00001.object n0004q.receiver
+wire n0004q.then n0004r.in
+wire n00001.object n0004r.receiver
+wire n0004o.result n0004r.value
+wire n0004r.then n0004s.in
+wire n00001.object n0004s.text
+wire n0000a.result n0004t.receiver
+wire n0000s.result n0004t.to
+wire n0004t.result n0004u.b
+wire n0000a.result n0004u.receiver
+wire n0004u.result n0004v.a
+wire n0004s.then n0004w.in
+wire n00001.object n0004w.receiver
+wire n0004w.then n0004x.in
+wire n00001.object n0004x.receiver
+wire n0004x.then n0004y.in
+wire n00001.object n0004y.receiver
+wire n0004v.result n0004y.value
+wire n0004y.then n0004z.in
+wire n00001.object n0004z.text
+wire n0000a.result n00050.receiver
+wire n0000s.result n00050.to
+wire n00051.value n00052.other
+wire n00050.result n00052.receiver
+wire n0004z.then n00053.in
+wire n00001.object n00053.receiver
+wire n00053.then n00054.in
+wire n00001.object n00054.receiver
+wire n00054.then n00055.in
+wire n00001.object n00055.receiver
+wire n00052.result n00055.value
+wire n00055.then n00056.in
+wire n00001.object n00056.text
+wire n0000s.result n00057.b
+wire n0000a.result n00057.receiver
+wire n00057.result n00058.a
+wire n00056.then n00059.in
+wire n00001.object n00059.receiver
+wire n00059.then n0005a.in
+wire n00001.object n0005a.receiver
+wire n0005a.then n0005b.in
+wire n00001.object n0005b.receiver
+wire n00058.result n0005b.value
+wire n0005b.then n0005c.in
+wire n00001.object n0005c.text
+wire n0000s.result n0005d.receiver
+wire n0005e.value n0005h.C0
+wire n0005f.value n0005h.C1
+wire n0005g.value n0005h.C2
+wire n0005d.result n0005i.a
+wire n0005h.value n0005i.b
+wire n0005c.then n0005j.in
+wire n00001.object n0005j.receiver
+wire n0005j.then n0005k.in
+wire n00001.object n0005k.receiver
+wire n0005k.then n0005l.in
+wire n00001.object n0005l.receiver
+wire n0005i.result n0005l.value
+wire n0005l.then n0005m.in
+wire n00001.object n0005m.text
+wire n0000s.result n0005n.receiver
+wire n0005o.value n0005s.C0
+wire n0005p.value n0005s.C1
+wire n0005q.value n0005s.C2
+wire n0005r.value n0005s.C3
+wire n0005n.result n0005t.a
+wire n0005s.value n0005t.b
+wire n0005m.then n0005u.in
+wire n00001.object n0005u.receiver
+wire n0005u.then n0005v.in
+wire n00001.object n0005v.receiver
+wire n0005v.then n0005w.in
+wire n00001.object n0005w.receiver
+wire n0005t.result n0005w.value
+wire n0005w.then n0005x.in
+wire n00001.object n0005x.text
+wire n0005y.value n00061.C0
+wire n0005z.value n00061.C1
+wire n00060.value n00061.C2
+wire n00061.value n00062.m
+wire n00063.value n00064.other
+wire n00062.result n00064.receiver
+wire n0005x.then n00065.in
+wire n00001.object n00065.receiver
+wire n00065.then n00066.in
+wire n00001.object n00066.receiver
+wire n00066.then n00067.in
+wire n00001.object n00067.receiver
+wire n00064.result n00067.value
+wire n00067.then n00068.in
+wire n00001.object n00068.text
+wire n0000s.result n00069.receiver
+wire n00069.result n0006a.m
+wire n0006b.value n0006c.other
+wire n0006a.result n0006c.receiver
+wire n00068.then n0006d.in
+wire n00001.object n0006d.receiver
+wire n0006d.then n0006e.in
+wire n00001.object n0006e.receiver
+wire n0006e.then n0006f.in
+wire n00001.object n0006f.receiver
+wire n0006c.result n0006f.value
+wire n0006f.then n0006g.in
+wire n00001.object n0006g.text
+wire n0006h.value n0006i.axis
+wire n0006i.result n0006j.receiver
+wire n0006j.result n0006k.m
+wire n0006l.value n0006m.other
+wire n0006k.result n0006m.receiver
+wire n0006g.then n0006n.in
+wire n00001.object n0006n.receiver
+wire n0006n.then n0006o.in
+wire n00001.object n0006o.receiver
+wire n0006o.then n0006p.in
+wire n00001.object n0006p.receiver
+wire n0006m.result n0006p.value
+wire n0006p.then n0006q.in
+wire n00001.object n0006q.text
+wire n0006r.value n0006s.axis
+wire n0006s.result n0006t.receiver
+wire n0006t.result n0006u.m
+wire n0006v.value n0006w.other
+wire n0006u.result n0006w.receiver
+wire n0006q.then n0006x.in
+wire n00001.object n0006x.receiver
+wire n0006x.then n0006y.in
+wire n00001.object n0006y.receiver
+wire n0006y.then n0006z.in
+wire n00001.object n0006z.receiver
+wire n0006w.result n0006z.value
+wire n0006z.then n00070.in
+wire n00001.object n00070.text
+wire n00071.value n00072.axis
+wire n00072.result n00073.receiver
+wire n00073.result n00074.m
+wire n00075.value n00076.other
+wire n00074.result n00076.receiver
+wire n00070.then n00077.in
+wire n00001.object n00077.receiver
+wire n00077.then n00078.in
+wire n00001.object n00078.receiver
+wire n00078.then n00079.in
+wire n00001.object n00079.receiver
+wire n00076.result n00079.value
+wire n00079.then n0007a.in
+wire n00001.object n0007a.text
+wire n0007c.value n0007d.other
+wire n0007b.result n0007d.receiver
+wire n0007a.then n0007e.in
+wire n00001.object n0007e.receiver
+wire n0007e.then n0007f.in
+wire n00001.object n0007f.receiver
+wire n0007f.then n0007g.in
+wire n00001.object n0007g.receiver
+wire n0007d.result n0007g.value
+wire n0007g.then n0007h.in
+wire n00001.object n0007h.text
+wire n0007i.result n0007j.receiver
+wire n0007j.result n0007l.a
+wire n0007k.value n0007l.b
+wire n0007h.then n0007m.in
+wire n00001.object n0007m.receiver
+wire n0007m.then n0007n.in
+wire n00001.object n0007n.receiver
+wire n0007n.then n0007o.in
+wire n00001.object n0007o.receiver
+wire n0007l.result n0007o.value
+wire n0007o.then n0007p.in
+wire n00001.object n0007p.text
+wire n0000a.result n0007q.receiver
+wire n0007q.result n0007s.a
+wire n0007r.value n0007s.b
+wire n0007p.then n0007t.in
+wire n00001.object n0007t.receiver
+wire n0007t.then n0007u.in
+wire n00001.object n0007u.receiver
+wire n0007u.then n0007v.in
+wire n00001.object n0007v.receiver
+wire n0007s.result n0007v.value
+wire n0007v.then n0007w.in
+wire n00001.object n0007w.text
+wire n0007x.result n0007y.receiver
+wire n0007y.result n00080.a
+wire n0007z.value n00080.b
+wire n0007w.then n00081.in
+wire n00001.object n00081.receiver
+wire n00081.then n00082.in
+wire n00001.object n00082.receiver
+wire n00082.then n00083.in
+wire n00001.object n00083.receiver
+wire n00080.result n00083.value
+wire n00083.then n00084.in
+wire n00001.object n00084.text
+wire n0000a.result n00085.receiver
+wire n00085.result n00086.a
+wire n00084.then n00087.in
+wire n00001.object n00087.receiver
+wire n00087.then n00088.in
+wire n00001.object n00088.receiver
+wire n00088.then n00089.in
+wire n00001.object n00089.receiver
+wire n00086.result n00089.value
+wire n00089.then n0008a.in
+wire n00001.object n0008a.text
+wire n0000a.result n0008b.receiver
+wire n0008b.axis n0008d.a
+wire n0008c.value n0008d.b
+wire n0008a.then n0008e.in
+wire n00001.object n0008e.receiver
+wire n0008e.then n0008f.in
+wire n00001.object n0008f.receiver
+wire n0008f.then n0008g.in
+wire n00001.object n0008g.receiver
+wire n0008d.result n0008g.value
+wire n0008g.then n0008h.in
+wire n00001.object n0008h.text
+wire n0008i.value n0008j.receiver
+wire n0008j.axis n0008l.a
+wire n0008k.value n0008l.b
+wire n0008h.then n0008m.in
+wire n00001.object n0008m.receiver
+wire n0008m.then n0008n.in
+wire n00001.object n0008n.receiver
+wire n0008n.then n0008o.in
+wire n00001.object n0008o.receiver
+wire n0008l.result n0008o.value
+wire n0008o.then n0008p.in
+wire n00001.object n0008p.text
+wire n0008q.value n0008s.forward
+wire n0008r.value n0008s.up
+wire n0008t.value n0008u.other
+wire n0008s.result n0008u.receiver
+wire n0008p.then n0008v.in
+wire n00001.object n0008v.receiver
+wire n0008v.then n0008w.in
+wire n00001.object n0008w.receiver
+wire n0008w.then n0008x.in
+wire n00001.object n0008x.receiver
+wire n0008u.result n0008x.value
+wire n0008x.then n0008y.in
+wire n00001.object n0008y.text
+wire n0008z.value n00091.forward
+wire n00090.value n00091.up
+wire n00091.result n00093.receiver
+wire n00092.value n00093.v
+wire n00093.result n00095.a
+wire n00094.value n00095.b
+wire n0008y.then n00096.in
+wire n00001.object n00096.receiver
+wire n00096.then n00097.in
+wire n00001.object n00097.receiver
+wire n00097.then n00098.in
+wire n00001.object n00098.receiver
+wire n00095.result n00098.value
+wire n00098.then n00099.in
+wire n00001.object n00099.text
+wire n0009a.value n0009c.from
+wire n0009b.value n0009c.to
+wire n0009d.value n0009e.other
+wire n0009c.result n0009e.receiver
+wire n00099.then n0009f.in
+wire n00001.object n0009f.receiver
+wire n0009f.then n0009g.in
+wire n00001.object n0009g.receiver
+wire n0009g.then n0009h.in
+wire n00001.object n0009h.receiver
+wire n0009e.result n0009h.value
+wire n0009h.then n0009i.in
+wire n00001.object n0009i.text
+wire n0009j.value n0009l.from
+wire n0009k.value n0009l.to
+wire n0009l.result n0009n.receiver
+wire n0009m.value n0009n.v
+wire n0009n.result n0009p.a
+wire n0009o.value n0009p.b
+wire n0009i.then n0009q.in
+wire n00001.object n0009q.receiver
+wire n0009q.then n0009r.in
+wire n00001.object n0009r.receiver
+wire n0009r.then n0009s.in
+wire n00001.object n0009s.receiver
+wire n0009p.result n0009s.value
+wire n0009s.then n0009t.in
+wire n00001.object n0009t.text
+wire n0009u.value n0009w.from
+wire n0009v.value n0009w.to
+wire n0009x.value n0009y.other
+wire n0009w.result n0009y.receiver
+wire n0009t.then n0009z.in
+wire n00001.object n0009z.receiver
+wire n0009z.then n000a0.in
+wire n00001.object n000a0.receiver
+wire n000a0.then n000a1.in
+wire n00001.object n000a1.receiver
+wire n0009y.result n000a1.value
+wire n000a1.then n000a2.in
+wire n00001.object n000a2.text
+wire n000a3.value n000a5.from
+wire n000a4.value n000a5.to
+wire n000a5.result n000a7.receiver
+wire n000a6.value n000a7.v
+wire n000a7.result n000a9.a
+wire n000a8.value n000a9.b
+wire n000a2.then n000aa.in
+wire n00001.object n000aa.receiver
+wire n000aa.then n000ab.in
+wire n00001.object n000ab.receiver
+wire n000ab.then n000ac.in
+wire n00001.object n000ac.receiver
+wire n000a9.result n000ac.value
+wire n000ac.then n000ad.in
+wire n00001.object n000ad.text
+wire n000af.value n000ag.other
+wire n000ae.value n000ag.receiver
+wire n000ag.result n000ah.a
+wire n000ad.then n000ai.in
+wire n00001.object n000ai.receiver
+wire n000ai.then n000aj.in
+wire n00001.object n000aj.receiver
+wire n000aj.then n000ak.in
+wire n00001.object n000ak.receiver
+wire n000ah.result n000ak.value
+wire n000ak.then n000al.in
+wire n00001.object n000al.text
+wire n000an.value n000ao.other
+wire n000am.value n000ao.receiver
+wire n000ao.result n000ap.a
+wire n000al.then n000aq.in
+wire n00001.object n000aq.receiver
+wire n000aq.then n000ar.in
+wire n00001.object n000ar.receiver
+wire n000ar.then n000as.in
+wire n00001.object n000as.receiver
+wire n000ap.result n000as.value
+wire n000as.then n000at.in
+wire n00001.object n000at.text
+wire n000at.then n000au.in

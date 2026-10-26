@@ -1,0 +1,26 @@
+# tir 1
+# Debug: a variable lane index outside 0..N-1 is a fatal error naming the node (lanecheck ->
+# rt_bounds); Release has no check (SIMD-and-Vectors.md 1.5).
+program SimdLanesGuard console
+entry Lg.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit Lg.Program
+type Lg.Program class
+global Lg.Program.sLane int 4
+
+func Lg.Program.Main() int static sheet "f1" display "Lg.Program.Main"
+	node a1 Entry
+	node a2 Call Core.Vector.GetLane
+	block b0
+		%v = const float4 1,2,3,4 @a2
+		%p = global.addr int* Lg.Program.sLane @a2
+		%i = load int %p @a2
+		lanecheck %i 4 @a2
+		%x = vec.get float %v %i @a2
+		%xd = cast double %x @a2
+		%f = const char8* "lane %g\n" @a2
+		%r = ccall int32 C.libc.printf(char8*,...) %f %xd @a2
+		%z = const int 0
+		ret %z

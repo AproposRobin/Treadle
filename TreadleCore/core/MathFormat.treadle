@@ -1,0 +1,702 @@
+# treadle 1
+type MathFormat extension
+	namespace Core
+	extends Core.String
+	doc "String.Append for the math types: vectors, quaternions and colours as (1, 2, 3), matrices as their rows [(..), (..)], each number as Append writes it. AppendF uses these for its arguments."
+
+function m000 Append
+	doc "Appends the vector as (X, Y)."
+param value Vec2
+sheet body
+node n00000 Entry
+node n00001 Break Core.Vec2
+node n00002 Call this.Append(StringView)
+	in text "("
+node n00003 Call this.Append(float)
+node n00004 Call this.Append(StringView)
+	in text ", "
+node n00005 Call this.Append(float)
+node n00006 Call this.Append(StringView)
+	in text ")"
+node n00007 Return
+wire n00000.value n00001.value
+wire n00000.then n00002.in
+wire n00002.then n00003.in
+wire n00001.X n00003.value
+wire n00003.then n00004.in
+wire n00004.then n00005.in
+wire n00001.Y n00005.value
+wire n00005.then n00006.in
+wire n00006.then n00007.in
+
+function m001 Append
+	doc "Appends the vector as (X, Y, Z)."
+param value Vec3
+sheet body
+node n00100 Entry
+node n00101 Break Core.Vec3
+node n00102 Call this.Append(StringView)
+	in text "("
+node n00103 Call this.Append(float)
+node n00104 Call this.Append(StringView)
+	in text ", "
+node n00105 Call this.Append(float)
+node n00106 Call this.Append(StringView)
+	in text ", "
+node n00107 Call this.Append(float)
+node n00108 Call this.Append(StringView)
+	in text ")"
+node n00109 Return
+wire n00100.value n00101.value
+wire n00100.then n00102.in
+wire n00102.then n00103.in
+wire n00101.X n00103.value
+wire n00103.then n00104.in
+wire n00104.then n00105.in
+wire n00101.Y n00105.value
+wire n00105.then n00106.in
+wire n00106.then n00107.in
+wire n00101.Z n00107.value
+wire n00107.then n00108.in
+wire n00108.then n00109.in
+
+function m002 Append
+	doc "Appends the vector as (X, Y, Z, W)."
+param value Vec4
+sheet body
+node n00200 Entry
+node n00201 Break Core.Vec4
+node n00202 Call this.Append(StringView)
+	in text "("
+node n00203 Call this.Append(float)
+node n00204 Call this.Append(StringView)
+	in text ", "
+node n00205 Call this.Append(float)
+node n00206 Call this.Append(StringView)
+	in text ", "
+node n00207 Call this.Append(float)
+node n00208 Call this.Append(StringView)
+	in text ", "
+node n00209 Call this.Append(float)
+node n0020a Call this.Append(StringView)
+	in text ")"
+node n0020b Return
+wire n00200.value n00201.value
+wire n00200.then n00202.in
+wire n00202.then n00203.in
+wire n00201.X n00203.value
+wire n00203.then n00204.in
+wire n00204.then n00205.in
+wire n00201.Y n00205.value
+wire n00205.then n00206.in
+wire n00206.then n00207.in
+wire n00201.Z n00207.value
+wire n00207.then n00208.in
+wire n00208.then n00209.in
+wire n00201.W n00209.value
+wire n00209.then n0020a.in
+wire n0020a.then n0020b.in
+
+function m003 Append
+	doc "Appends the vector as (X, Y)."
+param value Vec2d
+sheet body
+node n00300 Entry
+node n00301 Break Core.Vec2d
+node n00302 Call this.Append(StringView)
+	in text "("
+node n00303 Call this.Append(double)
+node n00304 Call this.Append(StringView)
+	in text ", "
+node n00305 Call this.Append(double)
+node n00306 Call this.Append(StringView)
+	in text ")"
+node n00307 Return
+wire n00300.value n00301.value
+wire n00300.then n00302.in
+wire n00302.then n00303.in
+wire n00301.X n00303.value
+wire n00303.then n00304.in
+wire n00304.then n00305.in
+wire n00301.Y n00305.value
+wire n00305.then n00306.in
+wire n00306.then n00307.in
+
+function m004 Append
+	doc "Appends the vector as (X, Y, Z)."
+param value Vec3d
+sheet body
+node n00400 Entry
+node n00401 Break Core.Vec3d
+node n00402 Call this.Append(StringView)
+	in text "("
+node n00403 Call this.Append(double)
+node n00404 Call this.Append(StringView)
+	in text ", "
+node n00405 Call this.Append(double)
+node n00406 Call this.Append(StringView)
+	in text ", "
+node n00407 Call this.Append(double)
+node n00408 Call this.Append(StringView)
+	in text ")"
+node n00409 Return
+wire n00400.value n00401.value
+wire n00400.then n00402.in
+wire n00402.then n00403.in
+wire n00401.X n00403.value
+wire n00403.then n00404.in
+wire n00404.then n00405.in
+wire n00401.Y n00405.value
+wire n00405.then n00406.in
+wire n00406.then n00407.in
+wire n00401.Z n00407.value
+wire n00407.then n00408.in
+wire n00408.then n00409.in
+
+function m005 Append
+	doc "Appends the vector as (X, Y, Z, W)."
+param value Vec4d
+sheet body
+node n00500 Entry
+node n00501 Break Core.Vec4d
+node n00502 Call this.Append(StringView)
+	in text "("
+node n00503 Call this.Append(double)
+node n00504 Call this.Append(StringView)
+	in text ", "
+node n00505 Call this.Append(double)
+node n00506 Call this.Append(StringView)
+	in text ", "
+node n00507 Call this.Append(double)
+node n00508 Call this.Append(StringView)
+	in text ", "
+node n00509 Call this.Append(double)
+node n0050a Call this.Append(StringView)
+	in text ")"
+node n0050b Return
+wire n00500.value n00501.value
+wire n00500.then n00502.in
+wire n00502.then n00503.in
+wire n00501.X n00503.value
+wire n00503.then n00504.in
+wire n00504.then n00505.in
+wire n00501.Y n00505.value
+wire n00505.then n00506.in
+wire n00506.then n00507.in
+wire n00501.Z n00507.value
+wire n00507.then n00508.in
+wire n00508.then n00509.in
+wire n00501.W n00509.value
+wire n00509.then n0050a.in
+wire n0050a.then n0050b.in
+
+function m006 Append
+	doc "Appends the matrix row by row: [(row 0), (row 1), ...]."
+param value Mat3
+sheet body
+node n00600 Entry
+node n00601 Break Core.Mat3
+node n00602 Break Core.Vec3
+node n00603 Break Core.Vec3
+node n00604 Break Core.Vec3
+node n00605 Call this.Append(StringView)
+	in text "[("
+node n00606 Call this.Append(float)
+node n00607 Call this.Append(StringView)
+	in text ", "
+node n00608 Call this.Append(float)
+node n00609 Call this.Append(StringView)
+	in text ", "
+node n0060a Call this.Append(float)
+node n0060b Call this.Append(StringView)
+	in text "), ("
+node n0060c Call this.Append(float)
+node n0060d Call this.Append(StringView)
+	in text ", "
+node n0060e Call this.Append(float)
+node n0060f Call this.Append(StringView)
+	in text ", "
+node n0060g Call this.Append(float)
+node n0060h Call this.Append(StringView)
+	in text "), ("
+node n0060i Call this.Append(float)
+node n0060j Call this.Append(StringView)
+	in text ", "
+node n0060k Call this.Append(float)
+node n0060l Call this.Append(StringView)
+	in text ", "
+node n0060m Call this.Append(float)
+node n0060n Call this.Append(StringView)
+	in text ")]"
+node n0060o Return
+wire n00600.value n00601.value
+wire n00601.C0 n00602.value
+wire n00601.C1 n00603.value
+wire n00601.C2 n00604.value
+wire n00600.then n00605.in
+wire n00605.then n00606.in
+wire n00602.X n00606.value
+wire n00606.then n00607.in
+wire n00607.then n00608.in
+wire n00603.X n00608.value
+wire n00608.then n00609.in
+wire n00609.then n0060a.in
+wire n00604.X n0060a.value
+wire n0060a.then n0060b.in
+wire n0060b.then n0060c.in
+wire n00602.Y n0060c.value
+wire n0060c.then n0060d.in
+wire n0060d.then n0060e.in
+wire n00603.Y n0060e.value
+wire n0060e.then n0060f.in
+wire n0060f.then n0060g.in
+wire n00604.Y n0060g.value
+wire n0060g.then n0060h.in
+wire n0060h.then n0060i.in
+wire n00602.Z n0060i.value
+wire n0060i.then n0060j.in
+wire n0060j.then n0060k.in
+wire n00603.Z n0060k.value
+wire n0060k.then n0060l.in
+wire n0060l.then n0060m.in
+wire n00604.Z n0060m.value
+wire n0060m.then n0060n.in
+wire n0060n.then n0060o.in
+
+function m007 Append
+	doc "Appends the matrix row by row: [(row 0), (row 1), ...]."
+param value Mat4
+sheet body
+node n00700 Entry
+node n00701 Break Core.Mat4
+node n00702 Break Core.Vec4
+node n00703 Break Core.Vec4
+node n00704 Break Core.Vec4
+node n00705 Break Core.Vec4
+node n00706 Call this.Append(StringView)
+	in text "[("
+node n00707 Call this.Append(float)
+node n00708 Call this.Append(StringView)
+	in text ", "
+node n00709 Call this.Append(float)
+node n0070a Call this.Append(StringView)
+	in text ", "
+node n0070b Call this.Append(float)
+node n0070c Call this.Append(StringView)
+	in text ", "
+node n0070d Call this.Append(float)
+node n0070e Call this.Append(StringView)
+	in text "), ("
+node n0070f Call this.Append(float)
+node n0070g Call this.Append(StringView)
+	in text ", "
+node n0070h Call this.Append(float)
+node n0070i Call this.Append(StringView)
+	in text ", "
+node n0070j Call this.Append(float)
+node n0070k Call this.Append(StringView)
+	in text ", "
+node n0070l Call this.Append(float)
+node n0070m Call this.Append(StringView)
+	in text "), ("
+node n0070n Call this.Append(float)
+node n0070o Call this.Append(StringView)
+	in text ", "
+node n0070p Call this.Append(float)
+node n0070q Call this.Append(StringView)
+	in text ", "
+node n0070r Call this.Append(float)
+node n0070s Call this.Append(StringView)
+	in text ", "
+node n0070t Call this.Append(float)
+node n0070u Call this.Append(StringView)
+	in text "), ("
+node n0070v Call this.Append(float)
+node n0070w Call this.Append(StringView)
+	in text ", "
+node n0070x Call this.Append(float)
+node n0070y Call this.Append(StringView)
+	in text ", "
+node n0070z Call this.Append(float)
+node n00710 Call this.Append(StringView)
+	in text ", "
+node n00711 Call this.Append(float)
+node n00712 Call this.Append(StringView)
+	in text ")]"
+node n00713 Return
+wire n00700.value n00701.value
+wire n00701.C0 n00702.value
+wire n00701.C1 n00703.value
+wire n00701.C2 n00704.value
+wire n00701.C3 n00705.value
+wire n00700.then n00706.in
+wire n00706.then n00707.in
+wire n00702.X n00707.value
+wire n00707.then n00708.in
+wire n00708.then n00709.in
+wire n00703.X n00709.value
+wire n00709.then n0070a.in
+wire n0070a.then n0070b.in
+wire n00704.X n0070b.value
+wire n0070b.then n0070c.in
+wire n0070c.then n0070d.in
+wire n00705.X n0070d.value
+wire n0070d.then n0070e.in
+wire n0070e.then n0070f.in
+wire n00702.Y n0070f.value
+wire n0070f.then n0070g.in
+wire n0070g.then n0070h.in
+wire n00703.Y n0070h.value
+wire n0070h.then n0070i.in
+wire n0070i.then n0070j.in
+wire n00704.Y n0070j.value
+wire n0070j.then n0070k.in
+wire n0070k.then n0070l.in
+wire n00705.Y n0070l.value
+wire n0070l.then n0070m.in
+wire n0070m.then n0070n.in
+wire n00702.Z n0070n.value
+wire n0070n.then n0070o.in
+wire n0070o.then n0070p.in
+wire n00703.Z n0070p.value
+wire n0070p.then n0070q.in
+wire n0070q.then n0070r.in
+wire n00704.Z n0070r.value
+wire n0070r.then n0070s.in
+wire n0070s.then n0070t.in
+wire n00705.Z n0070t.value
+wire n0070t.then n0070u.in
+wire n0070u.then n0070v.in
+wire n00702.W n0070v.value
+wire n0070v.then n0070w.in
+wire n0070w.then n0070x.in
+wire n00703.W n0070x.value
+wire n0070x.then n0070y.in
+wire n0070y.then n0070z.in
+wire n00704.W n0070z.value
+wire n0070z.then n00710.in
+wire n00710.then n00711.in
+wire n00705.W n00711.value
+wire n00711.then n00712.in
+wire n00712.then n00713.in
+
+function m008 Append
+	doc "Appends the quaternion as (X, Y, Z, W)."
+param value Quat
+sheet body
+node n00800 Entry
+node n00801 Break Core.Quat
+node n00802 Call this.Append(StringView)
+	in text "("
+node n00803 Call this.Append(float)
+node n00804 Call this.Append(StringView)
+	in text ", "
+node n00805 Call this.Append(float)
+node n00806 Call this.Append(StringView)
+	in text ", "
+node n00807 Call this.Append(float)
+node n00808 Call this.Append(StringView)
+	in text ", "
+node n00809 Call this.Append(float)
+node n0080a Call this.Append(StringView)
+	in text ")"
+node n0080b Return
+wire n00800.value n00801.value
+wire n00800.then n00802.in
+wire n00802.then n00803.in
+wire n00801.X n00803.value
+wire n00803.then n00804.in
+wire n00804.then n00805.in
+wire n00801.Y n00805.value
+wire n00805.then n00806.in
+wire n00806.then n00807.in
+wire n00801.Z n00807.value
+wire n00807.then n00808.in
+wire n00808.then n00809.in
+wire n00801.W n00809.value
+wire n00809.then n0080a.in
+wire n0080a.then n0080b.in
+
+function m009 Append
+	doc "Appends the colour as (R, G, B, A)."
+param value Color
+sheet body
+node n00900 Entry
+node n00901 Break Core.Color
+node n00902 Call this.Append(StringView)
+	in text "("
+node n00903 Call this.Append(float)
+node n00904 Call this.Append(StringView)
+	in text ", "
+node n00905 Call this.Append(float)
+node n00906 Call this.Append(StringView)
+	in text ", "
+node n00907 Call this.Append(float)
+node n00908 Call this.Append(StringView)
+	in text ", "
+node n00909 Call this.Append(float)
+node n0090a Call this.Append(StringView)
+	in text ")"
+node n0090b Return
+wire n00900.value n00901.value
+wire n00900.then n00902.in
+wire n00902.then n00903.in
+wire n00901.R n00903.value
+wire n00903.then n00904.in
+wire n00904.then n00905.in
+wire n00901.G n00905.value
+wire n00905.then n00906.in
+wire n00906.then n00907.in
+wire n00901.B n00907.value
+wire n00907.then n00908.in
+wire n00908.then n00909.in
+wire n00901.A n00909.value
+wire n00909.then n0090a.in
+wire n0090a.then n0090b.in
+
+function m00a Append
+	doc "Appends the colour as (R, G, B, A), each 0 to 255."
+param value Color32
+sheet body
+node n00a00 Entry
+node n00a01 Break Core.Color32
+node n00a02 Cast int
+node n00a03 Cast int
+node n00a04 Cast int
+node n00a05 Cast int
+node n00a06 Call this.Append(StringView)
+	in text "("
+node n00a07 Call this.Append(int)
+node n00a08 Call this.Append(StringView)
+	in text ", "
+node n00a09 Call this.Append(int)
+node n00a0a Call this.Append(StringView)
+	in text ", "
+node n00a0b Call this.Append(int)
+node n00a0c Call this.Append(StringView)
+	in text ", "
+node n00a0d Call this.Append(int)
+node n00a0e Call this.Append(StringView)
+	in text ")"
+node n00a0f Return
+wire n00a00.value n00a01.value
+wire n00a01.R n00a02.value
+wire n00a01.G n00a03.value
+wire n00a01.B n00a04.value
+wire n00a01.A n00a05.value
+wire n00a00.then n00a06.in
+wire n00a06.then n00a07.in
+wire n00a02.result n00a07.value
+wire n00a07.then n00a08.in
+wire n00a08.then n00a09.in
+wire n00a03.result n00a09.value
+wire n00a09.then n00a0a.in
+wire n00a0a.then n00a0b.in
+wire n00a04.result n00a0b.value
+wire n00a0b.then n00a0c.in
+wire n00a0c.then n00a0d.in
+wire n00a05.result n00a0d.value
+wire n00a0d.then n00a0e.in
+wire n00a0e.then n00a0f.in
+
+function m00b Append
+	doc "Appends the rectangle as (X, Y, Width, Height)."
+param value Rect
+sheet body
+node n00b00 Entry
+node n00b01 Break Core.Rect
+node n00b02 Call this.Append(StringView)
+	in text "("
+node n00b03 Call this.Append(float)
+node n00b04 Call this.Append(StringView)
+	in text ", "
+node n00b05 Call this.Append(float)
+node n00b06 Call this.Append(StringView)
+	in text ", "
+node n00b07 Call this.Append(float)
+node n00b08 Call this.Append(StringView)
+	in text ", "
+node n00b09 Call this.Append(float)
+node n00b0a Call this.Append(StringView)
+	in text ")"
+node n00b0b Return
+wire n00b00.value n00b01.value
+wire n00b00.then n00b02.in
+wire n00b02.then n00b03.in
+wire n00b01.X n00b03.value
+wire n00b03.then n00b04.in
+wire n00b04.then n00b05.in
+wire n00b01.Y n00b05.value
+wire n00b05.then n00b06.in
+wire n00b06.then n00b07.in
+wire n00b01.Width n00b07.value
+wire n00b07.then n00b08.in
+wire n00b08.then n00b09.in
+wire n00b01.Height n00b09.value
+wire n00b09.then n00b0a.in
+wire n00b0a.then n00b0b.in
+
+function m00c Append
+	doc "Appends the rectangle as (X, Y, Width, Height)."
+param value RectI
+sheet body
+node n00c00 Entry
+node n00c01 Break Core.RectI
+node n00c02 Cast int
+node n00c03 Cast int
+node n00c04 Cast int
+node n00c05 Cast int
+node n00c06 Call this.Append(StringView)
+	in text "("
+node n00c07 Call this.Append(int)
+node n00c08 Call this.Append(StringView)
+	in text ", "
+node n00c09 Call this.Append(int)
+node n00c0a Call this.Append(StringView)
+	in text ", "
+node n00c0b Call this.Append(int)
+node n00c0c Call this.Append(StringView)
+	in text ", "
+node n00c0d Call this.Append(int)
+node n00c0e Call this.Append(StringView)
+	in text ")"
+node n00c0f Return
+wire n00c00.value n00c01.value
+wire n00c01.X n00c02.value
+wire n00c01.Y n00c03.value
+wire n00c01.Width n00c04.value
+wire n00c01.Height n00c05.value
+wire n00c00.then n00c06.in
+wire n00c06.then n00c07.in
+wire n00c02.result n00c07.value
+wire n00c07.then n00c08.in
+wire n00c08.then n00c09.in
+wire n00c03.result n00c09.value
+wire n00c09.then n00c0a.in
+wire n00c0a.then n00c0b.in
+wire n00c04.result n00c0b.value
+wire n00c0b.then n00c0c.in
+wire n00c0c.then n00c0d.in
+wire n00c05.result n00c0d.value
+wire n00c0d.then n00c0e.in
+wire n00c0e.then n00c0f.in
+
+function m00d Append
+	doc "Appends the box as [(Min), (Max)]."
+param value AABB
+sheet body
+node n00d00 Entry
+node n00d01 Break Core.AABB
+node n00d02 Call this.Append(StringView)
+	in text "["
+node n00d03 Call this.Append(Vec3)
+node n00d04 Call this.Append(StringView)
+	in text ", "
+node n00d05 Call this.Append(Vec3)
+node n00d06 Call this.Append(StringView)
+	in text "]"
+node n00d07 Return
+wire n00d00.value n00d01.value
+wire n00d00.then n00d02.in
+wire n00d02.then n00d03.in
+wire n00d01.Min n00d03.value
+wire n00d03.then n00d04.in
+wire n00d04.then n00d05.in
+wire n00d01.Max n00d05.value
+wire n00d05.then n00d06.in
+wire n00d06.then n00d07.in
+
+function m00e Append
+	doc "Appends the plane as (Normal.X, Normal.Y, Normal.Z, D)."
+param value Plane
+sheet body
+node n00e00 Entry
+node n00e01 Break Core.Plane
+node n00e02 Break Core.Vec3
+node n00e03 Call this.Append(StringView)
+	in text "("
+node n00e04 Call this.Append(float)
+node n00e05 Call this.Append(StringView)
+	in text ", "
+node n00e06 Call this.Append(float)
+node n00e07 Call this.Append(StringView)
+	in text ", "
+node n00e08 Call this.Append(float)
+node n00e09 Call this.Append(StringView)
+	in text ", "
+node n00e0a Call this.Append(float)
+node n00e0b Call this.Append(StringView)
+	in text ")"
+node n00e0c Return
+wire n00e00.value n00e01.value
+wire n00e01.Normal n00e02.value
+wire n00e00.then n00e03.in
+wire n00e03.then n00e04.in
+wire n00e02.X n00e04.value
+wire n00e04.then n00e05.in
+wire n00e05.then n00e06.in
+wire n00e02.Y n00e06.value
+wire n00e06.then n00e07.in
+wire n00e07.then n00e08.in
+wire n00e02.Z n00e08.value
+wire n00e08.then n00e09.in
+wire n00e09.then n00e0a.in
+wire n00e01.D n00e0a.value
+wire n00e0a.then n00e0b.in
+wire n00e0b.then n00e0c.in
+
+function m00f Append
+	doc "Appends the ray as [(Origin), (Direction)]."
+param value Ray
+sheet body
+node n00f00 Entry
+node n00f01 Break Core.Ray
+node n00f02 Call this.Append(StringView)
+	in text "["
+node n00f03 Call this.Append(Vec3)
+node n00f04 Call this.Append(StringView)
+	in text ", "
+node n00f05 Call this.Append(Vec3)
+node n00f06 Call this.Append(StringView)
+	in text "]"
+node n00f07 Return
+wire n00f00.value n00f01.value
+wire n00f00.then n00f02.in
+wire n00f02.then n00f03.in
+wire n00f01.Origin n00f03.value
+wire n00f03.then n00f04.in
+wire n00f04.then n00f05.in
+wire n00f01.Direction n00f05.value
+wire n00f05.then n00f06.in
+wire n00f06.then n00f07.in
+
+function m00g Append
+	doc "Appends the transform as [(Translation), (Rotation), (Scale)]."
+param value Transform
+sheet body
+node n00g00 Entry
+node n00g01 Break Core.Transform
+node n00g02 Call this.Append(StringView)
+	in text "["
+node n00g03 Call this.Append(Vec3)
+node n00g04 Call this.Append(StringView)
+	in text ", "
+node n00g05 Call this.Append(Quat)
+node n00g06 Call this.Append(StringView)
+	in text ", "
+node n00g07 Call this.Append(Vec3)
+node n00g08 Call this.Append(StringView)
+	in text "]"
+node n00g09 Return
+wire n00g00.value n00g01.value
+wire n00g00.then n00g02.in
+wire n00g02.then n00g03.in
+wire n00g01.Translation n00g03.value
+wire n00g03.then n00g04.in
+wire n00g04.then n00g05.in
+wire n00g01.Rotation n00g05.value
+wire n00g05.then n00g06.in
+wire n00g06.then n00g07.in
+wire n00g01.Scale n00g07.value
+wire n00g07.then n00g08.in
+wire n00g08.then n00g09.in

@@ -1,0 +1,60 @@
+# treadle 1
+type RefFields class
+	namespace M2
+	static
+	doc "Set of a field whose Receiver is a struct place (Language.md 2.2): through a ref parameter the caller's variable changes; on a local variable or a struct Local the place changes. Run prints 41, 2, 0, 9."
+
+function f0001 SetX
+	static
+	doc "Writes `x` into the mX field of the struct the caller passes by ref."
+param p ThisValue
+	mode ref
+param x int
+sheet body
+node a1 Entry
+node a2 Set M2.ThisValue.mX
+node a3 Return
+wire a1.then a2.in
+wire a1.p a2.receiver
+wire a1.x a2.value
+wire a2.then a3.in
+
+function f0002 Run
+	static
+local s ThisValue
+sheet body
+node b1 Entry
+node b2 Get local:s
+node b3 Set M2.ThisValue.mY
+	in value 2
+node b4 Call M2.RefFields.SetX
+	in x 41
+node b5 Get local:s
+node b6 Break M2.ThisValue
+node b7 Call Console.WriteLine(int)
+node b8 Call Console.WriteLine(int)
+node b9 Local M2.ThisValue
+node c1 Set M2.ThisValue.mY
+	in value 9
+node c2 Break M2.ThisValue
+node c4 Call Console.WriteLine(int)
+node c5 Call Console.WriteLine(int)
+node c6 Return
+wire b1.then b3.in
+wire b2.value b3.receiver
+wire b3.then b4.in
+wire b2.value b4.p
+wire b5.value b6.value
+wire b4.then b7.in
+wire b6.mX b7.value
+wire b7.then b8.in
+wire b6.mY b8.value
+wire b8.then b9.in
+wire b9.then c1.in
+wire b9.object c1.receiver
+wire b9.object c2.value
+wire c1.then c4.in
+wire c2.mX c4.value
+wire c4.then c5.in
+wire c2.mY c5.value
+wire c5.then c6.in

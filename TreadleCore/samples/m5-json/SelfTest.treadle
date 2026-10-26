@@ -1,0 +1,1020 @@
+# treadle 1
+type SelfTest class
+	namespace Json
+	static
+	doc "The built-in cases run by `--selftest`: valid and invalid documents, escapes and unicode, 500 levels of nesting, a generated 1 MB array (timed), trailing commas, exact error positions and the compact and pretty texts. Run stops at the first failing case."
+
+function m0001 ParseText
+	static
+	returns Result<Json.JsonValue,Json.ParseError>
+	doc "Parses `text` with a Local Parser."
+param text StringView
+sheet body
+node a000 Entry
+node a001 Local Json.Parser
+node a002 Call Json.Parser.Parse
+node a003 Return
+wire a000.then a001.in
+wire a000.text a001.text
+wire a001.then a002.in
+wire a001.object a002.receiver
+wire a002.then a003.in
+wire a002.result a003.value
+
+function m0002 Report
+	static
+	doc "Prints `selftest FAILED: <name>: <detail>`."
+param name StringView
+param detail StringView
+sheet body
+node b000 Entry
+node b001 Local String
+	set ctor ()
+node b002 Call String.AppendF
+	in format "selftest FAILED: {0}: {1}"
+node b003 Call Console.WriteLine(String)
+node b004 Return
+wire b000.then b001.in
+wire b000.name b002.arg0
+wire b000.detail b002.arg1
+wire b001.then b002.in
+wire b001.object b002.receiver
+wire b002.then b003.in
+wire b001.object b003.value
+wire b003.then b004.in
+
+function m0003 CheckValid
+	static
+	returns bool
+	doc "`text` must parse, hold `nodes` values nested `depth` deep, and round-trip."
+param name StringView
+param text StringView
+param nodes int
+param depth int
+local good bool
+sheet body
+node c000 Entry
+node c001 Call Json.SelfTest.ParseText
+node c002 ResultMatch
+node c003 Local String
+	set ctor ()
+node c004 Call Json.ParseError.Describe
+node c005 Call Json.SelfTest.Report
+node c006 Return
+	in value false
+node c007 Call Json.Stats.Of
+node c008 Break Json.Stats
+node c009 Operator ==
+node c00a Operator ==
+node c00b Operator &&
+node c00c Call Json.Equality.RoundTrips
+node c00d Operator &&
+node c00e Set local:good
+node c00f Call Json.JsonValue.Free
+node c00g Get local:good
+node c00h Branch
+node c00i Return
+	in value true
+node c00j Call Json.SelfTest.Report
+	in detail "wrong node count or depth, or no round trip"
+node c00k Fatal
+	in message "unreachable: both arms return"
+wire c000.then c001.in
+wire c000.text c001.text
+wire c001.then c002.in
+wire c001.result c002.result
+wire c002.err c003.in
+wire c003.then c004.in
+wire c003.object c004.into
+wire c002.error c004.receiver
+wire c003.object c005.detail
+wire c004.then c005.in
+wire c000.name c005.name
+wire c005.then c006.in
+wire c00j.then c006.in
+wire c002.ok c007.in
+wire c002.value c007.value
+wire c007.result c008.value
+wire c008.Nodes c009.a
+wire c000.nodes c009.b
+wire c008.Depth c00a.a
+wire c000.depth c00a.b
+wire c009.result c00b.a
+wire c00a.result c00b.b
+wire c007.then c00c.in
+wire c002.value c00c.value
+wire c00b.result c00d.a
+wire c00c.result c00d.b
+wire c00c.then c00e.in
+wire c00d.result c00e.value
+wire c00e.then c00f.in
+wire c002.value c00f.value
+wire c00g.value c00h.condition
+wire c00f.then c00h.in
+wire c00h.true c00i.in
+wire c00h.false c00j.in
+wire c000.name c00j.name
+wire c002.done c00k.in
+
+function m0004 CheckError
+	static
+	returns bool
+	doc "`text` must not parse; when `line` is not 0 the error must be at that line and column."
+param name StringView
+param text StringView
+param line int
+param column int
+sheet body
+node d000 Entry
+node d001 Call Json.SelfTest.ParseText
+node d002 ResultMatch
+node d003 Call Json.JsonValue.Free
+node d004 Call Json.SelfTest.Report
+	in detail "parsed, but it is not valid JSON"
+node d005 Return
+	in value false
+node d006 Break Json.ParseError
+node d007 Operator ==
+	in b 0
+node d008 Operator ==
+node d009 Operator ==
+node d00a Operator &&
+node d00b Operator ||
+node d00c Branch
+node d00d Return
+	in value true
+node d00e Local String
+	set ctor ()
+node d00f Call Json.ParseError.Describe
+node d00g Call Json.SelfTest.Report
+node d00h Fatal
+	in message "unreachable: both arms return"
+wire d000.then d001.in
+wire d000.text d001.text
+wire d001.then d002.in
+wire d001.result d002.result
+wire d002.ok d003.in
+wire d002.value d003.value
+wire d003.then d004.in
+wire d000.name d004.name
+wire d004.then d005.in
+wire d00g.then d005.in
+wire d002.error d006.value
+wire d000.line d007.a
+wire d006.Line d008.a
+wire d000.line d008.b
+wire d006.Column d009.a
+wire d000.column d009.b
+wire d008.result d00a.a
+wire d009.result d00a.b
+wire d007.result d00b.a
+wire d00a.result d00b.b
+wire d00b.result d00c.condition
+wire d002.err d00c.in
+wire d00c.true d00d.in
+wire d00c.false d00e.in
+wire d00e.then d00f.in
+wire d00e.object d00f.into
+wire d002.error d00f.receiver
+wire d00e.object d00g.detail
+wire d00f.then d00g.in
+wire d000.name d00g.name
+wire d002.done d00h.in
+
+function m0005 CheckText
+	static
+	returns bool
+	doc "`json` must parse to a string equal to `expected` and round-trip."
+param name StringView
+param json StringView
+param expected StringView
+local good bool
+sheet body
+node e000 Entry
+node e001 Call Json.SelfTest.ParseText
+node e002 ResultMatch
+node e003 Local String
+	set ctor ()
+node e004 Call Json.ParseError.Describe
+node e005 Call Json.SelfTest.Report
+node e006 Return
+	in value false
+node e007 IsCase Json.JsonValue.Text
+node e008 Call String.Equals
+node e009 Operator &&
+node e00a Call Json.Equality.RoundTrips
+node e00b Operator &&
+node e00c Set local:good
+node e00d Local String
+	set ctor ()
+node e00e Call String.AppendF
+	in format "text equal {0}, round trip {1}, expected {2}; read "
+node e00f Call Json.Writer.Write
+	in pretty false
+	in level 0
+node e00g Call Json.JsonValue.Free
+node e00h Get local:good
+node e00i Branch
+node e00j Return
+	in value true
+node e00k Call Json.SelfTest.Report
+node e00l Fatal
+	in message "unreachable: both arms return"
+wire e000.then e001.in
+wire e000.json e001.text
+wire e001.then e002.in
+wire e001.result e002.result
+wire e002.err e003.in
+wire e003.then e004.in
+wire e003.object e004.into
+wire e002.error e004.receiver
+wire e003.object e005.detail
+wire e004.then e005.in
+wire e000.name e005.name
+wire e005.then e006.in
+wire e00k.then e006.in
+wire e002.value e007.value
+wire e000.expected e008.other
+wire e007.value e008.receiver
+wire e007.result e009.a
+wire e008.result e009.b
+wire e002.ok e00a.in
+wire e002.value e00a.value
+wire e009.result e00b.a
+wire e00a.result e00b.b
+wire e00a.then e00c.in
+wire e00b.result e00c.value
+wire e00c.then e00d.in
+wire e009.result e00e.arg0
+wire e00a.result e00e.arg1
+wire e000.expected e00e.arg2
+wire e00d.then e00e.in
+wire e00d.object e00e.receiver
+wire e00e.then e00f.in
+wire e00d.object e00f.into
+wire e002.value e00f.value
+wire e00f.then e00g.in
+wire e002.value e00g.value
+wire e00h.value e00i.condition
+wire e00g.then e00i.in
+wire e00i.true e00j.in
+wire e00d.object e00k.detail
+wire e00i.false e00k.in
+wire e000.name e00k.name
+wire e002.done e00l.in
+
+function m0006 QueryIs
+	static
+	returns bool
+	doc "True when Query.Find(root, path) written compact is `expected` (`none` for no value)."
+param root Json.JsonValue
+param path StringView
+param expected StringView
+sheet body
+node f000 Entry
+node f001 Local String
+	set ctor ()
+node f002 Call Json.Query.Find
+node f003 IsCase Option<Json.JsonValue>.Some
+node f004 Branch
+node f005 Call Json.Writer.Write
+	in pretty false
+	in level 0
+node f006 Call String.Append(StringView)
+	in text "none"
+node f007 Call String.Equals
+node f008 Return
+wire f000.then f001.in
+wire f001.then f002.in
+wire f000.path f002.path
+wire f000.root f002.root
+wire f002.result f003.value
+wire f003.result f004.condition
+wire f002.then f004.in
+wire f004.true f005.in
+wire f001.object f005.into
+wire f003.value f005.value
+wire f004.false f006.in
+wire f001.object f006.receiver
+wire f000.expected f007.other
+wire f001.object f007.receiver
+wire f005.then f008.in
+wire f006.then f008.in
+wire f007.result f008.value
+
+function m0007 Nested
+	static
+	doc "Appends `count` opening brackets, then `count` closing ones."
+param count int
+param into String
+sheet body
+node g000 Entry
+node g001 For
+	in start 0
+node g002 Call String.Append(char8)
+	in value 91
+node g003 For
+	in start 0
+node g004 Call String.Append(char8)
+	in value 93
+node g005 Return
+wire g000.count g001.count
+wire g000.then g001.in
+wire g001.body g002.in
+wire g000.into g002.receiver
+wire g000.count g003.count
+wire g001.done g003.in
+wire g003.body g004.in
+wire g000.into g004.receiver
+wire g003.done g005.in
+
+function m0008 CaseScalars
+	static
+	returns bool
+	doc "Every scalar kind in one array: 9 values, depth 2."
+sheet body
+node h000 Entry
+node h001 Call Json.SelfTest.CheckValid
+	in name "scalars"
+	in text "[null, true, false, 0, -1.5e3, \"x\", 1e-2, 123456789012]"
+	in nodes 9
+	in depth 2
+node h002 Return
+wire h000.then h001.in
+wire h001.then h002.in
+wire h001.result h002.value
+
+function m0009 CaseQuery
+	static
+	returns bool
+	doc "Path lookups: members, indexes, misses and a subtree."
+local v Json.JsonValue
+local good bool
+sheet body
+node j000 Entry
+node j001 Call Json.SelfTest.ParseText
+	in text "{\"a\": {\"b\": [10, 20, {\"c\": \"deep\"}]}, \"n\": -0.5, \"s\": \"x\\u00e9\"}"
+node j002 ResultMatch
+node j003 Call Json.SelfTest.Report
+	in name "query"
+	in detail "did not parse"
+node j004 Return
+	in value false
+node j005 Set local:v
+node j006 Get local:v
+node j007 Call Json.SelfTest.QueryIs
+	in path "a.b[2].c"
+	in expected "\"deep\""
+node j008 Call Json.SelfTest.QueryIs
+	in path "a.b[1]"
+	in expected "20"
+node j009 Call Json.SelfTest.QueryIs
+	in path "a.b[3]"
+	in expected "none"
+node j00a Call Json.SelfTest.QueryIs
+	in path "a.x.y"
+	in expected "none"
+node j00b Call Json.SelfTest.QueryIs
+	in path "a.b"
+	in expected "[10,20,{\"c\":\"deep\"}]"
+node j00c Call Json.SelfTest.QueryIs
+	in path "n"
+	in expected "-0.5"
+node j00d Call Json.SelfTest.QueryIs
+	in path "s"
+	in expected "\"xé\""
+node j00e Call Json.SelfTest.QueryIs
+	in path "n[0]"
+	in expected "none"
+node j00f Operator &&
+node j00g Operator &&
+node j00h Operator &&
+node j00i Operator &&
+node j00j Operator &&
+node j00k Operator &&
+node j00l Operator &&
+node j00m Set local:good
+node j00n Call Json.JsonValue.Free
+node j00o Get local:good
+node j00p Branch
+node j00q Return
+	in value true
+node j00r Call Json.SelfTest.Report
+	in name "query"
+	in detail "a path gave the wrong value"
+node j00s Fatal
+	in message "unreachable: both arms return"
+wire j000.then j001.in
+wire j001.then j002.in
+wire j001.result j002.result
+wire j002.err j003.in
+wire j003.then j004.in
+wire j00r.then j004.in
+wire j002.ok j005.in
+wire j002.value j005.value
+wire j005.then j007.in
+wire j006.value j007.root
+wire j007.then j008.in
+wire j006.value j008.root
+wire j008.then j009.in
+wire j006.value j009.root
+wire j009.then j00a.in
+wire j006.value j00a.root
+wire j00a.then j00b.in
+wire j006.value j00b.root
+wire j00b.then j00c.in
+wire j006.value j00c.root
+wire j00c.then j00d.in
+wire j006.value j00d.root
+wire j00d.then j00e.in
+wire j006.value j00e.root
+wire j007.result j00f.a
+wire j008.result j00f.b
+wire j00f.result j00g.a
+wire j009.result j00g.b
+wire j00g.result j00h.a
+wire j00a.result j00h.b
+wire j00h.result j00i.a
+wire j00b.result j00i.b
+wire j00i.result j00j.a
+wire j00c.result j00j.b
+wire j00j.result j00k.a
+wire j00d.result j00k.b
+wire j00k.result j00l.a
+wire j00e.result j00l.b
+wire j00e.then j00m.in
+wire j00l.result j00m.value
+wire j00m.then j00n.in
+wire j006.value j00n.value
+wire j00o.value j00p.condition
+wire j00n.then j00p.in
+wire j00p.true j00q.in
+wire j00p.false j00r.in
+wire j002.done j00s.in
+
+function m0010 CaseEscapes
+	static
+	returns bool
+	doc "Every short escape and a \\u escape decode to the right bytes and are written back."
+sheet body
+node k000 Entry
+node k001 Local String
+	set ctor (StringView)
+	in text "q\"b\\s/n\nt\tr\rb\u0008f"
+node k002 Call String.Append(char8)
+	in value 12
+node k003 Call String.Append(StringView)
+	in text "uA"
+node k004 Call Json.SelfTest.CheckText
+	in name "string escapes"
+	in json "\"q\\\"b\\\\s\\/n\\nt\\tr\\rb\\bf\\fu\\u0041\""
+node k005 Return
+wire k000.then k001.in
+wire k001.then k002.in
+wire k001.object k002.receiver
+wire k002.then k003.in
+wire k001.object k003.receiver
+wire k001.object k004.expected
+wire k003.then k004.in
+wire k004.then k005.in
+wire k004.result k005.value
+
+function m0011 CaseUnicode
+	static
+	returns bool
+	doc "\\u escapes (BMP and a surrogate pair) and raw UTF-8 give the same bytes."
+sheet body
+node n000 Entry
+node n001 Call Json.SelfTest.CheckText
+	in name "unicode"
+	in json "\"\\u00e9\\u4E2D\\ud83d\\ude00 raw é中😀\""
+	in expected "é中😀 raw é中😀"
+node n002 Return
+wire n000.then n001.in
+wire n001.then n002.in
+wire n001.result n002.value
+
+function m0012 CaseDeep
+	static
+	returns bool
+	doc "500 nested arrays parse (500 values, depth 500); 513 are refused at the 513th bracket (the parser limit is 512)."
+sheet body
+node p000 Entry
+node p001 Local String
+	set ctor ()
+node p002 Call Json.SelfTest.Nested
+	in count 500
+node p003 Call Json.SelfTest.CheckValid
+	in name "500 levels"
+	in nodes 500
+	in depth 500
+node p004 Local String
+	set ctor ()
+node p005 Call Json.SelfTest.Nested
+	in count 513
+node p006 Call Json.SelfTest.CheckError
+	in name "513 levels"
+	in line 1
+	in column 513
+node p007 Operator &&
+node p008 Return
+wire p000.then p001.in
+wire p001.then p002.in
+wire p001.object p002.into
+wire p002.then p003.in
+wire p001.object p003.text
+wire p003.then p004.in
+wire p004.then p005.in
+wire p004.object p005.into
+wire p005.then p006.in
+wire p004.object p006.text
+wire p003.result p007.a
+wire p006.result p007.b
+wire p006.then p008.in
+wire p007.result p008.value
+
+function m0013 CaseLarge
+	static
+	returns bool
+	doc "A generated array of about 1 MB (objects with numbers, strings, a nested array): parsed and written with the time and the rate printed, the element count checked, the compact text equal to the input and both texts round-tripped."
+local count int
+local good bool
+sheet body
+node q000 Entry
+node q001 Local String
+	set ctor ()
+node q002 Call String.Append(char8)
+	in value 91
+node q003 Call String.Length
+node q004 Operator <
+	in b 1048576
+node q005 While
+node q006 Get local:count
+node q007 Operator >
+	in b 0
+node q008 Branch
+node q009 Call String.Append(char8)
+	in value 44
+node q00a Cast double
+node q00b Operator *
+	in b 0.25
+node q00c Call String.AppendF
+	in format "{{\"id\":{0},\"name\":\"item {0}\",\"ok\":true,\"tags\":[\"a\",\"b\\n\"],\"v\":{1}}}"
+node q00d Set local:count
+	set op +=
+	in value 1
+node q00e Call String.Append(char8)
+	in value 93
+node q00f Local Stopwatch
+	set ctor (bool)
+	in startNow true
+node q00g Call Json.SelfTest.ParseText
+node q00h Call Stopwatch.Stop
+node q00i Call Stopwatch.ElapsedMicroseconds
+node q00j ResultMatch
+node q00k Call Json.SelfTest.Report
+	in name "1 MB array"
+	in detail "did not parse"
+node q00l Return
+	in value false
+node q00m Local Stopwatch
+	set ctor (bool)
+	in startNow true
+node q00n Local String
+	set ctor ()
+node q00o Call Json.Writer.Write
+	in pretty false
+	in level 0
+node q00p Call Stopwatch.Stop
+node q00q Call Stopwatch.ElapsedMicroseconds
+node q00r Call String.Length
+node q00s Cast double
+node q00t Cast int
+node q00u Cast int
+node q00v Operator +
+	in b 1
+node q00w Cast double
+node q00x Operator /
+node q00y Call Json.JsonValue.Count
+node q00z Local String
+	set ctor ()
+node q010 Call String.AppendF
+	in format "1 MB array: {0} bytes, {1} elements; parse {2} us ({3:F1} MB/s), compact write {4} us"
+node q011 Call Console.WriteLine(String)
+node q012 Operator ==
+node q013 Call String.Equals
+node q014 Call Json.Equality.RoundTrips
+node q015 Operator &&
+node q016 Operator &&
+node q017 Set local:good
+node q018 Call Json.JsonValue.Free
+node q019 Get local:good
+node q01a Branch
+node q01b Return
+	in value true
+node q01c Call Json.SelfTest.Report
+	in name "1 MB array"
+	in detail "wrong element count, compact text or round trip"
+node q01d Fatal
+	in message "unreachable: both arms return"
+wire q000.then q001.in
+wire q001.then q002.in
+wire q001.object q002.receiver
+wire q001.object q003.receiver
+wire q003.result q004.a
+wire q004.result q005.condition
+wire q002.then q005.in
+wire q006.value q007.a
+wire q007.result q008.condition
+wire q005.body q008.in
+wire q008.true q009.in
+wire q001.object q009.receiver
+wire q006.value q00a.value
+wire q00a.result q00b.a
+wire q006.value q00c.arg0
+wire q00b.result q00c.arg1
+wire q008.false q00c.in
+wire q009.then q00c.in
+wire q001.object q00c.receiver
+wire q00c.then q00d.in
+wire q005.done q00e.in
+wire q001.object q00e.receiver
+wire q00e.then q00f.in
+wire q00f.then q00g.in
+wire q001.object q00g.text
+wire q00g.then q00h.in
+wire q00f.object q00h.receiver
+wire q00h.then q00i.in
+wire q00f.object q00i.receiver
+wire q00i.then q00j.in
+wire q00g.result q00j.result
+wire q00j.err q00k.in
+wire q00k.then q00l.in
+wire q01c.then q00l.in
+wire q00j.ok q00m.in
+wire q00m.then q00n.in
+wire q00n.then q00o.in
+wire q00n.object q00o.into
+wire q00j.value q00o.value
+wire q00o.then q00p.in
+wire q00m.object q00p.receiver
+wire q00p.then q00q.in
+wire q00m.object q00q.receiver
+wire q001.object q00r.receiver
+wire q00r.result q00s.value
+wire q00i.result q00t.value
+wire q00q.result q00u.value
+wire q00t.result q00v.a
+wire q00v.result q00w.value
+wire q00s.result q00x.a
+wire q00w.result q00x.b
+wire q00j.value q00y.value
+wire q00q.then q00z.in
+wire q00r.result q010.arg0
+wire q00y.result q010.arg1
+wire q00t.result q010.arg2
+wire q00x.result q010.arg3
+wire q00u.result q010.arg4
+wire q00z.then q010.in
+wire q00z.object q010.receiver
+wire q010.then q011.in
+wire q00z.object q011.value
+wire q00y.result q012.a
+wire q006.value q012.b
+wire q001.object q013.other
+wire q00n.object q013.receiver
+wire q011.then q014.in
+wire q00j.value q014.value
+wire q012.result q015.a
+wire q013.result q015.b
+wire q015.result q016.a
+wire q014.result q016.b
+wire q014.then q017.in
+wire q016.result q017.value
+wire q017.then q018.in
+wire q00j.value q018.value
+wire q019.value q01a.condition
+wire q018.then q01a.in
+wire q01a.true q01b.in
+wire q01a.false q01c.in
+wire q00j.done q01d.in
+
+function m0014 CaseTrailingArray
+	static
+	returns bool
+	doc "A trailing comma in an array is an error at the closing bracket."
+sheet body
+node r000 Entry
+node r001 Call Json.SelfTest.CheckError
+	in name "trailing comma in an array"
+	in text "[1,2,]"
+	in line 1
+	in column 6
+node r002 Return
+wire r000.then r001.in
+wire r001.then r002.in
+wire r001.result r002.value
+
+function m0015 CaseTrailingObject
+	static
+	returns bool
+	doc "A trailing comma in an object is an error at the closing brace."
+sheet body
+node s000 Entry
+node s001 Call Json.SelfTest.CheckError
+	in name "trailing comma in an object"
+	in text "{\"a\":1,}"
+	in line 1
+	in column 8
+node s002 Return
+wire s000.then s001.in
+wire s001.then s002.in
+wire s001.result s002.value
+
+function m0016 CaseInvalid
+	static
+	returns bool
+	doc "Documents that are not JSON are refused; the multi-line one at the exact line and column."
+sheet body
+node t000 Entry
+node t001 Call Json.SelfTest.CheckError
+	in name "unterminated string"
+	in text "\"abc"
+	in line 0
+	in column 0
+node t002 Call Json.SelfTest.CheckError
+	in name "invalid escape"
+	in text "\"\\x\""
+	in line 0
+	in column 0
+node t003 Call Json.SelfTest.CheckError
+	in name "lone high surrogate"
+	in text "\"\\ud800\""
+	in line 0
+	in column 0
+node t004 Call Json.SelfTest.CheckError
+	in name "lone low surrogate"
+	in text "\"\\udc00\""
+	in line 0
+	in column 0
+node t005 Call Json.SelfTest.CheckError
+	in name "short \\u escape"
+	in text "\"\\u12\""
+	in line 0
+	in column 0
+node t006 Call Json.SelfTest.CheckError
+	in name "missing colon"
+	in text "{\"a\" 1}"
+	in line 0
+	in column 0
+node t007 Call Json.SelfTest.CheckError
+	in name "text after the value"
+	in text "[1] 2"
+	in line 0
+	in column 0
+node t008 Call Json.SelfTest.CheckError
+	in name "empty document"
+	in text ""
+	in line 0
+	in column 0
+node t009 Call Json.SelfTest.CheckError
+	in name "bad literal"
+	in text "[tru]"
+	in line 0
+	in column 0
+node t00a Call Json.SelfTest.CheckError
+	in name "duplicate key"
+	in text "{\"a\":1,\"a\":2}"
+	in line 0
+	in column 0
+node t00b Call Json.SelfTest.CheckError
+	in name "bad number"
+	in text "[1.2.3]"
+	in line 0
+	in column 0
+node t00c Call Json.SelfTest.CheckError
+	in name "raw tab in a string"
+	in text "\"a\tb\""
+	in line 0
+	in column 0
+node t00d Call Json.SelfTest.CheckError
+	in name "unclosed array"
+	in text "[1, [2, 3]"
+	in line 0
+	in column 0
+node t00e Call Json.SelfTest.CheckError
+	in name "error position"
+	in text "{\n  \"a\": tru\n}"
+	in line 2
+	in column 8
+node t00f Operator &&
+node t00g Operator &&
+node t00h Operator &&
+node t00i Operator &&
+node t00j Operator &&
+node t00k Operator &&
+node t00l Operator &&
+node t00m Operator &&
+node t00n Operator &&
+node t00o Operator &&
+node t00p Operator &&
+node t00q Operator &&
+node t00r Operator &&
+node t00s Return
+wire t000.then t001.in
+wire t001.then t002.in
+wire t002.then t003.in
+wire t003.then t004.in
+wire t004.then t005.in
+wire t005.then t006.in
+wire t006.then t007.in
+wire t007.then t008.in
+wire t008.then t009.in
+wire t009.then t00a.in
+wire t00a.then t00b.in
+wire t00b.then t00c.in
+wire t00c.then t00d.in
+wire t00d.then t00e.in
+wire t001.result t00f.a
+wire t002.result t00f.b
+wire t00f.result t00g.a
+wire t003.result t00g.b
+wire t00g.result t00h.a
+wire t004.result t00h.b
+wire t00h.result t00i.a
+wire t005.result t00i.b
+wire t00i.result t00j.a
+wire t006.result t00j.b
+wire t00j.result t00k.a
+wire t007.result t00k.b
+wire t00k.result t00l.a
+wire t008.result t00l.b
+wire t00l.result t00m.a
+wire t009.result t00m.b
+wire t00m.result t00n.a
+wire t00a.result t00n.b
+wire t00n.result t00o.a
+wire t00b.result t00o.b
+wire t00o.result t00p.a
+wire t00c.result t00p.b
+wire t00p.result t00q.a
+wire t00d.result t00q.b
+wire t00q.result t00r.a
+wire t00e.result t00r.b
+wire t00e.then t00s.in
+wire t00r.result t00s.value
+
+function m0017 CaseRoundTrip
+	static
+	returns bool
+	doc "The exact compact and pretty texts of a mixed document (keys sorted, empty containers, an escape, 15 and 17 digit numbers) and their round trips."
+local v Json.JsonValue
+local good bool
+sheet body
+node v000 Entry
+node v001 Call Json.SelfTest.ParseText
+	in text "{\"b\": [1, 2.5, {}, [], \"s\\n\"], \"a\": null, \"c\": {\"z\": 0.1, \"y\": 1e300, \"x\": -12345678901234, \"w\": true, \"v\": 0.30000000000000004}}"
+node v002 ResultMatch
+node v003 Call Json.SelfTest.Report
+	in name "round trip"
+	in detail "did not parse"
+node v004 Return
+	in value false
+node v005 Set local:v
+node v006 Get local:v
+node v007 Local String
+	set ctor ()
+node v008 Call Json.Writer.Write
+	in pretty false
+	in level 0
+node v009 Local String
+	set ctor ()
+node v00a Call Json.Writer.Write
+	in pretty true
+	in level 0
+node v00b Call String.Equals
+	in other "{\"a\":null,\"b\":[1,2.5,{},[],\"s\\n\"],\"c\":{\"v\":0.30000000000000004,\"w\":true,\"x\":-12345678901234,\"y\":1E+300,\"z\":0.1}}"
+node v00c Call String.Equals
+	in other "{\n  \"a\": null,\n  \"b\": [\n    1,\n    2.5,\n    {},\n    [],\n    \"s\\n\"\n  ],\n  \"c\": {\n    \"v\": 0.30000000000000004,\n    \"w\": true,\n    \"x\": -12345678901234,\n    \"y\": 1E+300,\n    \"z\": 0.1\n  }\n}"
+node v00d Call Json.Equality.RoundTrips
+node v00e Operator &&
+node v00f Operator &&
+node v00g Set local:good
+node v00h Call Json.JsonValue.Free
+node v00i Get local:good
+node v00j Branch
+node v00k Return
+	in value true
+node v00l Call Json.SelfTest.Report
+	in name "round trip"
+	in detail "wrong compact or pretty text, or no round trip"
+node v00m Fatal
+	in message "unreachable: both arms return"
+wire v000.then v001.in
+wire v001.then v002.in
+wire v001.result v002.result
+wire v002.err v003.in
+wire v003.then v004.in
+wire v00l.then v004.in
+wire v002.ok v005.in
+wire v002.value v005.value
+wire v005.then v007.in
+wire v007.then v008.in
+wire v007.object v008.into
+wire v006.value v008.value
+wire v008.then v009.in
+wire v009.then v00a.in
+wire v009.object v00a.into
+wire v006.value v00a.value
+wire v007.object v00b.receiver
+wire v009.object v00c.receiver
+wire v00a.then v00d.in
+wire v006.value v00d.value
+wire v00b.result v00e.a
+wire v00c.result v00e.b
+wire v00e.result v00f.a
+wire v00d.result v00f.b
+wire v00d.then v00g.in
+wire v00f.result v00g.value
+wire v00g.then v00h.in
+wire v006.value v00h.value
+wire v00i.value v00j.condition
+wire v00h.then v00j.in
+wire v00j.true v00k.in
+wire v00j.false v00l.in
+wire v002.done v00m.in
+
+function m0018 Run
+	static
+	returns int
+	doc "Runs the ten cases in order; prints `selftest ok` and gives 0, or stops at the first failure (already printed) and gives 1."
+sheet body
+node w000 Entry
+node w001 Return
+	in value 1
+node w002 Call Json.SelfTest.CaseScalars
+node w003 Branch
+node w004 Call Json.SelfTest.CaseQuery
+node w005 Branch
+node w006 Call Json.SelfTest.CaseEscapes
+node w007 Branch
+node w008 Call Json.SelfTest.CaseUnicode
+node w009 Branch
+node w00a Call Json.SelfTest.CaseDeep
+node w00b Branch
+node w00c Call Json.SelfTest.CaseLarge
+node w00d Branch
+node w00e Call Json.SelfTest.CaseTrailingArray
+node w00f Branch
+node w00g Call Json.SelfTest.CaseTrailingObject
+node w00h Branch
+node w00i Call Json.SelfTest.CaseInvalid
+node w00j Branch
+node w00k Call Json.SelfTest.CaseRoundTrip
+node w00l Branch
+node w00m Call Console.WriteLine(StringView)
+	in text "selftest ok"
+node w00n Return
+	in value 0
+wire w003.false w001.in
+wire w005.false w001.in
+wire w007.false w001.in
+wire w009.false w001.in
+wire w00b.false w001.in
+wire w00d.false w001.in
+wire w00f.false w001.in
+wire w00h.false w001.in
+wire w00j.false w001.in
+wire w00l.false w001.in
+wire w000.then w002.in
+wire w002.result w003.condition
+wire w002.then w003.in
+wire w003.true w004.in
+wire w004.result w005.condition
+wire w004.then w005.in
+wire w005.true w006.in
+wire w006.result w007.condition
+wire w006.then w007.in
+wire w007.true w008.in
+wire w008.result w009.condition
+wire w008.then w009.in
+wire w009.true w00a.in
+wire w00a.result w00b.condition
+wire w00a.then w00b.in
+wire w00b.true w00c.in
+wire w00c.result w00d.condition
+wire w00c.then w00d.in
+wire w00d.true w00e.in
+wire w00e.result w00f.condition
+wire w00e.then w00f.in
+wire w00f.true w00g.in
+wire w00g.result w00h.condition
+wire w00g.then w00h.in
+wire w00h.true w00i.in
+wire w00i.result w00j.condition
+wire w00i.then w00j.in
+wire w00j.true w00k.in
+wire w00k.result w00l.condition
+wire w00k.then w00l.in
+wire w00l.true w00m.in
+wire w00m.then w00n.in

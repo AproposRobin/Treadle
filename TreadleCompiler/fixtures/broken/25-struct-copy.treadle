@@ -1,0 +1,26 @@
+# treadle 1
+# expect n3 value T3064
+type StructCopy struct
+	namespace Broken
+	doc "A struct with a destructor copied from one variable into another: both copies would be destroyed (or the copy never)."
+
+field mId int
+
+dtor d1
+sheet body
+node e1 Entry
+node e2 Return
+wire e1.then e2.in
+
+function f1 Run
+	static
+local a StructCopy
+local b StructCopy
+sheet body
+node n1 Entry
+node n2 Get local:a
+node n3 Set local:b
+node n4 Return
+wire n1.then n3.in
+wire n2.value n3.value
+wire n3.then n4.in

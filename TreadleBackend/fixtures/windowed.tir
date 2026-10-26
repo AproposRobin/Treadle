@@ -1,0 +1,33 @@
+# tir 1
+# kind windowed: a Windows-subsystem exe (no console window; Linux: an ordinary program). It writes a
+# file next to itself and a Console line: started with a pipe for stdout (the fixture runner, the
+# editor's Run), the line arrives there whatever the subsystem. The backend self test checks the
+# exe's PE subsystem (2, the GUI subsystem) and the file.
+program Windowed windowed
+entry Wd.Program.Main()
+
+func C.libc.fopen(char8*,char8*) void* import "fopen"
+func C.libc.fputs(char8*,void*) int32 import "fputs"
+func C.libc.fclose(void*) int32 import "fclose"
+
+unit Wd.Program
+type Wd.Program class
+
+func Wd.Program.Main() int static sheet "m1" display "Wd.Program.Main"
+	node a1 Entry
+	node a2 Call C.libc.fopen
+	node a3 Call C.libc.fputs
+	node a4 Call C.libc.fclose
+	node a5 Call Console.WriteLine(StringView)
+	node a6 Return 0
+	block b0
+		%n = const char8* "windowed.out" @a2.path
+		%m = const char8* "w" @a2.mode
+		%f = ccall void* C.libc.fopen(char8*,char8*) %n %m @a2
+		%t = const char8* "written by a windowed program\n" @a3.text
+		%w = ccall int32 C.libc.fputs(char8*,void*) %t %f @a3
+		%c = ccall int32 C.libc.fclose(void*) %f @a4
+		%sv = const StringView "hello from a windowed program" @a5.text
+		intrinsic void console.writeline %sv @a5
+		%zero = const int 0 @a6
+		ret %zero @a6

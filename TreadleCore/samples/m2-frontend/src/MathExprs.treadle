@@ -1,0 +1,129 @@
+# treadle 1
+type MathExprs class
+	namespace M2
+	static
+	doc "Math Expressions (Language.md 5.6): arithmetic, the power, comparisons and logic, ? :, bit operators and shifts, Math functions, the fields of a struct input, literal suffixes and int / float promotion. Run prints 43, 1027, true, 22, 266, 5, 23.5, 3.25, 25, 25."
+
+function x0001 Length
+	static
+	pure
+	returns float
+	doc "A Vec's length in one node."
+param v Vec
+sheet body
+node a1 Entry
+node a2 Math
+	set expr "Sqrt(v.X * v.X + v.Y * v.Y)"
+node a3 Return
+wire a1.v a2.v
+wire a1.then a3.in
+wire a2.result a3.value
+
+function x0002 Poly
+	static
+	pure
+	returns int
+	doc "x * x + 2 * x + 1 as a Math Expression."
+param x int
+sheet body
+node b1 Entry
+node b2 Math
+	set expr "x * x + 2 * x + 1"
+node b3 Return
+wire b1.x b2.x
+wire b1.then b3.in
+wire b2.result b3.value
+
+function x0003 PolyNodes
+	static
+	pure
+	returns int
+	doc "Poly as Operator nodes: its Sheet IR is Poly's (the frontend self test compares them)."
+param x int
+sheet body
+node c1 Entry
+node c2 Operator *
+node c3 Operator *
+	in a 2
+node c4 Operator +
+node c5 Operator +
+	in b 1
+node c6 Return
+wire c1.x c2.a
+wire c1.x c2.b
+wire c1.x c3.b
+wire c2.result c4.a
+wire c3.result c4.b
+wire c4.result c5.a
+wire c1.then c6.in
+wire c5.result c6.value
+
+function x0004 Run
+	static
+sheet body
+node d1 Entry
+node d2 Math
+	set expr "a * b + 1"
+	in a 6
+	in b 7
+node d3 Call Console.WriteLine(int)
+node d4 Math
+	set expr "2 ** 10 - -3"
+node d5 Call Console.WriteLine(double)
+node d6 Math
+	set expr "x > 3 && x < 10 || !flag"
+	in x 5
+	in flag false
+node d7 Call Console.WriteLine(bool)
+node d8 Math
+	set expr "n % 2 == 0 ? n / 2 : 3 * n + 1"
+	in n 7
+node d9 Call Console.WriteLine(int)
+node e1 Math
+	set expr "(m >> 4 & 0xF) | 1 << 8"
+	in m 171
+node e2 Call Console.WriteLine(int)
+node e3 Make M2.Vec
+	in X 3
+	in Y 4
+node e4 Call M2.MathExprs.Length
+node e5 Call Console.WriteLine(float)
+node e6 Math
+	set expr "Clamp(v, 0, 10) * 2 + Abs(d) + Max(1, 2)"
+	in v 15
+	in d -1.5
+node e7 Call Console.WriteLine(double)
+node e8 Math
+	set expr "i / 2 + f * 0.5f"
+	in i 7
+	in f 0.5f
+node e9 Call Console.WriteLine(float)
+node f1 Call M2.MathExprs.Poly
+	in x 4
+node f2 Call Console.WriteLine(int)
+node f3 Call M2.MathExprs.PolyNodes
+	in x 4
+node f4 Call Console.WriteLine(int)
+node f5 Return
+wire d1.then d3.in
+wire d2.result d3.value
+wire d3.then d5.in
+wire d4.result d5.value
+wire d5.then d7.in
+wire d6.result d7.value
+wire d7.then d9.in
+wire d8.result d9.value
+wire d9.then e2.in
+wire e1.result e2.value
+wire e3.value e4.v
+wire e2.then e5.in
+wire e4.result e5.value
+wire e5.then e7.in
+wire e6.result e7.value
+wire e7.then e9.in
+wire e8.result e9.value
+wire e9.then f2.in
+wire f1.result f2.value
+wire f2.then f4.in
+wire f3.result f4.value
+wire f4.then f5.in

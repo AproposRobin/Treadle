@@ -1,0 +1,317 @@
+# treadle 1
+type ContainersMain class
+	namespace Cx
+	static
+	doc "Core containers, wave 3: List.BinarySearch (found and the insertion point), List.Slice as a Span (For Each, Get [ ], Span.Slice, IsEmpty), HashSet Union / Intersect / Except (ints and StringViews), Stack and Queue TryPeek."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a01 Entry
+node a02 Lambda
+	set type delegate:int(int,int)
+	set alloc local
+	set inputs a b
+node a03 Local List<int>
+node a04 Call List<int>.Add
+	in value 1
+node a05 Call List<int>.Add
+	in value 3
+node a06 Call List<int>.Add
+	in value 5
+node a07 Call List<int>.Add
+	in value 7
+node a08 Call List<int>.Add
+	in value 9
+node a09 Call List<int>.BinarySearch
+	in value 5
+node a10 Call Console.WriteLine(int)
+node a11 Call List<int>.BinarySearch
+	in value 4
+node a12 Call Console.WriteLine(int)
+node a13 Call List<int>.BinarySearch
+	in value 10
+node a14 Call Console.WriteLine(int)
+node a15 Call List<int>.BinarySearch
+	in value 0
+node a16 Call Console.WriteLine(int)
+node a17 Call List<int>.BinarySearch
+	in value 9
+node a18 Call Console.WriteLine(int)
+node a19 Local List<int>
+node a20 Call List<int>.BinarySearch
+	in value 3
+node a21 Call Console.WriteLine(int)
+node a22 Call List<int>.Slice
+	in start 1
+	in length 3
+node a23 Get Span<int>.Length
+node a24 Call Console.WriteLine(int)
+node a25 ForEach
+node a26 Call Console.Write(int)
+node a27 Call Console.Write(StringView)
+	in text " "
+node a28 Call Console.WriteLine()
+node a29 Index
+	in index 2
+node a30 Call Console.WriteLine(int)
+node a31 Call Span<int>.Slice
+	in start 1
+	in length 2
+node a32 Index
+	in index 0
+node a33 Call Console.WriteLine(int)
+node a34 Get Span<int>.Length
+node a35 Call Console.WriteLine(int)
+node a36 Call List<int>.Slice
+	in start 5
+	in length 0
+node a37 Call Span<int>.IsEmpty
+node a38 Call Console.WriteLine(bool)
+node a39 Local HashSet<int>
+node a40 Local HashSet<int>
+node a41 Call HashSet<int>.Add
+	in value 1
+node a42 Call HashSet<int>.Add
+	in value 2
+node a43 Call HashSet<int>.Add
+	in value 3
+node a44 Call HashSet<int>.Add
+	in value 4
+node a45 Call HashSet<int>.Add
+	in value 3
+node a46 Call HashSet<int>.Add
+	in value 4
+node a47 Call HashSet<int>.Add
+	in value 5
+node a48 Call HashSet<int>.Union
+node a49 Get HashSet<int>.Count
+node a50 Call Console.WriteLine(int)
+node a51 Call HashSet<int>.Intersect
+node a52 Get HashSet<int>.Count
+node a53 Call Console.WriteLine(int)
+node a54 Call HashSet<int>.Contains
+	in value 1
+node a55 Operator !
+node a56 Call HashSet<int>.Contains
+	in value 5
+node a57 Operator &&
+node a58 Call Console.WriteLine(bool)
+node a59 Call HashSet<int>.Add
+	in value 8
+node a60 Call HashSet<int>.Except
+node a61 Get HashSet<int>.Count
+node a62 Call Console.WriteLine(int)
+node a63 Call HashSet<int>.Contains
+	in value 8
+node a64 Call Console.WriteLine(bool)
+node a65 Local HashSet<StringView>
+node a66 Local HashSet<StringView>
+node a67 Call HashSet<StringView>.Add
+	in value "red"
+node a68 Call HashSet<StringView>.Add
+	in value "green"
+node a69 Call HashSet<StringView>.Add
+	in value "blue"
+node a70 Call HashSet<StringView>.Add
+	in value "green"
+node a71 Call HashSet<StringView>.Add
+	in value "pink"
+node a72 Call HashSet<StringView>.Intersect
+node a73 Get HashSet<StringView>.Count
+node a74 Call Console.WriteLine(int)
+node a75 Call HashSet<StringView>.Contains
+	in value "green"
+node a76 Call Console.WriteLine(bool)
+node a77 Local Stack<int>
+node a78 Call Stack<int>.TryPeek
+node a79 Call Console.WriteLine(bool)
+node a80 Call Stack<int>.Push
+	in value 4
+node a81 Call Stack<int>.Push
+	in value 6
+node a82 Call Stack<int>.TryPeek
+node a83 Call Console.WriteLine(bool)
+node a84 Call Console.WriteLine(int)
+node a85 Local Queue<int>
+node a86 Call Queue<int>.Enqueue
+	in value 8
+node a87 Call Queue<int>.Enqueue
+	in value 9
+node a88 Call Queue<int>.TryPeek
+node a89 Call Console.WriteLine(bool)
+node a90 Call Console.WriteLine(int)
+node a91 Return
+	in value 0
+wire a01.then a02.in
+wire a02.then a03.in
+wire a03.then a04.in
+wire a03.object a04.receiver
+wire a04.then a05.in
+wire a03.object a05.receiver
+wire a05.then a06.in
+wire a03.object a06.receiver
+wire a06.then a07.in
+wire a03.object a07.receiver
+wire a07.then a08.in
+wire a03.object a08.receiver
+wire a02.value a09.comparer
+wire a08.then a09.in
+wire a03.object a09.receiver
+wire a09.then a10.in
+wire a09.result a10.value
+wire a02.value a11.comparer
+wire a10.then a11.in
+wire a03.object a11.receiver
+wire a11.then a12.in
+wire a11.result a12.value
+wire a02.value a13.comparer
+wire a12.then a13.in
+wire a03.object a13.receiver
+wire a13.then a14.in
+wire a13.result a14.value
+wire a02.value a15.comparer
+wire a14.then a15.in
+wire a03.object a15.receiver
+wire a15.then a16.in
+wire a15.result a16.value
+wire a02.value a17.comparer
+wire a16.then a17.in
+wire a03.object a17.receiver
+wire a17.then a18.in
+wire a17.result a18.value
+wire a18.then a19.in
+wire a02.value a20.comparer
+wire a19.then a20.in
+wire a19.object a20.receiver
+wire a20.then a21.in
+wire a20.result a21.value
+wire a21.then a22.in
+wire a03.object a22.receiver
+wire a22.result a23.receiver
+wire a22.then a24.in
+wire a23.value a24.value
+wire a22.result a25.collection
+wire a24.then a25.in
+wire a25.body a26.in
+wire a25.element a26.value
+wire a26.then a27.in
+wire a25.done a28.in
+wire a22.result a29.collection
+wire a28.then a30.in
+wire a29.value a30.value
+wire a30.then a31.in
+wire a22.result a31.receiver
+wire a31.result a32.collection
+wire a31.then a33.in
+wire a32.value a33.value
+wire a31.result a34.receiver
+wire a33.then a35.in
+wire a34.value a35.value
+wire a35.then a36.in
+wire a03.object a36.receiver
+wire a36.result a37.receiver
+wire a36.then a38.in
+wire a37.result a38.value
+wire a38.then a39.in
+wire a39.then a40.in
+wire a40.then a41.in
+wire a39.object a41.receiver
+wire a41.then a42.in
+wire a39.object a42.receiver
+wire a42.then a43.in
+wire a39.object a43.receiver
+wire a43.then a44.in
+wire a39.object a44.receiver
+wire a44.then a45.in
+wire a40.object a45.receiver
+wire a45.then a46.in
+wire a40.object a46.receiver
+wire a46.then a47.in
+wire a40.object a47.receiver
+wire a47.then a48.in
+wire a40.object a48.other
+wire a39.object a48.receiver
+wire a39.object a49.receiver
+wire a48.then a50.in
+wire a49.value a50.value
+wire a50.then a51.in
+wire a40.object a51.other
+wire a39.object a51.receiver
+wire a39.object a52.receiver
+wire a51.then a53.in
+wire a52.value a53.value
+wire a39.object a54.receiver
+wire a54.result a55.a
+wire a39.object a56.receiver
+wire a55.result a57.a
+wire a56.result a57.b
+wire a53.then a58.in
+wire a57.result a58.value
+wire a58.then a59.in
+wire a39.object a59.receiver
+wire a59.then a60.in
+wire a40.object a60.other
+wire a39.object a60.receiver
+wire a39.object a61.receiver
+wire a60.then a62.in
+wire a61.value a62.value
+wire a39.object a63.receiver
+wire a62.then a64.in
+wire a63.result a64.value
+wire a64.then a65.in
+wire a65.then a66.in
+wire a66.then a67.in
+wire a65.object a67.receiver
+wire a67.then a68.in
+wire a65.object a68.receiver
+wire a68.then a69.in
+wire a65.object a69.receiver
+wire a69.then a70.in
+wire a66.object a70.receiver
+wire a70.then a71.in
+wire a66.object a71.receiver
+wire a71.then a72.in
+wire a66.object a72.other
+wire a65.object a72.receiver
+wire a65.object a73.receiver
+wire a72.then a74.in
+wire a73.value a74.value
+wire a65.object a75.receiver
+wire a74.then a76.in
+wire a75.result a76.value
+wire a76.then a77.in
+wire a77.object a78.receiver
+wire a77.then a79.in
+wire a78.result a79.value
+wire a79.then a80.in
+wire a77.object a80.receiver
+wire a80.then a81.in
+wire a77.object a81.receiver
+wire a81.then a82.in
+wire a77.object a82.receiver
+wire a82.then a83.in
+wire a82.result a83.value
+wire a83.then a84.in
+wire a82.item a84.value
+wire a84.then a85.in
+wire a85.then a86.in
+wire a85.object a86.receiver
+wire a86.then a87.in
+wire a85.object a87.receiver
+wire a87.then a88.in
+wire a85.object a88.receiver
+wire a88.then a89.in
+wire a88.result a89.value
+wire a89.then a90.in
+wire a88.item a90.value
+wire a90.then a91.in
+sheet lambda:a02
+node al01 Entry
+node al02 Operator -
+node al03 Return
+wire al01.a al02.a
+wire al01.b al02.b
+wire al01.then al03.in
+wire al02.result al03.value

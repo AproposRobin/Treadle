@@ -1,0 +1,18 @@
+# The m3-files sample (TreadleCore/samples/m3-files) on its built-in sentence: the counts written to
+# m3-files-out/counts.txt, read back, the folder listed, then both removed.
+== exit
+0
+== stdout
+13 words, 10 different, 10 lines read back
+  the 3
+  quick 1
+  brown 1
+  fox 2
+  jumps 1
+  over 1
+  lazy 1
+  dog 1
+  and 1
+  naps 1
+m3-files-out: counts.txt
+removed: true true

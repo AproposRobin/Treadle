@@ -1,0 +1,167 @@
+# treadle 1
+type Terminating class
+	namespace M2
+	static
+	doc "Functions that return a value and whose last node is not a Return: every path ends in a Return or a Fatal, so the unwired `done` outputs never run (Language.md 5.3). Run prints 6, -1, 4, 7, 30 and 2."
+
+function t0001 Halve
+	static
+	pure
+	returns Core.Result<int,int>
+param x int
+sheet body
+node a1 Entry
+node a2 Branch
+node a3 Math
+	set expr "x % 2 == 0"
+node a4 MakeCase Core.Result<int,int>.Ok
+node a5 Math
+	set expr "x / 2"
+node a6 MakeCase Core.Result<int,int>.Err
+	in error 1
+node a7 Return
+node a8 Return
+wire a3.result a2.condition
+wire a1.then a2.in
+wire a1.x a3.x
+wire a5.result a4.value
+wire a1.x a5.x
+wire a2.true a7.in
+wire a4.value a7.value
+wire a2.false a8.in
+wire a6.value a8.value
+
+function t0002 HalfOr
+	static
+	returns int
+	doc "Result: match whose ok and err arms both Return; its done is not wired."
+param x int
+sheet body
+node b1 Entry
+node b2 Call M2.Terminating.Halve
+node b3 ResultMatch
+node b4 Return
+node b5 Return
+	in value -1
+wire b1.x b2.x
+wire b1.then b3.in
+wire b2.result b3.result
+wire b3.ok b4.in
+wire b3.value b4.value
+wire b3.err b5.in
+
+function t0003 FirstSquareAbove
+	static
+	returns int
+	doc "While true: the body leaves only by a Return."
+param limit int
+local i int
+sheet body
+node c1 Entry
+node c2 While
+	in condition true
+node c3 Branch
+node c4 Math
+	set expr "i * i > limit"
+node c5 Get local:i
+node c6 Return
+node c7 Set local:i
+	set op +=
+	in value 1
+node c8 Get local:i
+wire c1.then c2.in
+wire c4.result c3.condition
+wire c2.body c3.in
+wire c5.value c4.i
+wire c1.limit c4.limit
+wire c3.true c6.in
+wire c8.value c6.value
+wire c3.false c7.in
+
+function t0004 Weight
+	static
+	returns int
+	doc "A Switch whose cases and default all Return."
+param c int
+sheet body
+node d1 Entry
+node d2 Switch
+	case 1
+	case 2
+node d3 Return
+	in value 10
+node d4 Return
+	in value 20
+node d5 Return
+	in value 30
+wire d1.then d2.in
+wire d1.c d2.value
+wire d2.case:1 d3.in
+wire d2.case:2 d4.in
+wire d2.default d5.in
+
+function t0005 Checked
+	static
+	returns int
+	doc "A Branch whose false arm ends in a Fatal."
+param x int
+sheet body
+node e1 Entry
+node e2 Branch
+node e3 Math
+	set expr "x > 0"
+node e4 Return
+node e5 Fatal
+	in message "not positive"
+wire e3.result e2.condition
+wire e1.then e2.in
+wire e1.x e3.x
+wire e2.true e4.in
+wire e1.x e4.value
+wire e2.false e5.in
+
+function t0006 Run
+	static
+sheet body
+node f1 Entry
+node f10 Call Console.WriteLine(int)
+node f11 Call Console.WriteLine(int)
+node f12 Call M2.Terminating.Weight
+	in c 2
+node f13 Math
+	set expr "w / 10"
+node f14 Call Console.WriteLine(int)
+node f15 Return
+node f2 Call M2.Terminating.HalfOr
+	in x 12
+node f3 Call Console.WriteLine(int)
+node f4 Call M2.Terminating.HalfOr
+	in x 7
+node f5 Call Console.WriteLine(int)
+node f6 Call M2.Terminating.FirstSquareAbove
+	in limit 10
+node f7 Call Console.WriteLine(int)
+node f8 Call M2.Terminating.Weight
+	in c 9
+node f9 Call M2.Terminating.Checked
+	in x 7
+wire f9.then f10.in
+wire f9.result f10.value
+wire f8.then f11.in
+wire f8.result f11.value
+wire f11.then f12.in
+wire f12.result f13.w
+wire f12.then f14.in
+wire f13.result f14.value
+wire f14.then f15.in
+wire f1.then f2.in
+wire f2.then f3.in
+wire f2.result f3.value
+wire f3.then f4.in
+wire f4.then f5.in
+wire f4.result f5.value
+wire f5.then f6.in
+wire f6.then f7.in
+wire f6.result f7.value
+wire f10.then f8.in
+wire f7.then f9.in

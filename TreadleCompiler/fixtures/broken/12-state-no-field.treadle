@@ -1,0 +1,12 @@
+# treadle 1
+# expect n2 - T2240
+type StateNoField class
+	namespace Broken
+	doc "The State Field names a field the type does not have."
+
+function f1 Run
+sheet body
+node n1 Entry
+node n2 DoOnce
+	set state mMissing
+wire n1.then n2.in

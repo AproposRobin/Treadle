@@ -1,0 +1,9 @@
+# x: 499500 from Bump(x, y), then + 499500 - 1000 from Bump(x, x); y: -1000 and 500.0 from the first.
+# The AccD field written as 5 through AccD and as 7 through Acc reads 7 through AccD; the byte store
+# through a uint8 pointer changes element 0 of the int[] from 1 to 2.
+== exit
+0
+== stdout
+x 998000 500.0 y -1000 500.0
+derived 7 9
+array 2 len 4 double 2.5

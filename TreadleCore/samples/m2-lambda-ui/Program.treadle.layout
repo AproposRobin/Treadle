@@ -1,0 +1,34 @@
+# treadle-layout 1
+sheet f0001
+	node b1 0 0
+	node b2 280 0
+	node b3 560 0
+sheet f0002
+	node a1 0 0
+	node a2 240 0
+	node a3 240 200
+	node a4 480 260
+	node a5 760 0
+	node a6 760 300
+	node a7 1060 0
+	node a8 240 480
+	node a9 560 440
+	node b4 860 440
+	node b5 1140 440
+	box x1 200 160 520 220 "C callback: compare two chars" 3
+	box x2 200 400 600 220 "A Local Lambda capturing offset" 5
+sheet lambda:a4
+	node c1 0 0
+	node c2 240 80
+	node c3 460 80
+	node c4 240 240
+	node c5 460 240
+	node c6 680 80
+	node c7 680 240
+	node c8 900 160
+	node c9 1120 0
+sheet lambda:a8
+	node d1 0 0
+	node d2 200 160
+	node d3 420 120
+	node d4 640 0

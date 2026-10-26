@@ -1,0 +1,1389 @@
+# treadle 1
+type Parser class
+	namespace Mini
+	doc "Builds the syntax tree from the tokens: statements by recursive descent, expressions by precedence climbing (|| 1, && 2, == != 3, < <= > >= 4, + - 5, * / % 6, all left-associative; unary - and ! bind tighter, calls tightest). Every List it makes is also kept in mMade until the parse ends: on success the tree owns them (mMade is emptied); on an error they are all deleted, so Try can pass an error up from any depth without leaking what was built."
+
+field mTokens List<Mini.Token>
+	doc "The tokens (not owned), ending with End."
+
+field mPos int
+	doc "The index of the current token."
+
+field mMade List<List<Mini.Ast>>
+	owner owned
+	doc "Every kids List made during this parse."
+
+field mParams List<List<StringView>>
+	owner owned
+	doc "Every parameter List made during this parse."
+
+field mName StringView
+	doc "The name ExpectName read last."
+
+field mNamePos int
+	doc "Where that name is."
+
+ctor m0001
+	doc "A parser over `tokens`, which must end with an End token."
+param tokens List<Mini.Token>
+sheet body
+node x00000 Entry
+node x00001 Set this.mTokens
+node x00002 Construct List<List<Mini.Ast>>
+node x00003 Set this.mMade
+node x00004 Construct List<List<StringView>>
+node x00005 Set this.mParams
+node x00006 Return
+wire x00000.then x00001.in
+wire x00000.tokens x00001.value
+wire x00001.then x00002.in
+wire x00002.then x00003.in
+wire x00002.object x00003.value
+wire x00003.then x00004.in
+wire x00004.then x00005.in
+wire x00004.object x00005.value
+wire x00005.then x00006.in
+
+function m0002 Cur
+	pure
+	access private
+	returns Mini.Token
+	doc "The current token."
+sheet body
+node x01000 Entry
+node x01001 Get this.mTokens
+node x01002 Get this.mPos
+node x01003 Index
+node x01004 Return
+wire x01001.value x01003.collection
+wire x01002.value x01003.index
+wire x01000.then x01004.in
+wire x01003.value x01004.value
+
+function m0003 CurPos
+	pure
+	access private
+	returns int
+	doc "Where the current token starts."
+sheet body
+node x02000 Entry
+node x02001 Call this.Cur
+node x02002 Get Mini.Token.Pos
+node x02003 Return
+wire x02001.result x02002.receiver
+wire x02000.then x02003.in
+wire x02002.value x02003.value
+
+function m0004 Is
+	pure
+	access private
+	returns bool
+	doc "True when the current token is the symbol or keyword `code`."
+param code int
+sheet body
+node x03000 Entry
+node x03001 Call this.Cur
+node x03002 Call Mini.Token.IsSym
+node x03003 Return
+wire x03000.code x03002.code
+wire x03001.result x03002.receiver
+wire x03000.then x03003.in
+wire x03002.result x03003.value
+
+function m0005 IsEnd
+	pure
+	access private
+	returns bool
+	doc "True at the End token."
+sheet body
+node x04000 Entry
+node x04001 Call this.Cur
+node x04002 Get Mini.Token.Kind
+node x04003 IsCase Mini.TokenKind.End
+node x04004 Return
+wire x04001.result x04002.receiver
+wire x04002.value x04003.value
+wire x04000.then x04004.in
+wire x04003.result x04004.value
+
+function m0006 Advance
+	access private
+	doc "Moves to the next token; stays on End."
+sheet body
+node x05000 Entry
+node x05001 Get this.mPos
+node x05002 Get this.mTokens
+node x05003 Get List<Mini.Token>.Count
+node x05004 Operator -
+	in b 1
+node x05005 Operator <
+node x05006 Branch
+node x05007 Set this.mPos
+	set op +=
+	in value 1
+node x05008 Return
+wire x05002.value x05003.receiver
+wire x05003.value x05004.a
+wire x05001.value x05005.a
+wire x05004.result x05005.b
+wire x05005.result x05006.condition
+wire x05000.then x05006.in
+wire x05006.true x05007.in
+wire x05006.false x05008.in
+wire x05007.then x05008.in
+
+function m0007 NewList
+	access private
+	returns List<Mini.Ast>
+	doc "A new kids List, remembered in mMade."
+sheet body
+node x06000 Entry
+node x06001 Construct List<Mini.Ast>
+node x06002 Get this.mMade
+node x06003 Call List<List<Mini.Ast>>.Add
+node x06004 Return
+wire x06000.then x06001.in
+wire x06001.then x06003.in
+wire x06002.value x06003.receiver
+wire x06001.object x06003.value
+wire x06003.then x06004.in
+wire x06001.object x06004.value
+
+function m0008 Fail
+	pure
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "An Err result at the current token."
+param message StringView
+sheet body
+node x07000 Entry
+node x07001 Call this.CurPos
+node x07002 Call Mini.ScriptError.At
+	in detail ""
+node x07003 MakeCase Result<Mini.Ast,Mini.ScriptError>.Err
+node x07004 Return
+wire x07000.message x07002.message
+wire x07001.result x07002.pos
+wire x07002.result x07003.error
+wire x07000.then x07004.in
+wire x07003.value x07004.value
+
+function m0009 Expect
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "Steps over the symbol `code`, or fails with `message`. The Ok value is the symbol's position as an Int node, which callers ignore: it returns the same Result type as the parse functions so that they can Try it."
+param code int
+param message StringView
+local pos int
+sheet body
+node x08000 Entry
+node x08001 Call this.Is
+node x08002 Branch
+node x08003 Call this.CurPos
+node x08004 Set local:pos
+node x08005 Call this.Advance
+node x08006 Get local:pos
+node x08007 MakeCase Mini.Ast.Int
+node x08008 MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x08009 Return
+node x0800a Call this.Fail
+node x0800b Return
+wire x08000.code x08001.code
+wire x08001.result x08002.condition
+wire x08000.then x08002.in
+wire x08002.true x08004.in
+wire x08003.result x08004.value
+wire x08004.then x08005.in
+wire x08006.value x08007.value
+wire x08007.value x08008.value
+wire x08005.then x08009.in
+wire x08008.value x08009.value
+wire x08000.message x0800a.message
+wire x08002.false x0800b.in
+wire x0800a.result x0800b.value
+
+function m0010 ExpectName
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "Reads a name into mName and mNamePos, or fails with `message`. The Ok value is unused (see Expect)."
+param message StringView
+sheet body
+node x09000 Entry
+node x09001 Call this.Cur
+node x09002 Get Mini.Token.Kind
+node x09003 Switch
+	case Name
+node x09004 Set this.mName
+node x09005 Call this.CurPos
+node x09006 Set this.mNamePos
+node x09007 Call this.Advance
+node x09008 MakeCase Mini.Ast.Bool
+	in value true
+node x09009 MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0900a Return
+node x0900b Call this.Fail
+node x0900c Return
+wire x09001.result x09002.receiver
+wire x09000.then x09003.in
+wire x09002.value x09003.value
+wire x09003.case:Name x09004.in
+wire x09003.case:Name.text x09004.value
+wire x09004.then x09006.in
+wire x09005.result x09006.value
+wire x09006.then x09007.in
+wire x09008.value x09009.value
+wire x09007.then x0900a.in
+wire x09009.value x0900a.value
+wire x09000.message x0900b.message
+wire x09003.done x0900c.in
+wire x0900b.result x0900c.value
+
+function m0011 ParseProgram
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "Parses the whole script: Ok(a Block of its statements), which the caller owns (Ast.Free), or Err at the first error, with everything built so far deleted."
+local kids List<Mini.Ast>
+sheet body
+node x0a000 Entry
+node x0a001 Call this.NewList
+node x0a002 Set local:kids
+node x0a003 While
+node x0a004 Call this.IsEnd
+node x0a005 Operator !
+node x0a006 Call this.Statement
+node x0a007 ResultMatch
+node x0a008 Get local:kids
+node x0a009 Call List<Mini.Ast>.Add
+node x0a00a Get this.mMade
+node x0a00b Call List<List<Mini.Ast>>.DeleteAll
+node x0a00c Get this.mParams
+node x0a00d Call List<List<StringView>>.DeleteAll
+node x0a00e MakeCase Result<Mini.Ast,Mini.ScriptError>.Err
+node x0a00f Return
+node x0a00g Get this.mMade
+node x0a00h Call List<List<Mini.Ast>>.Clear
+node x0a00i Get this.mParams
+node x0a00j Call List<List<StringView>>.Clear
+node x0a00k Get local:kids
+node x0a00l MakeCase Mini.Ast.Block
+node x0a00m MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0a00n Return
+wire x0a000.then x0a001.in
+wire x0a001.then x0a002.in
+wire x0a001.result x0a002.value
+wire x0a005.result x0a003.condition
+wire x0a002.then x0a003.in
+wire x0a004.result x0a005.a
+wire x0a003.body x0a006.in
+wire x0a006.then x0a007.in
+wire x0a006.result x0a007.result
+wire x0a007.ok x0a009.in
+wire x0a008.value x0a009.receiver
+wire x0a007.value x0a009.value
+wire x0a007.err x0a00b.in
+wire x0a00a.value x0a00b.receiver
+wire x0a00b.then x0a00d.in
+wire x0a00c.value x0a00d.receiver
+wire x0a007.error x0a00e.error
+wire x0a00d.then x0a00f.in
+wire x0a00e.value x0a00f.value
+wire x0a003.done x0a00h.in
+wire x0a00g.value x0a00h.receiver
+wire x0a00h.then x0a00j.in
+wire x0a00i.value x0a00j.receiver
+wire x0a00k.value x0a00l.kids
+wire x0a00l.value x0a00m.value
+wire x0a00j.then x0a00n.in
+wire x0a00m.value x0a00n.value
+
+function m0012 Statement
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "One statement: let, fn, if, while, return, a block, an assignment (a name then =) or an expression followed by ;."
+local e Mini.Ast
+local kids List<Mini.Ast>
+sheet body
+node x0b000 Entry
+node x0b001 Call this.Is
+	in code 300
+node x0b002 Branch
+node x0b003 Call this.LetStatement
+node x0b004 Return
+node x0b005 Call this.Is
+	in code 301
+node x0b006 Branch
+node x0b007 Call this.FuncStatement
+node x0b008 Return
+node x0b009 Call this.Is
+	in code 302
+node x0b00a Branch
+node x0b00b Call this.IfStatement
+node x0b00c Return
+node x0b00d Call this.Is
+	in code 304
+node x0b00e Branch
+node x0b00f Call this.WhileStatement
+node x0b00g Return
+node x0b00h Call this.Is
+	in code 305
+node x0b00i Branch
+node x0b00j Call this.ReturnStatement
+node x0b00k Return
+node x0b00l Call this.Is
+	in code 123
+node x0b00m Branch
+node x0b00n Call this.Block
+node x0b00o Return
+node x0b00p Call this.Cur
+node x0b00q Get Mini.Token.Kind
+node x0b00r IsCase Mini.TokenKind.Name
+node x0b00s Get this.mTokens
+node x0b00t Get this.mPos
+node x0b00u Operator +
+	in b 1
+node x0b00v Index
+node x0b00w Call Mini.Token.IsSym
+	in code 61
+node x0b00x Operator &&
+node x0b00y Branch
+node x0b00z Call this.AssignStatement
+node x0b010 Return
+node x0b011 Call this.Expression
+	in minPrec 1
+node x0b012 Try
+node x0b013 Set local:e
+node x0b014 Call this.Expect
+	in code 59
+	in message "expected ';'"
+node x0b015 Try
+node x0b016 Call this.NewList
+node x0b017 Set local:kids
+node x0b018 Get local:e
+node x0b019 Get local:kids
+node x0b01a Call List<Mini.Ast>.Add
+node x0b01b Get local:kids
+node x0b01c MakeCase Mini.Ast.Expr
+node x0b01d MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0b01e Return
+wire x0b001.result x0b002.condition
+wire x0b000.then x0b002.in
+wire x0b002.true x0b003.in
+wire x0b003.then x0b004.in
+wire x0b003.result x0b004.value
+wire x0b005.result x0b006.condition
+wire x0b002.false x0b006.in
+wire x0b006.true x0b007.in
+wire x0b007.then x0b008.in
+wire x0b007.result x0b008.value
+wire x0b009.result x0b00a.condition
+wire x0b006.false x0b00a.in
+wire x0b00a.true x0b00b.in
+wire x0b00b.then x0b00c.in
+wire x0b00b.result x0b00c.value
+wire x0b00d.result x0b00e.condition
+wire x0b00a.false x0b00e.in
+wire x0b00e.true x0b00f.in
+wire x0b00f.then x0b00g.in
+wire x0b00f.result x0b00g.value
+wire x0b00h.result x0b00i.condition
+wire x0b00e.false x0b00i.in
+wire x0b00i.true x0b00j.in
+wire x0b00j.then x0b00k.in
+wire x0b00j.result x0b00k.value
+wire x0b00l.result x0b00m.condition
+wire x0b00i.false x0b00m.in
+wire x0b00m.true x0b00n.in
+wire x0b00n.then x0b00o.in
+wire x0b00n.result x0b00o.value
+wire x0b00p.result x0b00q.receiver
+wire x0b00q.value x0b00r.value
+wire x0b00t.value x0b00u.a
+wire x0b00s.value x0b00v.collection
+wire x0b00u.result x0b00v.index
+wire x0b00v.value x0b00w.receiver
+wire x0b00r.result x0b00x.a
+wire x0b00w.result x0b00x.b
+wire x0b00x.result x0b00y.condition
+wire x0b00m.false x0b00y.in
+wire x0b00y.true x0b00z.in
+wire x0b00z.then x0b010.in
+wire x0b00z.result x0b010.value
+wire x0b00y.false x0b011.in
+wire x0b011.then x0b012.in
+wire x0b011.result x0b012.result
+wire x0b012.then x0b013.in
+wire x0b012.value x0b013.value
+wire x0b013.then x0b014.in
+wire x0b014.then x0b015.in
+wire x0b014.result x0b015.result
+wire x0b015.then x0b016.in
+wire x0b016.then x0b017.in
+wire x0b016.result x0b017.value
+wire x0b017.then x0b01a.in
+wire x0b019.value x0b01a.receiver
+wire x0b018.value x0b01a.value
+wire x0b01b.value x0b01c.kids
+wire x0b01c.value x0b01d.value
+wire x0b01a.then x0b01e.in
+wire x0b01d.value x0b01e.value
+
+function m0013 LetStatement
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "let name = expression;"
+local name StringView
+local pos int
+local e Mini.Ast
+local kids List<Mini.Ast>
+sheet body
+node x0c000 Entry
+node x0c001 Call this.Advance
+node x0c002 Call this.ExpectName
+	in message "expected a name"
+node x0c003 Try
+node x0c004 Get this.mName
+node x0c005 Set local:name
+node x0c006 Get this.mNamePos
+node x0c007 Set local:pos
+node x0c008 Call this.Expect
+	in code 61
+	in message "expected '='"
+node x0c009 Try
+node x0c00a Call this.Expression
+	in minPrec 1
+node x0c00b Try
+node x0c00c Set local:e
+node x0c00d Call this.Expect
+	in code 59
+	in message "expected ';'"
+node x0c00e Try
+node x0c00f Call this.NewList
+node x0c00g Set local:kids
+node x0c00h Get local:e
+node x0c00i Get local:kids
+node x0c00j Call List<Mini.Ast>.Add
+node x0c00k Get local:name
+node x0c00l Get local:pos
+node x0c00m Get local:kids
+node x0c00n MakeCase Mini.Ast.Let
+node x0c00o MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0c00p Return
+wire x0c000.then x0c001.in
+wire x0c001.then x0c002.in
+wire x0c002.then x0c003.in
+wire x0c002.result x0c003.result
+wire x0c003.then x0c005.in
+wire x0c004.value x0c005.value
+wire x0c005.then x0c007.in
+wire x0c006.value x0c007.value
+wire x0c007.then x0c008.in
+wire x0c008.then x0c009.in
+wire x0c008.result x0c009.result
+wire x0c009.then x0c00a.in
+wire x0c00a.then x0c00b.in
+wire x0c00a.result x0c00b.result
+wire x0c00b.then x0c00c.in
+wire x0c00b.value x0c00c.value
+wire x0c00c.then x0c00d.in
+wire x0c00d.then x0c00e.in
+wire x0c00d.result x0c00e.result
+wire x0c00e.then x0c00f.in
+wire x0c00f.then x0c00g.in
+wire x0c00f.result x0c00g.value
+wire x0c00g.then x0c00j.in
+wire x0c00i.value x0c00j.receiver
+wire x0c00h.value x0c00j.value
+wire x0c00m.value x0c00n.kids
+wire x0c00k.value x0c00n.name
+wire x0c00l.value x0c00n.pos
+wire x0c00n.value x0c00o.value
+wire x0c00j.then x0c00p.in
+wire x0c00o.value x0c00p.value
+
+function m0014 AssignStatement
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "name = expression;"
+local name StringView
+local pos int
+local e Mini.Ast
+local kids List<Mini.Ast>
+sheet body
+node x0d000 Entry
+node x0d001 Call this.ExpectName
+	in message "expected a name"
+node x0d002 Try
+node x0d003 Get this.mName
+node x0d004 Set local:name
+node x0d005 Get this.mNamePos
+node x0d006 Set local:pos
+node x0d007 Call this.Expect
+	in code 61
+	in message "expected '='"
+node x0d008 Try
+node x0d009 Call this.Expression
+	in minPrec 1
+node x0d00a Try
+node x0d00b Set local:e
+node x0d00c Call this.Expect
+	in code 59
+	in message "expected ';'"
+node x0d00d Try
+node x0d00e Call this.NewList
+node x0d00f Set local:kids
+node x0d00g Get local:e
+node x0d00h Get local:kids
+node x0d00i Call List<Mini.Ast>.Add
+node x0d00j Get local:name
+node x0d00k Get local:pos
+node x0d00l Get local:kids
+node x0d00m MakeCase Mini.Ast.Assign
+node x0d00n MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0d00o Return
+wire x0d000.then x0d001.in
+wire x0d001.then x0d002.in
+wire x0d001.result x0d002.result
+wire x0d002.then x0d004.in
+wire x0d003.value x0d004.value
+wire x0d004.then x0d006.in
+wire x0d005.value x0d006.value
+wire x0d006.then x0d007.in
+wire x0d007.then x0d008.in
+wire x0d007.result x0d008.result
+wire x0d008.then x0d009.in
+wire x0d009.then x0d00a.in
+wire x0d009.result x0d00a.result
+wire x0d00a.then x0d00b.in
+wire x0d00a.value x0d00b.value
+wire x0d00b.then x0d00c.in
+wire x0d00c.then x0d00d.in
+wire x0d00c.result x0d00d.result
+wire x0d00d.then x0d00e.in
+wire x0d00e.then x0d00f.in
+wire x0d00e.result x0d00f.value
+wire x0d00f.then x0d00i.in
+wire x0d00h.value x0d00i.receiver
+wire x0d00g.value x0d00i.value
+wire x0d00l.value x0d00m.kids
+wire x0d00j.value x0d00m.name
+wire x0d00k.value x0d00m.pos
+wire x0d00m.value x0d00n.value
+wire x0d00i.then x0d00o.in
+wire x0d00n.value x0d00o.value
+
+function m0015 FuncStatement
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "fn name(a, b, ...) { ... }"
+local name StringView
+local pos int
+local params List<StringView>
+local body Mini.Ast
+local kids List<Mini.Ast>
+sheet body
+node x0e000 Entry
+node x0e001 Call this.Advance
+node x0e002 Call this.ExpectName
+	in message "expected a function name"
+node x0e003 Try
+node x0e004 Get this.mName
+node x0e005 Set local:name
+node x0e006 Get this.mNamePos
+node x0e007 Set local:pos
+node x0e008 Call this.Expect
+	in code 40
+	in message "expected '('"
+node x0e009 Try
+node x0e00a Construct List<StringView>
+node x0e00b Set local:params
+node x0e00c Get local:params
+node x0e00d Get this.mParams
+node x0e00e Call List<List<StringView>>.Add
+node x0e00f Call this.Is
+	in code 41
+node x0e00g Operator !
+node x0e00h Branch
+node x0e00i While
+	in condition true
+node x0e00j Call this.ExpectName
+	in message "expected a parameter name"
+node x0e00k Try
+node x0e00l Get this.mName
+node x0e00m Get local:params
+node x0e00n Call List<StringView>.Add
+node x0e00o Call this.Is
+	in code 44
+node x0e00p Branch
+node x0e00q Call this.Advance
+node x0e00r Continue
+node x0e00s Break
+node x0e00t Call this.Expect
+	in code 41
+	in message "expected ')'"
+node x0e00u Try
+node x0e00v Call this.Block
+node x0e00w Try
+node x0e00x Set local:body
+node x0e00y Call this.NewList
+node x0e00z Set local:kids
+node x0e010 Get local:body
+node x0e011 Get local:kids
+node x0e012 Call List<Mini.Ast>.Add
+node x0e013 Get local:name
+node x0e014 Get local:pos
+node x0e015 Get local:params
+node x0e016 Get local:kids
+node x0e017 MakeCase Mini.Ast.Func
+node x0e018 MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0e019 Return
+wire x0e000.then x0e001.in
+wire x0e001.then x0e002.in
+wire x0e002.then x0e003.in
+wire x0e002.result x0e003.result
+wire x0e003.then x0e005.in
+wire x0e004.value x0e005.value
+wire x0e005.then x0e007.in
+wire x0e006.value x0e007.value
+wire x0e007.then x0e008.in
+wire x0e008.then x0e009.in
+wire x0e008.result x0e009.result
+wire x0e009.then x0e00a.in
+wire x0e00a.then x0e00b.in
+wire x0e00a.object x0e00b.value
+wire x0e00b.then x0e00e.in
+wire x0e00d.value x0e00e.receiver
+wire x0e00c.value x0e00e.value
+wire x0e00f.result x0e00g.a
+wire x0e00g.result x0e00h.condition
+wire x0e00e.then x0e00h.in
+wire x0e00h.true x0e00i.in
+wire x0e00i.body x0e00j.in
+wire x0e00j.then x0e00k.in
+wire x0e00j.result x0e00k.result
+wire x0e00k.then x0e00n.in
+wire x0e00m.value x0e00n.receiver
+wire x0e00l.value x0e00n.value
+wire x0e00o.result x0e00p.condition
+wire x0e00n.then x0e00p.in
+wire x0e00p.true x0e00q.in
+wire x0e00q.then x0e00r.in
+wire x0e00p.false x0e00s.in
+wire x0e00h.false x0e00t.in
+wire x0e00i.done x0e00t.in
+wire x0e00t.then x0e00u.in
+wire x0e00t.result x0e00u.result
+wire x0e00u.then x0e00v.in
+wire x0e00v.then x0e00w.in
+wire x0e00v.result x0e00w.result
+wire x0e00w.then x0e00x.in
+wire x0e00w.value x0e00x.value
+wire x0e00x.then x0e00y.in
+wire x0e00y.then x0e00z.in
+wire x0e00y.result x0e00z.value
+wire x0e00z.then x0e012.in
+wire x0e011.value x0e012.receiver
+wire x0e010.value x0e012.value
+wire x0e016.value x0e017.kids
+wire x0e013.value x0e017.name
+wire x0e015.value x0e017.params
+wire x0e014.value x0e017.pos
+wire x0e017.value x0e018.value
+wire x0e012.then x0e019.in
+wire x0e018.value x0e019.value
+
+function m0016 Block
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "{ statements }"
+local kids List<Mini.Ast>
+sheet body
+node x0f000 Entry
+node x0f001 Call this.Expect
+	in code 123
+	in message "expected '{'"
+node x0f002 Try
+node x0f003 Call this.NewList
+node x0f004 Set local:kids
+node x0f005 While
+node x0f006 Call this.Is
+	in code 125
+node x0f007 Operator !
+node x0f008 Call this.IsEnd
+node x0f009 Operator !
+node x0f00a Operator &&
+node x0f00b Call this.Statement
+node x0f00c Try
+node x0f00d Get local:kids
+node x0f00e Call List<Mini.Ast>.Add
+node x0f00f Call this.Expect
+	in code 125
+	in message "expected '}'"
+node x0f00g Try
+node x0f00h Get local:kids
+node x0f00i MakeCase Mini.Ast.Block
+node x0f00j MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0f00k Return
+wire x0f000.then x0f001.in
+wire x0f001.then x0f002.in
+wire x0f001.result x0f002.result
+wire x0f002.then x0f003.in
+wire x0f003.then x0f004.in
+wire x0f003.result x0f004.value
+wire x0f00a.result x0f005.condition
+wire x0f004.then x0f005.in
+wire x0f006.result x0f007.a
+wire x0f008.result x0f009.a
+wire x0f007.result x0f00a.a
+wire x0f009.result x0f00a.b
+wire x0f005.body x0f00b.in
+wire x0f00b.then x0f00c.in
+wire x0f00b.result x0f00c.result
+wire x0f00c.then x0f00e.in
+wire x0f00d.value x0f00e.receiver
+wire x0f00c.value x0f00e.value
+wire x0f005.done x0f00f.in
+wire x0f00f.then x0f00g.in
+wire x0f00f.result x0f00g.result
+wire x0f00h.value x0f00i.kids
+wire x0f00i.value x0f00j.value
+wire x0f00g.then x0f00k.in
+wire x0f00j.value x0f00k.value
+
+function m0017 IfStatement
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "if condition { ... } with an optional else { ... } or else if ..."
+local cond Mini.Ast
+local then Mini.Ast
+local kids List<Mini.Ast>
+sheet body
+node x0g000 Entry
+node x0g001 Call this.Advance
+node x0g002 Call this.Expression
+	in minPrec 1
+node x0g003 Try
+node x0g004 Set local:cond
+node x0g005 Call this.Block
+node x0g006 Try
+node x0g007 Set local:then
+node x0g008 Call this.NewList
+node x0g009 Set local:kids
+node x0g00a Get local:cond
+node x0g00b Get local:kids
+node x0g00c Call List<Mini.Ast>.Add
+node x0g00d Get local:then
+node x0g00e Get local:kids
+node x0g00f Call List<Mini.Ast>.Add
+node x0g00g Call this.Is
+	in code 303
+node x0g00h Branch
+node x0g00i Call this.Advance
+node x0g00j Call this.Is
+	in code 302
+node x0g00k Branch
+node x0g00l Call this.IfStatement
+node x0g00m Try
+node x0g00n Get local:kids
+node x0g00o Call List<Mini.Ast>.Add
+node x0g00p Call this.Block
+node x0g00q Try
+node x0g00r Get local:kids
+node x0g00s Call List<Mini.Ast>.Add
+node x0g00t Get local:kids
+node x0g00u MakeCase Mini.Ast.If
+node x0g00v MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0g00w Return
+wire x0g000.then x0g001.in
+wire x0g001.then x0g002.in
+wire x0g002.then x0g003.in
+wire x0g002.result x0g003.result
+wire x0g003.then x0g004.in
+wire x0g003.value x0g004.value
+wire x0g004.then x0g005.in
+wire x0g005.then x0g006.in
+wire x0g005.result x0g006.result
+wire x0g006.then x0g007.in
+wire x0g006.value x0g007.value
+wire x0g007.then x0g008.in
+wire x0g008.then x0g009.in
+wire x0g008.result x0g009.value
+wire x0g009.then x0g00c.in
+wire x0g00b.value x0g00c.receiver
+wire x0g00a.value x0g00c.value
+wire x0g00c.then x0g00f.in
+wire x0g00e.value x0g00f.receiver
+wire x0g00d.value x0g00f.value
+wire x0g00g.result x0g00h.condition
+wire x0g00f.then x0g00h.in
+wire x0g00h.true x0g00i.in
+wire x0g00j.result x0g00k.condition
+wire x0g00i.then x0g00k.in
+wire x0g00k.true x0g00l.in
+wire x0g00l.then x0g00m.in
+wire x0g00l.result x0g00m.result
+wire x0g00m.then x0g00o.in
+wire x0g00n.value x0g00o.receiver
+wire x0g00m.value x0g00o.value
+wire x0g00k.false x0g00p.in
+wire x0g00p.then x0g00q.in
+wire x0g00p.result x0g00q.result
+wire x0g00q.then x0g00s.in
+wire x0g00r.value x0g00s.receiver
+wire x0g00q.value x0g00s.value
+wire x0g00t.value x0g00u.kids
+wire x0g00u.value x0g00v.value
+wire x0g00h.false x0g00w.in
+wire x0g00o.then x0g00w.in
+wire x0g00s.then x0g00w.in
+wire x0g00v.value x0g00w.value
+
+function m0018 WhileStatement
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "while condition { ... }"
+local cond Mini.Ast
+local body Mini.Ast
+local kids List<Mini.Ast>
+sheet body
+node x0h000 Entry
+node x0h001 Call this.Advance
+node x0h002 Call this.Expression
+	in minPrec 1
+node x0h003 Try
+node x0h004 Set local:cond
+node x0h005 Call this.Block
+node x0h006 Try
+node x0h007 Set local:body
+node x0h008 Call this.NewList
+node x0h009 Set local:kids
+node x0h00a Get local:cond
+node x0h00b Get local:kids
+node x0h00c Call List<Mini.Ast>.Add
+node x0h00d Get local:body
+node x0h00e Get local:kids
+node x0h00f Call List<Mini.Ast>.Add
+node x0h00g Get local:kids
+node x0h00h MakeCase Mini.Ast.While
+node x0h00i MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0h00j Return
+wire x0h000.then x0h001.in
+wire x0h001.then x0h002.in
+wire x0h002.then x0h003.in
+wire x0h002.result x0h003.result
+wire x0h003.then x0h004.in
+wire x0h003.value x0h004.value
+wire x0h004.then x0h005.in
+wire x0h005.then x0h006.in
+wire x0h005.result x0h006.result
+wire x0h006.then x0h007.in
+wire x0h006.value x0h007.value
+wire x0h007.then x0h008.in
+wire x0h008.then x0h009.in
+wire x0h008.result x0h009.value
+wire x0h009.then x0h00c.in
+wire x0h00b.value x0h00c.receiver
+wire x0h00a.value x0h00c.value
+wire x0h00c.then x0h00f.in
+wire x0h00e.value x0h00f.receiver
+wire x0h00d.value x0h00f.value
+wire x0h00g.value x0h00h.kids
+wire x0h00h.value x0h00i.value
+wire x0h00f.then x0h00j.in
+wire x0h00i.value x0h00j.value
+
+function m0019 ReturnStatement
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "return; or return expression;"
+local pos int
+local kids List<Mini.Ast>
+sheet body
+node x0i000 Entry
+node x0i001 Call this.CurPos
+node x0i002 Set local:pos
+node x0i003 Call this.Advance
+node x0i004 Call this.NewList
+node x0i005 Set local:kids
+node x0i006 Call this.Is
+	in code 59
+node x0i007 Operator !
+node x0i008 Branch
+node x0i009 Call this.Expression
+	in minPrec 1
+node x0i00a Try
+node x0i00b Get local:kids
+node x0i00c Call List<Mini.Ast>.Add
+node x0i00d Call this.Expect
+	in code 59
+	in message "expected ';'"
+node x0i00e Try
+node x0i00f Get local:pos
+node x0i00g Get local:kids
+node x0i00h MakeCase Mini.Ast.Return
+node x0i00i MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0i00j Return
+wire x0i000.then x0i002.in
+wire x0i001.result x0i002.value
+wire x0i002.then x0i003.in
+wire x0i003.then x0i004.in
+wire x0i004.then x0i005.in
+wire x0i004.result x0i005.value
+wire x0i006.result x0i007.a
+wire x0i007.result x0i008.condition
+wire x0i005.then x0i008.in
+wire x0i008.true x0i009.in
+wire x0i009.then x0i00a.in
+wire x0i009.result x0i00a.result
+wire x0i00a.then x0i00c.in
+wire x0i00b.value x0i00c.receiver
+wire x0i00a.value x0i00c.value
+wire x0i008.false x0i00d.in
+wire x0i00c.then x0i00d.in
+wire x0i00d.then x0i00e.in
+wire x0i00d.result x0i00e.result
+wire x0i00g.value x0i00h.kids
+wire x0i00f.value x0i00h.pos
+wire x0i00h.value x0i00i.value
+wire x0i00e.then x0i00j.in
+wire x0i00i.value x0i00j.value
+
+function m0020 Prec
+	static
+	pure
+	returns int
+	doc "The precedence of a binary operator code (1 lowest, 6 highest), 0 for anything else."
+param code int
+sheet body
+node x0j000 Entry
+node x0j001 Switch
+	case 261
+	case 260
+	case 256
+	case 257
+	case 60
+	case 62
+	case 258
+	case 259
+	case 43
+	case 45
+	case 42
+	case 47
+	case 37
+node x0j002 Return
+	in value 1
+node x0j003 Return
+	in value 2
+node x0j004 Return
+	in value 3
+node x0j005 Return
+	in value 4
+node x0j006 Return
+	in value 5
+node x0j007 Return
+	in value 6
+node x0j008 Return
+	in value 0
+wire x0j000.then x0j001.in
+wire x0j000.code x0j001.value
+wire x0j001.case:261 x0j002.in
+wire x0j001.case:260 x0j003.in
+wire x0j001.case:256 x0j004.in
+wire x0j001.case:257 x0j004.in
+wire x0j001.case:258 x0j005.in
+wire x0j001.case:259 x0j005.in
+wire x0j001.case:60 x0j005.in
+wire x0j001.case:62 x0j005.in
+wire x0j001.case:43 x0j006.in
+wire x0j001.case:45 x0j006.in
+wire x0j001.case:37 x0j007.in
+wire x0j001.case:42 x0j007.in
+wire x0j001.case:47 x0j007.in
+wire x0j001.done x0j008.in
+
+function m0021 Expression
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "Precedence climbing: a unary operand, then every binary operator of precedence minPrec or higher with its right side parsed at one level above (so operators of one level group to the left)."
+param minPrec int
+local left Mini.Ast
+local op int
+local prec int
+local pos int
+local right Mini.Ast
+local kids List<Mini.Ast>
+sheet body
+node x0k000 Entry
+node x0k001 Call this.Unary
+node x0k002 Try
+node x0k003 Set local:left
+node x0k004 While
+	in condition true
+node x0k005 Call this.Cur
+node x0k006 Call Mini.Token.SymCode
+node x0k007 Set local:op
+node x0k008 Get local:op
+node x0k009 Call Mini.Parser.Prec
+node x0k00a Set local:prec
+node x0k00b Get local:prec
+node x0k00c Operator ==
+	in b 0
+node x0k00d Get local:prec
+node x0k00e Operator <
+node x0k00f Operator ||
+node x0k00g Branch
+node x0k00h Break
+node x0k00i Call this.CurPos
+node x0k00j Set local:pos
+node x0k00k Call this.Advance
+node x0k00l Get local:prec
+node x0k00m Operator +
+	in b 1
+node x0k00n Call this.Expression
+node x0k00o Try
+node x0k00p Set local:right
+node x0k00q Call this.NewList
+node x0k00r Set local:kids
+node x0k00s Get local:left
+node x0k00t Get local:kids
+node x0k00u Call List<Mini.Ast>.Add
+node x0k00v Get local:right
+node x0k00w Get local:kids
+node x0k00x Call List<Mini.Ast>.Add
+node x0k00y Get local:op
+node x0k00z Get local:pos
+node x0k010 Get local:kids
+node x0k011 MakeCase Mini.Ast.Binary
+node x0k012 Set local:left
+node x0k013 Get local:left
+node x0k014 MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0k015 Return
+wire x0k000.then x0k001.in
+wire x0k001.then x0k002.in
+wire x0k001.result x0k002.result
+wire x0k002.then x0k003.in
+wire x0k002.value x0k003.value
+wire x0k003.then x0k004.in
+wire x0k005.result x0k006.receiver
+wire x0k004.body x0k007.in
+wire x0k006.result x0k007.value
+wire x0k008.value x0k009.code
+wire x0k007.then x0k00a.in
+wire x0k009.result x0k00a.value
+wire x0k00b.value x0k00c.a
+wire x0k00d.value x0k00e.a
+wire x0k000.minPrec x0k00e.b
+wire x0k00c.result x0k00f.a
+wire x0k00e.result x0k00f.b
+wire x0k00f.result x0k00g.condition
+wire x0k00a.then x0k00g.in
+wire x0k00g.true x0k00h.in
+wire x0k00g.false x0k00j.in
+wire x0k00i.result x0k00j.value
+wire x0k00j.then x0k00k.in
+wire x0k00l.value x0k00m.a
+wire x0k00k.then x0k00n.in
+wire x0k00m.result x0k00n.minPrec
+wire x0k00n.then x0k00o.in
+wire x0k00n.result x0k00o.result
+wire x0k00o.then x0k00p.in
+wire x0k00o.value x0k00p.value
+wire x0k00p.then x0k00q.in
+wire x0k00q.then x0k00r.in
+wire x0k00q.result x0k00r.value
+wire x0k00r.then x0k00u.in
+wire x0k00t.value x0k00u.receiver
+wire x0k00s.value x0k00u.value
+wire x0k00u.then x0k00x.in
+wire x0k00w.value x0k00x.receiver
+wire x0k00v.value x0k00x.value
+wire x0k010.value x0k011.kids
+wire x0k00y.value x0k011.op
+wire x0k00z.value x0k011.pos
+wire x0k00x.then x0k012.in
+wire x0k011.value x0k012.value
+wire x0k013.value x0k014.value
+wire x0k004.done x0k015.in
+wire x0k014.value x0k015.value
+
+function m0022 Unary
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "- or ! before an operand, or a postfix expression."
+local op int
+local pos int
+local kids List<Mini.Ast>
+local e Mini.Ast
+sheet body
+node x0l000 Entry
+node x0l001 Call this.Is
+	in code 45
+node x0l002 Call this.Is
+	in code 33
+node x0l003 Operator ||
+node x0l004 Branch
+node x0l005 Call this.Cur
+node x0l006 Call Mini.Token.SymCode
+node x0l007 Set local:op
+node x0l008 Call this.CurPos
+node x0l009 Set local:pos
+node x0l00a Call this.Advance
+node x0l00b Call this.Unary
+node x0l00c Try
+node x0l00d Set local:e
+node x0l00e Call this.NewList
+node x0l00f Set local:kids
+node x0l00g Get local:e
+node x0l00h Get local:kids
+node x0l00i Call List<Mini.Ast>.Add
+node x0l00j Get local:op
+node x0l00k Get local:pos
+node x0l00l Get local:kids
+node x0l00m MakeCase Mini.Ast.Unary
+node x0l00n MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0l00o Return
+node x0l00p Call this.Postfix
+node x0l00q Return
+wire x0l001.result x0l003.a
+wire x0l002.result x0l003.b
+wire x0l003.result x0l004.condition
+wire x0l000.then x0l004.in
+wire x0l005.result x0l006.receiver
+wire x0l004.true x0l007.in
+wire x0l006.result x0l007.value
+wire x0l007.then x0l009.in
+wire x0l008.result x0l009.value
+wire x0l009.then x0l00a.in
+wire x0l00a.then x0l00b.in
+wire x0l00b.then x0l00c.in
+wire x0l00b.result x0l00c.result
+wire x0l00c.then x0l00d.in
+wire x0l00c.value x0l00d.value
+wire x0l00d.then x0l00e.in
+wire x0l00e.then x0l00f.in
+wire x0l00e.result x0l00f.value
+wire x0l00f.then x0l00i.in
+wire x0l00h.value x0l00i.receiver
+wire x0l00g.value x0l00i.value
+wire x0l00l.value x0l00m.kids
+wire x0l00j.value x0l00m.op
+wire x0l00k.value x0l00m.pos
+wire x0l00m.value x0l00n.value
+wire x0l00i.then x0l00o.in
+wire x0l00n.value x0l00o.value
+wire x0l004.false x0l00p.in
+wire x0l00p.then x0l00q.in
+wire x0l00p.result x0l00q.value
+
+function m0023 Postfix
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "A primary expression followed by any number of calls: f(a, b)(c)."
+local e Mini.Ast
+local pos int
+local kids List<Mini.Ast>
+sheet body
+node x0m000 Entry
+node x0m001 Call this.Primary
+node x0m002 Try
+node x0m003 Set local:e
+node x0m004 While
+node x0m005 Call this.Is
+	in code 40
+node x0m006 Call this.CurPos
+node x0m007 Set local:pos
+node x0m008 Call this.Advance
+node x0m009 Call this.NewList
+node x0m00a Set local:kids
+node x0m00b Get local:e
+node x0m00c Get local:kids
+node x0m00d Call List<Mini.Ast>.Add
+node x0m00e Call this.Is
+	in code 41
+node x0m00f Operator !
+node x0m00g Branch
+node x0m00h While
+	in condition true
+node x0m00i Call this.Expression
+	in minPrec 1
+node x0m00j Try
+node x0m00k Get local:kids
+node x0m00l Call List<Mini.Ast>.Add
+node x0m00m Call this.Is
+	in code 44
+node x0m00n Branch
+node x0m00o Call this.Advance
+node x0m00p Continue
+node x0m00q Break
+node x0m00r Call this.Expect
+	in code 41
+	in message "expected ')'"
+node x0m00s Try
+node x0m00t Get local:pos
+node x0m00u Get local:kids
+node x0m00v MakeCase Mini.Ast.Call
+node x0m00w Set local:e
+node x0m00x Get local:e
+node x0m00y MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0m00z Return
+wire x0m000.then x0m001.in
+wire x0m001.then x0m002.in
+wire x0m001.result x0m002.result
+wire x0m002.then x0m003.in
+wire x0m002.value x0m003.value
+wire x0m005.result x0m004.condition
+wire x0m003.then x0m004.in
+wire x0m004.body x0m007.in
+wire x0m006.result x0m007.value
+wire x0m007.then x0m008.in
+wire x0m008.then x0m009.in
+wire x0m009.then x0m00a.in
+wire x0m009.result x0m00a.value
+wire x0m00a.then x0m00d.in
+wire x0m00c.value x0m00d.receiver
+wire x0m00b.value x0m00d.value
+wire x0m00e.result x0m00f.a
+wire x0m00f.result x0m00g.condition
+wire x0m00d.then x0m00g.in
+wire x0m00g.true x0m00h.in
+wire x0m00h.body x0m00i.in
+wire x0m00i.then x0m00j.in
+wire x0m00i.result x0m00j.result
+wire x0m00j.then x0m00l.in
+wire x0m00k.value x0m00l.receiver
+wire x0m00j.value x0m00l.value
+wire x0m00m.result x0m00n.condition
+wire x0m00l.then x0m00n.in
+wire x0m00n.true x0m00o.in
+wire x0m00o.then x0m00p.in
+wire x0m00n.false x0m00q.in
+wire x0m00g.false x0m00r.in
+wire x0m00h.done x0m00r.in
+wire x0m00r.then x0m00s.in
+wire x0m00r.result x0m00s.result
+wire x0m00u.value x0m00v.kids
+wire x0m00t.value x0m00v.pos
+wire x0m00s.then x0m00w.in
+wire x0m00v.value x0m00w.value
+wire x0m00x.value x0m00y.value
+wire x0m004.done x0m00z.in
+wire x0m00y.value x0m00z.value
+
+function m0024 Primary
+	access private
+	returns Result<Mini.Ast,Mini.ScriptError>
+	doc "A number, a text, true, false, a name or ( expression )."
+local pos int
+local e Mini.Ast
+sheet body
+node x0n000 Entry
+node x0n001 Call this.CurPos
+node x0n002 Set local:pos
+node x0n003 Call this.Cur
+node x0n004 Get Mini.Token.Kind
+node x0n005 Switch
+	case Int
+	case Float
+	case Str
+	case Name
+	case Sym
+	case End
+node x0n006 Call this.Advance
+node x0n007 MakeCase Mini.Ast.Int
+node x0n008 MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0n009 Return
+node x0n00a Call this.Advance
+node x0n00b MakeCase Mini.Ast.Float
+node x0n00c MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0n00d Return
+node x0n00e Call this.Advance
+node x0n00f MakeCase Mini.Ast.Str
+node x0n00g MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0n00h Return
+node x0n00i Call this.Advance
+node x0n00j Get local:pos
+node x0n00k MakeCase Mini.Ast.Name
+node x0n00l MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0n00m Return
+node x0n00n Switch
+	case 306
+	case 307
+	case 40
+node x0n00o Call this.Advance
+node x0n00p MakeCase Mini.Ast.Bool
+	in value true
+node x0n00q MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0n00r Return
+node x0n00s Call this.Advance
+node x0n00t MakeCase Mini.Ast.Bool
+	in value false
+node x0n00u MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0n00v Return
+node x0n00w Call this.Advance
+node x0n00x Call this.Expression
+	in minPrec 1
+node x0n00y Try
+node x0n00z Set local:e
+node x0n010 Call this.Expect
+	in code 41
+	in message "expected ')'"
+node x0n011 Try
+node x0n012 Get local:e
+node x0n013 MakeCase Result<Mini.Ast,Mini.ScriptError>.Ok
+node x0n014 Return
+node x0n015 Call this.Fail
+	in message "unexpected end of the script"
+node x0n016 Return
+node x0n017 Call this.Fail
+	in message "expected an expression"
+node x0n018 Return
+wire x0n000.then x0n002.in
+wire x0n001.result x0n002.value
+wire x0n003.result x0n004.receiver
+wire x0n002.then x0n005.in
+wire x0n004.value x0n005.value
+wire x0n005.case:Int x0n006.in
+wire x0n005.case:Int.value x0n007.value
+wire x0n007.value x0n008.value
+wire x0n006.then x0n009.in
+wire x0n008.value x0n009.value
+wire x0n005.case:Float x0n00a.in
+wire x0n005.case:Float.value x0n00b.value
+wire x0n00b.value x0n00c.value
+wire x0n00a.then x0n00d.in
+wire x0n00c.value x0n00d.value
+wire x0n005.case:Str x0n00e.in
+wire x0n005.case:Str.text x0n00f.text
+wire x0n00f.value x0n00g.value
+wire x0n00e.then x0n00h.in
+wire x0n00g.value x0n00h.value
+wire x0n005.case:Name x0n00i.in
+wire x0n00j.value x0n00k.pos
+wire x0n005.case:Name.text x0n00k.text
+wire x0n00k.value x0n00l.value
+wire x0n00i.then x0n00m.in
+wire x0n00l.value x0n00m.value
+wire x0n005.case:Sym x0n00n.in
+wire x0n005.case:Sym.code x0n00n.value
+wire x0n00n.case:306 x0n00o.in
+wire x0n00p.value x0n00q.value
+wire x0n00o.then x0n00r.in
+wire x0n00q.value x0n00r.value
+wire x0n00n.case:307 x0n00s.in
+wire x0n00t.value x0n00u.value
+wire x0n00s.then x0n00v.in
+wire x0n00u.value x0n00v.value
+wire x0n00n.case:40 x0n00w.in
+wire x0n00w.then x0n00x.in
+wire x0n00x.then x0n00y.in
+wire x0n00x.result x0n00y.result
+wire x0n00y.then x0n00z.in
+wire x0n00y.value x0n00z.value
+wire x0n00z.then x0n010.in
+wire x0n010.then x0n011.in
+wire x0n010.result x0n011.result
+wire x0n012.value x0n013.value
+wire x0n011.then x0n014.in
+wire x0n013.value x0n014.value
+wire x0n005.case:End x0n016.in
+wire x0n015.result x0n016.value
+wire x0n005.done x0n018.in
+wire x0n017.result x0n018.value

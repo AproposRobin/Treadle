@@ -1,0 +1,13 @@
+# treadle 1
+# expect n2 - T2243
+type ResetNothing class
+	namespace Broken
+	static
+	doc "A Reset Do Once with no Do Once in the type."
+
+function f1 Run
+	static
+sheet body
+node n1 Entry
+node n2 ResetDoOnce
+wire n1.then n2.in

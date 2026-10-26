@@ -1,0 +1,6 @@
+== exit
+3
+== stderr Debug
+fatal: Local array length -3 is negative at Lg.Program.Main node a3
+== stderr Release
+fatal: array length -3 is negative at Lg.Program.Main node a3

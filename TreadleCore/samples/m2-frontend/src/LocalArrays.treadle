@@ -1,0 +1,52 @@
+# treadle 1
+type LocalArrays class
+	namespace M2
+	static
+	doc "Local arrays with a length known at run time (Language.md 3): made in a loop body and freed at each pass's end, an array of structs with a destructor destroyed element by element. Run prints 12000, ~Res 0, ~Res 0, 3."
+
+function a0001 Run
+	static
+local total int
+sheet body
+node a1 Entry
+node a2 For
+	in start 1
+	in count 3
+node a3 Operator *
+	in b 2000
+node a4 Local int
+	set count
+node a5 Get int[].Length
+node a6 Set local:total
+	set op +=
+node a7 Get local:total
+node a8 Call Console.WriteLine(int)
+node a9 Scope
+node b1 Local M2.Res
+	set count
+	in count 2
+node b2 Get M2.Res[].Length
+node b3 Set local:total
+node b4 Get local:total
+node b5 Operator +
+	in b 1
+node b6 Call Console.WriteLine(int)
+node b7 Return
+wire a1.then a2.in
+wire a2.index a3.a
+wire a3.result a4.count
+wire a2.body a4.in
+wire a4.object a5.receiver
+wire a4.then a6.in
+wire a5.value a6.value
+wire a2.done a8.in
+wire a7.value a8.value
+wire a8.then a9.in
+wire a9.body b1.in
+wire b1.object b2.receiver
+wire b1.then b3.in
+wire b2.value b3.value
+wire b4.value b5.a
+wire a9.done b6.in
+wire b5.result b6.value
+wire b6.then b7.in

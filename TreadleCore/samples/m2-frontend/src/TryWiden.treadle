@@ -1,0 +1,102 @@
+# treadle 1
+type TryWiden class
+	namespace M2
+	static
+	doc "Try on a Result<bool,int> in a function returning Result<int,int>: the Err path makes the function's own Result from the error. Run prints ok 10, err -3 and ok 0."
+
+function w0001 Check
+	static
+	pure
+	returns Core.Result<bool,int>
+	doc "Ok(true) for a positive number, Err(x) otherwise."
+param x int
+sheet body
+node a1 Entry
+node a2 Branch
+node a3 Operator >
+	in b 0
+node a4 MakeCase Core.Result<bool,int>.Ok
+	in value true
+node a5 MakeCase Core.Result<bool,int>.Err
+node a6 Return
+node a7 Return
+wire a3.result a2.condition
+wire a1.then a2.in
+wire a1.x a3.a
+wire a1.x a5.error
+wire a2.true a6.in
+wire a4.value a6.value
+wire a2.false a7.in
+wire a5.value a7.value
+
+function w0002 Pick
+	static
+	returns Core.Result<int,int>
+	doc "0 gives Ok(0); anything else is Checked with a Try inside the Switch's default."
+param x int
+sheet body
+node b1 Entry
+node b2 Switch
+	case 0
+node b3 MakeCase Core.Result<int,int>.Ok
+	in value 0
+node b4 Return
+node b5 Call M2.TryWiden.Check
+node b6 Try
+node b7 MakeCase Core.Result<int,int>.Ok
+	in value 10
+node b8 Return
+node b9 Fatal
+	in message "unreachable: every case returns"
+wire b1.then b2.in
+wire b1.x b2.value
+wire b2.case:0 b4.in
+wire b3.value b4.value
+wire b1.x b5.x
+wire b2.default b6.in
+wire b5.result b6.result
+wire b6.then b8.in
+wire b7.value b8.value
+wire b2.done b9.in
+
+function w0003 Show
+	static
+param x int
+sheet body
+node c1 Entry
+node c2 Call M2.TryWiden.Pick
+node c3 ResultMatch
+node c4 Call Console.Write(StringView)
+	in text "ok "
+node c5 Call Console.WriteLine(int)
+node c6 Call Console.Write(StringView)
+	in text "err "
+node c7 Call Console.WriteLine(int)
+node c8 Return
+wire c1.then c2.in
+wire c1.x c2.x
+wire c2.then c3.in
+wire c2.result c3.result
+wire c3.ok c4.in
+wire c4.then c5.in
+wire c3.value c5.value
+wire c3.err c6.in
+wire c6.then c7.in
+wire c3.error c7.value
+wire c3.done c8.in
+
+function w0004 Run
+	static
+sheet body
+node d1 Entry
+node d2 Call M2.TryWiden.Show
+	in x 5
+node d3 Call M2.TryWiden.Show
+	in x -3
+node d4 Call M2.TryWiden.Show
+	in x 0
+node d5 Return
+wire d1.then d2.in
+wire d2.then d3.in
+wire d3.then d4.in
+wire d4.then d5.in

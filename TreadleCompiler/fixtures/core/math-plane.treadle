@@ -1,0 +1,300 @@
+# treadle 1
+type MathPlaneMain class
+	namespace Cx
+	static
+	doc "The core math library, plane: every check compares the result with a reference computed in double precision by a separate C implementation (Gauss-Jordan inverse, Rodrigues rotations, the GLM conventions), within 1e-5 of the larger of 1 and the reference's size; each line is the check's name and true."
+
+function m000 Main
+	static
+	returns int
+sheet body
+node n00000 Entry
+node n00001 Local String
+	set ctor ()
+node n00002 Make Core.Vec3
+	in X 1.0f
+	in Y 2.0f
+	in Z 3.0f
+node n00003 Make Core.Vec3
+	in X 0.0f
+	in Y 0.6000000238418579f
+	in Z 0.800000011920929f
+node n00004 Call Core.Plane.FromPointNormal
+node n00005 Make Core.Vec3
+	in X 0.0f
+	in Y 0.6000000238418579f
+	in Z 0.800000011920929f
+node n00006 Make Core.Plane
+	in D -3.5999999046325684f
+node n00007 Math
+	set expr "Abs(a.Normal.X - b.Normal.X) <= 0.00003600000127335079f && Abs(a.Normal.Y - b.Normal.Y) <= 0.00003600000127335079f && Abs(a.Normal.Z - b.Normal.Z) <= 0.00003600000127335079f && Abs(a.D - b.D) <= 0.00003600000127335079f"
+node n00008 Call String.Clear
+node n00009 Call String.Append(StringView)
+	in text "plane.FromPointNormal "
+node n0000a Call String.Append(bool)
+node n0000b Call Console.WriteLine(StringView)
+node n0000c Make Core.Vec3
+	in X 1.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0000d Make Core.Vec3
+	in X 0.0f
+	in Y 1.0f
+	in Z 0.0f
+node n0000e Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+node n0000f Call Core.Plane.FromPoints
+node n0000g Make Core.Vec3
+	in X 0.5773502588272095f
+	in Y 0.5773502588272095f
+	in Z 0.5773502588272095f
+node n0000h Make Core.Plane
+	in D -0.5773502588272095f
+node n0000i Math
+	set expr "Abs(a.Normal.X - b.Normal.X) <= 0.000009999999747378752f && Abs(a.Normal.Y - b.Normal.Y) <= 0.000009999999747378752f && Abs(a.Normal.Z - b.Normal.Z) <= 0.000009999999747378752f && Abs(a.D - b.D) <= 0.000009999999747378752f"
+node n0000j Call String.Clear
+node n0000k Call String.Append(StringView)
+	in text "plane.FromPoints "
+node n0000l Call String.Append(bool)
+node n0000m Call Console.WriteLine(StringView)
+node n0000n Make Core.Vec3
+	in X 0.0f
+	in Y 0.6000000238418579f
+	in Z 0.800000011920929f
+node n0000o Make Core.Plane
+	in D -2.0f
+node n0000p Make Core.Vec3
+	in X 5.0f
+	in Y 3.0f
+	in Z 4.0f
+node n0000q Call Core.Plane.DistanceTo
+node n0000r Math
+	set expr "Abs(a - b) <= 0.000029999999242136255f"
+	in b 3.0f
+node n0000s Call String.Clear
+node n0000t Call String.Append(StringView)
+	in text "plane.DistanceTo "
+node n0000u Call String.Append(bool)
+node n0000v Call Console.WriteLine(StringView)
+node n0000w Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0000x Call Core.Plane.DistanceTo
+node n0000y Math
+	set expr "Abs(a - b) <= 0.000019999999494757503f"
+	in b -2.0f
+node n0000z Call String.Clear
+node n00010 Call String.Append(StringView)
+	in text "plane.DistanceTo.back "
+node n00011 Call String.Append(bool)
+node n00012 Call Console.WriteLine(StringView)
+node n00013 Make Core.Vec3
+	in X 5.0f
+	in Y 3.0f
+	in Z 4.0f
+node n00014 Call Core.Plane.Side
+node n00015 Operator ==
+	in b 1
+node n00016 Call String.Clear
+node n00017 Call String.Append(StringView)
+	in text "plane.Side.front "
+node n00018 Call String.Append(bool)
+node n00019 Call Console.WriteLine(StringView)
+node n0001a Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 0.0f
+node n0001b Call Core.Plane.Side
+node n0001c Operator ==
+	in b -1
+node n0001d Call String.Clear
+node n0001e Call String.Append(StringView)
+	in text "plane.Side.back "
+node n0001f Call String.Append(bool)
+node n0001g Call Console.WriteLine(StringView)
+node n0001h Make Core.Vec3
+	in X 0.0f
+	in Y 0.0f
+	in Z 1.0f
+node n0001i Make Core.Plane
+	in D -2.0f
+node n0001j Make Core.Vec3
+	in X 7.0f
+	in Y -3.0f
+	in Z 2.0f
+node n0001k Call Core.Plane.Side
+node n0001l Operator ==
+	in b 0
+node n0001m Call String.Clear
+node n0001n Call String.Append(StringView)
+	in text "plane.Side.on "
+node n0001o Call String.Append(bool)
+node n0001p Call Console.WriteLine(StringView)
+node n0001q Make Core.Vec3
+	in X 0.0f
+	in Y 3.0f
+	in Z 4.0f
+node n0001r Make Core.Plane
+	in D 10.0f
+node n0001s Call Core.Plane.Normalized
+node n0001t Make Core.Vec3
+	in X 0.0f
+	in Y 0.6000000238418579f
+	in Z 0.800000011920929f
+node n0001u Make Core.Plane
+	in D 2.0f
+node n0001v Math
+	set expr "Abs(a.Normal.X - b.Normal.X) <= 0.000019999999494757503f && Abs(a.Normal.Y - b.Normal.Y) <= 0.000019999999494757503f && Abs(a.Normal.Z - b.Normal.Z) <= 0.000019999999494757503f && Abs(a.D - b.D) <= 0.000019999999494757503f"
+node n0001w Call String.Clear
+node n0001x Call String.Append(StringView)
+	in text "plane.Normalized "
+node n0001y Call String.Append(bool)
+node n0001z Call Console.WriteLine(StringView)
+node n00020 Make Core.Vec3
+	in X 0.0f
+	in Y 3.0f
+	in Z 4.0f
+node n00021 Make Core.Plane
+	in D 10.0f
+node n00022 Make Core.Vec3
+	in X 1.0f
+	in Y 1.0f
+	in Z 1.0f
+node n00023 Call Core.Plane.Project
+node n00024 Make Core.Vec3
+	in X 1.0f
+	in Y -1.0399999618530273f
+	in Z -1.7200000286102295f
+node n00025 Math
+	set expr "Abs(a.X - b.X) <= 0.00001720000000204891f && Abs(a.Y - b.Y) <= 0.00001720000000204891f && Abs(a.Z - b.Z) <= 0.00001720000000204891f"
+node n00026 Call String.Clear
+node n00027 Call String.Append(StringView)
+	in text "plane.Project "
+node n00028 Call String.Append(bool)
+node n00029 Call Console.WriteLine(StringView)
+node n0002a Return
+	in value 0
+wire n00000.then n00001.in
+wire n00003.value n00004.normal
+wire n00002.value n00004.point
+wire n00005.value n00006.Normal
+wire n00004.result n00007.a
+wire n00006.value n00007.b
+wire n00001.then n00008.in
+wire n00001.object n00008.receiver
+wire n00008.then n00009.in
+wire n00001.object n00009.receiver
+wire n00009.then n0000a.in
+wire n00001.object n0000a.receiver
+wire n00007.result n0000a.value
+wire n0000a.then n0000b.in
+wire n00001.object n0000b.text
+wire n0000c.value n0000f.a
+wire n0000d.value n0000f.b
+wire n0000e.value n0000f.c
+wire n0000g.value n0000h.Normal
+wire n0000f.result n0000i.a
+wire n0000h.value n0000i.b
+wire n0000b.then n0000j.in
+wire n00001.object n0000j.receiver
+wire n0000j.then n0000k.in
+wire n00001.object n0000k.receiver
+wire n0000k.then n0000l.in
+wire n00001.object n0000l.receiver
+wire n0000i.result n0000l.value
+wire n0000l.then n0000m.in
+wire n00001.object n0000m.text
+wire n0000n.value n0000o.Normal
+wire n0000p.value n0000q.point
+wire n0000o.value n0000q.receiver
+wire n0000q.result n0000r.a
+wire n0000m.then n0000s.in
+wire n00001.object n0000s.receiver
+wire n0000s.then n0000t.in
+wire n00001.object n0000t.receiver
+wire n0000t.then n0000u.in
+wire n00001.object n0000u.receiver
+wire n0000r.result n0000u.value
+wire n0000u.then n0000v.in
+wire n00001.object n0000v.text
+wire n0000w.value n0000x.point
+wire n0000o.value n0000x.receiver
+wire n0000x.result n0000y.a
+wire n0000v.then n0000z.in
+wire n00001.object n0000z.receiver
+wire n0000z.then n00010.in
+wire n00001.object n00010.receiver
+wire n00010.then n00011.in
+wire n00001.object n00011.receiver
+wire n0000y.result n00011.value
+wire n00011.then n00012.in
+wire n00001.object n00012.text
+wire n00013.value n00014.point
+wire n0000o.value n00014.receiver
+wire n00014.result n00015.a
+wire n00012.then n00016.in
+wire n00001.object n00016.receiver
+wire n00016.then n00017.in
+wire n00001.object n00017.receiver
+wire n00017.then n00018.in
+wire n00001.object n00018.receiver
+wire n00015.result n00018.value
+wire n00018.then n00019.in
+wire n00001.object n00019.text
+wire n0001a.value n0001b.point
+wire n0000o.value n0001b.receiver
+wire n0001b.result n0001c.a
+wire n00019.then n0001d.in
+wire n00001.object n0001d.receiver
+wire n0001d.then n0001e.in
+wire n00001.object n0001e.receiver
+wire n0001e.then n0001f.in
+wire n00001.object n0001f.receiver
+wire n0001c.result n0001f.value
+wire n0001f.then n0001g.in
+wire n00001.object n0001g.text
+wire n0001h.value n0001i.Normal
+wire n0001j.value n0001k.point
+wire n0001i.value n0001k.receiver
+wire n0001k.result n0001l.a
+wire n0001g.then n0001m.in
+wire n00001.object n0001m.receiver
+wire n0001m.then n0001n.in
+wire n00001.object n0001n.receiver
+wire n0001n.then n0001o.in
+wire n00001.object n0001o.receiver
+wire n0001l.result n0001o.value
+wire n0001o.then n0001p.in
+wire n00001.object n0001p.text
+wire n0001q.value n0001r.Normal
+wire n0001r.value n0001s.receiver
+wire n0001t.value n0001u.Normal
+wire n0001s.result n0001v.a
+wire n0001u.value n0001v.b
+wire n0001p.then n0001w.in
+wire n00001.object n0001w.receiver
+wire n0001w.then n0001x.in
+wire n00001.object n0001x.receiver
+wire n0001x.then n0001y.in
+wire n00001.object n0001y.receiver
+wire n0001v.result n0001y.value
+wire n0001y.then n0001z.in
+wire n00001.object n0001z.text
+wire n00020.value n00021.Normal
+wire n00022.value n00023.point
+wire n00021.value n00023.receiver
+wire n00023.result n00025.a
+wire n00024.value n00025.b
+wire n0001z.then n00026.in
+wire n00001.object n00026.receiver
+wire n00026.then n00027.in
+wire n00001.object n00027.receiver
+wire n00027.then n00028.in
+wire n00001.object n00028.receiver
+wire n00025.result n00028.value
+wire n00028.then n00029.in
+wire n00001.object n00029.text
+wire n00029.then n0002a.in

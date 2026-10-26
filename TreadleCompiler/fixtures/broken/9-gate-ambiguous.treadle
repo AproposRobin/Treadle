@@ -1,0 +1,17 @@
+# treadle 1
+# expect n4 - T2244
+type GateAmbiguous class
+	namespace Broken
+	static
+	doc "Two Gates in the type: an Open Gate must name the one it opens (State Field)."
+
+function f1 Run
+	static
+sheet body
+node n1 Entry
+node n2 Gate
+node n3 Gate
+node n4 GateOpen
+wire n1.then n2.in
+wire n2.done n3.in
+wire n3.done n4.in

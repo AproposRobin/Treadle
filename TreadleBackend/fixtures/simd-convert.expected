@@ -1,0 +1,10 @@
+== exit
+0
+== stdout
+(1, -2, 3, 0)
+back -2 double 3.9900000 float 3.9900000
+(200, 1, 2, 255)
+sext -1 trunc 44 127
+(1, 0, 1, 1)
+masks 15 10 1
+bits 1065353216 byte7 64

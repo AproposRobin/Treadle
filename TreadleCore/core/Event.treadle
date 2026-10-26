@@ -1,0 +1,157 @@
+# treadle 1
+type Event struct
+	namespace Core
+	generic T class
+	doc "The storage of an event (Language.md 4, Event): the handlers (delegates) in the order they were added. The event owns them: Remove and Clear delete them, and so does the destructor, which runs with the object that has the event. A field marked Event holds one of these; its Add, Remove, Invoke, Clear and Count nodes reach it (Invoke is compiled into a loop over the handlers)."
+
+field mHandlers List<T>
+	access internal
+
+dtor e0001
+	doc "Deletes every handler, then the list."
+sheet body
+node a1 Entry
+node a2 Get this.mHandlers
+node a3 Operator ==
+	in b null
+node a4 Branch
+node a5 Call List<T>.DeleteAll
+node a6 Delete
+node a7 Return
+wire a2.value a3.a
+wire a3.result a4.condition
+wire a1.then a4.in
+wire a4.false a5.in
+wire a2.value a5.receiver
+wire a5.then a6.in
+wire a2.value a6.object
+wire a4.true a7.in
+wire a6.then a7.in
+
+function e0002 Add
+	mutating
+	doc "Adds a handler at the end; the event owns it from now on."
+param handler T
+sheet body
+node b1 Entry
+node b2 Get this.mHandlers
+node b3 Operator ==
+	in b null
+node b4 Branch
+node b5 Construct List<T>
+node b6 Set this.mHandlers
+node b7 Get this.mHandlers
+node b8 Call List<T>.Add
+node b9 Return
+wire b2.value b3.a
+wire b3.result b4.condition
+wire b1.then b4.in
+wire b4.true b5.in
+wire b5.then b6.in
+wire b5.object b6.value
+wire b4.false b8.in
+wire b6.then b8.in
+wire b7.value b8.receiver
+wire b1.handler b8.value
+wire b8.then b9.in
+
+function e0003 Remove
+	mutating
+	returns bool
+	doc "Removes the handler that is `handler` (the same delegate object) and deletes it; false when the event does not hold it."
+param handler T
+sheet body
+node c1 Entry
+node c2 Get this.mHandlers
+node c3 Operator ==
+	in b null
+node c4 Branch
+node c5 Return
+	in value false
+node c6 Get List<T>.Count
+node c7 For
+	in start 0
+node c8 Index
+node c9 Operator ==
+node d1 Branch
+node d2 Delete
+node d3 Call List<T>.RemoveAt
+node d4 Return
+	in value true
+node d5 Return
+	in value false
+wire c2.value c3.a
+wire c3.result c4.condition
+wire c1.then c4.in
+wire c4.true c5.in
+wire c2.value c6.receiver
+wire c6.value c7.count
+wire c4.false c7.in
+wire c2.value c8.collection
+wire c7.index c8.index
+wire c8.value c9.a
+wire c1.handler c9.b
+wire c9.result d1.condition
+wire c7.body d1.in
+wire d1.true d2.in
+wire c8.value d2.object
+wire d2.then d3.in
+wire c7.index d3.index
+wire c2.value d3.receiver
+wire d3.then d4.in
+wire c7.done d5.in
+
+function e0004 Clear
+	mutating
+	doc "Deletes every handler (the event is empty afterwards)."
+sheet body
+node f1 Entry
+node f2 Get this.mHandlers
+node f3 Operator ==
+	in b null
+node f4 Branch
+node f5 Call List<T>.DeleteAll
+node f6 Return
+wire f2.value f3.a
+wire f3.result f4.condition
+wire f1.then f4.in
+wire f4.false f5.in
+wire f2.value f5.receiver
+wire f4.true f6.in
+wire f5.then f6.in
+
+property e0005 Count int
+	doc "The number of handlers."
+sheet get
+node g1 Entry
+node g2 Get this.mHandlers
+node g3 Operator ==
+	in b null
+node g4 Branch
+node g5 Return
+	in value 0
+node g6 Get List<T>.Count
+node g7 Return
+wire g2.value g3.a
+wire g3.result g4.condition
+wire g1.then g4.in
+wire g4.true g5.in
+wire g2.value g6.receiver
+wire g4.false g7.in
+wire g6.value g7.value
+
+function e0006 At
+	pure
+	access internal
+	returns T
+	doc "The handler at `index` (Invoke's loop reads them in order)."
+param index int
+sheet body
+node h1 Entry
+node h2 Get this.mHandlers
+node h3 Index
+node h4 Return
+wire h2.value h3.collection
+wire h1.index h3.index
+wire h1.then h4.in
+wire h3.value h4.value

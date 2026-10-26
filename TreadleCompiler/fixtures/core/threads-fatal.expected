@@ -1,0 +1,7 @@
+# The worker's Fatal ends the program (exit code 3) while Main waits in Join; the fatal line names the thread
+== exit
+3
+== stdout
+== stderr
+the worker gave up
+fatal: Fatal node at Cx.ThreadsFatalMain.Doom node da2 on thread "doomed"

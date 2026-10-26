@@ -1,0 +1,13 @@
+# File and Directory in a kfiles folder under the working folder (made and removed by the program).
+== exit
+0
+== stdout
+true true true true
+false true
+3
+one|two|three
+xyz
+a.txt,b.dat
+sub
+true true true true
+false

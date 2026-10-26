@@ -1,0 +1,98 @@
+# treadle 1
+type Program class
+	namespace LambdaUi
+	static
+	doc "Lambdas in the editor (Language.md 4.2): a function pointer Lambda handed to C's qsort as its compare callback, and a Local Lambda of a delegate type that captures a local, handed to a function that takes the delegate. Prints adeelrt, then 142."
+
+function f0001 Apply
+	static
+	returns int
+param fn IntFn
+param x int
+sheet body
+node b1 Entry
+node b2 Invoke
+node b3 Return
+wire b1.x b2.arg0
+wire b1.fn b2.delegate
+wire b1.then b2.in
+wire b2.then b3.in
+wire b2.result b3.value
+
+function f0002 Main
+	static
+	unsafe
+	returns int
+local offset int
+	init 100
+sheet body
+node a1 Entry
+node a2 Local String
+	set ctor (StringView)
+	in text "treadle"
+node a3 Call String.CStr()
+node a4 Lambda
+	set type function:int32(void*,void*)
+	set inputs a b
+node a5 Call C.cstd.qsort
+	in numOfElements 7
+	in sizeOfElements 1
+node a6 Call String.CStr()
+node a7 Call C.cstd.printf
+	in format "%s\n"
+node a8 Lambda
+	set type LambdaUi.IntFn
+	set alloc local
+	set inputs x
+node a9 Call LambdaUi.Program.Apply
+	in x 42
+node b4 Call Console.WriteLine(int)
+node b5 Return
+	in value 0
+wire a1.then a2.in
+wire a2.object a3.receiver
+wire a3.result a5.base
+wire a2.then a5.in
+wire a4.value a5.ptFuncCompare
+wire a2.object a6.receiver
+wire a5.then a7.in
+wire a6.result a7.va0
+wire a7.then a8.in
+wire a8.value a9.fn
+wire a8.then a9.in
+wire a9.then b4.in
+wire a9.result b4.value
+wire b4.then b5.in
+sheet lambda:a4
+node c1 Entry
+node c2 Cast char8*
+	set kind unchecked
+node c3 Index
+	in index 0
+node c4 Cast char8*
+	set kind unchecked
+node c5 Index
+	in index 0
+node c6 Cast int32
+node c7 Cast int32
+node c8 Operator -
+node c9 Return
+wire c1.a c2.value
+wire c2.result c3.collection
+wire c1.b c4.value
+wire c4.result c5.collection
+wire c3.value c6.value
+wire c5.value c7.value
+wire c6.result c8.a
+wire c7.result c8.b
+wire c1.then c9.in
+wire c8.result c9.value
+sheet lambda:a8
+node d1 Entry
+node d2 Get local:offset
+node d3 Operator +
+node d4 Return
+wire d1.x d3.a
+wire d2.value d3.b
+wire d1.then d4.in
+wire d3.result d4.value

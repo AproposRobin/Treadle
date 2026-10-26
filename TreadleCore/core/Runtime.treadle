@@ -1,0 +1,9 @@
+# treadle 1
+type Runtime class
+	namespace Core
+	static
+
+function r0001 Fatal
+	static
+	attr Intrinsic Runtime.Fatal
+param message StringView

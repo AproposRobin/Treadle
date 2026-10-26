@@ -1,0 +1,137 @@
+# tir 1
+# Dynamically sized Local arrays (local.array): a 2000-int array (16016 bytes, under the 16 KiB stack
+# limit) made in a loop body 500 times, so the stack pointer must be restored at every region exit
+# (8 MB without it, past the 1 MB stack); a 5000-int array (over the limit) on the heap and freed at
+# the region's exit (Debug: no leak report); lengths read at run time; an array of structs with a
+# destructor on the stack and one on the heap, their elements destroyed first to last at the exit.
+program LocalArray console
+entry La.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+unit La.Program
+type La.Res struct
+	field mId int
+	dtor La.Res.~this()
+type La.Program class
+
+func La.Res.~this() void sheet "d1" display "La.Res.~this"
+	node a1 Entry
+	node a2 Call C.libc.printf
+	block b0
+		%p = field.addr int* %this mId @a2
+		%id = load int %p @a2
+		%zero = const int 0 @a2
+		%set = cmp bool ne %id %zero @a2
+		condbr %set say done @a2
+	block say
+		%f = const char8* "~Res %lld\n" @a2.format
+		%r = ccall int32 C.libc.printf(char8*,...) %f %id @a2
+		br done
+	block done
+		ret @a2
+
+func La.Program.Main() int static sheet "m1" display "La.Program.Main"
+	region r1
+	region r2
+	region r3
+	slot si int loopvar node a2.index
+	slot stotal int variable
+	slot sa int[] local region r1 node a3.object
+	slot sb int[] local node a5.object
+	slot sc La.Res[] local region r2 node a7.object
+	slot sd La.Res[] local region r3 node a8.object
+	node a1 Entry
+	node a2 For
+	node a3 Local int[]
+	node a4 Call C.libc.printf
+	node a5 Local int[]
+	node a6 Call C.libc.printf
+	node a7 Local La.Res[]
+	node a8 Local La.Res[]
+	node a9 Return 0
+	block b0
+		region.enter r0 @a1
+		%z = const int 0 @a2.start
+		store.slot si %z @a2
+		store.slot stotal %z @a2
+		br cond
+	block cond
+		%i = load.slot int si @a2
+		%n = const int 500 @a2.count
+		%more = cmp bool lt %i %n @a2
+		condbr %more body after @a2
+	block body
+		region.enter r1 @a3
+		%len = const int 2000 @a3.length
+		%a = local.array int[] sa %len @a3
+		%i2 = load.slot int si @a3
+		%k0 = const int 0 @a3
+		boundscheck %a %k0 @a3
+		%p0 = elem.addr int* %a %k0 @a3
+		store %p0 %i2 @a3
+		%klast = const int 1999 @a3
+		boundscheck %a %klast @a3
+		%pl = elem.addr int* %a %klast @a3
+		%two = const int 2 @a3
+		%dbl = binop int mul %i2 %two @a3
+		store %pl %dbl @a3
+		%v0 = load int %p0 @a3
+		%vl = load int %pl @a3
+		%al = array.len int %a @a3
+		%s1 = binop int add %v0 %vl @a3
+		%s2 = binop int add %s1 %al @a3
+		%t0 = load.slot int stotal @a3
+		%t1 = binop int add %t0 %s2 @a3
+		store.slot stotal %t1 @a3
+		region.exit r1 @a2
+		%i3 = load.slot int si @a2
+		%one = const int 1 @a2
+		%i4 = binop int add %i3 %one @a2
+		store.slot si %i4 @a2
+		br cond @a2
+	block after
+		%tot = load.slot int stotal @a4
+		%f = const char8* "loop total %lld\n" @a4.format
+		%r1 = ccall int32 C.libc.printf(char8*,...) %f %tot @a4
+		%blen = const int 5000 @a5.length
+		%b = local.array int[] sb %blen @a5
+		%k4999 = const int 4999 @a5
+		%pb = elem.addr int* %b %k4999 @a5
+		%seven = const int 7 @a5
+		store %pb %seven @a5
+		%bv = load int %pb @a5
+		%bl = array.len int %b @a6
+		%f2 = const char8* "heap array %lld %lld\n" @a6.format
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %bl %bv @a6
+		region.enter r2 @a7
+		%clen = const int 3 @a7.length
+		%c = local.array La.Res[] sc %clen @a7
+		%c0 = const int 0 @a7
+		%cp0 = elem.addr La.Res* %c %c0 @a7
+		%cid0 = field.addr int* %cp0 mId @a7
+		%x10 = const int 10 @a7
+		store %cid0 %x10 @a7
+		%c2 = const int 2 @a7
+		%cp2 = elem.addr La.Res* %c %c2 @a7
+		%cid2 = field.addr int* %cp2 mId @a7
+		%x12 = const int 12 @a7
+		store %cid2 %x12 @a7
+		region.exit r2 @a7
+		region.enter r3 @a8
+		%dlen = const int 2100 @a8.length
+		%d = local.array La.Res[] sd %dlen @a8
+		%d0 = const int 0 @a8
+		%dp0 = elem.addr La.Res* %d %d0 @a8
+		%did0 = field.addr int* %dp0 mId @a8
+		%x20 = const int 20 @a8
+		store %did0 %x20 @a8
+		%dz = const int 2099 @a8
+		%dpz = elem.addr La.Res* %d %dz @a8
+		%didz = field.addr int* %dpz mId @a8
+		%x21 = const int 21 @a8
+		store %didz %x21 @a8
+		region.exit r3 @a8
+		%ret = const int 0 @a9.value
+		region.exit r0 @a9
+		ret %ret @a9

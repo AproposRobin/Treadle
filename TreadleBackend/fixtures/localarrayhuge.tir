@@ -1,0 +1,32 @@
+# tir 1
+# A Local array whose size in bytes does not fit (2^61 + 1 ints): a fatal error naming the Local node in
+# both configs (the length check of alloc.array, Security-Review.md finding 2), not a stack or heap overrun.
+program LocalArrayHuge console
+entry Lh.Program.Main()
+
+unit Lh.Program
+type Lh.Program class
+
+func Lh.Program.Length(int) int static sheet "m2" display "Lh.Program.Length"
+	param n int
+	node a1 Entry
+	node a2 Multiply
+	block b0
+		%ten = const int 2305843009213693953 @a2
+		%r = binop int mul %n %ten @a2
+		ret %r @a2
+
+func Lh.Program.Main() int static sheet "m1" display "Lh.Program.Main"
+	slot sa int[] local node a3.object
+	node a1 Entry
+	node a2 Call Lh.Program.Length
+	node a3 Local int[]
+	node a4 Return 0
+	block b0
+		region.enter r0 @a1
+		%seven = const int 1 @a2.n
+		%len = call int Lh.Program.Length(int) %seven @a2
+		%a = local.array int[] sa %len @a3
+		%z = const int 0 @a4.value
+		region.exit r0 @a4
+		ret %z @a4

@@ -1,0 +1,31 @@
+# treadle 1
+type Program class
+	namespace Cfg
+	static
+	doc "The config's flags (Graph-Format.md 5): Build.IsDefined and Build.Value read its define lines; the Profile config defines PROFILE and LEVEL=3, Debug and Release define nothing."
+
+function m0001 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Call Build.IsDefined
+	in name "PROFILE"
+node a3 Branch
+node a4 Call Console.WriteLine(StringView)
+	in text "profile build"
+node a5 Call Console.WriteLine(StringView)
+	in text "not a profile build"
+node a6 Call Build.Value
+	in name "LEVEL"
+node a7 Call Console.WriteLine(StringView)
+node a8 Return
+	in value 0
+wire a1.then a3.in
+wire a2.result a3.condition
+wire a3.true a4.in
+wire a3.false a5.in
+wire a4.then a7.in
+wire a5.then a7.in
+wire a6.result a7.text
+wire a7.then a8.in

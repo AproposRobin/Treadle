@@ -1,0 +1,1319 @@
+# treadle 1
+type Vm class
+	namespace Mini
+	doc "Runs a Chunk on a stack of Values. Calls push a frame (return address, stack base, function) on a Stack; locals live in the value stack above the base. Globals are a Dictionary by name; native functions are delegates in a Dictionary by name (print, len, str). With mTrace on, OnTrace is invoked before each instruction with its index and opcode. Texts made while running (joins, str) are kept in mHeap and deleted with the Vm."
+
+field OnTrace delegate:void(int,int)
+	attr Event
+	doc "Invoked before each instruction when mTrace is on: (instruction index, opcode as an int)."
+
+field mTrace bool
+	doc "Invoke OnTrace for each instruction."
+
+field mChunk Mini.Chunk
+	doc "The code being run (not owned)."
+
+field mStack Mini.Value[]
+	owner owned
+	doc "The value stack."
+
+field mFrames Stack<(int,int,int)>
+	owner owned
+	doc "Call frames: (return index, caller stack base, function index)."
+
+field mGlobals Dictionary<String,Mini.Value>
+	owner owned
+	doc "Global variables; the keys are Strings of the chunk."
+
+field mNatives Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>
+	owner owned
+	doc "Native functions by name; keys and delegates are deleted with the Vm."
+
+field mArgs List<Mini.Value>
+	owner owned
+	doc "The arguments of the native call being made."
+
+field mHeap List<String>
+	owner owned
+	doc "Texts made while running, deleted with the Vm."
+
+field mOut String
+	doc "Where print writes (not owned)."
+
+field mNativeError StringView
+	doc "Set by a native function that fails; the Vm turns it into a runtime error."
+
+field mSteps int
+	doc "Instructions run by the last Run."
+
+field mMaxDepth int
+	init 10000
+	doc "The deepest call nesting allowed."
+
+ctor m0001
+	doc "A Vm for `chunk` that prints into `output`, with the natives print, len and str registered."
+param chunk Mini.Chunk
+param output String
+sheet body
+node x00000 Entry
+node x00001 Set this.mChunk
+node x00002 Set this.mOut
+node x00003 Construct Mini.Value[]
+	set count
+	in count 65536
+node x00004 Set this.mStack
+node x00005 Construct Stack<(int,int,int)>
+node x00006 Set this.mFrames
+node x00007 Construct Dictionary<String,Mini.Value>
+node x00008 Set this.mGlobals
+node x00009 Construct Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>
+node x0000a Set this.mNatives
+node x0000b Construct List<Mini.Value>
+node x0000c Set this.mArgs
+node x0000d Construct List<String>
+node x0000e Set this.mHeap
+node x0000f Construct String
+	set ctor (StringView)
+	in text "print"
+node x0000g This
+node x0000h Bind Mini.Vm.NativePrint
+	set alloc construct
+node x0000i Get this.mNatives
+node x0000j Call Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>.Add
+node x0000k Construct String
+	set ctor (StringView)
+	in text "len"
+node x0000l This
+node x0000m Bind Mini.Vm.NativeLen
+	set alloc construct
+node x0000n Get this.mNatives
+node x0000o Call Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>.Add
+node x0000p Construct String
+	set ctor (StringView)
+	in text "str"
+node x0000q This
+node x0000r Bind Mini.Vm.NativeStr
+	set alloc construct
+node x0000s Get this.mNatives
+node x0000t Call Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>.Add
+node x0000u Return
+wire x00000.then x00001.in
+wire x00000.chunk x00001.value
+wire x00001.then x00002.in
+wire x00000.output x00002.value
+wire x00002.then x00003.in
+wire x00003.then x00004.in
+wire x00003.object x00004.value
+wire x00004.then x00005.in
+wire x00005.then x00006.in
+wire x00005.object x00006.value
+wire x00006.then x00007.in
+wire x00007.then x00008.in
+wire x00007.object x00008.value
+wire x00008.then x00009.in
+wire x00009.then x0000a.in
+wire x00009.object x0000a.value
+wire x0000a.then x0000b.in
+wire x0000b.then x0000c.in
+wire x0000b.object x0000c.value
+wire x0000c.then x0000d.in
+wire x0000d.then x0000e.in
+wire x0000d.object x0000e.value
+wire x0000e.then x0000f.in
+wire x0000f.then x0000h.in
+wire x0000g.value x0000h.receiver
+wire x0000h.then x0000j.in
+wire x0000f.object x0000j.key
+wire x0000i.value x0000j.receiver
+wire x0000h.value x0000j.value
+wire x0000j.then x0000k.in
+wire x0000k.then x0000m.in
+wire x0000l.value x0000m.receiver
+wire x0000m.then x0000o.in
+wire x0000k.object x0000o.key
+wire x0000n.value x0000o.receiver
+wire x0000m.value x0000o.value
+wire x0000o.then x0000p.in
+wire x0000p.then x0000r.in
+wire x0000q.value x0000r.receiver
+wire x0000r.then x0000t.in
+wire x0000p.object x0000t.key
+wire x0000s.value x0000t.receiver
+wire x0000r.value x0000t.value
+wire x0000t.then x0000u.in
+
+dtor m0002
+	doc "Deletes the native names and delegates and the texts made while running; the owned fields go after this Sheet."
+sheet body
+node x01000 Entry
+node x01001 Get this.mNatives
+node x01002 Call Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>.DeleteKeys
+node x01003 Get this.mNatives
+node x01004 Call Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>.DeleteValues
+node x01005 Get this.mHeap
+node x01006 Call List<String>.DeleteAll
+node x01007 Return
+wire x01000.then x01002.in
+wire x01001.value x01002.receiver
+wire x01002.then x01004.in
+wire x01003.value x01004.receiver
+wire x01004.then x01006.in
+wire x01005.value x01006.receiver
+wire x01006.then x01007.in
+
+function m0003 NativePrint
+	returns Mini.Value
+	doc "print(a, b, ...): the values separated by spaces, then a line break."
+param args List<Mini.Value>
+sheet body
+node x02000 Entry
+node x02001 ForEach
+node x02002 Operator >
+	in b 0
+node x02003 Branch
+node x02004 Get this.mOut
+node x02005 Call String.Append(char8)
+	in value 32
+node x02006 Get this.mOut
+node x02007 Call Mini.Value.Append
+node x02008 Get this.mOut
+node x02009 Call String.Append(char8)
+	in value 10
+node x0200a MakeCase Mini.Value.Nil
+node x0200b Return
+wire x02000.args x02001.collection
+wire x02000.then x02001.in
+wire x02001.index x02002.a
+wire x02002.result x02003.condition
+wire x02001.body x02003.in
+wire x02003.true x02005.in
+wire x02004.value x02005.receiver
+wire x02003.false x02007.in
+wire x02005.then x02007.in
+wire x02006.value x02007.into
+wire x02001.element x02007.value
+wire x02001.done x02009.in
+wire x02008.value x02009.receiver
+wire x02009.then x0200b.in
+wire x0200a.value x0200b.value
+
+function m0004 NativeLen
+	returns Mini.Value
+	doc "len(text): the length of a text in bytes."
+param args List<Mini.Value>
+sheet body
+node x03000 Entry
+node x03001 Get List<Mini.Value>.Count
+node x03002 Operator ==
+	in b 1
+node x03003 Branch
+node x03004 Index
+	in index 0
+node x03005 Switch
+	case Str
+node x03006 Call String.Length
+node x03007 MakeCase Mini.Value.Int
+node x03008 Return
+node x03009 Set this.mNativeError
+	in value "len takes one text"
+node x0300a MakeCase Mini.Value.Nil
+node x0300b Return
+wire x03000.args x03001.receiver
+wire x03001.value x03002.a
+wire x03002.result x03003.condition
+wire x03000.then x03003.in
+wire x03000.args x03004.collection
+wire x03003.true x03005.in
+wire x03004.value x03005.value
+wire x03005.case:Str.text x03006.receiver
+wire x03006.result x03007.value
+wire x03005.case:Str x03008.in
+wire x03007.value x03008.value
+wire x03003.false x03009.in
+wire x03005.done x03009.in
+wire x03009.then x0300b.in
+wire x0300a.value x0300b.value
+
+function m0005 NativeStr
+	returns Mini.Value
+	doc "str(value): the value as print shows it, as a new text."
+param args List<Mini.Value>
+sheet body
+node x04000 Entry
+node x04001 Get List<Mini.Value>.Count
+node x04002 Operator !=
+	in b 1
+node x04003 Branch
+node x04004 Set this.mNativeError
+	in value "str takes one value"
+node x04005 MakeCase Mini.Value.Nil
+node x04006 Return
+node x04007 Construct String
+node x04008 Get this.mHeap
+node x04009 Call List<String>.Add
+node x0400a Index
+	in index 0
+node x0400b Call Mini.Value.Append
+node x0400c MakeCase Mini.Value.Str
+node x0400d Return
+wire x04000.args x04001.receiver
+wire x04001.value x04002.a
+wire x04002.result x04003.condition
+wire x04000.then x04003.in
+wire x04003.true x04004.in
+wire x04004.then x04006.in
+wire x04005.value x04006.value
+wire x04003.false x04007.in
+wire x04007.then x04009.in
+wire x04008.value x04009.receiver
+wire x04007.object x04009.value
+wire x04000.args x0400a.collection
+wire x04009.then x0400b.in
+wire x04007.object x0400b.into
+wire x0400a.value x0400b.value
+wire x04007.object x0400c.text
+wire x0400b.then x0400d.in
+wire x0400c.value x0400d.value
+
+function m0006 Fail
+	static
+	pure
+	access private
+	returns Result<Mini.Value,Mini.ScriptError>
+	doc "An Err result at a packed position."
+param pos int
+param message StringView
+param detail StringView
+sheet body
+node x05000 Entry
+node x05001 Call Mini.ScriptError.At
+node x05002 MakeCase Result<Mini.Value,Mini.ScriptError>.Err
+node x05003 Return
+wire x05000.detail x05001.detail
+wire x05000.message x05001.message
+wire x05000.pos x05001.pos
+wire x05001.result x05002.error
+wire x05000.then x05003.in
+wire x05002.value x05003.value
+
+function m0007 NameOf
+	static
+	pure
+	access private
+	returns StringView
+	doc "The text of a Str constant (a name); empty for other values."
+param value Mini.Value
+sheet body
+node x06000 Entry
+node x06001 Switch
+	case Str
+node x06002 Return
+node x06003 Return
+	in value ""
+wire x06000.then x06001.in
+wire x06000.value x06001.value
+wire x06001.case:Str x06002.in
+wire x06001.case:Str.text x06002.value
+wire x06001.done x06003.in
+
+function m0008 Arith
+	access private
+	returns Result<Mini.Value,StringView>
+	doc "The general case of an arithmetic or comparison opcode: == and != on any values, + joining texts, numbers mixed (an Int with a Float gives a Float), division by a zero whole number refused. Err is the message."
+param op Mini.Opcode
+param a Mini.Value
+param b Mini.Value
+sheet body
+node x07000 Entry
+node x07001 Switch
+	case Eq
+	case Ne
+	case Add
+node x07002 Call Mini.Value.Equal
+node x07003 MakeCase Mini.Value.Bool
+node x07004 MakeCase Result<Mini.Value,StringView>.Ok
+node x07005 Return
+node x07006 Call Mini.Value.Equal
+node x07007 Operator !
+node x07008 MakeCase Mini.Value.Bool
+node x07009 MakeCase Result<Mini.Value,StringView>.Ok
+node x0700a Return
+node x0700b Call Mini.Value.IsText
+node x0700c Call Mini.Value.IsText
+node x0700d Operator ||
+node x0700e Branch
+node x0700f Construct String
+node x0700g Get this.mHeap
+node x0700h Call List<String>.Add
+node x0700i Call Mini.Value.Append
+node x0700j Call Mini.Value.Append
+node x0700k MakeCase Mini.Value.Str
+node x0700l MakeCase Result<Mini.Value,StringView>.Ok
+node x0700m Return
+node x0700n Call Mini.Value.IsNumber
+node x0700o Operator !
+node x0700p Call Mini.Value.IsNumber
+node x0700q Operator !
+node x0700r Operator ||
+node x0700s Branch
+node x0700t MakeCase Result<Mini.Value,StringView>.Err
+	in error "operands must be numbers"
+node x0700u Return
+node x0700v IsCase Mini.Value.Int
+node x0700w IsCase Mini.Value.Int
+node x0700x Operator &&
+node x0700y Branch
+node x0700z Operator ==
+	in b 0
+node x07010 Operator ==
+	in b .Div
+node x07011 Operator ==
+	in b .Mod
+node x07012 Operator ||
+node x07013 Operator &&
+node x07014 Branch
+node x07015 MakeCase Result<Mini.Value,StringView>.Err
+	in error "division by zero"
+node x07016 Return
+node x07017 Call Mini.Value.IntOp
+node x07018 MakeCase Result<Mini.Value,StringView>.Ok
+node x07019 Return
+node x0701a Call Mini.Value.ToFloat
+node x0701b Call Mini.Value.ToFloat
+node x0701c Call Mini.Value.FloatOp
+node x0701d MakeCase Result<Mini.Value,StringView>.Ok
+node x0701e Return
+wire x07000.then x07001.in
+wire x07000.op x07001.value
+wire x07000.a x07002.a
+wire x07000.b x07002.b
+wire x07002.result x07003.value
+wire x07003.value x07004.value
+wire x07001.case:Eq x07005.in
+wire x07004.value x07005.value
+wire x07000.a x07006.a
+wire x07000.b x07006.b
+wire x07006.result x07007.a
+wire x07007.result x07008.value
+wire x07008.value x07009.value
+wire x07001.case:Ne x0700a.in
+wire x07009.value x0700a.value
+wire x07000.a x0700b.value
+wire x07000.b x0700c.value
+wire x0700b.result x0700d.a
+wire x0700c.result x0700d.b
+wire x0700d.result x0700e.condition
+wire x07001.case:Add x0700e.in
+wire x0700e.true x0700f.in
+wire x0700f.then x0700h.in
+wire x0700g.value x0700h.receiver
+wire x0700f.object x0700h.value
+wire x0700h.then x0700i.in
+wire x0700f.object x0700i.into
+wire x07000.a x0700i.value
+wire x0700i.then x0700j.in
+wire x0700f.object x0700j.into
+wire x07000.b x0700j.value
+wire x0700f.object x0700k.text
+wire x0700k.value x0700l.value
+wire x0700j.then x0700m.in
+wire x0700l.value x0700m.value
+wire x07000.a x0700n.value
+wire x0700n.result x0700o.a
+wire x07000.b x0700p.value
+wire x0700p.result x0700q.a
+wire x0700o.result x0700r.a
+wire x0700q.result x0700r.b
+wire x0700r.result x0700s.condition
+wire x07001.done x0700s.in
+wire x0700s.true x0700u.in
+wire x0700t.value x0700u.value
+wire x07000.a x0700v.value
+wire x07000.b x0700w.value
+wire x0700v.result x0700x.a
+wire x0700w.result x0700x.b
+wire x0700x.result x0700y.condition
+wire x0700s.false x0700y.in
+wire x0700w.value x0700z.a
+wire x07000.op x07010.a
+wire x07000.op x07011.a
+wire x07010.result x07012.a
+wire x07011.result x07012.b
+wire x0700z.result x07013.a
+wire x07012.result x07013.b
+wire x07013.result x07014.condition
+wire x0700y.true x07014.in
+wire x07014.true x07016.in
+wire x07015.value x07016.value
+wire x0700v.value x07017.a
+wire x0700w.value x07017.b
+wire x07000.op x07017.op
+wire x07017.result x07018.value
+wire x07014.false x07019.in
+wire x07018.value x07019.value
+wire x07000.a x0701a.value
+wire x07000.b x0701b.value
+wire x0701a.result x0701c.a
+wire x0701b.result x0701c.b
+wire x07000.op x0701c.op
+wire x0701c.result x0701d.value
+wire x0700y.false x0701e.in
+wire x0701d.value x0701e.value
+
+function m0009 Run
+	returns Result<Mini.Value,Mini.ScriptError>
+	doc "Runs the chunk from instruction 0 to Halt: Ok(nil), or Err with the position of the instruction that failed. mSteps counts the instructions run."
+local pc int
+local sp int
+local base int
+local steps int
+local ins Mini.Instr
+local a Mini.Value
+local b Mini.Value
+local code List<Mini.Instr>
+local consts List<Mini.Value>
+local stack Mini.Value[]
+local func int
+local argc int
+local key StringView
+local result Mini.Value
+sheet body
+node x08000 Entry
+node x08001 Get this.mChunk
+node x08002 Get Mini.Chunk.Code
+node x08003 Set local:code
+node x08004 Get this.mChunk
+node x08005 Get Mini.Chunk.Constants
+node x08006 Set local:consts
+node x08007 Get this.mStack
+node x08008 Set local:stack
+node x08009 While
+	in condition true
+node x0800a Get local:code
+node x0800b Get local:pc
+node x0800c Index
+node x0800d Set local:ins
+node x0800e Set local:pc
+	set op +=
+	in value 1
+node x0800f Set local:steps
+	set op +=
+	in value 1
+node x0800g Get this.mTrace
+node x0800h Branch
+node x0800i Get local:pc
+node x0800j Operator -
+	in b 1
+node x0800k Get local:ins
+node x0800l Get Mini.Instr.Op
+node x0800m Cast int
+node x0800n Call this.OnTrace.Invoke
+node x0800o Get local:ins
+node x0800p Get Mini.Instr.Op
+node x0800q Switch
+	case Const
+	case Nil
+	case Pop
+	case LoadLocal
+	case StoreLocal
+	case LoadGlobal
+	case StoreGlobal
+	case Add
+	case Sub
+	case Mul
+	case Div
+	case Mod
+	case Lt
+	case Le
+	case Gt
+	case Ge
+	case Eq
+	case Ne
+	case Neg
+	case Not
+	case Jump
+	case JumpIfFalse
+	case JumpIfFalseKeep
+	case JumpIfTrueKeep
+	case Call
+	case CallNative
+	case Return
+	case Halt
+node x0800r Get local:consts
+node x0800s Get local:ins
+node x0800t Get Mini.Instr.A
+node x0800u Index
+node x0800v Get local:sp
+node x0800w Get local:stack
+node x0800x Call Arrays.Set
+node x0800y Set local:sp
+	set op +=
+	in value 1
+node x0800z MakeCase Mini.Value.Nil
+node x08010 Get local:sp
+node x08011 Get local:stack
+node x08012 Call Arrays.Set
+node x08013 Set local:sp
+	set op +=
+	in value 1
+node x08014 Set local:sp
+	set op -=
+	in value 1
+node x08015 Get local:base
+node x08016 Get local:ins
+node x08017 Get Mini.Instr.A
+node x08018 Operator +
+node x08019 Get local:stack
+node x0801a Index
+node x0801b Get local:sp
+node x0801c Get local:stack
+node x0801d Call Arrays.Set
+node x0801e Set local:sp
+	set op +=
+	in value 1
+node x0801f Set local:sp
+	set op -=
+	in value 1
+node x0801g Get local:base
+node x0801h Get local:ins
+node x0801i Get Mini.Instr.A
+node x0801j Operator +
+node x0801k Get local:sp
+node x0801l Get local:stack
+node x0801m Index
+node x0801n Get local:stack
+node x0801o Call Arrays.Set
+node x0801p Get local:consts
+node x0801q Get local:ins
+node x0801r Get Mini.Instr.A
+node x0801s Index
+node x0801t Call Mini.Vm.NameOf
+node x0801u Set local:key
+node x0801v Get local:consts
+node x0801w Get local:ins
+node x0801x Get Mini.Instr.A
+node x0801y Index
+node x0801z Switch
+	case Str
+node x08020 Get this.mGlobals
+node x08021 Call Dictionary<String,Mini.Value>.TryGet
+node x08022 Operator !
+node x08023 Branch
+node x08024 Get local:key
+node x08025 Get local:steps
+node x08026 Set this.mSteps
+node x08027 Get local:ins
+node x08028 Get Mini.Instr.Pos
+node x08029 Call this.Fail
+	in message "undefined variable"
+node x0802a Return
+node x0802b Get local:sp
+node x0802c Get local:stack
+node x0802d Call Arrays.Set
+node x0802e Set local:sp
+	set op +=
+	in value 1
+node x0802f Get local:consts
+node x0802g Get local:ins
+node x0802h Get Mini.Instr.A
+node x0802i Index
+node x0802j Switch
+	case Str
+node x0802k Get local:ins
+node x0802l Get Mini.Instr.B
+node x0802m Operator ==
+	in b 1
+node x0802n Get this.mGlobals
+node x0802o Call Dictionary<String,Mini.Value>.ContainsKey
+node x0802p Operator !
+node x0802q Operator &&
+node x0802r Branch
+node x0802s Call String.View
+node x0802t Get local:steps
+node x0802u Set this.mSteps
+node x0802v Get local:ins
+node x0802w Get Mini.Instr.Pos
+node x0802x Call this.Fail
+	in message "undefined variable"
+node x0802y Return
+node x0802z Set local:sp
+	set op -=
+	in value 1
+node x08030 Get local:sp
+node x08031 Get local:stack
+node x08032 Index
+node x08033 Get this.mGlobals
+node x08034 Call Dictionary<String,Mini.Value>.SetItem
+node x08035 Get local:sp
+node x08036 Operator -
+	in b 2
+node x08037 Get local:stack
+node x08038 Index
+node x08039 Set local:a
+node x0803a Get local:sp
+node x0803b Operator -
+	in b 1
+node x0803c Get local:stack
+node x0803d Index
+node x0803e Set local:b
+node x0803f Get local:a
+node x0803g IsCase Mini.Value.Int
+node x0803h Get local:b
+node x0803i IsCase Mini.Value.Int
+node x0803j Operator &&
+node x0803k Operator !=
+	in b 0
+node x0803l Operator &&
+node x0803m Branch
+node x0803n Get local:sp
+node x0803o Operator -
+	in b 2
+node x0803p Get local:ins
+node x0803q Get Mini.Instr.Op
+node x0803r Call Mini.Value.IntOp
+node x0803s Get local:stack
+node x0803t Call Arrays.Set
+node x0803u Get local:ins
+node x0803v Get Mini.Instr.Op
+node x0803w Get local:a
+node x0803x Get local:b
+node x0803y Call this.Arith
+node x0803z ResultMatch
+node x08040 Get local:sp
+node x08041 Operator -
+	in b 2
+node x08042 Get local:stack
+node x08043 Call Arrays.Set
+node x08044 Get local:steps
+node x08045 Set this.mSteps
+node x08046 Get local:ins
+node x08047 Get Mini.Instr.Pos
+node x08048 Call this.Fail
+	in detail ""
+node x08049 Return
+node x0804a Set local:sp
+	set op -=
+	in value 1
+node x0804b Get local:sp
+node x0804c Operator -
+	in b 1
+node x0804d Get local:stack
+node x0804e Index
+node x0804f Switch
+	case Int
+	case Float
+node x0804g Get local:sp
+node x0804h Operator -
+	in b 1
+node x0804i Operator neg
+node x0804j MakeCase Mini.Value.Int
+node x0804k Get local:stack
+node x0804l Call Arrays.Set
+node x0804m Get local:sp
+node x0804n Operator -
+	in b 1
+node x0804o Operator neg
+node x0804p MakeCase Mini.Value.Float
+node x0804q Get local:stack
+node x0804r Call Arrays.Set
+node x0804s Get local:steps
+node x0804t Set this.mSteps
+node x0804u Get local:ins
+node x0804v Get Mini.Instr.Pos
+node x0804w Call this.Fail
+	in message "operand must be a number"
+	in detail ""
+node x0804x Return
+node x0804y Get local:sp
+node x0804z Operator -
+	in b 1
+node x08050 Get local:sp
+node x08051 Operator -
+	in b 1
+node x08052 Get local:stack
+node x08053 Index
+node x08054 Call Mini.Value.Truthy
+node x08055 Operator !
+node x08056 MakeCase Mini.Value.Bool
+node x08057 Get local:stack
+node x08058 Call Arrays.Set
+node x08059 Get local:ins
+node x0805a Get Mini.Instr.A
+node x0805b Set local:pc
+node x0805c Set local:sp
+	set op -=
+	in value 1
+node x0805d Get local:sp
+node x0805e Get local:stack
+node x0805f Index
+node x0805g Call Mini.Value.Truthy
+node x0805h Operator !
+node x0805i Branch
+node x0805j Get local:ins
+node x0805k Get Mini.Instr.A
+node x0805l Set local:pc
+node x0805m Get local:sp
+node x0805n Operator -
+	in b 1
+node x0805o Get local:stack
+node x0805p Index
+node x0805q Call Mini.Value.Truthy
+node x0805r Operator !
+node x0805s Branch
+node x0805t Get local:ins
+node x0805u Get Mini.Instr.A
+node x0805v Set local:pc
+node x0805w Get local:sp
+node x0805x Operator -
+	in b 1
+node x0805y Get local:stack
+node x0805z Index
+node x08060 Call Mini.Value.Truthy
+node x08061 Branch
+node x08062 Get local:ins
+node x08063 Get Mini.Instr.A
+node x08064 Set local:pc
+node x08065 Get local:ins
+node x08066 Get Mini.Instr.A
+node x08067 Set local:argc
+node x08068 Get local:sp
+node x08069 Get local:argc
+node x0806a Operator -
+node x0806b Operator -
+	in b 1
+node x0806c Get local:stack
+node x0806d Index
+node x0806e Switch
+	case Func
+node x0806f Set local:func
+node x0806g Get this.mChunk
+node x0806h Get Mini.Chunk.FuncArity
+node x0806i Get local:func
+node x0806j Index
+node x0806k Get local:argc
+node x0806l Operator !=
+node x0806m Branch
+node x0806n Get local:steps
+node x0806o Set this.mSteps
+node x0806p Get local:ins
+node x0806q Get Mini.Instr.Pos
+node x0806r Call this.Fail
+	in message "wrong number of arguments"
+	in detail ""
+node x0806s Return
+node x0806t Get this.mFrames
+node x0806u Get Stack<(int,int,int)>.Count
+node x0806v Get this.mMaxDepth
+node x0806w Operator >=
+node x0806x Branch
+node x0806y Get local:steps
+node x0806z Set this.mSteps
+node x08070 Get local:ins
+node x08071 Get Mini.Instr.Pos
+node x08072 Call this.Fail
+	in message "calls nested too deeply"
+	in detail ""
+node x08073 Return
+node x08074 Get local:pc
+node x08075 Get local:base
+node x08076 Get local:func
+node x08077 Make (int,int,int)
+node x08078 Get this.mFrames
+node x08079 Call Stack<(int,int,int)>.Push
+node x0807a Get local:sp
+node x0807b Get local:argc
+node x0807c Operator -
+node x0807d Set local:base
+node x0807e Get local:argc
+node x0807f Get this.mChunk
+node x0807g Get Mini.Chunk.FuncSlots
+node x0807h Get local:func
+node x0807i Index
+node x0807j Get local:argc
+node x0807k Operator -
+node x0807l For
+node x0807m MakeCase Mini.Value.Nil
+node x0807n Get local:sp
+node x0807o Get local:stack
+node x0807p Call Arrays.Set
+node x0807q Set local:sp
+	set op +=
+	in value 1
+node x0807r Get this.mChunk
+node x0807s Get Mini.Chunk.FuncEntry
+node x0807t Get local:func
+node x0807u Index
+node x0807v Set local:pc
+node x0807w Get local:steps
+node x0807x Set this.mSteps
+node x0807y Get local:ins
+node x0807z Get Mini.Instr.Pos
+node x08080 Call this.Fail
+	in message "not a function"
+	in detail ""
+node x08081 Return
+node x08082 Get local:ins
+node x08083 Get Mini.Instr.B
+node x08084 Set local:argc
+node x08085 Get this.mArgs
+node x08086 Call List<Mini.Value>.Clear
+node x08087 Get local:argc
+node x08088 For
+	in start 0
+node x08089 Get local:sp
+node x0808a Get local:argc
+node x0808b Operator -
+node x0808c Operator +
+node x0808d Get local:stack
+node x0808e Index
+node x0808f Get this.mArgs
+node x0808g Call List<Mini.Value>.Add
+node x0808h Get local:argc
+node x0808i Set local:sp
+	set op -=
+node x0808j Get local:consts
+node x0808k Get local:ins
+node x0808l Get Mini.Instr.A
+node x0808m Index
+node x0808n Switch
+	case Str
+node x0808o Get this.mNatives
+node x0808p Call Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>.TryGet
+node x0808q Get this.mArgs
+node x0808r Invoke
+node x0808s Get this.mNativeError
+node x0808t Call StringView.IsEmpty
+node x0808u Operator !
+node x0808v Branch
+node x0808w Get this.mNativeError
+node x0808x Call String.View
+node x0808y Get local:steps
+node x0808z Set this.mSteps
+node x08090 Get local:ins
+node x08091 Get Mini.Instr.Pos
+node x08092 Call this.Fail
+node x08093 Return
+node x08094 Get local:sp
+node x08095 Get local:stack
+node x08096 Call Arrays.Set
+node x08097 Set local:sp
+	set op +=
+	in value 1
+node x08098 Get local:sp
+node x08099 Operator -
+	in b 1
+node x0809a Get local:stack
+node x0809b Index
+node x0809c Set local:result
+node x0809d Get this.mFrames
+node x0809e Call Stack<(int,int,int)>.Pop
+node x0809f Break (int,int,int)
+node x0809g Get local:base
+node x0809h Operator -
+	in b 1
+node x0809i Set local:sp
+node x0809j Get local:result
+node x0809k Get local:sp
+node x0809l Get local:stack
+node x0809m Call Arrays.Set
+node x0809n Set local:sp
+	set op +=
+	in value 1
+node x0809o Set local:pc
+node x0809p Set local:base
+node x0809q Get local:steps
+node x0809r Set this.mSteps
+node x0809s MakeCase Mini.Value.Nil
+node x0809t MakeCase Result<Mini.Value,Mini.ScriptError>.Ok
+node x0809u Return
+node x0809v Fatal
+	in message "unreachable: the loop only ends by Return"
+wire x08001.value x08002.receiver
+wire x08000.then x08003.in
+wire x08002.value x08003.value
+wire x08004.value x08005.receiver
+wire x08003.then x08006.in
+wire x08005.value x08006.value
+wire x08006.then x08008.in
+wire x08007.value x08008.value
+wire x08008.then x08009.in
+wire x0800a.value x0800c.collection
+wire x0800b.value x0800c.index
+wire x08009.body x0800d.in
+wire x0800c.value x0800d.value
+wire x0800d.then x0800e.in
+wire x0800e.then x0800f.in
+wire x0800g.value x0800h.condition
+wire x0800f.then x0800h.in
+wire x0800i.value x0800j.a
+wire x0800k.value x0800l.receiver
+wire x0800l.value x0800m.value
+wire x0800j.result x0800n.arg0
+wire x0800m.result x0800n.arg1
+wire x0800h.true x0800n.in
+wire x0800o.value x0800p.receiver
+wire x0800h.false x0800q.in
+wire x0800n.then x0800q.in
+wire x0800p.value x0800q.value
+wire x0800s.value x0800t.receiver
+wire x0800r.value x0800u.collection
+wire x0800t.value x0800u.index
+wire x0800w.value x0800x.array
+wire x0800q.case:Const x0800x.in
+wire x0800v.value x0800x.index
+wire x0800u.value x0800x.value
+wire x0800x.then x0800y.in
+wire x08011.value x08012.array
+wire x0800q.case:Nil x08012.in
+wire x08010.value x08012.index
+wire x0800z.value x08012.value
+wire x08012.then x08013.in
+wire x0800q.case:Pop x08014.in
+wire x08016.value x08017.receiver
+wire x08015.value x08018.a
+wire x08017.value x08018.b
+wire x08019.value x0801a.collection
+wire x08018.result x0801a.index
+wire x0801c.value x0801d.array
+wire x0800q.case:LoadLocal x0801d.in
+wire x0801b.value x0801d.index
+wire x0801a.value x0801d.value
+wire x0801d.then x0801e.in
+wire x0800q.case:StoreLocal x0801f.in
+wire x0801h.value x0801i.receiver
+wire x0801g.value x0801j.a
+wire x0801i.value x0801j.b
+wire x0801l.value x0801m.collection
+wire x0801k.value x0801m.index
+wire x0801n.value x0801o.array
+wire x0801f.then x0801o.in
+wire x0801j.result x0801o.index
+wire x0801m.value x0801o.value
+wire x0801q.value x0801r.receiver
+wire x0801p.value x0801s.collection
+wire x0801r.value x0801s.index
+wire x0801s.value x0801t.value
+wire x0800q.case:LoadGlobal x0801u.in
+wire x0801t.result x0801u.value
+wire x0801w.value x0801x.receiver
+wire x0801v.value x0801y.collection
+wire x0801x.value x0801y.index
+wire x0801u.then x0801z.in
+wire x0801y.value x0801z.value
+wire x0801z.case:Str x08021.in
+wire x0801z.case:Str.text x08021.key
+wire x08020.value x08021.receiver
+wire x08021.result x08022.a
+wire x08022.result x08023.condition
+wire x08021.then x08023.in
+wire x08023.true x08026.in
+wire x08025.value x08026.value
+wire x08027.value x08028.receiver
+wire x08024.value x08029.detail
+wire x08028.value x08029.pos
+wire x08026.then x0802a.in
+wire x08029.result x0802a.value
+wire x0802c.value x0802d.array
+wire x08023.false x0802d.in
+wire x0802b.value x0802d.index
+wire x08021.item x0802d.value
+wire x0802d.then x0802e.in
+wire x0802g.value x0802h.receiver
+wire x0802f.value x0802i.collection
+wire x0802h.value x0802i.index
+wire x0800q.case:StoreGlobal x0802j.in
+wire x0802i.value x0802j.value
+wire x0802k.value x0802l.receiver
+wire x0802l.value x0802m.a
+wire x0802j.case:Str.text x0802o.key
+wire x0802n.value x0802o.receiver
+wire x0802o.result x0802p.a
+wire x0802m.result x0802q.a
+wire x0802p.result x0802q.b
+wire x0802q.result x0802r.condition
+wire x0802j.case:Str x0802r.in
+wire x0802j.case:Str.text x0802s.receiver
+wire x0802r.true x0802u.in
+wire x0802t.value x0802u.value
+wire x0802v.value x0802w.receiver
+wire x0802s.result x0802x.detail
+wire x0802w.value x0802x.pos
+wire x0802u.then x0802y.in
+wire x0802x.result x0802y.value
+wire x0802r.false x0802z.in
+wire x08031.value x08032.collection
+wire x08030.value x08032.index
+wire x0802z.then x08034.in
+wire x0802j.case:Str.text x08034.key
+wire x08033.value x08034.receiver
+wire x08032.value x08034.value
+wire x08035.value x08036.a
+wire x08037.value x08038.collection
+wire x08036.result x08038.index
+wire x0800q.case:Add x08039.in
+wire x0800q.case:Div x08039.in
+wire x0800q.case:Eq x08039.in
+wire x0800q.case:Ge x08039.in
+wire x0800q.case:Gt x08039.in
+wire x0800q.case:Le x08039.in
+wire x0800q.case:Lt x08039.in
+wire x0800q.case:Mod x08039.in
+wire x0800q.case:Mul x08039.in
+wire x0800q.case:Ne x08039.in
+wire x0800q.case:Sub x08039.in
+wire x08038.value x08039.value
+wire x0803a.value x0803b.a
+wire x0803c.value x0803d.collection
+wire x0803b.result x0803d.index
+wire x08039.then x0803e.in
+wire x0803d.value x0803e.value
+wire x0803f.value x0803g.value
+wire x0803h.value x0803i.value
+wire x0803g.result x0803j.a
+wire x0803i.result x0803j.b
+wire x0803i.value x0803k.a
+wire x0803j.result x0803l.a
+wire x0803k.result x0803l.b
+wire x0803l.result x0803m.condition
+wire x0803e.then x0803m.in
+wire x0803n.value x0803o.a
+wire x0803p.value x0803q.receiver
+wire x0803g.value x0803r.a
+wire x0803i.value x0803r.b
+wire x0803q.value x0803r.op
+wire x0803s.value x0803t.array
+wire x0803m.true x0803t.in
+wire x0803o.result x0803t.index
+wire x0803r.result x0803t.value
+wire x0803u.value x0803v.receiver
+wire x0803w.value x0803y.a
+wire x0803x.value x0803y.b
+wire x0803m.false x0803y.in
+wire x0803v.value x0803y.op
+wire x0803y.then x0803z.in
+wire x0803y.result x0803z.result
+wire x08040.value x08041.a
+wire x08042.value x08043.array
+wire x0803z.ok x08043.in
+wire x08041.result x08043.index
+wire x0803z.value x08043.value
+wire x0803z.err x08045.in
+wire x08044.value x08045.value
+wire x08046.value x08047.receiver
+wire x0803z.error x08048.message
+wire x08047.value x08048.pos
+wire x08045.then x08049.in
+wire x08048.result x08049.value
+wire x0803t.then x0804a.in
+wire x0803z.done x0804a.in
+wire x0804b.value x0804c.a
+wire x0804d.value x0804e.collection
+wire x0804c.result x0804e.index
+wire x0800q.case:Neg x0804f.in
+wire x0804e.value x0804f.value
+wire x0804g.value x0804h.a
+wire x0804f.case:Int.value x0804i.a
+wire x0804i.result x0804j.value
+wire x0804k.value x0804l.array
+wire x0804f.case:Int x0804l.in
+wire x0804h.result x0804l.index
+wire x0804j.value x0804l.value
+wire x0804m.value x0804n.a
+wire x0804f.case:Float.value x0804o.a
+wire x0804o.result x0804p.value
+wire x0804q.value x0804r.array
+wire x0804f.case:Float x0804r.in
+wire x0804n.result x0804r.index
+wire x0804p.value x0804r.value
+wire x0804f.default x0804t.in
+wire x0804s.value x0804t.value
+wire x0804u.value x0804v.receiver
+wire x0804v.value x0804w.pos
+wire x0804t.then x0804x.in
+wire x0804w.result x0804x.value
+wire x0804y.value x0804z.a
+wire x08050.value x08051.a
+wire x08052.value x08053.collection
+wire x08051.result x08053.index
+wire x08053.value x08054.value
+wire x08054.result x08055.a
+wire x08055.result x08056.value
+wire x08057.value x08058.array
+wire x0800q.case:Not x08058.in
+wire x0804z.result x08058.index
+wire x08056.value x08058.value
+wire x08059.value x0805a.receiver
+wire x0800q.case:Jump x0805b.in
+wire x0805a.value x0805b.value
+wire x0800q.case:JumpIfFalse x0805c.in
+wire x0805e.value x0805f.collection
+wire x0805d.value x0805f.index
+wire x0805f.value x0805g.value
+wire x0805g.result x0805h.a
+wire x0805h.result x0805i.condition
+wire x0805c.then x0805i.in
+wire x0805j.value x0805k.receiver
+wire x0805i.true x0805l.in
+wire x0805k.value x0805l.value
+wire x0805m.value x0805n.a
+wire x0805o.value x0805p.collection
+wire x0805n.result x0805p.index
+wire x0805p.value x0805q.value
+wire x0805q.result x0805r.a
+wire x0805r.result x0805s.condition
+wire x0800q.case:JumpIfFalseKeep x0805s.in
+wire x0805t.value x0805u.receiver
+wire x0805s.true x0805v.in
+wire x0805u.value x0805v.value
+wire x0805w.value x0805x.a
+wire x0805y.value x0805z.collection
+wire x0805x.result x0805z.index
+wire x0805z.value x08060.value
+wire x08060.result x08061.condition
+wire x0800q.case:JumpIfTrueKeep x08061.in
+wire x08062.value x08063.receiver
+wire x08061.true x08064.in
+wire x08063.value x08064.value
+wire x08065.value x08066.receiver
+wire x0800q.case:Call x08067.in
+wire x08066.value x08067.value
+wire x08068.value x0806a.a
+wire x08069.value x0806a.b
+wire x0806a.result x0806b.a
+wire x0806c.value x0806d.collection
+wire x0806b.result x0806d.index
+wire x08067.then x0806e.in
+wire x0806d.value x0806e.value
+wire x0806e.case:Func x0806f.in
+wire x0806e.case:Func.index x0806f.value
+wire x0806g.value x0806h.receiver
+wire x0806h.value x0806j.collection
+wire x0806i.value x0806j.index
+wire x0806j.value x0806l.a
+wire x0806k.value x0806l.b
+wire x0806l.result x0806m.condition
+wire x0806f.then x0806m.in
+wire x0806m.true x0806o.in
+wire x0806n.value x0806o.value
+wire x0806p.value x0806q.receiver
+wire x0806q.value x0806r.pos
+wire x0806o.then x0806s.in
+wire x0806r.result x0806s.value
+wire x0806t.value x0806u.receiver
+wire x0806u.value x0806w.a
+wire x0806v.value x0806w.b
+wire x0806w.result x0806x.condition
+wire x0806m.false x0806x.in
+wire x0806x.true x0806z.in
+wire x0806y.value x0806z.value
+wire x08070.value x08071.receiver
+wire x08071.value x08072.pos
+wire x0806z.then x08073.in
+wire x08072.result x08073.value
+wire x08074.value x08077.item0
+wire x08075.value x08077.item1
+wire x08076.value x08077.item2
+wire x0806x.false x08079.in
+wire x08078.value x08079.receiver
+wire x08077.value x08079.value
+wire x0807a.value x0807c.a
+wire x0807b.value x0807c.b
+wire x08079.then x0807d.in
+wire x0807c.result x0807d.value
+wire x0807f.value x0807g.receiver
+wire x0807g.value x0807i.collection
+wire x0807h.value x0807i.index
+wire x0807i.value x0807k.a
+wire x0807j.value x0807k.b
+wire x0807k.result x0807l.count
+wire x0807d.then x0807l.in
+wire x0807e.value x0807l.start
+wire x0807o.value x0807p.array
+wire x0807l.body x0807p.in
+wire x0807n.value x0807p.index
+wire x0807m.value x0807p.value
+wire x0807p.then x0807q.in
+wire x0807r.value x0807s.receiver
+wire x0807s.value x0807u.collection
+wire x0807t.value x0807u.index
+wire x0807l.done x0807v.in
+wire x0807u.value x0807v.value
+wire x0806e.default x0807x.in
+wire x0807w.value x0807x.value
+wire x0807y.value x0807z.receiver
+wire x0807z.value x08080.pos
+wire x0807x.then x08081.in
+wire x08080.result x08081.value
+wire x08082.value x08083.receiver
+wire x0800q.case:CallNative x08084.in
+wire x08083.value x08084.value
+wire x08084.then x08086.in
+wire x08085.value x08086.receiver
+wire x08087.value x08088.count
+wire x08086.then x08088.in
+wire x08089.value x0808b.a
+wire x0808a.value x0808b.b
+wire x0808b.result x0808c.a
+wire x08088.index x0808c.b
+wire x0808d.value x0808e.collection
+wire x0808c.result x0808e.index
+wire x08088.body x0808g.in
+wire x0808f.value x0808g.receiver
+wire x0808e.value x0808g.value
+wire x08088.done x0808i.in
+wire x0808h.value x0808i.value
+wire x0808k.value x0808l.receiver
+wire x0808j.value x0808m.collection
+wire x0808l.value x0808m.index
+wire x0808i.then x0808n.in
+wire x0808m.value x0808n.value
+wire x0808n.case:Str x0808p.in
+wire x0808n.case:Str.text x0808p.key
+wire x0808o.value x0808p.receiver
+wire x0808q.value x0808r.arg0
+wire x0808p.item x0808r.delegate
+wire x0808p.then x0808r.in
+wire x0808s.value x0808t.receiver
+wire x0808t.result x0808u.a
+wire x0808u.result x0808v.condition
+wire x0808r.then x0808v.in
+wire x0808n.case:Str.text x0808x.receiver
+wire x0808v.true x0808z.in
+wire x0808y.value x0808z.value
+wire x08090.value x08091.receiver
+wire x0808x.result x08092.detail
+wire x0808w.value x08092.message
+wire x08091.value x08092.pos
+wire x0808z.then x08093.in
+wire x08092.result x08093.value
+wire x08095.value x08096.array
+wire x0808v.false x08096.in
+wire x08094.value x08096.index
+wire x0808r.result x08096.value
+wire x08096.then x08097.in
+wire x08098.value x08099.a
+wire x0809a.value x0809b.collection
+wire x08099.result x0809b.index
+wire x0800q.case:Return x0809c.in
+wire x0809b.value x0809c.value
+wire x0809c.then x0809e.in
+wire x0809d.value x0809e.receiver
+wire x0809e.result x0809f.value
+wire x0809g.value x0809h.a
+wire x0809e.then x0809i.in
+wire x0809h.result x0809i.value
+wire x0809l.value x0809m.array
+wire x0809i.then x0809m.in
+wire x0809k.value x0809m.index
+wire x0809j.value x0809m.value
+wire x0809m.then x0809n.in
+wire x0809n.then x0809o.in
+wire x0809f.item0 x0809o.value
+wire x0809o.then x0809p.in
+wire x0809f.item1 x0809p.value
+wire x0800q.case:Halt x0809r.in
+wire x0809q.value x0809r.value
+wire x0809s.value x0809t.value
+wire x0809r.then x0809u.in
+wire x0809t.value x0809u.value
+wire x08009.done x0809v.in

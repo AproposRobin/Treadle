@@ -1,0 +1,38 @@
+# treadle 1
+type ArrayArena class
+	namespace M2
+	static
+	doc "Construct of an array with an allocator (Language.md 3, Construct with allocator): the array is allocated through the Arena (its Alloc) and Delete with the same allocator frees it there. Run prints 1, 4, 0."
+
+function y0001 Run
+	static
+sheet body
+node a1 Entry
+node a2 Local M2.Arena
+node a3 Construct int
+	set count
+	in count 4
+node a4 Call M2.Arena.Live
+node a5 Call Console.WriteLine(int)
+node a6 Get int[].Length
+node a7 Call Console.WriteLine(int)
+node a8 Delete
+node a9 Call M2.Arena.Live
+node b1 Call Console.WriteLine(int)
+node b2 Return
+wire a1.then a2.in
+wire a2.object a3.allocator
+wire a2.then a3.in
+wire a2.object a4.receiver
+wire a3.then a5.in
+wire a4.result a5.value
+wire a3.object a6.receiver
+wire a5.then a7.in
+wire a6.value a7.value
+wire a2.object a8.allocator
+wire a7.then a8.in
+wire a3.object a8.object
+wire a2.object a9.receiver
+wire a8.then b1.in
+wire a9.result b1.value
+wire b1.then b2.in

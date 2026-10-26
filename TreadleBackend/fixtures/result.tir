@@ -1,0 +1,159 @@
+# tir 1
+# Result and Option: payload enums of the core library. Make Case, Result: match (a Switch on the
+# tag with the payload read per case), Try (an Err returns from the enclosing function), passing and
+# returning payload enums by value.
+program ResultOption console
+entry Opt.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+
+type Core.Option<int> enum
+	case None
+	case Some int
+type Core.Result<int,int32> enum
+	case Ok int
+	case Err int32
+
+unit Opt.Program
+type Opt.Program class
+
+func Opt.Program.Half(int) Core.Option<int> static sheet "f1" display "Opt.Program.Half"
+	param x int
+	node a1 Entry
+	node a2 Branch
+	node a3 Return Some
+	node a4 Return None
+	block b0
+		%two = const int 2 @a2
+		%m = binop int rem %x %two @a2
+		%z = const int 0 @a2
+		%even = cmp bool eq %m %z @a2
+		condbr %even yes no @a2
+	block yes
+		%h = binop int div %x %two @a3
+		%s = case.make Core.Option<int> Some %h @a3
+		ret %s @a3
+	block no
+		%n = case.make Core.Option<int> None @a4
+		ret %n @a4
+
+func Opt.Program.Parse(int) Core.Result<int,int32> static sheet "f2" display "Opt.Program.Parse"
+	param x int
+	node a1 Entry
+	node a2 Branch
+	node a3 Return Ok
+	node a4 Return Err
+	block b0
+		%z = const int 0 @a2
+		%ok = cmp bool ge %x %z @a2
+		condbr %ok yes no @a2
+	block yes
+		%ten = const int 10 @a3
+		%v = binop int mul %x %ten @a3
+		%r = case.make Core.Result<int,int32> Ok %v @a3
+		ret %r @a3
+	block no
+		%code = const int32 7 @a4
+		%e = case.make Core.Result<int,int32> Err %code @a4
+		ret %e @a4
+
+func Opt.Program.Twice(int) Core.Result<int,int32> static sheet "f3" display "Opt.Program.Twice"
+	param x int
+	slot tv int outtemp node a2.value
+	node a1 Entry
+	node a2 Try Opt.Program.Parse
+	node a3 Return Ok
+	block b0
+		%r = call Core.Result<int,int32> Opt.Program.Parse(int) %x @a2
+		%t = enum.tag int32 %r @a2
+		switch %t ok 1 err @a2
+	block err
+		ret %r @a2
+	block ok
+		%v = enum.payload int %r Ok 0 @a2.value
+		store.slot tv %v @a2
+		%v2 = load.slot int tv @a3
+		%two = const int 2 @a3
+		%d = binop int mul %v2 %two @a3
+		%o = case.make Core.Result<int,int32> Ok %d @a3
+		ret %o @a3
+
+func Opt.Program.Show(Core.Result<int,int32>) void static sheet "f4" display "Opt.Program.Show"
+	param r Core.Result<int,int32>
+	node a1 Entry
+	node a2 Result: match
+	node a3 Call C.libc.printf
+	node a4 Call C.libc.printf
+	block b0
+		%t = enum.tag int32 %r @a2
+		switch %t bad 0 ok 1 err @a2
+	block ok
+		%v = enum.payload int %r Ok 0 @a2.value
+		%f = const char8* "Ok %lld\n" @a3.format
+		%p = ccall int32 C.libc.printf(char8*,...) %f %v @a3
+		ret @a3
+	block err
+		%e = enum.payload int32 %r Err 0 @a2.error
+		%g = const char8* "Err %d\n" @a4.format
+		%q = ccall int32 C.libc.printf(char8*,...) %g %e @a4
+		ret @a4
+	block bad
+		fatal 10 "not a Result case" @a2
+
+func Opt.Program.ShowOption(Core.Option<int>) void static sheet "f5" display "Opt.Program.ShowOption"
+	param o Core.Option<int>
+	node a1 Entry
+	node a2 Switch
+	node a3 Call C.libc.printf
+	node a4 Call C.libc.printf
+	block b0
+		%t = enum.tag int %o @a2
+		%one = const int 1 @a2
+		%some = cmp bool eq %t %one @a2
+		condbr %some some none @a2
+	block some
+		%v = enum.payload int %o Some 0 @a2.value
+		%f = const char8* "Some %lld\n" @a3.format
+		%p = ccall int32 C.libc.printf(char8*,...) %f %v @a3
+		ret @a3
+	block none
+		%g = const char8* "None\n" @a4.format
+		%q = ccall int32 C.libc.printf(char8*,...) %g @a4
+		ret @a4
+
+func Opt.Program.Main() int static sheet "m1" display "Opt.Program.Main"
+	node a1 Entry
+	node a2 Call Opt.Program.Half
+	node a3 Call Opt.Program.ShowOption
+	node a4 Call Opt.Program.Half
+	node a5 Call Opt.Program.ShowOption
+	node a6 Call Opt.Program.Parse
+	node a7 Call Opt.Program.Show
+	node a8 Call Opt.Program.Parse
+	node a9 Call Opt.Program.Show
+	node b1 Call Opt.Program.Twice
+	node b2 Call Opt.Program.Show
+	node b3 Call Opt.Program.Twice
+	node b4 Call Opt.Program.Show
+	node b5 Return 0
+	block b0
+		%eight = const int 8 @a2.x
+		%h1 = call Core.Option<int> Opt.Program.Half(int) %eight @a2
+		call void Opt.Program.ShowOption(Core.Option<int>) %h1 @a3
+		%seven = const int 7 @a4.x
+		%h2 = call Core.Option<int> Opt.Program.Half(int) %seven @a4
+		call void Opt.Program.ShowOption(Core.Option<int>) %h2 @a5
+		%five = const int 5 @a6.x
+		%p1 = call Core.Result<int,int32> Opt.Program.Parse(int) %five @a6
+		call void Opt.Program.Show(Core.Result<int,int32>) %p1 @a7
+		%neg = const int -3 @a8.x
+		%p2 = call Core.Result<int,int32> Opt.Program.Parse(int) %neg @a8
+		call void Opt.Program.Show(Core.Result<int,int32>) %p2 @a9
+		%m1 = const int -1 @b1.x
+		%t1 = call Core.Result<int,int32> Opt.Program.Twice(int) %m1 @b1
+		call void Opt.Program.Show(Core.Result<int,int32>) %t1 @b2
+		%two = const int 2 @b3.x
+		%t2 = call Core.Result<int,int32> Opt.Program.Twice(int) %two @b3
+		call void Opt.Program.Show(Core.Result<int,int32>) %t2 @b4
+		%z = const int 0 @b5.value
+		ret %z @b5

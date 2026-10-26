@@ -1,0 +1,10 @@
+# Plain loop, ForRange and For over 64 blocks agree; ForEach adds 0..999. Timings go to stderr.
+== exit
+0
+== stdout
+5115336460
+5115336460
+5115336460
+499500
+== stderr
+speedup

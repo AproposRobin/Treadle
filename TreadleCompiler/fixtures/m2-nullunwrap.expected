@@ -1,0 +1,6 @@
+== exit
+3
+== stdout
+before
+== stderr
+fatal: cast of a null int? to int at M2.NullUnwrap.Value node a2

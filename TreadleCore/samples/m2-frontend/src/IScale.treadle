@@ -1,0 +1,8 @@
+# treadle 1
+type IScale interface
+	namespace M2
+	doc "An interface function the delegates sample binds through the interface table."
+
+function i0001 Scale
+	returns int
+param x int

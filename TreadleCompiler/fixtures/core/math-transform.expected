@@ -1,0 +1,14 @@
+== exit
+0
+== stdout
+transform.Identity true
+transform.ToMat4 true
+transform.TransformPoint true
+transform.TransformVector true
+transform.Inverse.matrix true
+transform.Inverse.point true
+transform.mul true
+transform.Compose true
+transform.Lerp true
+transform.ApproxEquals true
+transform.ApproxEquals.false true

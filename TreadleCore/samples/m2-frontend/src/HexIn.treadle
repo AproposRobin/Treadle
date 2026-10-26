@@ -1,0 +1,40 @@
+# treadle 1
+type HexIn class
+	namespace M2
+	static
+	doc "Hexadecimal numbers on in lines and a field's init (Graph-Format.md 2): the compiler writes them as decimal for the back end. Run prints 243, 32767, -16, 16 and 255."
+
+field sMask int
+	static
+	init 0x10
+
+function h0001 Run
+	static
+sheet body
+node a1 Entry
+node a10 Call Console.WriteLine(int)
+node a11 Return
+node a2 Operator &
+	in a 0x1F3
+	in b 0xFF
+node a3 Call Console.WriteLine(int)
+node a4 Call Console.WriteLine(int)
+	in value 0x7FFF
+node a5 Call Console.WriteLine(int)
+	in value -0x10
+node a6 Get M2.HexIn.sMask
+node a7 Call Console.WriteLine(int)
+node a8 Cast int
+node a9 Literal
+	set type uint8
+	set value 0xff
+wire a7.then a10.in
+wire a8.result a10.value
+wire a10.then a11.in
+wire a1.then a3.in
+wire a2.result a3.value
+wire a3.then a4.in
+wire a4.then a5.in
+wire a5.then a7.in
+wire a6.value a7.value
+wire a9.value a8.value

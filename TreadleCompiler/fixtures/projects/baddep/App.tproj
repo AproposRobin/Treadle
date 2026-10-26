@@ -1,0 +1,4 @@
+# tproj 1
+project App
+	kind console
+depends lib/Lib.tproj

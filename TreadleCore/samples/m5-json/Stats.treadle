@@ -1,0 +1,66 @@
+# treadle 1
+type Stats struct
+	namespace Json
+	doc "What a document holds: the number of values (every null, bool, number, string, array and object counts once) and the deepest nesting (a lone scalar is 1)."
+
+field Nodes int
+
+field Depth int
+
+function m0001 Of
+	static
+	returns Json.Stats
+	doc "Counts the values under `value` and their deepest level with two folds of a Visitor<int>: one adds 1 per value, one keeps the largest depth."
+param value Json.JsonValue
+sheet body
+node a000 Entry
+node a001 Lambda
+	set type delegate:int(int,Json.JsonValue,int)
+	set alloc local
+	set inputs acc node level
+node a002 Local Json.Visitor<int>
+node a003 Call Json.Visitor<int>.Visit
+	in depth 1
+	in acc 0
+node a004 Lambda
+	set type delegate:int(int,Json.JsonValue,int)
+	set alloc local
+	set inputs acc node level
+node a005 Local Json.Visitor<int>
+node a006 Call Json.Visitor<int>.Visit
+	in depth 1
+	in acc 0
+node a007 Make Json.Stats
+node a008 Return
+wire a000.then a001.in
+wire a001.value a002.folder
+wire a001.then a002.in
+wire a002.then a003.in
+wire a002.object a003.receiver
+wire a000.value a003.value
+wire a003.then a004.in
+wire a004.value a005.folder
+wire a004.then a005.in
+wire a005.then a006.in
+wire a005.object a006.receiver
+wire a000.value a006.value
+wire a006.result a007.Depth
+wire a003.result a007.Nodes
+wire a006.then a008.in
+wire a007.value a008.value
+sheet lambda:a001
+node b000 Entry
+node b001 Operator +
+	in b 1
+node b002 Return
+wire b000.acc b001.a
+wire b000.then b002.in
+wire b001.result b002.value
+sheet lambda:a004
+node c000 Entry
+node c001 Call Math.Max
+node c002 Return
+wire c000.acc c001.a
+wire c000.level c001.b
+wire c000.then c002.in
+wire c001.result c002.value

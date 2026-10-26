@@ -1,0 +1,15 @@
+# tproj 1
+project ConfigDemo
+	kind console
+	entry Cfg.Program
+	version 0.1.0
+config Debug
+	checks on
+	optimize 0
+config Release
+	optimize 2
+	checks off
+config Profile
+	optimize 2
+	checks on
+	define PROFILE LEVEL=3

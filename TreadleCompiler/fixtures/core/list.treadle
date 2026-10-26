@@ -1,0 +1,171 @@
+# treadle 1
+type ListMain class
+	namespace Cx
+	static
+	doc "Core List<T>: Add, Insert, RemoveAt, SetAt, Count, Get [ ], Contains, IndexOf, Reverse, For Each, Sort with a Lambda comparer, Clear; a List of Strings emptied with DeleteAll (no leaks)."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Local List<int>
+node a3 Call List<int>.Add
+	in value 4
+node a4 Call List<int>.Add
+	in value 8
+node a5 Call List<int>.Add
+	in value 15
+node a6 Call List<int>.Add
+	in value 16
+node a7 Call List<int>.Add
+	in value 23
+node a8 Call List<int>.Add
+	in value 42
+node a9 Call List<int>.Insert
+	in index 0
+	in value 1
+node b1 Call List<int>.RemoveAt
+	in index 3
+node b2 Call List<int>.SetAt
+	in index 1
+	in value 5
+node b3 Get List<int>.Count
+node b4 Call Console.WriteLine(int)
+node b5 Call List<int>.Contains
+	in value 23
+node b6 Call Console.WriteLine(bool)
+node b7 Call List<int>.IndexOf
+	in value 16
+node b8 Call Console.WriteLine(int)
+node b9 Call List<int>.IndexOf
+	in value 99
+node c1 Call Console.WriteLine(int)
+node c2 Index
+	in index 5
+node c3 Call Console.WriteLine(int)
+node c4 Call List<int>.Reverse
+node c5 Call this.Show
+node c6 Lambda
+	set type delegate:int(int,int)
+	set alloc local
+	set inputs a b
+node c7 Call List<int>.Sort
+node c8 Call this.Show
+node c9 Call List<int>.Clear
+node d1 Call Console.WriteLine(int)
+node d2 Construct List<String>
+node d3 Construct String
+	set ctor (StringView)
+	in text "first"
+node d4 Call List<String>.Add
+node d5 Construct String
+	set ctor (StringView)
+	in text "second"
+node d6 Call List<String>.Add
+node d7 Index
+	in index 1
+node d8 Call Console.WriteLine(String)
+node d9 Call List<String>.DeleteAll
+node e1 Delete
+node e2 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.receiver
+wire a3.then a4.in
+wire a2.object a4.receiver
+wire a4.then a5.in
+wire a2.object a5.receiver
+wire a5.then a6.in
+wire a2.object a6.receiver
+wire a6.then a7.in
+wire a2.object a7.receiver
+wire a7.then a8.in
+wire a2.object a8.receiver
+wire a8.then a9.in
+wire a2.object a9.receiver
+wire a9.then b1.in
+wire a2.object b1.receiver
+wire b1.then b2.in
+wire a2.object b2.receiver
+wire a2.object b3.receiver
+wire b2.then b4.in
+wire b3.value b4.value
+wire a2.object b5.receiver
+wire b4.then b6.in
+wire b5.result b6.value
+wire a2.object b7.receiver
+wire b6.then b8.in
+wire b7.result b8.value
+wire a2.object b9.receiver
+wire b8.then c1.in
+wire b9.result c1.value
+wire a2.object c2.collection
+wire c1.then c3.in
+wire c2.value c3.value
+wire c3.then c4.in
+wire a2.object c4.receiver
+wire c4.then c5.in
+wire a2.object c5.list
+wire c5.then c6.in
+wire c6.value c7.comparer
+wire c6.then c7.in
+wire a2.object c7.receiver
+wire c7.then c8.in
+wire a2.object c8.list
+wire c8.then c9.in
+wire a2.object c9.receiver
+wire c9.then d1.in
+wire b3.value d1.value
+wire d1.then d2.in
+wire d2.then d3.in
+wire d3.then d4.in
+wire d2.object d4.receiver
+wire d3.object d4.value
+wire d4.then d5.in
+wire d5.then d6.in
+wire d2.object d6.receiver
+wire d5.object d6.value
+wire d2.object d7.collection
+wire d6.then d8.in
+wire d7.value d8.value
+wire d8.then d9.in
+wire d2.object d9.receiver
+wire d9.then e1.in
+wire d2.object e1.object
+wire e1.then e2.in
+sheet lambda:c6
+node l1 Entry
+node l2 Operator -
+node l3 Return
+wire l1.a l2.a
+wire l1.b l2.b
+wire l1.then l3.in
+wire l2.result l3.value
+
+function m2 Show
+	static
+	doc "Writes the elements as index:value pairs on one line."
+param list List<int>
+sheet body
+node s1 Entry
+node s2 ForEach
+node s3 Call Console.Write(int)
+node s4 Call Console.Write(StringView)
+	in text ":"
+node s5 Call Console.Write(int)
+node s6 Call Console.Write(StringView)
+	in text " "
+node s7 Call Console.WriteLine()
+node s8 Return
+wire s1.list s2.collection
+wire s1.then s2.in
+wire s2.body s3.in
+wire s2.index s3.value
+wire s3.then s4.in
+wire s4.then s5.in
+wire s2.element s5.value
+wire s5.then s6.in
+wire s2.done s7.in
+wire s7.then s8.in

@@ -1,0 +1,17 @@
+== exit
+0
+== stdout-prefix
+text    |kind   |     value
+--------+-------+----------
+12      |int    |        12
+3.5     |double |      3.50
+0x1F    |int    |        31
+-7      |int    |        -7
+abc     |-      | bad at 0
+1e3     |double |  1,000.00
+1'000   |int    |     1,000
+4x2     |-      | bad at 1
+zwölf   |-      | bad at 0
+total   |       |  2,039.50
+"Grüße aus Köln ✓": 21 bytes, 16 code points
+child said "hello from a child process", exit code 0

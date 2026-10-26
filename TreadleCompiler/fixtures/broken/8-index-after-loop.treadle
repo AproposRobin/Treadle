@@ -1,0 +1,21 @@
+# treadle 1
+# expect n3 value T3023
+type IndexAfterLoop class
+	namespace Broken
+	static
+	doc "A For loop's Index read after the loop."
+
+function f1 Run
+	static
+local last int
+sheet body
+node n1 Entry
+node n2 For
+	in start 0
+	in count 3
+node n3 Set local:last
+node n4 Return
+wire n1.then n2.in
+wire n2.done n3.in
+wire n2.index n3.value
+wire n3.then n4.in

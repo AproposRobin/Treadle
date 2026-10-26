@@ -1,0 +1,4 @@
+# tproj 1
+project M2Lib
+	kind library
+	version 0.1.0

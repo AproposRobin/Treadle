@@ -1,0 +1,64 @@
+# vtype 1
+type Pair struct
+	namespace Core
+	generic TFirst
+	generic TSecond
+	attr CRepr
+	doc "Two values of any types."
+
+field First TFirst
+
+field Second TSecond
+
+ctor k1a7e
+param first TFirst
+param second TSecond
+sheet body
+node a1 Entry
+node a2 Set this.First
+node a3 Set this.Second
+node a4 Return
+wire a1.then a2.in
+wire a1.first a2.value
+wire a2.then a3.in
+wire a1.second a3.value
+wire a3.then a4.in
+
+function k2b8f Swap
+	pure
+	returns Pair<TSecond,TFirst>
+sheet body
+node b1 Entry
+node b2 Make Pair<TSecond,TFirst>
+node b3 Get this.First
+node b4 Get this.Second
+node b5 Return
+wire b4.value b2.First
+wire b3.value b2.Second
+wire b1.then b5.in
+wire b2.value b5.value
+
+operator k3c9g ==
+	returns bool
+	generic TFirst operator==
+	generic TSecond operator==
+param a Pair<TFirst,TSecond>
+param b Pair<TFirst,TSecond>
+sheet body
+node c1 Entry
+node c2 Return
+node c3 Operator &&
+node c4 Operator ==
+node c5 Operator ==
+node c6 Break Pair<TFirst,TSecond>
+node c7 Break Pair<TFirst,TSecond>
+wire c1.then c2.in
+wire c3.result c2.value
+wire c4.result c3.a
+wire c5.result c3.b
+wire c6.First c4.a
+wire c7.First c4.b
+wire c6.Second c5.a
+wire c7.Second c5.b
+wire c1.a c6.value
+wire c1.b c7.value

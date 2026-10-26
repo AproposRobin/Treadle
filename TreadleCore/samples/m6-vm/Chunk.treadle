@@ -1,0 +1,301 @@
+# treadle 1
+type Chunk class
+	namespace Mini
+	doc "A compiled script: the code, the constant pool (the texts of the script, names included, are Strings the chunk owns), and the function table (name, entry, parameter count, local slot count). The chunk must live while a Vm runs it."
+
+field Code List<Mini.Instr>
+	owner owned
+	doc "The instructions; the script starts at 0."
+
+field Constants List<Mini.Value>
+	owner owned
+	doc "The constant pool."
+
+field Strings List<String>
+	owner owned
+	doc "The texts of Str constants (owned; deleted with the chunk)."
+
+field Names Dictionary<String,int>
+	owner owned
+	doc "Text to constant index, so each name or text is in the pool once (keys are the Strings above)."
+
+field FuncNames List<StringView>
+	owner owned
+	doc "Function names (views of the script)."
+
+field FuncEntry List<int>
+	owner owned
+	doc "Where each function starts."
+
+field FuncArity List<int>
+	owner owned
+	doc "How many parameters each function takes."
+
+field FuncSlots List<int>
+	owner owned
+	doc "How many local slots each function needs (its parameters first)."
+
+ctor m0001
+	doc "An empty chunk."
+sheet body
+node x00000 Entry
+node x00001 Construct List<Mini.Instr>
+node x00002 Set this.Code
+node x00003 Construct List<Mini.Value>
+node x00004 Set this.Constants
+node x00005 Construct List<String>
+node x00006 Set this.Strings
+node x00007 Construct Dictionary<String,int>
+node x00008 Set this.Names
+node x00009 Construct List<StringView>
+node x0000a Set this.FuncNames
+node x0000b Construct List<int>
+node x0000c Set this.FuncEntry
+node x0000d Construct List<int>
+node x0000e Set this.FuncArity
+node x0000f Construct List<int>
+node x0000g Set this.FuncSlots
+node x0000h Return
+wire x00000.then x00001.in
+wire x00001.then x00002.in
+wire x00001.object x00002.value
+wire x00002.then x00003.in
+wire x00003.then x00004.in
+wire x00003.object x00004.value
+wire x00004.then x00005.in
+wire x00005.then x00006.in
+wire x00005.object x00006.value
+wire x00006.then x00007.in
+wire x00007.then x00008.in
+wire x00007.object x00008.value
+wire x00008.then x00009.in
+wire x00009.then x0000a.in
+wire x00009.object x0000a.value
+wire x0000a.then x0000b.in
+wire x0000b.then x0000c.in
+wire x0000b.object x0000c.value
+wire x0000c.then x0000d.in
+wire x0000d.then x0000e.in
+wire x0000d.object x0000e.value
+wire x0000e.then x0000f.in
+wire x0000f.then x0000g.in
+wire x0000f.object x0000g.value
+wire x0000g.then x0000h.in
+
+dtor m0002
+	doc "Deletes the constant texts; the owned lists go after this Sheet."
+sheet body
+node x01000 Entry
+node x01001 Get this.Strings
+node x01002 Call List<String>.DeleteAll
+node x01003 Return
+wire x01000.then x01002.in
+wire x01001.value x01002.receiver
+wire x01002.then x01003.in
+
+function m0003 Emit
+	returns int
+	doc "Adds an instruction and gives its index."
+param op Mini.Opcode
+param a int
+param b int
+param pos int
+sheet body
+node x02000 Entry
+node x02001 Make Mini.Instr
+node x02002 Get this.Code
+node x02003 Call List<Mini.Instr>.Add
+node x02004 Get this.Code
+node x02005 Get List<Mini.Instr>.Count
+node x02006 Operator -
+	in b 1
+node x02007 Return
+wire x02000.a x02001.A
+wire x02000.b x02001.B
+wire x02000.op x02001.Op
+wire x02000.pos x02001.Pos
+wire x02000.then x02003.in
+wire x02002.value x02003.receiver
+wire x02001.value x02003.value
+wire x02004.value x02005.receiver
+wire x02005.value x02006.a
+wire x02003.then x02007.in
+wire x02006.result x02007.value
+
+function m0004 Patch
+	doc "Sets operand A of the jump at `at` to `target`."
+param at int
+param target int
+local old Mini.Instr
+sheet body
+node x03000 Entry
+node x03001 Get this.Code
+node x03002 Index
+node x03003 Set local:old
+node x03004 Get local:old
+node x03005 Break Mini.Instr
+node x03006 Make Mini.Instr
+node x03007 Get this.Code
+node x03008 Call List<Mini.Instr>.SetAt
+node x03009 Return
+wire x03001.value x03002.collection
+wire x03000.at x03002.index
+wire x03000.then x03003.in
+wire x03002.value x03003.value
+wire x03004.value x03005.value
+wire x03000.target x03006.A
+wire x03005.B x03006.B
+wire x03005.Op x03006.Op
+wire x03005.Pos x03006.Pos
+wire x03003.then x03008.in
+wire x03000.at x03008.index
+wire x03007.value x03008.receiver
+wire x03006.value x03008.value
+wire x03008.then x03009.in
+
+function m0005 AddConst
+	returns int
+	doc "Adds a constant and gives its index."
+param value Mini.Value
+sheet body
+node x04000 Entry
+node x04001 Get this.Constants
+node x04002 Call List<Mini.Value>.Add
+node x04003 Get this.Constants
+node x04004 Get List<Mini.Value>.Count
+node x04005 Operator -
+	in b 1
+node x04006 Return
+wire x04000.then x04002.in
+wire x04001.value x04002.receiver
+wire x04000.value x04002.value
+wire x04003.value x04004.receiver
+wire x04004.value x04005.a
+wire x04002.then x04006.in
+wire x04005.result x04006.value
+
+function m0006 AddText
+	returns int
+	doc "The index of the Str constant with this text, made (a String the chunk owns) the first time."
+param text StringView
+local made String
+local index int
+sheet body
+node x05000 Entry
+node x05001 Local String
+	set ctor (StringView)
+node x05002 Get this.Names
+node x05003 Call Dictionary<String,int>.TryGet
+node x05004 Branch
+node x05005 Return
+node x05006 Construct String
+	set ctor (StringView)
+node x05007 Set local:made
+node x05008 Get local:made
+node x05009 Get this.Strings
+node x0500a Call List<String>.Add
+node x0500b Get local:made
+node x0500c MakeCase Mini.Value.Str
+node x0500d Call this.AddConst
+node x0500e Set local:index
+node x0500f Get local:made
+node x0500g Get local:index
+node x0500h Get this.Names
+node x0500i Call Dictionary<String,int>.Add
+node x0500j Get local:index
+node x0500k Return
+wire x05000.then x05001.in
+wire x05000.text x05001.text
+wire x05001.then x05003.in
+wire x05001.object x05003.key
+wire x05002.value x05003.receiver
+wire x05003.result x05004.condition
+wire x05003.then x05004.in
+wire x05004.true x05005.in
+wire x05003.item x05005.value
+wire x05004.false x05006.in
+wire x05000.text x05006.text
+wire x05006.then x05007.in
+wire x05006.object x05007.value
+wire x05007.then x0500a.in
+wire x05009.value x0500a.receiver
+wire x05008.value x0500a.value
+wire x0500b.value x0500c.text
+wire x0500a.then x0500d.in
+wire x0500c.value x0500d.value
+wire x0500d.then x0500e.in
+wire x0500d.result x0500e.value
+wire x0500e.then x0500i.in
+wire x0500f.value x0500i.key
+wire x0500h.value x0500i.receiver
+wire x0500g.value x0500i.value
+wire x0500i.then x0500k.in
+wire x0500j.value x0500k.value
+
+function m0007 AddFunc
+	returns int
+	doc "Adds a function to the table (its entry is set later) and gives its index."
+param name StringView
+param arity int
+sheet body
+node x06000 Entry
+node x06001 Get this.FuncNames
+node x06002 Call List<StringView>.Add
+node x06003 Get this.FuncEntry
+node x06004 Call List<int>.Add
+	in value -1
+node x06005 Get this.FuncArity
+node x06006 Call List<int>.Add
+node x06007 Get this.FuncSlots
+node x06008 Call List<int>.Add
+node x06009 Get this.FuncNames
+node x0600a Get List<StringView>.Count
+node x0600b Operator -
+	in b 1
+node x0600c Return
+wire x06000.then x06002.in
+wire x06001.value x06002.receiver
+wire x06000.name x06002.value
+wire x06002.then x06004.in
+wire x06003.value x06004.receiver
+wire x06004.then x06006.in
+wire x06005.value x06006.receiver
+wire x06000.arity x06006.value
+wire x06006.then x06008.in
+wire x06007.value x06008.receiver
+wire x06000.arity x06008.value
+wire x06009.value x0600a.receiver
+wire x0600a.value x0600b.a
+wire x06008.then x0600c.in
+wire x0600b.result x0600c.value
+
+function m0008 FindFunc
+	pure
+	returns int
+	doc "The index of the function with this name, or -1."
+param name StringView
+sheet body
+node x07000 Entry
+node x07001 Get this.FuncNames
+node x07002 Get List<StringView>.Count
+node x07003 For
+	in start 0
+node x07004 Get this.FuncNames
+node x07005 Index
+node x07006 Call StringView.Equals
+node x07007 Branch
+node x07008 Return
+node x07009 Return
+	in value -1
+wire x07001.value x07002.receiver
+wire x07002.value x07003.count
+wire x07000.then x07003.in
+wire x07004.value x07005.collection
+wire x07003.index x07005.index
+wire x07000.name x07006.other
+wire x07005.value x07006.receiver
+wire x07006.result x07007.condition
+wire x07003.body x07007.in
+wire x07007.true x07008.in
+wire x07003.index x07008.value
+wire x07003.done x07009.in

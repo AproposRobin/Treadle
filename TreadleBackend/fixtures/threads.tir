@@ -1,0 +1,24 @@
+# tir 1
+# Threads (docs/Threads.md 7): the runtime's thread block called from C (threads.c, compiled by the same clang):
+# 8 threads add to a mutex-protected counter 100,000 times each, a thread-local count per thread, a pool range sum,
+# a condition and an event. Debug: the threads allocate through the locked Debug allocator, no leak.
+program Threads console
+entry Th.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+func C.self.c_threads() int import "c_threads"
+
+unit Th.Program
+type Th.Program class
+
+func Th.Program.Main() int static sheet "m1" display "Th.Program.Main"
+	node a1 Entry
+	node a2 Call C.self.c_threads
+	node a3 Call C.libc.printf
+	node a4 Return 0
+	block b0
+		%n = ccall int C.self.c_threads() @a2
+		%f = const char8* "total %lld\n" @a3.format
+		%p = ccall int32 C.libc.printf(char8*,...) %f %n @a3
+		%z = const int 0 @a4
+		ret %z @a4

@@ -1,0 +1,23 @@
+# treadle 1
+type NestedCaptureMain class
+	namespace Fx
+	static
+	doc "Runs M2.NestedCapture.Run(3) (TreadleCore/samples/m2-frontend)."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a1 Entry
+node a2 Construct M2.NestedCapture
+node a3 Call M2.NestedCapture.Run
+	in k 3
+node a4 Delete
+node a5 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then a3.in
+wire a2.object a3.receiver
+wire a3.then a4.in
+wire a2.object a4.object
+wire a4.then a5.in

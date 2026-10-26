@@ -1,0 +1,239 @@
+# treadle 1
+type NumFormatMain class
+	namespace Cx
+	static
+	doc "Core number formats: AppendF placeholders {index,width:spec} (right and left alignment, F, E, G, N, D, X, B), five and six arguments, braces and broken placeholders as text, String.AppendNumber, Int / Double / Float.ToString."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a01 Entry
+node a02 Local String
+node a03 Call String.AppendF
+	in format "[{0,8:F2}] [{1,-6}] [{2:X}] [{3:x8}] [{4:B}] [{5,4}]"
+	in arg0 3.14159
+	in arg1 "ab"
+	in arg2 255
+	in arg3 255
+	in arg4 5
+	in arg5 -7
+node a04 Call Console.WriteLine(String)
+node a05 Call String.Clear
+node a06 Call String.AppendF
+	in format "{0:N0} {1:N2} {2:E3} {3:G} {4:D5} {5}"
+	in arg0 1234567
+	in arg1 9876.543
+	in arg2 12345.678
+	in arg3 0.1
+	in arg4 -42
+	in arg5 1.5f
+node a07 Call Console.WriteLine(String)
+node a08 Call String.Clear
+node a09 Call String.AppendF
+	in format "{0:D4}-{1:D2}-{2:D2}T{3:D2}:{4:D2}:{5:D2}"
+	in arg0 2026
+	in arg1 1
+	in arg2 2
+	in arg3 3
+	in arg4 4
+	in arg5 5
+node a10 Call Console.WriteLine(String)
+node a11 Call String.Clear
+node a12 Call String.AppendF
+	in format "{4}{3}{2}{1}{0}"
+	in arg0 1
+	in arg1 2
+	in arg2 3
+	in arg3 4
+	in arg4 5
+node a13 Call Console.WriteLine(String)
+node a14 Call String.Clear
+node a15 Call String.AppendF
+	in format "{{{0}}} {1,6}|{2,-6}|{3,3:F1}|{0,-3:x}|"
+	in arg0 11
+	in arg1 true
+	in arg2 "é"
+	in arg3 2.71
+node a16 Call Console.WriteLine(String)
+node a17 Call String.Clear
+node a18 Call String.AppendF
+	in format "{0}{9} {0 {a} {1,} {0:F2"
+	in arg0 "x"
+node a19 Call Console.WriteLine(String)
+node a20 Call String.Clear
+node a21 Call String.AppendF
+	in format "{0:e2} {0:g3} {0:F0} {1:X} {1:B8} {2:Q} {3:N}"
+	in arg0 -0.000123456
+	in arg1 -1
+	in arg2 7
+	in arg3 1234.5
+node a22 Call Console.WriteLine(String)
+node a23 Call String.Clear
+node a24 Call String.AppendNumber(int,StringView)
+	in value -1234567
+	in format "N0"
+node a25 Call Console.WriteLine(String)
+node a26 Call String.Clear
+node a27 Call String.AppendNumber(double,StringView)
+	in value 1e+21
+	in format "N0"
+node a28 Call Console.WriteLine(String)
+node a29 Call String.Clear
+node a30 Call String.AppendNumber(float,StringView)
+	in value 0.1f
+	in format ""
+node a31 Call Console.WriteLine(String)
+node a32 Call String.Clear
+node a33 Call Int.ToString
+	in value 255
+	in format "X4"
+node a34 Call Console.WriteLine(String)
+node a35 Call String.Clear
+node a36 Call Int.ToString
+	in value -5
+node a37 Call Console.WriteLine(String)
+node a38 Call String.Clear
+node a39 Call Double.ToString
+	in value 3.14159
+	in precision 3
+node a40 Call Console.WriteLine(String)
+node a41 Call String.Clear
+node a42 Call Double.ToString
+	in value 1234.5
+	in precision 2
+	in style .Scientific
+node a43 Call Console.WriteLine(String)
+node a44 Call String.Clear
+node a45 Call Double.ToString
+	in value 0.000123456
+	in precision 4
+	in style .General
+node a46 Call Console.WriteLine(String)
+node a47 Call String.Clear
+node a48 Call Double.ToString
+	in value 2.5
+node a49 Call Console.WriteLine(String)
+node a50 Call String.Clear
+node a51 Call Float.ToString
+	in value 0.333333f
+	in precision 4
+node a52 Call Console.WriteLine(String)
+node a53 Call String.Clear
+node a54 Call Float.ToString
+	in value 1.5f
+	in style .General
+node a55 Call Console.WriteLine(String)
+node a56 Call String.Clear
+node a57 Return
+	in value 0
+wire a01.then a02.in
+wire a02.then a03.in
+wire a02.object a03.receiver
+wire a03.then a04.in
+wire a02.object a04.value
+wire a04.then a05.in
+wire a02.object a05.receiver
+wire a05.then a06.in
+wire a02.object a06.receiver
+wire a06.then a07.in
+wire a02.object a07.value
+wire a07.then a08.in
+wire a02.object a08.receiver
+wire a08.then a09.in
+wire a02.object a09.receiver
+wire a09.then a10.in
+wire a02.object a10.value
+wire a10.then a11.in
+wire a02.object a11.receiver
+wire a11.then a12.in
+wire a02.object a12.receiver
+wire a12.then a13.in
+wire a02.object a13.value
+wire a13.then a14.in
+wire a02.object a14.receiver
+wire a14.then a15.in
+wire a02.object a15.receiver
+wire a15.then a16.in
+wire a02.object a16.value
+wire a16.then a17.in
+wire a02.object a17.receiver
+wire a17.then a18.in
+wire a02.object a18.receiver
+wire a18.then a19.in
+wire a02.object a19.value
+wire a19.then a20.in
+wire a02.object a20.receiver
+wire a20.then a21.in
+wire a02.object a21.receiver
+wire a21.then a22.in
+wire a02.object a22.value
+wire a22.then a23.in
+wire a02.object a23.receiver
+wire a23.then a24.in
+wire a02.object a24.receiver
+wire a24.then a25.in
+wire a02.object a25.value
+wire a25.then a26.in
+wire a02.object a26.receiver
+wire a26.then a27.in
+wire a02.object a27.receiver
+wire a27.then a28.in
+wire a02.object a28.value
+wire a28.then a29.in
+wire a02.object a29.receiver
+wire a29.then a30.in
+wire a02.object a30.receiver
+wire a30.then a31.in
+wire a02.object a31.value
+wire a31.then a32.in
+wire a02.object a32.receiver
+wire a32.then a33.in
+wire a02.object a33.into
+wire a33.then a34.in
+wire a02.object a34.value
+wire a34.then a35.in
+wire a02.object a35.receiver
+wire a35.then a36.in
+wire a02.object a36.into
+wire a36.then a37.in
+wire a02.object a37.value
+wire a37.then a38.in
+wire a02.object a38.receiver
+wire a38.then a39.in
+wire a02.object a39.into
+wire a39.then a40.in
+wire a02.object a40.value
+wire a40.then a41.in
+wire a02.object a41.receiver
+wire a41.then a42.in
+wire a02.object a42.into
+wire a42.then a43.in
+wire a02.object a43.value
+wire a43.then a44.in
+wire a02.object a44.receiver
+wire a44.then a45.in
+wire a02.object a45.into
+wire a45.then a46.in
+wire a02.object a46.value
+wire a46.then a47.in
+wire a02.object a47.receiver
+wire a47.then a48.in
+wire a02.object a48.into
+wire a48.then a49.in
+wire a02.object a49.value
+wire a49.then a50.in
+wire a02.object a50.receiver
+wire a50.then a51.in
+wire a02.object a51.into
+wire a51.then a52.in
+wire a02.object a52.value
+wire a52.then a53.in
+wire a02.object a53.receiver
+wire a53.then a54.in
+wire a02.object a54.into
+wire a54.then a55.in
+wire a02.object a55.value
+wire a55.then a56.in
+wire a02.object a56.receiver
+wire a56.then a57.in

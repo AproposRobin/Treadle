@@ -1,0 +1,1135 @@
+# treadle 1
+type Compiler class
+	namespace Mini
+	doc "Compiles a syntax tree into a Chunk. Top-level lets are globals (a Dictionary in the Vm); inside a function, parameters and lets are local slots. Functions are declared at the top level and may be used before their declaration; a name that is a function compiles to its constant, a name of a native function (print, len, str) in call position to CallNative. Jumps are emitted with a placeholder target and patched once the target is known."
+
+field mChunk Mini.Chunk
+	doc "Where the code goes (not owned)."
+
+field mNatives Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>
+	doc "The native functions of the Vm, by name (not owned)."
+
+field mLocals List<StringView>
+	owner owned
+	doc "The slot names of the function being compiled."
+
+field mInFunction bool
+	doc "True while compiling a function body."
+
+ctor m0001
+	doc "A compiler writing into `chunk` that knows the natives of a Vm."
+param chunk Mini.Chunk
+param natives Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>
+sheet body
+node x00000 Entry
+node x00001 Set this.mChunk
+node x00002 Set this.mNatives
+node x00003 Construct List<StringView>
+node x00004 Set this.mLocals
+node x00005 Return
+wire x00000.then x00001.in
+wire x00000.chunk x00001.value
+wire x00001.then x00002.in
+wire x00000.natives x00002.value
+wire x00002.then x00003.in
+wire x00003.then x00004.in
+wire x00003.object x00004.value
+wire x00004.then x00005.in
+
+function m0002 Fail
+	static
+	pure
+	access private
+	returns Result<int,Mini.ScriptError>
+	doc "An Err result at a packed position."
+param pos int
+param message StringView
+param detail StringView
+sheet body
+node x01000 Entry
+node x01001 Call Mini.ScriptError.At
+node x01002 MakeCase Result<int,Mini.ScriptError>.Err
+node x01003 Return
+wire x01000.detail x01001.detail
+wire x01000.message x01001.message
+wire x01000.pos x01001.pos
+wire x01001.result x01002.error
+wire x01000.then x01003.in
+wire x01002.value x01003.value
+
+function m0003 FindLocal
+	pure
+	access private
+	returns int
+	doc "The slot of a local of the current function, or -1 (always -1 at the top level)."
+param name StringView
+local found int
+	init -1
+sheet body
+node x02000 Entry
+node x02001 Get this.mInFunction
+node x02002 Branch
+node x02003 Get this.mLocals
+node x02004 Get List<StringView>.Count
+node x02005 For
+	in start 0
+node x02006 Get this.mLocals
+node x02007 Index
+node x02008 Call StringView.Equals
+node x02009 Branch
+node x0200a Set local:found
+node x0200b Get local:found
+node x0200c Return
+wire x02001.value x02002.condition
+wire x02000.then x02002.in
+wire x02003.value x02004.receiver
+wire x02004.value x02005.count
+wire x02002.true x02005.in
+wire x02006.value x02007.collection
+wire x02005.index x02007.index
+wire x02000.name x02008.other
+wire x02007.value x02008.receiver
+wire x02008.result x02009.condition
+wire x02005.body x02009.in
+wire x02009.true x0200a.in
+wire x02005.index x0200a.value
+wire x02002.false x0200c.in
+wire x02005.done x0200c.in
+wire x0200b.value x0200c.value
+
+function m0004 NativeName
+	pure
+	access private
+	returns StringView
+	doc "The name when `callee` is a plain name that is not a local or a function of the script but a native function; empty otherwise."
+param callee Mini.Ast
+sheet body
+node x03000 Entry
+node x03001 Switch
+	case Name
+node x03002 Call this.FindLocal
+node x03003 Operator <
+	in b 0
+node x03004 Get this.mChunk
+node x03005 Call Mini.Chunk.FindFunc
+node x03006 Operator <
+	in b 0
+node x03007 Operator &&
+node x03008 Branch
+node x03009 Local String
+	set ctor (StringView)
+node x0300a Get this.mNatives
+node x0300b Call Dictionary<String,delegate:Mini.Value(List<Mini.Value>)>.ContainsKey
+node x0300c Branch
+node x0300d Return
+node x0300e Return
+	in value ""
+wire x03000.then x03001.in
+wire x03000.callee x03001.value
+wire x03001.case:Name.text x03002.name
+wire x03002.result x03003.a
+wire x03001.case:Name.text x03005.name
+wire x03004.value x03005.receiver
+wire x03005.result x03006.a
+wire x03003.result x03007.a
+wire x03006.result x03007.b
+wire x03007.result x03008.condition
+wire x03001.case:Name x03008.in
+wire x03008.true x03009.in
+wire x03001.case:Name.text x03009.text
+wire x03009.object x0300b.key
+wire x0300a.value x0300b.receiver
+wire x0300b.result x0300c.condition
+wire x03009.then x0300c.in
+wire x0300c.true x0300d.in
+wire x03001.case:Name.text x0300d.value
+wire x03001.done x0300e.in
+
+function m0005 CompileProgram
+	returns Result<int,Mini.ScriptError>
+	doc "Compiles a whole script (a Block): declares its functions first, then compiles each statement and a Halt. Ok(the code size) or Err at the first error."
+param root Mini.Ast
+sheet body
+node x04000 Entry
+node x04001 Switch
+	case Block
+node x04002 ForEach
+node x04003 Switch
+	case Func
+node x04004 Get this.mChunk
+node x04005 Call Mini.Chunk.FindFunc
+node x04006 Operator >=
+	in b 0
+node x04007 Branch
+node x04008 Call Mini.Compiler.Fail
+	in message "function already declared"
+node x04009 Return
+node x0400a Get List<StringView>.Count
+node x0400b Get this.mChunk
+node x0400c Call Mini.Chunk.AddFunc
+node x0400d ForEach
+node x0400e Call this.Statement
+node x0400f Try
+node x0400g Get this.mChunk
+node x0400h Call Mini.Chunk.Emit
+	in op .Halt
+	in a 0
+	in b 0
+	in pos 0
+node x0400i Get this.mChunk
+node x0400j Get Mini.Chunk.Code
+node x0400k Get List<Mini.Instr>.Count
+node x0400l MakeCase Result<int,Mini.ScriptError>.Ok
+node x0400m Return
+node x0400n Call Mini.Compiler.Fail
+	in pos 0
+	in message "the script is not a block"
+	in detail ""
+node x0400o Return
+wire x04000.then x04001.in
+wire x04000.root x04001.value
+wire x04001.case:Block.kids x04002.collection
+wire x04001.case:Block x04002.in
+wire x04002.body x04003.in
+wire x04002.element x04003.value
+wire x04003.case:Func.name x04005.name
+wire x04004.value x04005.receiver
+wire x04005.result x04006.a
+wire x04006.result x04007.condition
+wire x04003.case:Func x04007.in
+wire x04003.case:Func.name x04008.detail
+wire x04003.case:Func.pos x04008.pos
+wire x04007.true x04009.in
+wire x04008.result x04009.value
+wire x04003.case:Func.params x0400a.receiver
+wire x0400a.value x0400c.arity
+wire x04007.false x0400c.in
+wire x04003.case:Func.name x0400c.name
+wire x0400b.value x0400c.receiver
+wire x04001.case:Block.kids x0400d.collection
+wire x04002.done x0400d.in
+wire x0400d.body x0400e.in
+wire x0400d.element x0400e.node
+wire x0400e.then x0400f.in
+wire x0400e.result x0400f.result
+wire x0400d.done x0400h.in
+wire x0400g.value x0400h.receiver
+wire x0400i.value x0400j.receiver
+wire x0400j.value x0400k.receiver
+wire x0400k.value x0400l.value
+wire x0400h.then x0400m.in
+wire x0400l.value x0400m.value
+wire x04001.done x0400o.in
+wire x0400n.result x0400o.value
+
+function m0006 Statement
+	access private
+	returns Result<int,Mini.ScriptError>
+	doc "Compiles one statement."
+param node Mini.Ast
+local slot int
+local jump int
+local jump2 int
+local top int
+local func int
+sheet body
+node x05000 Entry
+node x05001 Switch
+	case Let
+	case Assign
+	case If
+	case While
+	case Block
+	case Func
+	case Return
+	case Expr
+node x05002 Index
+	in index 0
+node x05003 Call this.Expression
+node x05004 Try
+node x05005 Get this.mInFunction
+node x05006 Branch
+node x05007 Call this.FindLocal
+node x05008 Set local:slot
+node x05009 Get local:slot
+node x0500a Operator <
+	in b 0
+node x0500b Branch
+node x0500c Get this.mLocals
+node x0500d Call List<StringView>.Add
+node x0500e Get this.mLocals
+node x0500f Get List<StringView>.Count
+node x0500g Operator -
+	in b 1
+node x0500h Set local:slot
+node x0500i Get local:slot
+node x0500j Get this.mChunk
+node x0500k Call Mini.Chunk.Emit
+	in op .StoreLocal
+	in b 0
+node x0500l Get this.mChunk
+node x0500m Call Mini.Chunk.AddText
+node x0500n Get this.mChunk
+node x0500o Call Mini.Chunk.Emit
+	in op .StoreGlobal
+	in b 0
+node x0500p Index
+	in index 0
+node x0500q Call this.Expression
+node x0500r Try
+node x0500s Call this.FindLocal
+node x0500t Set local:slot
+node x0500u Get local:slot
+node x0500v Operator >=
+	in b 0
+node x0500w Branch
+node x0500x Get local:slot
+node x0500y Get this.mChunk
+node x0500z Call Mini.Chunk.Emit
+	in op .StoreLocal
+	in b 0
+node x05010 Get this.mChunk
+node x05011 Call Mini.Chunk.AddText
+node x05012 Get this.mChunk
+node x05013 Call Mini.Chunk.Emit
+	in op .StoreGlobal
+	in b 1
+node x05014 Index
+	in index 0
+node x05015 Call this.Expression
+node x05016 Try
+node x05017 Get this.mChunk
+node x05018 Call Mini.Chunk.Emit
+	in op .JumpIfFalse
+	in a 0
+	in b 0
+	in pos 0
+node x05019 Set local:jump
+node x0501a Index
+	in index 1
+node x0501b Call this.Statement
+node x0501c Try
+node x0501d Get List<Mini.Ast>.Count
+node x0501e Operator >
+	in b 2
+node x0501f Branch
+node x0501g Get this.mChunk
+node x0501h Call Mini.Chunk.Emit
+	in op .Jump
+	in a 0
+	in b 0
+	in pos 0
+node x0501i Set local:jump2
+node x0501j Get local:jump
+node x0501k Get this.mChunk
+node x0501l Get Mini.Chunk.Code
+node x0501m Get List<Mini.Instr>.Count
+node x0501n Get this.mChunk
+node x0501o Call Mini.Chunk.Patch
+node x0501p Index
+	in index 2
+node x0501q Call this.Statement
+node x0501r Try
+node x0501s Get local:jump2
+node x0501t Get this.mChunk
+node x0501u Get Mini.Chunk.Code
+node x0501v Get List<Mini.Instr>.Count
+node x0501w Get this.mChunk
+node x0501x Call Mini.Chunk.Patch
+node x0501y Get local:jump
+node x0501z Get this.mChunk
+node x05020 Get Mini.Chunk.Code
+node x05021 Get List<Mini.Instr>.Count
+node x05022 Get this.mChunk
+node x05023 Call Mini.Chunk.Patch
+node x05024 Get this.mChunk
+node x05025 Get Mini.Chunk.Code
+node x05026 Get List<Mini.Instr>.Count
+node x05027 Set local:top
+node x05028 Index
+	in index 0
+node x05029 Call this.Expression
+node x0502a Try
+node x0502b Get this.mChunk
+node x0502c Call Mini.Chunk.Emit
+	in op .JumpIfFalse
+	in a 0
+	in b 0
+	in pos 0
+node x0502d Set local:jump
+node x0502e Index
+	in index 1
+node x0502f Call this.Statement
+node x0502g Try
+node x0502h Get local:top
+node x0502i Get this.mChunk
+node x0502j Call Mini.Chunk.Emit
+	in op .Jump
+	in b 0
+	in pos 0
+node x0502k Get local:jump
+node x0502l Get this.mChunk
+node x0502m Get Mini.Chunk.Code
+node x0502n Get List<Mini.Instr>.Count
+node x0502o Get this.mChunk
+node x0502p Call Mini.Chunk.Patch
+node x0502q ForEach
+node x0502r Call this.Statement
+node x0502s Try
+node x0502t Get this.mChunk
+node x0502u Call Mini.Chunk.FindFunc
+node x0502v Set local:func
+node x0502w Get this.mInFunction
+node x0502x Get local:func
+node x0502y Operator <
+	in b 0
+node x0502z Operator ||
+node x05030 Branch
+node x05031 Call Mini.Compiler.Fail
+	in message "functions are declared at the top level"
+node x05032 Return
+node x05033 Get this.mChunk
+node x05034 Call Mini.Chunk.Emit
+	in op .Jump
+	in a 0
+	in b 0
+	in pos 0
+node x05035 Set local:jump
+node x05036 Get local:func
+node x05037 Get this.mChunk
+node x05038 Get Mini.Chunk.Code
+node x05039 Get List<Mini.Instr>.Count
+node x0503a Get this.mChunk
+node x0503b Get Mini.Chunk.FuncEntry
+node x0503c Call List<int>.SetAt
+node x0503d Set this.mInFunction
+	in value true
+node x0503e Get this.mLocals
+node x0503f Call List<StringView>.Clear
+node x0503g ForEach
+node x0503h Get this.mLocals
+node x0503i Call List<StringView>.Add
+node x0503j Index
+	in index 0
+node x0503k Call this.Statement
+node x0503l Try
+node x0503m Get this.mChunk
+node x0503n Call Mini.Chunk.Emit
+	in op .Nil
+	in a 0
+	in b 0
+	in pos 0
+node x0503o Get this.mChunk
+node x0503p Call Mini.Chunk.Emit
+	in op .Return
+	in a 0
+	in b 0
+	in pos 0
+node x0503q Get local:func
+node x0503r Get this.mLocals
+node x0503s Get List<StringView>.Count
+node x0503t Get this.mChunk
+node x0503u Get Mini.Chunk.FuncSlots
+node x0503v Call List<int>.SetAt
+node x0503w Set this.mInFunction
+	in value false
+node x0503x Get local:jump
+node x0503y Get this.mChunk
+node x0503z Get Mini.Chunk.Code
+node x05040 Get List<Mini.Instr>.Count
+node x05041 Get this.mChunk
+node x05042 Call Mini.Chunk.Patch
+node x05043 Get this.mInFunction
+node x05044 Operator !
+node x05045 Branch
+node x05046 Call Mini.Compiler.Fail
+	in message "return outside a function"
+	in detail ""
+node x05047 Return
+node x05048 Get List<Mini.Ast>.Count
+node x05049 Operator >
+	in b 0
+node x0504a Branch
+node x0504b Index
+	in index 0
+node x0504c Call this.Expression
+node x0504d Try
+node x0504e Get this.mChunk
+node x0504f Call Mini.Chunk.Emit
+	in op .Nil
+	in a 0
+	in b 0
+	in pos 0
+node x0504g Get this.mChunk
+node x0504h Call Mini.Chunk.Emit
+	in op .Return
+	in a 0
+	in b 0
+node x0504i Index
+	in index 0
+node x0504j Call this.Expression
+node x0504k Try
+node x0504l Get this.mChunk
+node x0504m Call Mini.Chunk.Emit
+	in op .Pop
+	in a 0
+	in b 0
+	in pos 0
+node x0504n Call Mini.Compiler.Fail
+	in pos 0
+	in message "not a statement"
+	in detail ""
+node x0504o Return
+node x0504p MakeCase Result<int,Mini.ScriptError>.Ok
+	in value 0
+node x0504q Return
+wire x05000.then x05001.in
+wire x05000.node x05001.value
+wire x05001.case:Let.kids x05002.collection
+wire x05001.case:Let x05003.in
+wire x05002.value x05003.node
+wire x05003.then x05004.in
+wire x05003.result x05004.result
+wire x05005.value x05006.condition
+wire x05004.then x05006.in
+wire x05001.case:Let.name x05007.name
+wire x05006.true x05008.in
+wire x05007.result x05008.value
+wire x05009.value x0500a.a
+wire x0500a.result x0500b.condition
+wire x05008.then x0500b.in
+wire x0500b.true x0500d.in
+wire x0500c.value x0500d.receiver
+wire x05001.case:Let.name x0500d.value
+wire x0500e.value x0500f.receiver
+wire x0500f.value x0500g.a
+wire x0500d.then x0500h.in
+wire x0500g.result x0500h.value
+wire x0500i.value x0500k.a
+wire x0500b.false x0500k.in
+wire x0500h.then x0500k.in
+wire x05001.case:Let.pos x0500k.pos
+wire x0500j.value x0500k.receiver
+wire x05006.false x0500m.in
+wire x0500l.value x0500m.receiver
+wire x05001.case:Let.name x0500m.text
+wire x0500m.result x0500o.a
+wire x0500m.then x0500o.in
+wire x05001.case:Let.pos x0500o.pos
+wire x0500n.value x0500o.receiver
+wire x05001.case:Assign.kids x0500p.collection
+wire x05001.case:Assign x0500q.in
+wire x0500p.value x0500q.node
+wire x0500q.then x0500r.in
+wire x0500q.result x0500r.result
+wire x05001.case:Assign.name x0500s.name
+wire x0500r.then x0500t.in
+wire x0500s.result x0500t.value
+wire x0500u.value x0500v.a
+wire x0500v.result x0500w.condition
+wire x0500t.then x0500w.in
+wire x0500x.value x0500z.a
+wire x0500w.true x0500z.in
+wire x05001.case:Assign.pos x0500z.pos
+wire x0500y.value x0500z.receiver
+wire x0500w.false x05011.in
+wire x05010.value x05011.receiver
+wire x05001.case:Assign.name x05011.text
+wire x05011.result x05013.a
+wire x05011.then x05013.in
+wire x05001.case:Assign.pos x05013.pos
+wire x05012.value x05013.receiver
+wire x05001.case:If.kids x05014.collection
+wire x05001.case:If x05015.in
+wire x05014.value x05015.node
+wire x05015.then x05016.in
+wire x05015.result x05016.result
+wire x05016.then x05018.in
+wire x05017.value x05018.receiver
+wire x05018.then x05019.in
+wire x05018.result x05019.value
+wire x05001.case:If.kids x0501a.collection
+wire x05019.then x0501b.in
+wire x0501a.value x0501b.node
+wire x0501b.then x0501c.in
+wire x0501b.result x0501c.result
+wire x05001.case:If.kids x0501d.receiver
+wire x0501d.value x0501e.a
+wire x0501e.result x0501f.condition
+wire x0501c.then x0501f.in
+wire x0501f.true x0501h.in
+wire x0501g.value x0501h.receiver
+wire x0501h.then x0501i.in
+wire x0501h.result x0501i.value
+wire x0501k.value x0501l.receiver
+wire x0501l.value x0501m.receiver
+wire x0501j.value x0501o.at
+wire x0501i.then x0501o.in
+wire x0501n.value x0501o.receiver
+wire x0501m.value x0501o.target
+wire x05001.case:If.kids x0501p.collection
+wire x0501o.then x0501q.in
+wire x0501p.value x0501q.node
+wire x0501q.then x0501r.in
+wire x0501q.result x0501r.result
+wire x0501t.value x0501u.receiver
+wire x0501u.value x0501v.receiver
+wire x0501s.value x0501x.at
+wire x0501r.then x0501x.in
+wire x0501w.value x0501x.receiver
+wire x0501v.value x0501x.target
+wire x0501z.value x05020.receiver
+wire x05020.value x05021.receiver
+wire x0501y.value x05023.at
+wire x0501f.false x05023.in
+wire x05022.value x05023.receiver
+wire x05021.value x05023.target
+wire x05024.value x05025.receiver
+wire x05025.value x05026.receiver
+wire x05001.case:While x05027.in
+wire x05026.value x05027.value
+wire x05001.case:While.kids x05028.collection
+wire x05027.then x05029.in
+wire x05028.value x05029.node
+wire x05029.then x0502a.in
+wire x05029.result x0502a.result
+wire x0502a.then x0502c.in
+wire x0502b.value x0502c.receiver
+wire x0502c.then x0502d.in
+wire x0502c.result x0502d.value
+wire x05001.case:While.kids x0502e.collection
+wire x0502d.then x0502f.in
+wire x0502e.value x0502f.node
+wire x0502f.then x0502g.in
+wire x0502f.result x0502g.result
+wire x0502h.value x0502j.a
+wire x0502g.then x0502j.in
+wire x0502i.value x0502j.receiver
+wire x0502l.value x0502m.receiver
+wire x0502m.value x0502n.receiver
+wire x0502k.value x0502p.at
+wire x0502j.then x0502p.in
+wire x0502o.value x0502p.receiver
+wire x0502n.value x0502p.target
+wire x05001.case:Block.kids x0502q.collection
+wire x05001.case:Block x0502q.in
+wire x0502q.body x0502r.in
+wire x0502q.element x0502r.node
+wire x0502r.then x0502s.in
+wire x0502r.result x0502s.result
+wire x05001.case:Func.name x0502u.name
+wire x0502t.value x0502u.receiver
+wire x05001.case:Func x0502v.in
+wire x0502u.result x0502v.value
+wire x0502x.value x0502y.a
+wire x0502w.value x0502z.a
+wire x0502y.result x0502z.b
+wire x0502z.result x05030.condition
+wire x0502v.then x05030.in
+wire x05001.case:Func.name x05031.detail
+wire x05001.case:Func.pos x05031.pos
+wire x05030.true x05032.in
+wire x05031.result x05032.value
+wire x05030.false x05034.in
+wire x05033.value x05034.receiver
+wire x05034.then x05035.in
+wire x05034.result x05035.value
+wire x05037.value x05038.receiver
+wire x05038.value x05039.receiver
+wire x0503a.value x0503b.receiver
+wire x05035.then x0503c.in
+wire x05036.value x0503c.index
+wire x0503b.value x0503c.receiver
+wire x05039.value x0503c.value
+wire x0503c.then x0503d.in
+wire x0503d.then x0503f.in
+wire x0503e.value x0503f.receiver
+wire x05001.case:Func.params x0503g.collection
+wire x0503f.then x0503g.in
+wire x0503g.body x0503i.in
+wire x0503h.value x0503i.receiver
+wire x0503g.element x0503i.value
+wire x05001.case:Func.kids x0503j.collection
+wire x0503g.done x0503k.in
+wire x0503j.value x0503k.node
+wire x0503k.then x0503l.in
+wire x0503k.result x0503l.result
+wire x0503l.then x0503n.in
+wire x0503m.value x0503n.receiver
+wire x0503n.then x0503p.in
+wire x0503o.value x0503p.receiver
+wire x0503r.value x0503s.receiver
+wire x0503t.value x0503u.receiver
+wire x0503p.then x0503v.in
+wire x0503q.value x0503v.index
+wire x0503u.value x0503v.receiver
+wire x0503s.value x0503v.value
+wire x0503v.then x0503w.in
+wire x0503y.value x0503z.receiver
+wire x0503z.value x05040.receiver
+wire x0503x.value x05042.at
+wire x0503w.then x05042.in
+wire x05041.value x05042.receiver
+wire x05040.value x05042.target
+wire x05043.value x05044.a
+wire x05044.result x05045.condition
+wire x05001.case:Return x05045.in
+wire x05001.case:Return.pos x05046.pos
+wire x05045.true x05047.in
+wire x05046.result x05047.value
+wire x05001.case:Return.kids x05048.receiver
+wire x05048.value x05049.a
+wire x05049.result x0504a.condition
+wire x05045.false x0504a.in
+wire x05001.case:Return.kids x0504b.collection
+wire x0504a.true x0504c.in
+wire x0504b.value x0504c.node
+wire x0504c.then x0504d.in
+wire x0504c.result x0504d.result
+wire x0504a.false x0504f.in
+wire x0504e.value x0504f.receiver
+wire x0504d.then x0504h.in
+wire x0504f.then x0504h.in
+wire x05001.case:Return.pos x0504h.pos
+wire x0504g.value x0504h.receiver
+wire x05001.case:Expr.kids x0504i.collection
+wire x05001.case:Expr x0504j.in
+wire x0504i.value x0504j.node
+wire x0504j.then x0504k.in
+wire x0504j.result x0504k.result
+wire x0504k.then x0504m.in
+wire x0504l.value x0504m.receiver
+wire x05001.default x0504o.in
+wire x0504n.result x0504o.value
+wire x05001.done x0504q.in
+wire x0504p.value x0504q.value
+
+function m0007 OpFor
+	static
+	pure
+	access private
+	returns Mini.Opcode
+	doc "The opcode of a binary operator code."
+param code int
+sheet body
+node x06000 Entry
+node x06001 Switch
+	case 43
+	case 45
+	case 42
+	case 47
+	case 37
+	case 256
+	case 257
+	case 60
+	case 258
+	case 62
+	case 259
+node x06002 Return
+	in value .Add
+node x06003 Return
+	in value .Sub
+node x06004 Return
+	in value .Mul
+node x06005 Return
+	in value .Div
+node x06006 Return
+	in value .Mod
+node x06007 Return
+	in value .Eq
+node x06008 Return
+	in value .Ne
+node x06009 Return
+	in value .Lt
+node x0600a Return
+	in value .Le
+node x0600b Return
+	in value .Gt
+node x0600c Return
+	in value .Ge
+node x0600d Return
+	in value .Halt
+wire x06000.then x06001.in
+wire x06000.code x06001.value
+wire x06001.case:43 x06002.in
+wire x06001.case:45 x06003.in
+wire x06001.case:42 x06004.in
+wire x06001.case:47 x06005.in
+wire x06001.case:37 x06006.in
+wire x06001.case:256 x06007.in
+wire x06001.case:257 x06008.in
+wire x06001.case:60 x06009.in
+wire x06001.case:258 x0600a.in
+wire x06001.case:62 x0600b.in
+wire x06001.case:259 x0600c.in
+wire x06001.done x0600d.in
+
+function m0008 Expression
+	access private
+	returns Result<int,Mini.ScriptError>
+	doc "Compiles an expression; its value is left on the stack."
+param node Mini.Ast
+local slot int
+local func int
+local jump int
+local native StringView
+sheet body
+node x07000 Entry
+node x07001 Switch
+	case Int
+	case Float
+	case Bool
+	case Str
+	case Name
+	case Unary
+	case Binary
+	case Call
+node x07002 MakeCase Mini.Value.Int
+node x07003 Get this.mChunk
+node x07004 Call Mini.Chunk.AddConst
+node x07005 Get this.mChunk
+node x07006 Call Mini.Chunk.Emit
+	in op .Const
+	in b 0
+	in pos 0
+node x07007 MakeCase Mini.Value.Float
+node x07008 Get this.mChunk
+node x07009 Call Mini.Chunk.AddConst
+node x0700a Get this.mChunk
+node x0700b Call Mini.Chunk.Emit
+	in op .Const
+	in b 0
+	in pos 0
+node x0700c MakeCase Mini.Value.Bool
+node x0700d Get this.mChunk
+node x0700e Call Mini.Chunk.AddConst
+node x0700f Get this.mChunk
+node x0700g Call Mini.Chunk.Emit
+	in op .Const
+	in b 0
+	in pos 0
+node x0700h Get this.mChunk
+node x0700i Call Mini.Chunk.AddText
+node x0700j Get this.mChunk
+node x0700k Call Mini.Chunk.Emit
+	in op .Const
+	in b 0
+	in pos 0
+node x0700l Call this.FindLocal
+node x0700m Set local:slot
+node x0700n Get local:slot
+node x0700o Operator >=
+	in b 0
+node x0700p Branch
+node x0700q Get local:slot
+node x0700r Get this.mChunk
+node x0700s Call Mini.Chunk.Emit
+	in op .LoadLocal
+	in b 0
+node x0700t Get this.mChunk
+node x0700u Call Mini.Chunk.FindFunc
+node x0700v Set local:func
+node x0700w Get local:func
+node x0700x Operator >=
+	in b 0
+node x0700y Branch
+node x0700z Get local:func
+node x07010 MakeCase Mini.Value.Func
+node x07011 Get this.mChunk
+node x07012 Call Mini.Chunk.AddConst
+node x07013 Get this.mChunk
+node x07014 Call Mini.Chunk.Emit
+	in op .Const
+	in b 0
+	in pos 0
+node x07015 Get this.mChunk
+node x07016 Call Mini.Chunk.AddText
+node x07017 Get this.mChunk
+node x07018 Call Mini.Chunk.Emit
+	in op .LoadGlobal
+	in b 0
+node x07019 Index
+	in index 0
+node x0701a Call this.Expression
+node x0701b Try
+node x0701c Operator ==
+	in b 45
+node x0701d Branch
+node x0701e Get this.mChunk
+node x0701f Call Mini.Chunk.Emit
+	in op .Neg
+	in a 0
+	in b 0
+node x0701g Get this.mChunk
+node x0701h Call Mini.Chunk.Emit
+	in op .Not
+	in a 0
+	in b 0
+node x0701i Index
+	in index 0
+node x0701j Call this.Expression
+node x0701k Try
+node x0701l Operator ==
+	in b 260
+node x0701m Operator ==
+	in b 261
+node x0701n Operator ||
+node x0701o Branch
+node x0701p Operator ==
+	in b 260
+node x0701q Branch
+node x0701r Get this.mChunk
+node x0701s Call Mini.Chunk.Emit
+	in op .JumpIfFalseKeep
+	in a 0
+	in b 0
+	in pos 0
+node x0701t Set local:jump
+node x0701u Get this.mChunk
+node x0701v Call Mini.Chunk.Emit
+	in op .JumpIfTrueKeep
+	in a 0
+	in b 0
+	in pos 0
+node x0701w Set local:jump
+node x0701x Get this.mChunk
+node x0701y Call Mini.Chunk.Emit
+	in op .Pop
+	in a 0
+	in b 0
+	in pos 0
+node x0701z Index
+	in index 1
+node x07020 Call this.Expression
+node x07021 Try
+node x07022 Get local:jump
+node x07023 Get this.mChunk
+node x07024 Get Mini.Chunk.Code
+node x07025 Get List<Mini.Instr>.Count
+node x07026 Get this.mChunk
+node x07027 Call Mini.Chunk.Patch
+node x07028 Index
+	in index 1
+node x07029 Call this.Expression
+node x0702a Try
+node x0702b Call Mini.Compiler.OpFor
+node x0702c Get this.mChunk
+node x0702d Call Mini.Chunk.Emit
+	in a 0
+	in b 0
+node x0702e Index
+	in index 0
+node x0702f Call this.NativeName
+node x0702g Set local:native
+node x0702h Get local:native
+node x0702i Call StringView.IsEmpty
+node x0702j Operator !
+node x0702k Branch
+node x0702l Index
+	in index 0
+node x0702m Call this.Expression
+node x0702n Try
+node x0702o Get List<Mini.Ast>.Count
+node x0702p Operator -
+	in b 1
+node x0702q For
+	in start 1
+node x0702r Index
+node x0702s Call this.Expression
+node x0702t Try
+node x0702u Get local:native
+node x0702v Call StringView.IsEmpty
+node x0702w Operator !
+node x0702x Branch
+node x0702y Get local:native
+node x0702z Get this.mChunk
+node x07030 Call Mini.Chunk.AddText
+node x07031 Get List<Mini.Ast>.Count
+node x07032 Operator -
+	in b 1
+node x07033 Get this.mChunk
+node x07034 Call Mini.Chunk.Emit
+	in op .CallNative
+node x07035 Get List<Mini.Ast>.Count
+node x07036 Operator -
+	in b 1
+node x07037 Get this.mChunk
+node x07038 Call Mini.Chunk.Emit
+	in op .Call
+	in b 0
+node x07039 Call Mini.Compiler.Fail
+	in pos 0
+	in message "not an expression"
+	in detail ""
+node x0703a Return
+node x0703b MakeCase Result<int,Mini.ScriptError>.Ok
+	in value 0
+node x0703c Return
+wire x07000.then x07001.in
+wire x07000.node x07001.value
+wire x07001.case:Int.value x07002.value
+wire x07001.case:Int x07004.in
+wire x07003.value x07004.receiver
+wire x07002.value x07004.value
+wire x07004.result x07006.a
+wire x07004.then x07006.in
+wire x07005.value x07006.receiver
+wire x07001.case:Float.value x07007.value
+wire x07001.case:Float x07009.in
+wire x07008.value x07009.receiver
+wire x07007.value x07009.value
+wire x07009.result x0700b.a
+wire x07009.then x0700b.in
+wire x0700a.value x0700b.receiver
+wire x07001.case:Bool.value x0700c.value
+wire x07001.case:Bool x0700e.in
+wire x0700d.value x0700e.receiver
+wire x0700c.value x0700e.value
+wire x0700e.result x0700g.a
+wire x0700e.then x0700g.in
+wire x0700f.value x0700g.receiver
+wire x07001.case:Str x0700i.in
+wire x0700h.value x0700i.receiver
+wire x07001.case:Str.text x0700i.text
+wire x0700i.result x0700k.a
+wire x0700i.then x0700k.in
+wire x0700j.value x0700k.receiver
+wire x07001.case:Name.text x0700l.name
+wire x07001.case:Name x0700m.in
+wire x0700l.result x0700m.value
+wire x0700n.value x0700o.a
+wire x0700o.result x0700p.condition
+wire x0700m.then x0700p.in
+wire x0700q.value x0700s.a
+wire x0700p.true x0700s.in
+wire x07001.case:Name.pos x0700s.pos
+wire x0700r.value x0700s.receiver
+wire x07001.case:Name.text x0700u.name
+wire x0700t.value x0700u.receiver
+wire x0700p.false x0700v.in
+wire x0700u.result x0700v.value
+wire x0700w.value x0700x.a
+wire x0700x.result x0700y.condition
+wire x0700v.then x0700y.in
+wire x0700z.value x07010.index
+wire x0700y.true x07012.in
+wire x07011.value x07012.receiver
+wire x07010.value x07012.value
+wire x07012.result x07014.a
+wire x07012.then x07014.in
+wire x07013.value x07014.receiver
+wire x0700y.false x07016.in
+wire x07015.value x07016.receiver
+wire x07001.case:Name.text x07016.text
+wire x07016.result x07018.a
+wire x07016.then x07018.in
+wire x07001.case:Name.pos x07018.pos
+wire x07017.value x07018.receiver
+wire x07001.case:Unary.kids x07019.collection
+wire x07001.case:Unary x0701a.in
+wire x07019.value x0701a.node
+wire x0701a.then x0701b.in
+wire x0701a.result x0701b.result
+wire x07001.case:Unary.op x0701c.a
+wire x0701c.result x0701d.condition
+wire x0701b.then x0701d.in
+wire x0701d.true x0701f.in
+wire x07001.case:Unary.pos x0701f.pos
+wire x0701e.value x0701f.receiver
+wire x0701d.false x0701h.in
+wire x07001.case:Unary.pos x0701h.pos
+wire x0701g.value x0701h.receiver
+wire x07001.case:Binary.kids x0701i.collection
+wire x07001.case:Binary x0701j.in
+wire x0701i.value x0701j.node
+wire x0701j.then x0701k.in
+wire x0701j.result x0701k.result
+wire x07001.case:Binary.op x0701l.a
+wire x07001.case:Binary.op x0701m.a
+wire x0701l.result x0701n.a
+wire x0701m.result x0701n.b
+wire x0701n.result x0701o.condition
+wire x0701k.then x0701o.in
+wire x07001.case:Binary.op x0701p.a
+wire x0701p.result x0701q.condition
+wire x0701o.true x0701q.in
+wire x0701q.true x0701s.in
+wire x0701r.value x0701s.receiver
+wire x0701s.then x0701t.in
+wire x0701s.result x0701t.value
+wire x0701q.false x0701v.in
+wire x0701u.value x0701v.receiver
+wire x0701v.then x0701w.in
+wire x0701v.result x0701w.value
+wire x0701t.then x0701y.in
+wire x0701w.then x0701y.in
+wire x0701x.value x0701y.receiver
+wire x07001.case:Binary.kids x0701z.collection
+wire x0701y.then x07020.in
+wire x0701z.value x07020.node
+wire x07020.then x07021.in
+wire x07020.result x07021.result
+wire x07023.value x07024.receiver
+wire x07024.value x07025.receiver
+wire x07022.value x07027.at
+wire x07021.then x07027.in
+wire x07026.value x07027.receiver
+wire x07025.value x07027.target
+wire x07001.case:Binary.kids x07028.collection
+wire x0701o.false x07029.in
+wire x07028.value x07029.node
+wire x07029.then x0702a.in
+wire x07029.result x0702a.result
+wire x07001.case:Binary.op x0702b.code
+wire x0702a.then x0702d.in
+wire x0702b.result x0702d.op
+wire x07001.case:Binary.pos x0702d.pos
+wire x0702c.value x0702d.receiver
+wire x07001.case:Call.kids x0702e.collection
+wire x0702e.value x0702f.callee
+wire x07001.case:Call x0702g.in
+wire x0702f.result x0702g.value
+wire x0702h.value x0702i.receiver
+wire x0702i.result x0702j.a
+wire x0702j.result x0702k.condition
+wire x0702g.then x0702k.in
+wire x07001.case:Call.kids x0702l.collection
+wire x0702k.false x0702m.in
+wire x0702l.value x0702m.node
+wire x0702m.then x0702n.in
+wire x0702m.result x0702n.result
+wire x07001.case:Call.kids x0702o.receiver
+wire x0702o.value x0702p.a
+wire x0702p.result x0702q.count
+wire x0702k.true x0702q.in
+wire x0702n.then x0702q.in
+wire x07001.case:Call.kids x0702r.collection
+wire x0702q.index x0702r.index
+wire x0702q.body x0702s.in
+wire x0702r.value x0702s.node
+wire x0702s.then x0702t.in
+wire x0702s.result x0702t.result
+wire x0702u.value x0702v.receiver
+wire x0702v.result x0702w.a
+wire x0702w.result x0702x.condition
+wire x0702q.done x0702x.in
+wire x0702x.true x07030.in
+wire x0702z.value x07030.receiver
+wire x0702y.value x07030.text
+wire x07001.case:Call.kids x07031.receiver
+wire x07031.value x07032.a
+wire x07030.result x07034.a
+wire x07032.result x07034.b
+wire x07030.then x07034.in
+wire x07001.case:Call.pos x07034.pos
+wire x07033.value x07034.receiver
+wire x07001.case:Call.kids x07035.receiver
+wire x07035.value x07036.a
+wire x07036.result x07038.a
+wire x0702x.false x07038.in
+wire x07001.case:Call.pos x07038.pos
+wire x07037.value x07038.receiver
+wire x07001.default x0703a.in
+wire x07039.result x0703a.value
+wire x07001.done x0703c.in
+wire x0703b.value x0703c.value

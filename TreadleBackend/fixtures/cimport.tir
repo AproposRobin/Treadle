@@ -1,0 +1,119 @@
+# tir 1
+# C interop: variadic printf with the C default promotions (float -> double, small integers ->
+# int), struct returns by the win64 C ABI (div: an 8-byte struct in a register, lldiv: a 16-byte
+# struct through a hidden pointer), a C callback (qsort calling a Treadle function through a
+# function pointer), strlen, and the console intrinsics with a StringView.
+program CImport console
+entry Cimp.Program.Main()
+
+func C.libc.printf(char8*,...) int32 import "printf"
+func C.libc.div(int32,int32) C.libc.div_t import "div"
+func C.libc.lldiv(int,int) C.libc.lldiv_t import "lldiv"
+func C.libc.strlen(char8*) uint import "strlen"
+func C.libc.qsort(void*,uint,uint,function int32(void*,void*)) void import "qsort"
+
+type C.libc.div_t struct
+	field quot int32
+	field rem int32
+type C.libc.lldiv_t struct
+	field quot int
+	field rem int
+
+unit Cimp.Program
+type Cimp.Program class
+
+func Cimp.Program.Compare(void*,void*) int32 static cconv cdecl sheet "f1" display "Cimp.Program.Compare"
+	param a void*
+	param b void*
+	node a1 Entry
+	node a2 Subtract
+	node a3 Return
+	block b0
+		%ap = cast int32* %a @a2
+		%bp = cast int32* %b @a2
+		%av = load int32 %ap @a2
+		%bv = load int32 %bp @a2
+		%d = binop int32 sub %av %bv @a2
+		ret %d @a3
+
+func Cimp.Program.Main() int static sheet "m1" display "Cimp.Program.Main"
+	slot nums int32[5] variable
+	node a1 Entry
+	node a2 Call C.libc.printf
+	node a3 Call C.libc.div
+	node a4 Call C.libc.printf
+	node a5 Call C.libc.lldiv
+	node a6 Call C.libc.printf
+	node a7 Call C.libc.qsort
+	node a8 Call C.libc.printf
+	node a9 Call C.libc.strlen
+	node b1 Call Console.WriteLine
+	node b2 Call Math.Sqrt
+	node b3 Return 0
+	block b0
+		%f = const char8* "int32 %d, int %lld, uint8 %u, char8 %c, float %.3f, text %s, 100%%\n" @a2.format
+		%i32 = const int32 -12 @a2
+		%i64 = const int 9000000000 @a2
+		%u8 = const uint8 200 @a2
+		%ch = const char8 75 @a2
+		%fl = const float 2.5 @a2
+		%tx = const char8* "treadle" @a2
+		%r1 = ccall int32 C.libc.printf(char8*,...) %f %i32 %i64 %u8 %ch %fl %tx @a2
+		%n17 = const int32 17 @a3.numer
+		%n5 = const int32 5 @a3.denom
+		%dv = ccall C.libc.div_t C.libc.div(int32,int32) %n17 %n5 @a3
+		%q = extract int32 %dv 0 @a4
+		%rm = extract int32 %dv 1 @a4
+		%f2 = const char8* "div 17/5 = %d rem %d\n" @a4.format
+		%r2 = ccall int32 C.libc.printf(char8*,...) %f2 %q %rm @a4
+		%big = const int 100000000007 @a5.numer
+		%ten = const int 10 @a5.denom
+		%ld = ccall C.libc.lldiv_t C.libc.lldiv(int,int) %big %ten @a5
+		%lq = extract int %ld 0 @a6
+		%lr = extract int %ld 1 @a6
+		%f3 = const char8* "lldiv = %lld rem %lld\n" @a6.format
+		%r3 = ccall int32 C.libc.printf(char8*,...) %f3 %lq %lr @a6
+		%arr = slot.addr int32[5]* nums @a7
+		%k0 = const int 0 @a7
+		%k1 = const int 1 @a7
+		%k2 = const int 2 @a7
+		%k3 = const int 3 @a7
+		%k4 = const int 4 @a7
+		%v0 = const int32 42 @a7
+		%v1 = const int32 -7 @a7
+		%v2 = const int32 19 @a7
+		%v3 = const int32 0 @a7
+		%v4 = const int32 5 @a7
+		%e0 = elem.addr int32* %arr %k0 @a7
+		store %e0 %v0 @a7
+		%e1 = elem.addr int32* %arr %k1 @a7
+		store %e1 %v1 @a7
+		%e2 = elem.addr int32* %arr %k2 @a7
+		store %e2 %v2 @a7
+		%e3 = elem.addr int32* %arr %k3 @a7
+		store %e3 %v3 @a7
+		%e4 = elem.addr int32* %arr %k4 @a7
+		store %e4 %v4 @a7
+		%base = cast void* %arr @a7
+		%cnt = const uint 5 @a7
+		%sz = sizeof uint int32 @a7
+		%cmp = fn.addr function int32(void*,void*) Cimp.Program.Compare(void*,void*) @a7
+		ccall void C.libc.qsort(void*,uint,uint,function int32(void*,void*)) %base %cnt %sz %cmp @a7
+		%s0 = load int32 %e0 @a8
+		%s1 = load int32 %e1 @a8
+		%s2 = load int32 %e2 @a8
+		%s3 = load int32 %e3 @a8
+		%s4 = load int32 %e4 @a8
+		%f4 = const char8* "sorted %d %d %d %d %d\n" @a8.format
+		%r4 = ccall int32 C.libc.printf(char8*,...) %f4 %s0 %s1 %s2 %s3 %s4 @a8
+		%len = ccall uint C.libc.strlen(char8*) %tx @a9
+		%f5 = const char8* "strlen = %llu\n" @a9.format
+		%r5 = ccall int32 C.libc.printf(char8*,...) %f5 %len @a9
+		%sv = const StringView "a StringView through the console intrinsic" @b1.value
+		intrinsic void console.writeline %sv @b1
+		%two = const double 2.0 @b2.value
+		%root = intrinsic double sqrt %two @b2
+		%f6 = const char8* "sqrt 2 = %.6f\n" @b2.format
+		%r6 = ccall int32 C.libc.printf(char8*,...) %f6 %root @b2
+		%z = const int 0 @b3.value
+		ret %z @b3

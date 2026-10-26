@@ -1,0 +1,339 @@
+# treadle 1
+type ParseMain class
+	namespace Cx
+	static
+	doc "Core parsing: Int, Double, Float and Bool Parse with Result<T, ParseError> (prefixes, separators, overflow, the first invalid character, no white space), TryParse."
+
+function m1 Main
+	static
+	returns int
+sheet body
+node a01 Entry
+node a02 Call this.ShowInt
+	in text "123"
+node a03 Call this.ShowInt
+	in text "-42"
+node a04 Call this.ShowInt
+	in text "+7"
+node a05 Call this.ShowInt
+	in text "0x1F"
+node a06 Call this.ShowInt
+	in text "-0X1f"
+node a07 Call this.ShowInt
+	in text "0b1010"
+node a08 Call this.ShowInt
+	in text "1'000'000"
+node a09 Call this.ShowInt
+	in text "9223372036854775807"
+node a10 Call this.ShowInt
+	in text "-9223372036854775808"
+node a11 Call this.ShowInt
+	in text "9223372036854775808"
+node a12 Call this.ShowInt
+	in text "0xFFFFFFFFFFFFFFFF"
+node a13 Call this.ShowInt
+	in text ""
+node a14 Call this.ShowInt
+	in text "-"
+node a15 Call this.ShowInt
+	in text "0x"
+node a16 Call this.ShowInt
+	in text " 5"
+node a17 Call this.ShowInt
+	in text "12a"
+node a18 Call this.ShowInt
+	in text "1.5"
+node a19 Call this.ShowDouble
+	in text "3.25"
+node a20 Call this.ShowDouble
+	in text "-1e3"
+node a21 Call this.ShowDouble
+	in text ".5"
+node a22 Call this.ShowDouble
+	in text "5."
+node a23 Call this.ShowDouble
+	in text "1e300"
+node a24 Call this.ShowDouble
+	in text "1e400"
+node a25 Call this.ShowDouble
+	in text "-Infinity"
+node a26 Call this.ShowDouble
+	in text "inf"
+node a27 Call this.ShowDouble
+	in text "NaN"
+node a28 Call this.ShowDouble
+	in text ""
+node a29 Call this.ShowDouble
+	in text "1e"
+node a30 Call this.ShowDouble
+	in text "1.2.3"
+node a31 Call this.ShowDouble
+	in text "abc"
+node a32 Call this.ShowDouble
+	in text "2,5"
+node a33 Call this.ShowFloat
+	in text "0.1"
+node a34 Call this.ShowFloat
+	in text "3.4e39"
+node a35 Call this.ShowFloat
+	in text "-2.5"
+node a36 Call this.ShowBool
+	in text "true"
+node a37 Call this.ShowBool
+	in text "FALSE"
+node a38 Call this.ShowBool
+	in text "True"
+node a39 Call this.ShowBool
+	in text ""
+node a40 Call this.ShowBool
+	in text "yes"
+node a41 Call this.ShowBool
+	in text " true"
+node a42 Call Int.TryParse
+	in text "77"
+node a43 Call Console.WriteLine(bool)
+node a44 Call Console.WriteLine(int)
+node a45 Call Int.TryParse
+	in text "x"
+node a46 Call Console.WriteLine(bool)
+node a47 Call Double.TryParse
+	in text "2.75"
+node a48 Call Console.WriteLine(double)
+node a49 Call Float.TryParse
+	in text "-0.5"
+node a50 Call Console.WriteLine(float)
+node a51 Call Bool.TryParse
+	in text "tRuE"
+node a52 Call Console.WriteLine(bool)
+node a53 Return
+	in value 0
+wire a01.then a02.in
+wire a02.then a03.in
+wire a03.then a04.in
+wire a04.then a05.in
+wire a05.then a06.in
+wire a06.then a07.in
+wire a07.then a08.in
+wire a08.then a09.in
+wire a09.then a10.in
+wire a10.then a11.in
+wire a11.then a12.in
+wire a12.then a13.in
+wire a13.then a14.in
+wire a14.then a15.in
+wire a15.then a16.in
+wire a16.then a17.in
+wire a17.then a18.in
+wire a18.then a19.in
+wire a19.then a20.in
+wire a20.then a21.in
+wire a21.then a22.in
+wire a22.then a23.in
+wire a23.then a24.in
+wire a24.then a25.in
+wire a25.then a26.in
+wire a26.then a27.in
+wire a27.then a28.in
+wire a28.then a29.in
+wire a29.then a30.in
+wire a30.then a31.in
+wire a31.then a32.in
+wire a32.then a33.in
+wire a33.then a34.in
+wire a34.then a35.in
+wire a35.then a36.in
+wire a36.then a37.in
+wire a37.then a38.in
+wire a38.then a39.in
+wire a39.then a40.in
+wire a40.then a41.in
+wire a41.then a42.in
+wire a42.then a43.in
+wire a42.result a43.value
+wire a43.then a44.in
+wire a42.parsed a44.value
+wire a44.then a45.in
+wire a45.then a46.in
+wire a45.result a46.value
+wire a46.then a47.in
+wire a47.then a48.in
+wire a47.parsed a48.value
+wire a48.then a49.in
+wire a49.then a50.in
+wire a49.parsed a50.value
+wire a50.then a51.in
+wire a51.then a52.in
+wire a51.parsed a52.value
+wire a52.then a53.in
+
+function m2 ShowInt
+	static
+	doc "Parses the text with Int.Parse and prints [text] -> the value or the error."
+param text StringView
+sheet body
+node b01 Entry
+node b02 Call Console.Write(StringView)
+	in text "["
+node b03 Call Console.Write(StringView)
+node b04 Call Console.Write(StringView)
+	in text "] -> "
+node b05 Call Int.Parse
+node b06 ResultMatch
+node b07 Call Console.WriteLine(int)
+node b08 Switch
+	case NoValue
+	case Overflow
+	case InvalidChar
+node b09 Call Console.WriteLine(StringView)
+	in text "NoValue"
+node b10 Call Console.WriteLine(StringView)
+	in text "Overflow"
+node b11 Call Console.Write(StringView)
+	in text "InvalidChar at "
+node b12 Call Console.WriteLine(int)
+wire b01.then b02.in
+wire b02.then b03.in
+wire b01.text b03.text
+wire b03.then b04.in
+wire b04.then b05.in
+wire b01.text b05.text
+wire b05.then b06.in
+wire b05.result b06.result
+wire b06.ok b07.in
+wire b06.value b07.value
+wire b06.err b08.in
+wire b06.error b08.value
+wire b08.case:NoValue b09.in
+wire b08.case:Overflow b10.in
+wire b08.case:InvalidChar b11.in
+wire b11.then b12.in
+wire b08.case:InvalidChar.position b12.value
+
+function m3 ShowDouble
+	static
+	doc "Parses the text with Double.Parse and prints [text] -> the value or the error."
+param text StringView
+sheet body
+node c01 Entry
+node c02 Call Console.Write(StringView)
+	in text "["
+node c03 Call Console.Write(StringView)
+node c04 Call Console.Write(StringView)
+	in text "] -> "
+node c05 Call Double.Parse
+node c06 ResultMatch
+node c07 Call Console.WriteLine(double)
+node c08 Switch
+	case NoValue
+	case Overflow
+	case InvalidChar
+node c09 Call Console.WriteLine(StringView)
+	in text "NoValue"
+node c10 Call Console.WriteLine(StringView)
+	in text "Overflow"
+node c11 Call Console.Write(StringView)
+	in text "InvalidChar at "
+node c12 Call Console.WriteLine(int)
+wire c01.then c02.in
+wire c02.then c03.in
+wire c01.text c03.text
+wire c03.then c04.in
+wire c04.then c05.in
+wire c01.text c05.text
+wire c05.then c06.in
+wire c05.result c06.result
+wire c06.ok c07.in
+wire c06.value c07.value
+wire c06.err c08.in
+wire c06.error c08.value
+wire c08.case:NoValue c09.in
+wire c08.case:Overflow c10.in
+wire c08.case:InvalidChar c11.in
+wire c11.then c12.in
+wire c08.case:InvalidChar.position c12.value
+
+function m4 ShowFloat
+	static
+	doc "Parses the text with Float.Parse and prints [text] -> the value or the error."
+param text StringView
+sheet body
+node d01 Entry
+node d02 Call Console.Write(StringView)
+	in text "["
+node d03 Call Console.Write(StringView)
+node d04 Call Console.Write(StringView)
+	in text "] -> "
+node d05 Call Float.Parse
+node d06 ResultMatch
+node d07 Call Console.WriteLine(float)
+node d08 Switch
+	case NoValue
+	case Overflow
+	case InvalidChar
+node d09 Call Console.WriteLine(StringView)
+	in text "NoValue"
+node d10 Call Console.WriteLine(StringView)
+	in text "Overflow"
+node d11 Call Console.Write(StringView)
+	in text "InvalidChar at "
+node d12 Call Console.WriteLine(int)
+wire d01.then d02.in
+wire d02.then d03.in
+wire d01.text d03.text
+wire d03.then d04.in
+wire d04.then d05.in
+wire d01.text d05.text
+wire d05.then d06.in
+wire d05.result d06.result
+wire d06.ok d07.in
+wire d06.value d07.value
+wire d06.err d08.in
+wire d06.error d08.value
+wire d08.case:NoValue d09.in
+wire d08.case:Overflow d10.in
+wire d08.case:InvalidChar d11.in
+wire d11.then d12.in
+wire d08.case:InvalidChar.position d12.value
+
+function m5 ShowBool
+	static
+	doc "Parses the text with Bool.Parse and prints [text] -> the value or the error."
+param text StringView
+sheet body
+node e01 Entry
+node e02 Call Console.Write(StringView)
+	in text "["
+node e03 Call Console.Write(StringView)
+node e04 Call Console.Write(StringView)
+	in text "] -> "
+node e05 Call Bool.Parse
+node e06 ResultMatch
+node e07 Call Console.WriteLine(bool)
+node e08 Switch
+	case NoValue
+	case Overflow
+	case InvalidChar
+node e09 Call Console.WriteLine(StringView)
+	in text "NoValue"
+node e10 Call Console.WriteLine(StringView)
+	in text "Overflow"
+node e11 Call Console.Write(StringView)
+	in text "InvalidChar at "
+node e12 Call Console.WriteLine(int)
+wire e01.then e02.in
+wire e02.then e03.in
+wire e01.text e03.text
+wire e03.then e04.in
+wire e04.then e05.in
+wire e01.text e05.text
+wire e05.then e06.in
+wire e05.result e06.result
+wire e06.ok e07.in
+wire e06.value e07.value
+wire e06.err e08.in
+wire e06.error e08.value
+wire e08.case:NoValue e09.in
+wire e08.case:Overflow e10.in
+wire e08.case:InvalidChar e11.in
+wire e11.then e12.in
+wire e08.case:InvalidChar.position e12.value

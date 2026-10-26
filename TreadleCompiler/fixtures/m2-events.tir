@@ -1,0 +1,1662 @@
+# tir 1
+program m2-events console
+entry Fx.EventsMain.Main()
+
+func C.crt.realloc(void*,uint) void* import "realloc"
+
+func C.crt.rt_format_int(char8*,int64) int64 import "rt_format_int"
+
+type Core.Event<delegate void(int)> struct
+	field mHandlers Core.List<delegate void(int)>
+	dtor Core.Event<delegate void(int)>.~this()
+
+type Core.IHashable interface
+	islot Core.IHashable.GetHashCode()
+
+func Core.IHashable.GetHashCode() int abstract
+
+type Core.List<delegate void(int)> class
+	field mItems delegate void(int)[]
+	field mCount int
+	dtor Core.List<delegate void(int)>.~this()
+
+type Core.String class
+	field mPtr char8*
+	field mLength int
+	field mCapacity int
+	field mInline char8[24]
+	itable Core.IHashable Core.String.GetHashCode()
+	dtor Core.String.~this()
+
+unit Core.Arrays "Arrays.treadle"
+
+func Core.Arrays.DestroyRange<delegate void(int)>(delegate void(int)[],int,int) void static sheet "r0007" display "Core.Arrays.DestroyRange"
+	param array delegate void(int)[]
+	param start int
+	param count int
+	region r1
+	slot s0 int loopvar "ab.index" pin node ab.index
+	slot s1 int loopvar "ab.count" pin node ab.count
+	node aa Entry
+	node ab For
+	node ac Call Arrays.DestroyAt
+	node ad Return
+	block b0
+		br b1
+	block b1
+		store.slot s0 %start @ab.start
+		store.slot s1 %count @ab.count
+		br b2
+	block b2
+		%_0 = load.slot int s1 @ab.count
+		%_1 = const int 0 @ab.count
+		%_2 = cmp bool gt %_0 %_1 @ab.count
+		condbr %_2 b5 b4 @ab
+	block b3
+		%_3 = const int 1 @ab.step
+		%_4 = load.slot int s0 @ab.index
+		%_5 = binop int add %_4 %_3 @ab.index
+		store.slot s0 %_5 @ab.index
+		%_6 = load.slot int s1 @ab.count
+		%_7 = const int 1 @ab.count
+		%_8 = binop int sub %_6 %_7 @ab.count
+		store.slot s1 %_8 @ab.count
+		br b2
+	block b4
+		br b7
+	block b5
+		region.enter r1 @ab.body
+		br b6
+	block b6
+		%_9 = load.slot int s0 @ab.index
+		region.exit r1 @ac
+		br b3
+	block b7
+		region.exit r0 @ad
+		ret @ad
+
+unit Core.Console "Console.treadle"
+
+func Core.Console.WriteLine(int) void static sheet "c000c" display "Core.Console.WriteLine"
+	param value int
+	slot s0 Core.String local "j2.object" pin node j2.object
+	node j1 Entry
+	node j2 Local String
+	node j3 Call String.Append(int)
+	node j4 Call Console.WriteLine(StringView)
+	node j5 Return
+	block b0
+		br b1
+	block b1
+		%_0 = local Core.String s0 @j2.object
+		call void Core.String.this() %_0 @j2
+		br b2
+	block b2
+		%_1 = slot.addr Core.String s0 @j2.object
+		nullcheck %_1 @j3.receiver
+		call void Core.String.Append(int) %_1 %value @j3
+		br b3
+	block b3
+		%_2 = slot.addr Core.String s0 @j2.object
+		%_3 = call StringView Core.String.View() %_2 @j4.text
+		intrinsic void console.writeline %_3 @j4
+		br b4
+	block b4
+		region.exit r0 @j5
+		ret @j5
+
+unit Core.Event "Event.treadle"
+
+func Core.Event<delegate void(int)>.Add(delegate void(int)) void sheet "e0002" display "Core.Event.Add"
+	param handler delegate void(int)
+	region r1
+	region r2
+	slot s0 Core.List<delegate void(int)> outtemp "b5.object" pin node b5.object
+	node b1 Entry
+	node b2 Get this.mHandlers
+	node b3 Operator ==
+	node b4 Branch
+	node b5 Construct List<T>
+	node b6 Set this.mHandlers
+	node b7 Get this.mHandlers
+	node b8 Call List<T>.Add
+	node b9 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr Core.List<delegate void(int)>* %this mHandlers @b2.value
+		%_1 = load Core.List<delegate void(int)> %_0 @b2.value
+		%_2 = const Core.List<delegate void(int)> null @b3.b
+		%_3 = cmp bool eq %_1 %_2 @b3.result
+		condbr %_3 b2 b3 @b4
+	block b2
+		region.enter r2 @b4.true
+		br b4
+	block b3
+		region.enter r1 @b4.false
+		region.exit r1 @b4
+		br b5
+	block b4
+		%_4 = alloc Core.List<delegate void(int)> @b5.object
+		call void Core.List<delegate void(int)>.this() %_4 @b5
+		store.slot s0 %_4 @b5.object
+		br b6
+	block b5
+		%_5 = field.addr Core.List<delegate void(int)>* %this mHandlers @b7.value
+		%_6 = load Core.List<delegate void(int)> %_5 @b7.value
+		nullcheck %_6 @b8.receiver
+		call void Core.List<delegate void(int)>.Add(delegate void(int)) %_6 %handler @b8
+		br b7
+	block b6
+		%_7 = load.slot Core.List<delegate void(int)> s0 @b5.object
+		%_8 = field.addr Core.List<delegate void(int)>* %this mHandlers @b6.value
+		store %_8 %_7 @b6.value
+		region.exit r2 @b6
+		br b5
+	block b7
+		region.exit r0 @b9
+		ret @b9
+
+func Core.Event<delegate void(int)>.At(int) delegate void(int) sheet "e0006" display "Core.Event.At"
+	param index int
+	node h1 Entry
+	node h2 Get this.mHandlers
+	node h3 Index
+	node h4 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr Core.List<delegate void(int)>* %this mHandlers @h2.value
+		%_1 = load Core.List<delegate void(int)> %_0 @h2.value
+		%_2 = call delegate void(int) Core.List<delegate void(int)>.op$index(Core.List<delegate void(int)>,int) %_1 %index @h3.value
+		region.exit r0 @h4
+		ret %_2 @h4
+
+func Core.Event<delegate void(int)>.Remove(delegate void(int)) bool sheet "e0003" display "Core.Event.Remove"
+	param handler delegate void(int)
+	region r1
+	region r2 parent r1
+	region r3 parent r2
+	region r4 parent r2
+	region r5
+	slot s0 int loopvar "c7.index" pin node c7.index
+	slot s1 int loopvar "c7.count" pin node c7.count
+	node c1 Entry
+	node c2 Get this.mHandlers
+	node c3 Operator ==
+	node c4 Branch
+	node c5 Return
+	node c6 Get List<T>.Count
+	node c7 For
+	node c8 Index
+	node c9 Operator ==
+	node d1 Branch
+	node d2 Delete
+	node d3 Call List<T>.RemoveAt
+	node d4 Return
+	node d5 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr Core.List<delegate void(int)>* %this mHandlers @c2.value
+		%_1 = load Core.List<delegate void(int)> %_0 @c2.value
+		%_2 = const Core.List<delegate void(int)> null @c3.b
+		%_3 = cmp bool eq %_1 %_2 @c3.result
+		condbr %_3 b2 b3 @c4
+	block b2
+		region.enter r5 @c4.true
+		br b4
+	block b3
+		region.enter r1 @c4.false
+		br b5
+	block b4
+		%_4 = const bool false @c5.value
+		region.exit r5 @c5
+		region.exit r0 @c5
+		ret %_4 @c5
+	block b5
+		%_5 = const int 0 @c7.start
+		%_6 = field.addr Core.List<delegate void(int)>* %this mHandlers @c2.value
+		%_7 = load Core.List<delegate void(int)> %_6 @c2.value
+		%_8 = call int Core.List<delegate void(int)>.get$Count() %_7 @c6.value
+		store.slot s0 %_5 @c7.start
+		store.slot s1 %_8 @c7.count
+		br b6
+	block b6
+		%_9 = load.slot int s1 @c7.count
+		%_10 = const int 0 @c7.count
+		%_11 = cmp bool gt %_9 %_10 @c7.count
+		condbr %_11 b9 b8 @c7
+	block b7
+		%_12 = const int 1 @c7.step
+		%_13 = load.slot int s0 @c7.index
+		%_14 = binop int add %_13 %_12 @c7.index
+		store.slot s0 %_14 @c7.index
+		%_15 = load.slot int s1 @c7.count
+		%_16 = const int 1 @c7.count
+		%_17 = binop int sub %_15 %_16 @c7.count
+		store.slot s1 %_17 @c7.count
+		br b6
+	block b8
+		br b11
+	block b9
+		region.enter r2 @c7.body
+		br b10
+	block b10
+		%_18 = field.addr Core.List<delegate void(int)>* %this mHandlers @c2.value
+		%_19 = load Core.List<delegate void(int)> %_18 @c2.value
+		%_20 = load.slot int s0 @c7.index
+		%_21 = call delegate void(int) Core.List<delegate void(int)>.op$index(Core.List<delegate void(int)>,int) %_19 %_20 @c8.value
+		%_22 = cmp bool eq %_21 %handler @c9.result
+		condbr %_22 b12 b13 @d1
+	block b11
+		%_23 = const bool false @d5.value
+		region.exit r1 @d5
+		region.exit r0 @d5
+		ret %_23 @d5
+	block b12
+		region.enter r4 @d1.true
+		br b14
+	block b13
+		region.enter r3 @d1.false
+		region.exit r3 @d1
+		region.exit r2 @d1
+		br b7
+	block b14
+		%_24 = field.addr Core.List<delegate void(int)>* %this mHandlers @c2.value
+		%_25 = load Core.List<delegate void(int)> %_24 @c2.value
+		%_26 = load.slot int s0 @c7.index
+		%_27 = call delegate void(int) Core.List<delegate void(int)>.op$index(Core.List<delegate void(int)>,int) %_25 %_26 @c8.value
+		delete %_27 @d2.object
+		br b15
+	block b15
+		%_28 = field.addr Core.List<delegate void(int)>* %this mHandlers @c2.value
+		%_29 = load Core.List<delegate void(int)> %_28 @c2.value
+		nullcheck %_29 @d3.receiver
+		%_30 = load.slot int s0 @c7.index
+		call void Core.List<delegate void(int)>.RemoveAt(int) %_29 %_30 @d3
+		br b16
+	block b16
+		%_31 = const bool true @d4.value
+		region.exit r4 @d4
+		region.exit r2 @d4
+		region.exit r1 @d4
+		region.exit r0 @d4
+		ret %_31 @d4
+
+func Core.Event<delegate void(int)>.get$Count() int sheet "get:e0005" display "Core.Event.get$Count"
+	region r1
+	region r2
+	node g1 Entry
+	node g2 Get this.mHandlers
+	node g3 Operator ==
+	node g4 Branch
+	node g5 Return
+	node g6 Get List<T>.Count
+	node g7 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr Core.List<delegate void(int)>* %this mHandlers @g2.value
+		%_1 = load Core.List<delegate void(int)> %_0 @g2.value
+		%_2 = const Core.List<delegate void(int)> null @g3.b
+		%_3 = cmp bool eq %_1 %_2 @g3.result
+		condbr %_3 b2 b3 @g4
+	block b2
+		region.enter r2 @g4.true
+		br b4
+	block b3
+		region.enter r1 @g4.false
+		br b5
+	block b4
+		%_4 = const int 0 @g5.value
+		region.exit r2 @g5
+		region.exit r0 @g5
+		ret %_4 @g5
+	block b5
+		%_5 = field.addr Core.List<delegate void(int)>* %this mHandlers @g2.value
+		%_6 = load Core.List<delegate void(int)> %_5 @g2.value
+		%_7 = call int Core.List<delegate void(int)>.get$Count() %_6 @g6.value
+		region.exit r1 @g7
+		region.exit r0 @g7
+		ret %_7 @g7
+
+func Core.Event<delegate void(int)>.~this() void sheet "e0001" display "Core.Event.~this"
+	region r1
+	region r2
+	node a1 Entry
+	node a2 Get this.mHandlers
+	node a3 Operator ==
+	node a4 Branch
+	node a5 Call List<T>.DeleteAll
+	node a6 Delete
+	node a7 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr Core.List<delegate void(int)>* %this mHandlers @a2.value
+		%_1 = load Core.List<delegate void(int)> %_0 @a2.value
+		%_2 = const Core.List<delegate void(int)> null @a3.b
+		%_3 = cmp bool eq %_1 %_2 @a3.result
+		condbr %_3 b2 b3 @a4
+	block b2
+		region.enter r2 @a4.true
+		region.exit r2 @a4
+		br b4
+	block b3
+		region.enter r1 @a4.false
+		br b5
+	block b4
+		region.exit r0 @a7
+		ret @a7
+	block b5
+		%_4 = field.addr Core.List<delegate void(int)>* %this mHandlers @a2.value
+		%_5 = load Core.List<delegate void(int)> %_4 @a2.value
+		nullcheck %_5 @a5.receiver
+		call void Core.List<delegate void(int)>.DeleteAll() %_5 @a5
+		br b6
+	block b6
+		%_6 = field.addr Core.List<delegate void(int)>* %this mHandlers @a2.value
+		%_7 = load Core.List<delegate void(int)> %_6 @a2.value
+		delete %_7 @a6.object
+		region.exit r1 @a6
+		br b4
+
+unit Core.List "List.treadle"
+
+func Core.List<delegate void(int)>.Add(delegate void(int)) void sheet "l0004" display "Core.List.Add"
+	param value delegate void(int)
+	node f1 Entry
+	node f2 Get this.mCount
+	node f3 Operator +
+	node f4 Call this.EnsureCapacity
+	node f5 Get this.mItems
+	node f6 Call Arrays.Set
+	node f7 Set this.mCount
+	node f8 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr int* %this mCount @f2.value
+		%_1 = load int %_0 @f2.value
+		%_2 = const int 1 @f3.b
+		%_3 = binop int add %_1 %_2 @f3.result
+		call void Core.List<delegate void(int)>.EnsureCapacity(int) %this %_3 @f4
+		br b2
+	block b2
+		%_4 = field.addr delegate void(int)[]* %this mItems @f5.value
+		%_5 = load delegate void(int)[] %_4 @f5.value
+		%_6 = field.addr int* %this mCount @f2.value
+		%_7 = load int %_6 @f2.value
+		nullcheck %_5 @f6
+		boundscheck %_5 %_7 @f6
+		%_8 = elem.addr delegate void(int)* %_5 %_7 @f6
+		store %_8 %value @f6
+		br b3
+	block b3
+		%_9 = const int 1 @f7.value
+		%_10 = field.addr int* %this mCount @f7.value
+		%_11 = load int %_10 @f7.value
+		%_12 = binop int add %_11 %_9 @f7.value
+		store %_10 %_12 @f7.value
+		br b4
+	block b4
+		region.exit r0 @f8
+		ret @f8
+
+func Core.List<delegate void(int)>.CheckIndex(int) void sheet "l000b" display "Core.List.CheckIndex"
+	param index int
+	region r1
+	region r2
+	slot s0 bool outtemp "p5.result" pin node p5.result
+	node p1 Entry
+	node p2 Get this.mCount
+	node p3 Operator <
+	node p4 Operator >=
+	node p5 Operator ||
+	node p6 Branch
+	node p7 Fatal
+	node p8 Return
+	block b0
+		br b1
+	block b1
+		%_0 = const int 0 @p3.b
+		%_1 = cmp bool lt %index %_0 @p3.result
+		store.slot s0 %_1 @p5.a
+		condbr %_1 b3 b2
+	block b2
+		%_2 = field.addr int* %this mCount @p2.value
+		%_3 = load int %_2 @p2.value
+		%_4 = cmp bool ge %index %_3 @p4.result
+		store.slot s0 %_4 @p5.b
+		br b3
+	block b3
+		%_5 = load.slot bool s0 @p5.result
+		condbr %_5 b4 b5 @p6
+	block b4
+		region.enter r2 @p6.true
+		br b6
+	block b5
+		region.enter r1 @p6.false
+		br b7
+	block b6
+		%_6 = const StringView "List: the index is out of range" @p7.message
+		intrinsic void console.error %_6 @p7.message
+		region.exit r2 @p7
+		region.exit r0 @p7
+		fatal 1 "Fatal node" @p7
+	block b7
+		region.exit r1 @p8
+		region.exit r0 @p8
+		ret @p8
+
+func Core.List<delegate void(int)>.Clear() void sheet "l0007" display "Core.List.Clear"
+	node l1 Entry
+	node l2 Set this.mCount
+	node l3 Return
+	node l4 Call Arrays.DestroyRange
+	node l5 Get this.mItems
+	node l6 Get this.mCount
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr delegate void(int)[]* %this mItems @l5.value
+		%_1 = load delegate void(int)[] %_0 @l5.value
+		%_2 = const int 0 @l4.start
+		%_3 = field.addr int* %this mCount @l6.value
+		%_4 = load int %_3 @l6.value
+		call void Core.Arrays.DestroyRange<delegate void(int)>(delegate void(int)[],int,int) %_1 %_2 %_4 @l4
+		br b2
+	block b2
+		%_5 = const int 0 @l2.value
+		%_6 = field.addr int* %this mCount @l2.value
+		store %_6 %_5 @l2.value
+		br b3
+	block b3
+		region.exit r0 @l3
+		ret @l3
+
+func Core.List<delegate void(int)>.DeleteAll() void sheet "l000e" display "Core.List.DeleteAll"
+	region r1
+	slot s0 int loopvar "w3.index" pin node w3.index
+	slot s1 int loopvar "w3.count" pin node w3.count
+	node w1 Entry
+	node w2 Get this.mCount
+	node w3 For
+	node w4 Get this.mItems
+	node w5 Index
+	node w6 Delete
+	node w7 Call this.Clear
+	node w8 Return
+	block b0
+		br b1
+	block b1
+		%_0 = const int 0 @w3.start
+		%_1 = field.addr int* %this mCount @w2.value
+		%_2 = load int %_1 @w2.value
+		store.slot s0 %_0 @w3.start
+		store.slot s1 %_2 @w3.count
+		br b2
+	block b2
+		%_3 = load.slot int s1 @w3.count
+		%_4 = const int 0 @w3.count
+		%_5 = cmp bool gt %_3 %_4 @w3.count
+		condbr %_5 b5 b4 @w3
+	block b3
+		%_6 = const int 1 @w3.step
+		%_7 = load.slot int s0 @w3.index
+		%_8 = binop int add %_7 %_6 @w3.index
+		store.slot s0 %_8 @w3.index
+		%_9 = load.slot int s1 @w3.count
+		%_10 = const int 1 @w3.count
+		%_11 = binop int sub %_9 %_10 @w3.count
+		store.slot s1 %_11 @w3.count
+		br b2
+	block b4
+		br b7
+	block b5
+		region.enter r1 @w3.body
+		br b6
+	block b6
+		%_12 = field.addr delegate void(int)[]* %this mItems @w4.value
+		%_13 = load delegate void(int)[] %_12 @w4.value
+		%_14 = load.slot int s0 @w3.index
+		boundscheck %_13 %_14 @w5.value
+		%_15 = elem.addr delegate void(int)* %_13 %_14 @w5.value
+		%_16 = load delegate void(int) %_15 @w5.value
+		delete %_16 @w6.object
+		region.exit r1 @w6
+		br b3
+	block b7
+		call void Core.List<delegate void(int)>.Clear() %this @w7
+		br b8
+	block b8
+		region.exit r0 @w8
+		ret @w8
+
+func Core.List<delegate void(int)>.EnsureCapacity(int) void sheet "l0003" display "Core.List.EnsureCapacity"
+	param need int
+	region r1
+	region r2 parent r1
+	region r3
+	slot s0 int variable "cap" local
+	slot s1 delegate void(int)[] outtemp "d3.object" pin node d3.object
+	slot s2 int loopvar "d5.index" pin node d5.index
+	slot s3 int loopvar "d5.count" pin node d5.count
+	slot s4 int outtemp "c5.result" pin node c5.result
+	node c1 Entry
+	node c2 Get this.mItems
+	node c3 Operator !=
+	node c4 Get T[].Length
+	node c5 Select
+	node c6 Operator <=
+	node c7 Branch
+	node c8 Return
+	node c9 Operator *
+	node d1 Call Math.Max
+	node d2 Call Math.Max
+	node d3 Construct T
+	node d4 Get this.mCount
+	node d5 For
+	node d6 Index
+	node d7 Call Arrays.Set
+	node d8 Call Arrays.Free
+	node d9 Set this.mItems
+	node e1 Return
+	block b0
+		%_0 = const int zero @c1
+		store.slot s0 %_0 @c1
+		br b1
+	block b1
+		%_1 = field.addr delegate void(int)[]* %this mItems @c2.value
+		%_2 = load delegate void(int)[] %_1 @c2.value
+		%_3 = const delegate void(int)[] null @c3.b
+		%_4 = cmp bool ne %_2 %_3 @c3.result
+		condbr %_4 b2 b3
+	block b2
+		%_5 = field.addr delegate void(int)[]* %this mItems @c2.value
+		%_6 = load delegate void(int)[] %_5 @c2.value
+		nullcheck %_6 @c4.receiver
+		%_7 = array.len int %_6 @c4.value
+		store.slot s4 %_7 @c5.result
+		br b4
+	block b3
+		%_8 = const int 0 @c5.false
+		store.slot s4 %_8 @c5.result
+		br b4
+	block b4
+		%_9 = load.slot int s4 @c5.result
+		%_10 = cmp bool le %need %_9 @c6.result
+		condbr %_10 b5 b6 @c7
+	block b5
+		region.enter r3 @c7.true
+		br b7
+	block b6
+		region.enter r1 @c7.false
+		br b8
+	block b7
+		region.exit r3 @c8
+		region.exit r0 @c8
+		ret @c8
+	block b8
+		%_11 = field.addr delegate void(int)[]* %this mItems @c2.value
+		%_12 = load delegate void(int)[] %_11 @c2.value
+		%_13 = const delegate void(int)[] null @c3.b
+		%_14 = cmp bool ne %_12 %_13 @c3.result
+		condbr %_14 b9 b10
+	block b9
+		%_15 = field.addr delegate void(int)[]* %this mItems @c2.value
+		%_16 = load delegate void(int)[] %_15 @c2.value
+		nullcheck %_16 @c4.receiver
+		%_17 = array.len int %_16 @c4.value
+		store.slot s4 %_17 @c5.result
+		br b11
+	block b10
+		%_18 = const int 0 @c5.false
+		store.slot s4 %_18 @c5.result
+		br b11
+	block b11
+		%_19 = load.slot int s4 @c5.result
+		%_20 = const int 2 @c9.b
+		%_21 = binop int mul %_19 %_20 @c9.result
+		%_22 = cmp bool lt %_21 %need @d1.result
+		%_23 = select int %_22 %need %_21 @d1.result
+		%_24 = const int 4 @d2.b
+		%_25 = cmp bool lt %_23 %_24 @d2.result
+		%_26 = select int %_25 %_24 %_23 @d2.result
+		%_27 = alloc.array delegate void(int)[] %_26 @d3.object
+		store.slot s1 %_27 @d3.object
+		br b12
+	block b12
+		%_28 = const int 0 @d5.start
+		%_29 = field.addr int* %this mCount @d4.value
+		%_30 = load int %_29 @d4.value
+		store.slot s2 %_28 @d5.start
+		store.slot s3 %_30 @d5.count
+		br b13
+	block b13
+		%_31 = load.slot int s3 @d5.count
+		%_32 = const int 0 @d5.count
+		%_33 = cmp bool gt %_31 %_32 @d5.count
+		condbr %_33 b16 b15 @d5
+	block b14
+		%_34 = const int 1 @d5.step
+		%_35 = load.slot int s2 @d5.index
+		%_36 = binop int add %_35 %_34 @d5.index
+		store.slot s2 %_36 @d5.index
+		%_37 = load.slot int s3 @d5.count
+		%_38 = const int 1 @d5.count
+		%_39 = binop int sub %_37 %_38 @d5.count
+		store.slot s3 %_39 @d5.count
+		br b13
+	block b15
+		br b18
+	block b16
+		region.enter r2 @d5.body
+		br b17
+	block b17
+		%_40 = load.slot delegate void(int)[] s1 @d3.object
+		%_41 = load.slot int s2 @d5.index
+		%_42 = field.addr delegate void(int)[]* %this mItems @c2.value
+		%_43 = load delegate void(int)[] %_42 @c2.value
+		%_44 = load.slot int s2 @d5.index
+		boundscheck %_43 %_44 @d6.value
+		%_45 = elem.addr delegate void(int)* %_43 %_44 @d6.value
+		%_46 = load delegate void(int) %_45 @d6.value
+		nullcheck %_40 @d7
+		boundscheck %_40 %_41 @d7
+		%_47 = elem.addr delegate void(int)* %_40 %_41 @d7
+		store %_47 %_46 @d7
+		region.exit r2 @d7
+		br b14
+	block b18
+		%_48 = field.addr delegate void(int)[]* %this mItems @c2.value
+		%_49 = load delegate void(int)[] %_48 @c2.value
+		free %_49 @d8
+		br b19
+	block b19
+		%_50 = load.slot delegate void(int)[] s1 @d3.object
+		%_51 = field.addr delegate void(int)[]* %this mItems @d9.value
+		store %_51 %_50 @d9.value
+		br b20
+	block b20
+		region.exit r1 @e1
+		region.exit r0 @e1
+		ret @e1
+
+func Core.List<delegate void(int)>.RemoveAt(int) void sheet "l0006" display "Core.List.RemoveAt"
+	param index int
+	region r1
+	slot s0 int loopvar "j6.index" pin node j6.index
+	slot s1 int loopvar "j6.count" pin node j6.count
+	node j1 Entry
+	node j2 Call this.CheckIndex
+	node j3 Get this.mCount
+	node j4 Operator -
+	node j5 Operator -
+	node j6 For
+	node j7 Operator +
+	node j8 Operator +
+	node j9 Get this.mItems
+	node ja Call Arrays.DestroyAt
+	node k1 Index
+	node k2 Call Arrays.Set
+	node k3 Set this.mCount
+	node k4 Get this.mCount
+	node k5 Call Arrays.Set
+	node k6 Return
+	block b0
+		br b1
+	block b1
+		call void Core.List<delegate void(int)>.CheckIndex(int) %this %index @j2
+		br b2
+	block b2
+		%_0 = field.addr delegate void(int)[]* %this mItems @j9.value
+		%_1 = load delegate void(int)[] %_0 @j9.value
+		br b3
+	block b3
+		%_2 = const int 0 @j6.start
+		%_3 = field.addr int* %this mCount @j3.value
+		%_4 = load int %_3 @j3.value
+		%_5 = binop int sub %_4 %index @j4.result
+		%_6 = const int 1 @j5.b
+		%_7 = binop int sub %_5 %_6 @j5.result
+		store.slot s0 %_2 @j6.start
+		store.slot s1 %_7 @j6.count
+		br b4
+	block b4
+		%_8 = load.slot int s1 @j6.count
+		%_9 = const int 0 @j6.count
+		%_10 = cmp bool gt %_8 %_9 @j6.count
+		condbr %_10 b7 b6 @j6
+	block b5
+		%_11 = const int 1 @j6.step
+		%_12 = load.slot int s0 @j6.index
+		%_13 = binop int add %_12 %_11 @j6.index
+		store.slot s0 %_13 @j6.index
+		%_14 = load.slot int s1 @j6.count
+		%_15 = const int 1 @j6.count
+		%_16 = binop int sub %_14 %_15 @j6.count
+		store.slot s1 %_16 @j6.count
+		br b4
+	block b6
+		br b9
+	block b7
+		region.enter r1 @j6.body
+		br b8
+	block b8
+		%_17 = field.addr delegate void(int)[]* %this mItems @j9.value
+		%_18 = load delegate void(int)[] %_17 @j9.value
+		%_19 = load.slot int s0 @j6.index
+		%_20 = binop int add %index %_19 @j7.result
+		%_21 = const int 1 @j8.b
+		%_22 = binop int add %_20 %_21 @j8.result
+		boundscheck %_18 %_22 @k1.value
+		%_23 = elem.addr delegate void(int)* %_18 %_22 @k1.value
+		%_24 = load delegate void(int) %_23 @k1.value
+		nullcheck %_18 @k2
+		boundscheck %_18 %_20 @k2
+		%_25 = elem.addr delegate void(int)* %_18 %_20 @k2
+		store %_25 %_24 @k2
+		region.exit r1 @k2
+		br b5
+	block b9
+		%_26 = const int 1 @k3.value
+		%_27 = field.addr int* %this mCount @k3.value
+		%_28 = load int %_27 @k3.value
+		%_29 = binop int sub %_28 %_26 @k3.value
+		store %_27 %_29 @k3.value
+		br b10
+	block b10
+		%_30 = field.addr delegate void(int)[]* %this mItems @j9.value
+		%_31 = load delegate void(int)[] %_30 @j9.value
+		%_32 = field.addr int* %this mCount @k4.value
+		%_33 = load int %_32 @k4.value
+		%_34 = const delegate void(int) zero @k5.value
+		nullcheck %_31 @k5
+		boundscheck %_31 %_33 @k5
+		%_35 = elem.addr delegate void(int)* %_31 %_33 @k5
+		store %_35 %_34 @k5
+		br b11
+	block b11
+		region.exit r0 @k6
+		ret @k6
+
+func Core.List<delegate void(int)>.get$Count() int sheet "get:l0002" display "Core.List.get$Count"
+	node b1 Entry
+	node b2 Get this.mCount
+	node b3 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr int* %this mCount @b2.value
+		%_1 = load int %_0 @b2.value
+		region.exit r0 @b3
+		ret %_1 @b3
+
+func Core.List<delegate void(int)>.op$index(Core.List<delegate void(int)>,int) delegate void(int) static sheet "l000c" display "Core.List.op$index"
+	param list Core.List<delegate void(int)>
+	param index int
+	region r1
+	region r2
+	slot s0 bool outtemp "q5.result" pin node q5.result
+	node q1 Entry
+	node q2 Get List<T>.mCount
+	node q3 Operator <
+	node q4 Operator >=
+	node q5 Operator ||
+	node q6 Branch
+	node q7 Fatal
+	node q8 Get List<T>.mItems
+	node q9 Index
+	node r1 Return
+	block b0
+		br b1
+	block b1
+		%_0 = const int 0 @q3.b
+		%_1 = cmp bool lt %index %_0 @q3.result
+		store.slot s0 %_1 @q5.a
+		condbr %_1 b3 b2
+	block b2
+		nullcheck %list @q2.receiver
+		%_2 = field.addr int* %list mCount @q2.value
+		%_3 = load int %_2 @q2.value
+		%_4 = cmp bool ge %index %_3 @q4.result
+		store.slot s0 %_4 @q5.b
+		br b3
+	block b3
+		%_5 = load.slot bool s0 @q5.result
+		condbr %_5 b4 b5 @q6
+	block b4
+		region.enter r2 @q6.true
+		br b6
+	block b5
+		region.enter r1 @q6.false
+		br b7
+	block b6
+		%_6 = const StringView "List: the index is out of range" @q7.message
+		intrinsic void console.error %_6 @q7.message
+		region.exit r2 @q7
+		region.exit r0 @q7
+		fatal 1 "Fatal node" @q7
+	block b7
+		nullcheck %list @q8.receiver
+		%_7 = field.addr delegate void(int)[]* %list mItems @q8.value
+		%_8 = load delegate void(int)[] %_7 @q8.value
+		boundscheck %_8 %index @q9.value
+		%_9 = elem.addr delegate void(int)* %_8 %index @q9.value
+		%_10 = load delegate void(int) %_9 @q9.value
+		region.exit r1 @r1
+		region.exit r0 @r1
+		ret %_10 @r1
+
+func Core.List<delegate void(int)>.this() void sheet "l0001" display "Core.List.this"
+	node a1 Entry
+	node a2 Return
+	block b0
+		br b1
+	block b1
+		region.exit r0 @a2
+		ret @a2
+
+func Core.List<delegate void(int)>.~this() void sheet "l0011" display "Core.List.~this"
+	node a3 Get this.mCount
+	node a4 Call Arrays.DestroyRange
+	node a5 Call Arrays.Free
+	node a6 Return
+	node aa Entry
+	node ab Get this.mItems
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr delegate void(int)[]* %this mItems @ab.value
+		%_1 = load delegate void(int)[] %_0 @ab.value
+		%_2 = const int 0 @a4.start
+		%_3 = field.addr int* %this mCount @a3.value
+		%_4 = load int %_3 @a3.value
+		call void Core.Arrays.DestroyRange<delegate void(int)>(delegate void(int)[],int,int) %_1 %_2 %_4 @a4
+		br b2
+	block b2
+		%_5 = field.addr delegate void(int)[]* %this mItems @ab.value
+		%_6 = load delegate void(int)[] %_5 @ab.value
+		free %_6 @a5
+		br b3
+	block b3
+		region.exit r0 @a6
+		ret @a6
+
+unit Core.Memory "Memory.treadle"
+
+func Core.Memory.Resize<char8>(char8*,int) char8* static sheet "y0005" display "Core.Memory.Resize"
+	param ptr char8*
+	param count int
+	slot s0 void* outtemp "r5.result" pin node r5.result
+	node r1 Entry
+	node r2 Call Memory.ElementSize
+	node r3 Operator *
+	node r4 Cast uint
+	node r5 Call C.crt.realloc
+	node r6 Cast T*
+	node r7 Return
+	block b0
+		br b1
+	block b1
+		%_0 = cast void* %ptr @r5.ptr
+		%_1 = sizeof int char8 @r2.result
+		%_2 = binop int mul %count %_1 @r3.result
+		%_3 = cast uint %_2 @r4.result
+		%_4 = ccall void* C.crt.realloc(void*,uint) %_0 %_3 @r5
+		store.slot s0 %_4 @r5.result
+		br b2
+	block b2
+		%_5 = load.slot void* s0 @r5.result
+		%_6 = cast char8* %_5 @r6.result
+		region.exit r0 @r7
+		ret %_6 @r7
+
+unit Core.String "String.treadle"
+
+func Core.String.Append(StringView) void sheet "s0005" display "Core.String.Append"
+	param text StringView
+	region r1
+	node d0 Scope
+	node d1 Entry
+	node d2 Break StringView
+	node d3 Get this.mLength
+	node d4 Operator +
+	node d5 Operator +
+	node d6 Call this.Reserve
+	node d7 Get this.mPtr
+	node d8 Call Pointer.Add
+	node d9 Call Memory.Copy
+	node e1 Set this.mLength
+	node e2 Get this.mLength
+	node e3 Call Pointer.Add
+	node e4 Call Pointer.Store
+	node e5 Return
+	block b0
+		br b1
+	block b1
+		region.enter r1 @d0.body
+		br b2
+	block b2
+		%_0 = field.addr int* %this mLength @d3.value
+		%_1 = load int %_0 @d3.value
+		%_2 = extract int %text 1 @d2.Length
+		%_3 = binop int add %_1 %_2 @d4.result
+		%_4 = const int 1 @d5.b
+		%_5 = binop int add %_3 %_4 @d5.result
+		call void Core.String.Reserve(int) %this %_5 @d6
+		br b3
+	block b3
+		%_6 = field.addr char8** %this mPtr @d7.value
+		%_7 = load char8* %_6 @d7.value
+		%_8 = field.addr int* %this mLength @d3.value
+		%_9 = load int %_8 @d3.value
+		%_10 = elem.addr char8* %_7 %_9 @d8.result
+		%_11 = cast void* %_10 @d9.dest
+		%_12 = extract char8* %text 0 @d2.Ptr
+		%_13 = cast void* %_12 @d9.src
+		%_14 = extract int %text 1 @d2.Length
+		intrinsic void memcpy %_11 %_13 %_14 @d9
+		br b4
+	block b4
+		%_15 = extract int %text 1 @d2.Length
+		%_16 = field.addr int* %this mLength @e1.value
+		%_17 = load int %_16 @e1.value
+		%_18 = binop int add %_17 %_15 @e1.value
+		store %_16 %_18 @e1.value
+		br b5
+	block b5
+		%_19 = field.addr char8** %this mPtr @d7.value
+		%_20 = load char8* %_19 @d7.value
+		%_21 = field.addr int* %this mLength @e2.value
+		%_22 = load int %_21 @e2.value
+		%_23 = elem.addr char8* %_20 %_22 @e3.result
+		%_24 = const char8 0 @e4.value
+		store %_23 %_24 @e4
+		region.exit r1 @e4
+		br b6
+	block b6
+		region.exit r0 @e5
+		ret @e5
+
+func Core.String.Append(int) void sheet "s0007" display "Core.String.Append"
+	param value int
+	region r1
+	slot s0 int64 outtemp "f7.result" pin node f7.result
+	node f0 Scope
+	node f1 Entry
+	node f2 Get this.mLength
+	node f3 Operator +
+	node f4 Call this.Reserve
+	node f5 Get this.mPtr
+	node f6 Call Pointer.Add
+	node f7 Call C.crt.rt_format_int
+	node f9 Set this.mLength
+	node g1 Return
+	block b0
+		br b1
+	block b1
+		region.enter r1 @f0.body
+		br b2
+	block b2
+		%_0 = field.addr int* %this mLength @f2.value
+		%_1 = load int %_0 @f2.value
+		%_2 = const int 21 @f3.b
+		%_3 = binop int add %_1 %_2 @f3.result
+		call void Core.String.Reserve(int) %this %_3 @f4
+		br b3
+	block b3
+		%_4 = field.addr char8** %this mPtr @f5.value
+		%_5 = load char8* %_4 @f5.value
+		%_6 = field.addr int* %this mLength @f2.value
+		%_7 = load int %_6 @f2.value
+		%_8 = elem.addr char8* %_5 %_7 @f6.result
+		%_9 = cast int64 %value @f7.v
+		%_10 = ccall int64 C.crt.rt_format_int(char8*,int64) %_8 %_9 @f7
+		store.slot s0 %_10 @f7.result
+		br b4
+	block b4
+		%_11 = load.slot int64 s0 @f7.result
+		%_12 = cast int %_11 @f9.value
+		%_13 = field.addr int* %this mLength @f9.value
+		%_14 = load int %_13 @f9.value
+		%_15 = binop int add %_14 %_12 @f9.value
+		store %_13 %_15 @f9.value
+		region.exit r1 @f9
+		br b5
+	block b5
+		region.exit r0 @g1
+		ret @g1
+
+func Core.String.GetHashCode() int sheet "s001a" display "Core.String.GetHashCode"
+	slot s0 StringView outtemp "mc.receiver" pin node mc.receiver
+	node ma Entry
+	node mb Call this.View
+	node mc Call StringView.GetHashCode
+	node md Return
+	block b0
+		br b1
+	block b1
+		%_0 = call StringView Core.String.View() %this @mb.result
+		store.slot s0 %_0 @mc.receiver
+		%_1 = slot.addr StringView* s0 @mc.receiver
+		%_2 = call int StringView.GetHashCode(StringView*) %_1 @mc.result
+		region.exit r0 @md
+		ret %_2 @md
+
+func Core.String.Reserve(int) void sheet "s0004" display "Core.String.Reserve"
+	param need int
+	region r1
+	region r2 parent r1
+	region r3 parent r2
+	region r4 parent r2
+	region r5 parent r1
+	region r6
+	slot s0 int variable "cap" local
+	slot s1 char8* variable "old" local
+	slot s2 char8* variable "none" local
+	slot s3 char8* outtemp "c3.result" pin node c3.result
+	slot s4 bool outtemp "rd1.result" pin node rd1.result
+	slot s5 char8* outtemp "re3.result" pin node re3.result
+	node b1 Entry
+	node b2 Get this.mCapacity
+	node b3 Operator <=
+	node b4 Branch
+	node b5 Return
+	node b6 Operator *
+	node b7 Call Math.Max
+	node b8 Call Math.Max
+	node b9 Set local:cap
+	node c1 Get local:cap
+	node c2 Get local:old
+	node c3 Call Memory.Resize
+	node c4 Set this.mPtr
+	node c5 Set this.mCapacity
+	node c6 Return
+	node c7 Get this.mPtr
+	node c8 Operator ==
+	node c9 Operator <=
+	node rd1 Operator &&
+	node rd2 Branch
+	node rd3 This
+	node rd4 Call String.InlineBuffer
+	node rd5 Set this.mPtr
+	node rd6 Set this.mCapacity
+	node rd7 Call Pointer.Store
+	node rd8 Return
+	node rd9 Set local:old
+	node re1 Operator ==
+	node re2 Get local:none
+	node re3 Select
+	node re4 Branch
+	node re5 Call Memory.Copy
+	node re6 Get this.mPtr
+	node re7 Get this.mLength
+	node re8 Operator +
+	node re9 Return
+	block b0
+		%_0 = const int zero @b1
+		store.slot s0 %_0 @b1
+		%_1 = const char8* zero @b1
+		store.slot s1 %_1 @b1
+		%_2 = const char8* zero @b1
+		store.slot s2 %_2 @b1
+		br b1
+	block b1
+		%_3 = field.addr int* %this mCapacity @b2.value
+		%_4 = load int %_3 @b2.value
+		%_5 = cmp bool le %need %_4 @b3.result
+		condbr %_5 b2 b3 @b4
+	block b2
+		region.enter r6 @b4.true
+		br b4
+	block b3
+		region.enter r1 @b4.false
+		br b5
+	block b4
+		region.exit r6 @b5
+		region.exit r0 @b5
+		ret @b5
+	block b5
+		%_6 = field.addr char8** %this mPtr @c7.value
+		%_7 = load char8* %_6 @c7.value
+		%_8 = const char8* null @c8.b
+		%_9 = cmp bool eq %_7 %_8 @c8.result
+		store.slot s4 %_9 @rd1.a
+		condbr %_9 b6 b7
+	block b6
+		%_10 = const int 24 @c9.b
+		%_11 = cmp bool le %need %_10 @c9.result
+		store.slot s4 %_11 @rd1.b
+		br b7
+	block b7
+		%_12 = load.slot bool s4 @rd1.result
+		condbr %_12 b8 b9 @rd2
+	block b8
+		region.enter r5 @rd2.true
+		br b10
+	block b9
+		region.enter r2 @rd2.false
+		br b11
+	block b10
+		%_13 = field.addr char8[24]* %this mInline @rd4.result
+		%_14 = cast char8* %_13 @rd4.result
+		%_15 = field.addr char8** %this mPtr @rd5.value
+		store %_15 %_14 @rd5.value
+		br b12
+	block b11
+		%_16 = field.addr char8** %this mPtr @c7.value
+		%_17 = load char8* %_16 @c7.value
+		store.slot s1 %_17 @rd9.value
+		br b13
+	block b12
+		%_18 = const int 24 @rd6.value
+		%_19 = field.addr int* %this mCapacity @rd6.value
+		store %_19 %_18 @rd6.value
+		br b14
+	block b13
+		%_20 = field.addr int* %this mCapacity @b2.value
+		%_21 = load int %_20 @b2.value
+		%_22 = const int 2 @b6.b
+		%_23 = binop int mul %_21 %_22 @b6.result
+		%_24 = cmp bool lt %_23 %need @b7.result
+		%_25 = select int %_24 %need %_23 @b7.result
+		%_26 = const int 16 @b8.b
+		%_27 = cmp bool lt %_25 %_26 @b8.result
+		%_28 = select int %_27 %_26 %_25 @b8.result
+		store.slot s0 %_28 @b9.value
+		br b15
+	block b14
+		%_29 = field.addr char8[24]* %this mInline @rd4.result
+		%_30 = cast char8* %_29 @rd4.result
+		%_31 = const char8 0 @rd7.value
+		store %_30 %_31 @rd7
+		br b16
+	block b15
+		%_32 = load.slot char8* s1 @c2.value
+		%_33 = field.addr char8[24]* %this mInline @rd4.result
+		%_34 = cast char8* %_33 @rd4.result
+		%_35 = cmp bool eq %_32 %_34 @re1.result
+		condbr %_35 b17 b18
+	block b16
+		region.exit r5 @rd8
+		region.exit r1 @rd8
+		region.exit r0 @rd8
+		ret @rd8
+	block b17
+		%_36 = load.slot char8* s2 @re2.value
+		store.slot s5 %_36 @re3.result
+		br b19
+	block b18
+		%_37 = load.slot char8* s1 @c2.value
+		store.slot s5 %_37 @re3.result
+		br b19
+	block b19
+		%_38 = load.slot char8* s5 @re3.result
+		%_39 = load.slot int s0 @c1.value
+		%_40 = call char8* Core.Memory.Resize<char8>(char8*,int) %_38 %_39 @c3
+		store.slot s3 %_40 @c3.result
+		br b20
+	block b20
+		%_41 = load.slot char8* s3 @c3.result
+		%_42 = field.addr char8** %this mPtr @c4.value
+		store %_42 %_41 @c4.value
+		br b21
+	block b21
+		%_43 = load.slot int s0 @c1.value
+		%_44 = field.addr int* %this mCapacity @c5.value
+		store %_44 %_43 @c5.value
+		br b22
+	block b22
+		%_45 = load.slot char8* s1 @c2.value
+		%_46 = field.addr char8[24]* %this mInline @rd4.result
+		%_47 = cast char8* %_46 @rd4.result
+		%_48 = cmp bool eq %_45 %_47 @re1.result
+		condbr %_48 b23 b24 @re4
+	block b23
+		region.enter r4 @re4.true
+		br b25
+	block b24
+		region.enter r3 @re4.false
+		br b26
+	block b25
+		%_49 = field.addr char8** %this mPtr @re6.value
+		%_50 = load char8* %_49 @re6.value
+		%_51 = cast void* %_50 @re5.dest
+		%_52 = load.slot char8* s1 @c2.value
+		%_53 = cast void* %_52 @re5.src
+		%_54 = field.addr int* %this mLength @re7.value
+		%_55 = load int %_54 @re7.value
+		%_56 = const int 1 @re8.b
+		%_57 = binop int add %_55 %_56 @re8.result
+		intrinsic void memcpy %_51 %_53 %_57 @re5
+		br b27
+	block b26
+		region.exit r3 @c6
+		region.exit r2 @c6
+		region.exit r1 @c6
+		region.exit r0 @c6
+		ret @c6
+	block b27
+		region.exit r4 @re9
+		region.exit r2 @re9
+		region.exit r1 @re9
+		region.exit r0 @re9
+		ret @re9
+
+func Core.String.View() StringView sheet "s0011" display "Core.String.View"
+	node m1 Entry
+	node m2 Make StringView
+	node m3 Get this.mPtr
+	node m4 Get this.mLength
+	node m5 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr char8** %this mPtr @m3.value
+		%_1 = load char8* %_0 @m3.value
+		%_2 = field.addr int* %this mLength @m4.value
+		%_3 = load int %_2 @m4.value
+		%_4 = make StringView %_1 %_3 @m2.value
+		region.exit r0 @m5
+		ret %_4 @m5
+
+func Core.String.this() void sheet "s0001" display "Core.String.this"
+	node a1 Entry
+	node a2 Return
+	block b0
+		br b1
+	block b1
+		region.exit r0 @a2
+		ret @a2
+
+func Core.String.this(StringView) void sheet "s0002" display "Core.String.this"
+	param text StringView
+	node n1 Entry
+	node n2 Call this.Append(StringView)
+	node n3 Return
+	block b0
+		br b1
+	block b1
+		call void Core.String.Append(StringView) %this %text @n2
+		br b2
+	block b2
+		region.exit r0 @n3
+		ret @n3
+
+func Core.String.~this() void sheet "s0003" display "Core.String.~this"
+	region r1
+	region r2 parent r1
+	region r3 parent r1
+	slot s0 bool outtemp "p1.result" pin node p1.result
+	node o1 Entry
+	node o2 Scope
+	node o3 Get this.mPtr
+	node o4 Call Memory.Resize
+	node o5 Return
+	node o6 This
+	node o7 Call String.InlineBuffer
+	node o8 Operator !=
+	node o9 Operator !=
+	node p1 Operator &&
+	node p2 Branch
+	block b0
+		br b1
+	block b1
+		region.enter r1 @o2.body
+		br b2
+	block b2
+		%_0 = field.addr char8** %this mPtr @o3.value
+		%_1 = load char8* %_0 @o3.value
+		%_2 = field.addr char8[24]* %this mInline @o7.result
+		%_3 = cast char8* %_2 @o7.result
+		%_4 = cmp bool ne %_1 %_3 @o8.result
+		store.slot s0 %_4 @p1.a
+		condbr %_4 b3 b4
+	block b3
+		%_5 = field.addr char8** %this mPtr @o3.value
+		%_6 = load char8* %_5 @o3.value
+		%_7 = const char8* null @o9.b
+		%_8 = cmp bool ne %_6 %_7 @o9.result
+		store.slot s0 %_8 @p1.b
+		br b4
+	block b4
+		%_9 = load.slot bool s0 @p1.result
+		condbr %_9 b5 b6 @p2
+	block b5
+		region.enter r3 @p2.true
+		br b7
+	block b6
+		region.enter r2 @p2.false
+		region.exit r2 @p2
+		region.exit r1 @p2
+		br b8
+	block b7
+		%_10 = field.addr char8** %this mPtr @o3.value
+		%_11 = load char8* %_10 @o3.value
+		%_12 = const int 0 @o4.count
+		%_13 = call char8* Core.Memory.Resize<char8>(char8*,int) %_11 %_12 @o4
+		region.exit r3 @o4
+		region.exit r1 @o4
+		br b8
+	block b8
+		region.exit r0 @o5
+		ret @o5
+
+unit Core.StringView "StringView.treadle"
+
+func StringView.GetHashCode(StringView*) int static sheet "v000b" display "Core.StringView.GetHashCode"
+	param this StringView*
+	region r1
+	slot s0 int variable "h" local
+	slot s1 int loopvar "p3.index" pin node p3.index
+	slot s2 int loopvar "p3.count" pin node p3.count
+	node p1 Entry
+	node p2 Get this.Length
+	node p3 For
+	node p4 Make StringView
+	node p5 Get this.Ptr
+	node p6 Index
+	node p7 Cast int
+	node p8 Get local:h
+	node p9 Operator ^
+	node q1 Operator *
+	node q2 Set local:h
+	node q3 Return
+	block b0
+		%_0 = const int -3750763034362895579 @p1
+		store.slot s0 %_0 @p1
+		br b1
+	block b1
+		%_1 = const int 0 @p3.start
+		%_2 = load StringView %this @p2.value
+		%_3 = extract int %_2 1 @p2.value
+		store.slot s1 %_1 @p3.start
+		store.slot s2 %_3 @p3.count
+		br b2
+	block b2
+		%_4 = load.slot int s2 @p3.count
+		%_5 = const int 0 @p3.count
+		%_6 = cmp bool gt %_4 %_5 @p3.count
+		condbr %_6 b5 b4 @p3
+	block b3
+		%_7 = const int 1 @p3.step
+		%_8 = load.slot int s1 @p3.index
+		%_9 = binop int add %_8 %_7 @p3.index
+		store.slot s1 %_9 @p3.index
+		%_10 = load.slot int s2 @p3.count
+		%_11 = const int 1 @p3.count
+		%_12 = binop int sub %_10 %_11 @p3.count
+		store.slot s2 %_12 @p3.count
+		br b2
+	block b4
+		br b7
+	block b5
+		region.enter r1 @p3.body
+		br b6
+	block b6
+		%_13 = load.slot int s0 @p8.value
+		%_14 = load StringView %this @p5.value
+		%_15 = extract char8* %_14 0 @p5.value
+		%_16 = load StringView %this @p2.value
+		%_17 = extract int %_16 1 @p2.value
+		%_18 = make StringView %_15 %_17 @p4.value
+		%_19 = load.slot int s1 @p3.index
+		%_20 = extract char8* %_18 0 @p6.value
+		%_21 = elem.addr char8* %_20 %_19 @p6.value
+		%_22 = load char8 %_21 @p6.value
+		%_23 = cast int %_22 @p7.result
+		%_24 = binop int xor %_13 %_23 @p9.result
+		%_25 = const int 1099511628211 @q1.b
+		%_26 = binop int mul %_24 %_25 @q1.result
+		store.slot s0 %_26 @q2.value
+		region.exit r1 @q2
+		br b3
+	block b7
+		%_27 = load.slot int s0 @p8.value
+		region.exit r0 @q3
+		ret %_27 @q3
+
+unit Fx.EventsMain "EventsMain.treadle"
+
+type Fx.EventsMain class
+
+func Fx.EventsMain.Main() int static sheet "m1" display "Fx.EventsMain.Main"
+	node a1 Entry
+	node a2 Call M2.Events.Run
+	node a3 Return
+	block b0
+		br b1
+	block b1
+		call void M2.Events.Run() @a2
+		br b2
+	block b2
+		%_0 = const int 0 @a3.value
+		region.exit r0 @a3
+		ret %_0 @a3
+
+unit M2.Button "Button.treadle"
+
+type M2.Button class
+	field OnClick Core.Event<delegate void(int)>
+
+func M2.Button.Press(int) void sheet "b0001" display "M2.Button.Press"
+	param times int
+	slot s0 int outtemp "a2.index" pin node a2.index
+	node a1 Entry
+	node a2 Call this.OnClick.Invoke
+	node a3 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr Core.Event<delegate void(int)>* %this OnClick @a2.receiver
+		%_1 = const int 0 @a2.index
+		store.slot s0 %_1 @a2.index
+		br b2
+	block b2
+		%_2 = call int Core.Event<delegate void(int)>.get$Count() %_0 @a2
+		%_3 = load.slot int s0 @a2.index
+		%_4 = cmp bool lt %_3 %_2 @a2
+		condbr %_4 b3 b4 @a2
+	block b3
+		%_5 = load.slot int s0 @a2.index
+		%_6 = call delegate void(int) Core.Event<delegate void(int)>.At(int) %_0 %_5 @a2
+		invoke void %_6 %times @a2
+		%_7 = load.slot int s0 @a2.index
+		%_8 = const int 1 @a2.index
+		%_9 = binop int add %_7 %_8 @a2.index
+		store.slot s0 %_9 @a2.index
+		br b2
+	block b4
+		br b5
+	block b5
+		region.exit r0 @a3
+		ret @a3
+
+func M2.Button.Handlers() int sheet "b0002" display "M2.Button.Handlers"
+	node b1 Entry
+	node b2 Call this.OnClick.Count
+	node b3 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr Core.Event<delegate void(int)>* %this OnClick @b2.receiver
+		%_1 = call int Core.Event<delegate void(int)>.get$Count() %_0 @b2.result
+		region.exit r0 @b3
+		ret %_1 @b3
+
+func M2.Button.this() void display "M2.Button.this"
+	block b0
+		ret
+
+unit M2.ClickHandler "ClickHandler.treadle"
+
+type M2.ClickHandler class
+
+unit M2.Events "Events.treadle"
+
+type M2.Events class
+
+func M2.Events.Show(int) void static sheet "e0001" display "M2.Events.Show"
+	param x int
+	node a1 Entry
+	node a2 Call Console.WriteLine(int)
+	node a3 Return
+	block b0
+		br b1
+	block b1
+		call void Core.Console.WriteLine(int) %x @a2
+		br b2
+	block b2
+		region.exit r0 @a3
+		ret @a3
+
+func M2.Events.Run() void static sheet "e0002" display "M2.Events.Run"
+	slot s0 M2.Button outtemp "n2.object" pin node n2.object
+	slot s1 M2.Meter outtemp "n3.object" pin node n3.object
+	slot s2 delegate void(int) outtemp "n4.value" pin node n4.value
+	slot s3 delegate void(int) outtemp "n6.value" pin node n6.value
+	node n1 Entry
+	node n2 Construct M2.Button
+	node n3 Construct M2.Meter
+	node n4 Bind M2.Events.Show
+	node n5 Call M2.Button.OnClick.Add
+	node n6 Bind M2.Meter.Add
+	node n7 Call M2.Button.OnClick.Add
+	node n8 Call M2.Button.Handlers
+	node n9 Call Console.WriteLine(int)
+	node p1 Call M2.Button.Press
+	node p2 Call M2.Button.OnClick.Remove
+	node p3 Call M2.Button.OnClick.Count
+	node p4 Call Console.WriteLine(int)
+	node p5 Call M2.Button.Press
+	node p6 Call M2.Meter.Read
+	node p7 Call Console.WriteLine(int)
+	node p8 Delete
+	node p9 Delete
+	node q1 Return
+	block b0
+		br b1
+	block b1
+		%_0 = alloc M2.Button @n2.object
+		call void M2.Button.this() %_0 @n2
+		store.slot s0 %_0 @n2.object
+		br b2
+	block b2
+		%_1 = alloc M2.Meter @n3.object
+		call void M2.Meter.this() %_1 @n3
+		store.slot s1 %_1 @n3.object
+		br b3
+	block b3
+		%_2 = bind delegate void(int) M2.Events.Show(int) @n4.value
+		store.slot s2 %_2 @n4.value
+		br b4
+	block b4
+		%_3 = load.slot M2.Button s0 @n2.object
+		nullcheck %_3 @n5.receiver
+		%_4 = field.addr Core.Event<delegate void(int)>* %_3 OnClick @n5.receiver
+		%_5 = load.slot delegate void(int) s2 @n4.value
+		call void Core.Event<delegate void(int)>.Add(delegate void(int)) %_4 %_5 @n5
+		br b5
+	block b5
+		%_6 = load.slot M2.Meter s1 @n3.object
+		nullcheck %_6 @n6.receiver
+		%_7 = bind delegate void(int) M2.Meter.Add(int) %_6 @n6.value
+		store.slot s3 %_7 @n6.value
+		br b6
+	block b6
+		%_8 = load.slot M2.Button s0 @n2.object
+		nullcheck %_8 @n7.receiver
+		%_9 = field.addr Core.Event<delegate void(int)>* %_8 OnClick @n7.receiver
+		%_10 = load.slot delegate void(int) s3 @n6.value
+		call void Core.Event<delegate void(int)>.Add(delegate void(int)) %_9 %_10 @n7
+		br b7
+	block b7
+		%_11 = load.slot M2.Button s0 @n2.object
+		nullcheck %_11 @n8.receiver
+		%_12 = call int M2.Button.Handlers() %_11 @n8.result
+		call void Core.Console.WriteLine(int) %_12 @n9
+		br b8
+	block b8
+		%_13 = load.slot M2.Button s0 @n2.object
+		nullcheck %_13 @p1.receiver
+		%_14 = const int 5 @p1.times
+		call void M2.Button.Press(int) %_13 %_14 @p1
+		br b9
+	block b9
+		%_15 = load.slot M2.Button s0 @n2.object
+		nullcheck %_15 @p2.receiver
+		%_16 = field.addr Core.Event<delegate void(int)>* %_15 OnClick @p2.receiver
+		%_17 = load.slot delegate void(int) s2 @n4.value
+		%_18 = call bool Core.Event<delegate void(int)>.Remove(delegate void(int)) %_16 %_17 @p2
+		br b10
+	block b10
+		%_19 = load.slot M2.Button s0 @n2.object
+		nullcheck %_19 @p3.receiver
+		%_20 = field.addr Core.Event<delegate void(int)>* %_19 OnClick @p3.receiver
+		%_21 = call int Core.Event<delegate void(int)>.get$Count() %_20 @p3.result
+		call void Core.Console.WriteLine(int) %_21 @p4
+		br b11
+	block b11
+		%_22 = load.slot M2.Button s0 @n2.object
+		nullcheck %_22 @p5.receiver
+		%_23 = const int 7 @p5.times
+		call void M2.Button.Press(int) %_22 %_23 @p5
+		br b12
+	block b12
+		%_24 = load.slot M2.Meter s1 @n3.object
+		nullcheck %_24 @p6.receiver
+		%_25 = call int M2.Meter.Read() %_24 @p6.result
+		call void Core.Console.WriteLine(int) %_25 @p7
+		br b13
+	block b13
+		%_26 = load.slot M2.Button s0 @n2.object
+		delete %_26 @p8.object
+		br b14
+	block b14
+		%_27 = load.slot M2.Meter s1 @n3.object
+		delete %_27 @p9.object
+		br b15
+	block b15
+		region.exit r0 @q1
+		ret @q1
+
+unit M2.Meter "Meter.treadle"
+
+type M2.Meter class
+	field mTotal int
+
+func M2.Meter.Add(int) void sheet "m0001" display "M2.Meter.Add"
+	param x int
+	node a1 Entry
+	node a2 Set this.mTotal
+	node a3 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr int* %this mTotal @a2.value
+		%_1 = load int %_0 @a2.value
+		%_2 = binop int add %_1 %x @a2.value
+		store %_0 %_2 @a2.value
+		br b2
+	block b2
+		region.exit r0 @a3
+		ret @a3
+
+func M2.Meter.Read() int sheet "m0002" display "M2.Meter.Read"
+	node b1 Entry
+	node b2 Get this.mTotal
+	node b3 Return
+	block b0
+		br b1
+	block b1
+		%_0 = field.addr int* %this mTotal @b2.value
+		%_1 = load int %_0 @b2.value
+		region.exit r0 @b3
+		ret %_1 @b3
+
+func M2.Meter.this() void display "M2.Meter.this"
+	block b0
+		ret

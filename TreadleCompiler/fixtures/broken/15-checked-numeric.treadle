@@ -1,0 +1,15 @@
+# treadle 1
+# expect n2 - T2157
+type CheckedNumeric class
+	namespace Broken
+	static
+	doc "A checked Cast is a Class Cast: a number has no Failed path."
+
+function f1 Run
+	static
+sheet body
+node n1 Entry
+node n2 Cast double
+	set checked
+	in value 3
+wire n1.then n2.in

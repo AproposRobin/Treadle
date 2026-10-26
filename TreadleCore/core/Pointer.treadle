@@ -1,0 +1,35 @@
+# treadle 1
+type Pointer class
+	namespace Core
+	static
+	doc "Pointer arithmetic, reads and writes through a pointer (unsafe nodes; the compiler implements them)."
+
+function p0001 Add
+	static
+	pure
+	unsafe
+	returns T*
+	generic T
+	attr Intrinsic Pointer.Add
+	doc "The pointer `count` elements after `ptr`."
+param ptr T*
+param count int
+
+function p0002 Load
+	static
+	pure
+	unsafe
+	returns T
+	generic T
+	attr Intrinsic Pointer.Load
+	doc "The element `ptr` points at."
+param ptr T*
+
+function p0003 Store
+	static
+	unsafe
+	generic T
+	attr Intrinsic Pointer.Store
+	doc "Writes the element `ptr` points at."
+param ptr T*
+param value T

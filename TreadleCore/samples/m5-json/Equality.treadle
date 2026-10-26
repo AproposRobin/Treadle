@@ -1,0 +1,197 @@
+# treadle 1
+type Equality class
+	namespace Json
+	static
+	doc "Structural comparison of JsonValues and the write-then-read round trip check."
+
+function m0001 Same
+	static
+	returns bool
+	doc "True when `a` and `b` hold the same JSON: the same case and equal payloads, arrays element by element in order, objects with the same keys and the same values (in any order)."
+param a Json.JsonValue
+param b Json.JsonValue
+sheet body
+node a000 Entry
+node a001 Call Json.JsonValue.Kind
+node a002 Call Json.JsonValue.Kind
+node a003 Operator !=
+node a004 Branch
+node a005 Return
+	in value false
+node a006 Return
+	in value true
+node a007 Switch
+	case Null
+	case Bool
+	case Number
+	case Text
+	case Array
+	case Object
+node a008 IsCase Json.JsonValue.Bool
+node a009 Operator ==
+node a00a Return
+node a00b IsCase Json.JsonValue.Number
+node a00c Operator ==
+node a00d Return
+node a00e IsCase Json.JsonValue.Text
+node a00f Call String.Equals
+node a00g Return
+node a00h IsCase Json.JsonValue.Array
+node a00i Get List<Json.JsonValue>.Count
+node a00j Get List<Json.JsonValue>.Count
+node a00k Operator !=
+node a00l Branch
+node a00m For
+	in start 0
+node a00n Index
+node a00o Index
+node a00p Call Json.Equality.Same
+node a00q Branch
+node a00r IsCase Json.JsonValue.Object
+node a00s Get Dictionary<String,Json.JsonValue>.Count
+node a00t Get Dictionary<String,Json.JsonValue>.Count
+node a00u Operator !=
+node a00v Branch
+node a00w ForEach
+node a00x Break (String,Json.JsonValue)
+node a00y Call Dictionary<String,Json.JsonValue>.TryGet
+node a00z Branch
+node a010 Call Json.Equality.Same
+node a011 Branch
+wire a000.a a001.value
+wire a000.b a002.value
+wire a001.result a003.a
+wire a002.result a003.b
+wire a003.result a004.condition
+wire a000.then a004.in
+wire a004.true a005.in
+wire a007.done a005.in
+wire a00l.true a005.in
+wire a00q.false a005.in
+wire a00v.true a005.in
+wire a00z.false a005.in
+wire a011.false a005.in
+wire a007.case:Null a006.in
+wire a00m.done a006.in
+wire a00w.done a006.in
+wire a004.false a007.in
+wire a000.a a007.value
+wire a000.b a008.value
+wire a007.case:Bool.value a009.a
+wire a008.value a009.b
+wire a007.case:Bool a00a.in
+wire a009.result a00a.value
+wire a000.b a00b.value
+wire a007.case:Number.value a00c.a
+wire a00b.value a00c.b
+wire a007.case:Number a00d.in
+wire a00c.result a00d.value
+wire a000.b a00e.value
+wire a00e.value a00f.other
+wire a007.case:Text.value a00f.receiver
+wire a007.case:Text a00g.in
+wire a00f.result a00g.value
+wire a000.b a00h.value
+wire a007.case:Array.items a00i.receiver
+wire a00h.items a00j.receiver
+wire a00i.value a00k.a
+wire a00j.value a00k.b
+wire a00k.result a00l.condition
+wire a007.case:Array a00l.in
+wire a00i.value a00m.count
+wire a00l.false a00m.in
+wire a007.case:Array.items a00n.collection
+wire a00m.index a00n.index
+wire a00h.items a00o.collection
+wire a00m.index a00o.index
+wire a00n.value a00p.a
+wire a00o.value a00p.b
+wire a00m.body a00p.in
+wire a00p.result a00q.condition
+wire a00p.then a00q.in
+wire a000.b a00r.value
+wire a007.case:Object.members a00s.receiver
+wire a00r.members a00t.receiver
+wire a00s.value a00u.a
+wire a00t.value a00u.b
+wire a00u.result a00v.condition
+wire a007.case:Object a00v.in
+wire a007.case:Object.members a00w.collection
+wire a00v.false a00w.in
+wire a00w.element a00x.value
+wire a00w.body a00y.in
+wire a00x.item0 a00y.key
+wire a00r.members a00y.receiver
+wire a00y.result a00z.condition
+wire a00y.then a00z.in
+wire a00x.item1 a010.a
+wire a00y.item a010.b
+wire a00z.true a010.in
+wire a010.result a011.condition
+wire a010.then a011.in
+
+function m0002 RoundTripOne
+	static
+	access private
+	returns bool
+	doc "Writes `value` (pretty or compact), parses the text again and compares the result with `value`."
+param value Json.JsonValue
+param pretty bool
+sheet body
+node b000 Entry
+node b001 Local String
+	set ctor ()
+node b002 Call Json.Writer.Write
+	in level 0
+node b003 Local Json.Parser
+node b004 Call Json.Parser.Parse
+node b005 ResultMatch
+node b006 Return
+	in value false
+node b007 Call Json.Equality.Same
+node b008 Call Json.JsonValue.Free
+node b009 Return
+node b00a Fatal
+	in message "unreachable: both arms return"
+wire b000.then b001.in
+wire b001.then b002.in
+wire b001.object b002.into
+wire b000.pretty b002.pretty
+wire b000.value b002.value
+wire b002.then b003.in
+wire b001.object b003.text
+wire b003.then b004.in
+wire b003.object b004.receiver
+wire b004.then b005.in
+wire b004.result b005.result
+wire b005.err b006.in
+wire b000.value b007.a
+wire b005.value b007.b
+wire b005.ok b007.in
+wire b007.then b008.in
+wire b005.value b008.value
+wire b008.then b009.in
+wire b007.result b009.value
+wire b005.done b00a.in
+
+function m0003 RoundTrips
+	static
+	returns bool
+	doc "True when both the compact and the pretty text of `value` parse back to the same JSON."
+param value Json.JsonValue
+sheet body
+node c000 Entry
+node c001 Call Json.Equality.RoundTripOne
+	in pretty false
+node c002 Call Json.Equality.RoundTripOne
+	in pretty true
+node c003 Operator &&
+node c004 Return
+wire c000.then c001.in
+wire c000.value c001.value
+wire c001.then c002.in
+wire c000.value c002.value
+wire c001.result c003.a
+wire c002.result c003.b
+wire c002.then c004.in
+wire c003.result c004.value

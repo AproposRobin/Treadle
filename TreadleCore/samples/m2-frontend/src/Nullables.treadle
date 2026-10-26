@@ -1,0 +1,126 @@
+# treadle 1
+type Nullables class
+	namespace M2
+	static
+	doc "Nullable values (Language.md 2.2, 2.3): == and != against null, == of two int?, Cast int? to int (a null is a fatal error naming the node) and the checked Cast (Failed when null). Run prints null, 7, failed, 3, true, true, false, false, true."
+
+function q0001 Describe
+	static
+	doc "Prints null, or the value."
+param v int?
+sheet body
+node a1 Entry
+node a2 Operator ==
+	in b null
+node a3 Branch
+node a4 Call Console.WriteLine(StringView)
+	in text "null"
+node a5 Cast int
+node a6 Call Console.WriteLine(int)
+node a7 Return
+wire a1.v a2.a
+wire a2.result a3.condition
+wire a1.then a3.in
+wire a3.true a4.in
+wire a1.v a5.value
+wire a3.false a6.in
+wire a5.result a6.value
+wire a4.then a7.in
+wire a6.then a7.in
+
+function q0002 Checked
+	static
+	doc "The checked Cast: the value when there is one, else Failed."
+param v int?
+sheet body
+node b1 Entry
+node b2 Cast int
+	set checked
+node b3 Call Console.WriteLine(int)
+node b4 Call Console.WriteLine(StringView)
+	in text "failed"
+node b5 Return
+wire b1.then b2.in
+wire b1.v b2.value
+wire b2.then b3.in
+wire b2.result b3.value
+wire b2.failed b4.in
+wire b3.then b5.in
+wire b4.then b5.in
+
+function q0003 Same
+	static
+	pure
+	returns bool
+param a int?
+param b int?
+sheet body
+node c1 Entry
+node c2 Operator ==
+node c3 Return
+wire c1.a c2.a
+wire c1.b c2.b
+wire c1.then c3.in
+wire c2.result c3.value
+
+function q0005 HasValue
+	static
+	pure
+	returns bool
+param v int?
+sheet body
+node e1 Entry
+node e2 Operator !=
+	in b null
+node e3 Return
+wire e1.v e2.a
+wire e1.then e3.in
+wire e2.result e3.value
+
+function q0004 Run
+	static
+sheet body
+node d01 Entry
+node d02 Call M2.Nullables.Describe
+	in v null
+node d03 Call M2.Nullables.Describe
+	in v 7
+node d04 Call M2.Nullables.Checked
+	in v null
+node d05 Call M2.Nullables.Checked
+	in v 3
+node d06 Call M2.Nullables.Same
+	in a 5
+	in b 5
+node d07 Call Console.WriteLine(bool)
+node d08 Call M2.Nullables.Same
+	in a null
+	in b null
+node d09 Call Console.WriteLine(bool)
+node d10 Call M2.Nullables.Same
+	in a 5
+	in b null
+node d11 Call Console.WriteLine(bool)
+node d12 Call M2.Nullables.Same
+	in a 5
+	in b 6
+node d13 Call Console.WriteLine(bool)
+node d14 Call M2.Nullables.HasValue
+	in v 4
+node d15 Call Console.WriteLine(bool)
+node d16 Return
+wire d01.then d02.in
+wire d02.then d03.in
+wire d03.then d04.in
+wire d04.then d05.in
+wire d05.then d07.in
+wire d06.result d07.value
+wire d07.then d09.in
+wire d08.result d09.value
+wire d09.then d11.in
+wire d10.result d11.value
+wire d11.then d13.in
+wire d12.result d13.value
+wire d13.then d15.in
+wire d14.result d15.value
+wire d15.then d16.in

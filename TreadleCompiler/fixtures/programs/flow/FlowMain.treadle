@@ -1,0 +1,60 @@
+# treadle 1
+type FlowMain class
+	namespace App
+	static
+	doc "Flow nodes: Sequence, Defer, While, Switch, Make Case and Result: match."
+
+function m1 Main
+	static
+	returns int
+local n int
+sheet body
+node a1 Entry
+node a2 Sequence
+	set count 2
+node b1 Defer
+node b2 Call C.libc.puts
+	in s "deferred ran"
+node b3 Set local:n
+	in value 3
+node b4 While
+node b5 Set local:n
+	set op -=
+	in value 1
+node b6 Switch
+	case 2
+	case 0
+node b7 Get local:n
+node b8 Operator >
+	in b 0
+node b9 Get local:n
+node c1 Call C.libc.puts
+	in s "two"
+node c2 Call C.libc.puts
+	in s "zero"
+node d1 MakeCase Core.Result<int,int32>.Ok
+	in value 7
+node d2 ResultMatch
+node d3 Call C.libc.puts
+	in s "ok"
+node d4 Call C.libc.puts
+	in s "err"
+node d5 Return
+	in value 0
+wire a1.then a2.in
+wire a2.then0 b1.in
+wire b1.deferred b2.in
+wire b1.done b3.in
+wire b3.then b4.in
+wire b8.result b4.condition
+wire b4.body b5.in
+wire b5.then b6.in
+wire b9.value b6.value
+wire b7.value b8.a
+wire b6.case:2 c1.in
+wire b6.case:0 c2.in
+wire a2.then1 d2.in
+wire d1.value d2.result
+wire d2.ok d3.in
+wire d2.err d4.in
+wire d2.done d5.in

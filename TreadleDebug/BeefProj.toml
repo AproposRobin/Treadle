@@ -1,0 +1,7 @@
+FileVersion = 1
+Dependencies = {corlib = "*", TreadleCore = "*"}
+
+[Project]
+Name = "TreadleDebug"
+TargetType = "BeefLib"
+DefaultNamespace = "Treadle.Debug"

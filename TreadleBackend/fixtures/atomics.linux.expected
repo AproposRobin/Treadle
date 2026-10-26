@@ -1,0 +1,8 @@
+# 5 + 10 = 15; cas 15 -> 100 succeeds; cas 7 -> 8 fails (old 100); xchg -> 3; min(3, -2) = -2;
+# max(-2, 9) = 9; 9 - 4 = 5. uint8: 250 + 10 wraps to 4; umax(4, 200) = 200; umin(200, 100) = 100.
+== exit
+0
+== stdout
+add 5 load 15 cas 15 1 cas 100 0 xchg 100 min 3 max -2 sub 9 final 5
+uint8 add 250 max 4 min 200 load 100 ptr cas 1 same 1
+threads 400000
