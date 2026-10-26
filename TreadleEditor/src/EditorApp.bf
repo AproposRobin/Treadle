@@ -1852,7 +1852,15 @@ namespace Treadle.Editor
 				mSpFileMenu = false;
 				Gui.OpenPopup("File");
 			}
-			if (Gui.BeginMenu("File"))
+			bool fileMenu = Gui.BeginMenu("File");
+#if TREADLE_SELFTEST
+			if (!fileMenu)
+			{
+				mFileMenuMin = Gui.igGetItemRectMin(); // the focus self test clicks it (SelfTestFocus.bf)
+				mFileMenuMax = Gui.igGetItemRectMax();
+			}
+#endif
+			if (fileMenu)
 			{
 				if (IconItem(Icon.Package, "New Project..."))
 					StartNewProject();

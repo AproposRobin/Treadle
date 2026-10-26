@@ -11,6 +11,10 @@
 bin/clang
 bin/lld
 bin/ld.lld -> lld
+# The Disassembly panel: llvm-objdump (the machine code by node) and llvm-cxxfilt (readable names); both load
+# lib/libLLVM.so.22.1 below.
+bin/llvm-objdump
+bin/llvm-cxxfilt
 # Target defaults for the programs the back end links: compiler-rt start-up files and builtins, no libgcc
 # (packaging/x86_64-pc-linux-gnu.cfg, copied into bin/ by the script; so no GCC needs to be installed).
 

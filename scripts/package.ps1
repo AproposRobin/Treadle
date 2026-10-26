@@ -64,7 +64,7 @@
   tools\SDL2, samples\m4-breakout -- --headless); the packaged exe ignores
   TREADLE_SELFTEST (starts normally, logs no self-test line), holds no "SELFTEST" string and is smaller than the
   Release build of the same source; the Release build (with the self tests), put into a copy of the unpacked
-  folder, runs TREADLE_SELFTEST=smoke,debug,quit there (the package's lldb-dap and toolchain). Last, the update
+  folder, runs TREADLE_SELFTEST=smoke,debug,hood,quit there (the package's lldb-dap, toolchain and llvm-objdump). Last, the update
   rehearsal: a copy of the package claiming an older version updates itself to this zip through a local release
   index (TREADLE_UPDATE_INDEX) with `Treadle.exe --update`; the new VERSION.txt and --version, B's files.txt, the
   removal of a file only A listed and the survival of user files are checked.
@@ -550,13 +550,13 @@ Report "TREADLE_SELFTEST=smoke,quit is ignored by the packaged exe (normal start
 $tl = Join-Path $VerifyDir "test-layout"
 Copy-Item -Recurse $unz $tl
 Copy-Item -Force $testExe (Join-Path $tl "Treadle.exe")
-$env2 = $env1.Clone(); $env2["TREADLE_SELFTEST"] = "smoke,debug,quit"; $env2["TREADLE_SAMPLES"] = (Join-Path $work "samples")
+$env2 = $env1.Clone(); $env2["TREADLE_SELFTEST"] = "smoke,debug,hood,quit"; $env2["TREADLE_SAMPLES"] = (Join-Path $work "samples")
 $r = Invoke-Packaged (Join-Path $tl "Treadle.exe") @() $env2 600
 $logFile = Get-ChildItem -Recurse (Join-Path $VerifyDir "home") -Filter "treadle-*.log" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime | Select-Object -Last 1
 $done = if ($logFile) { @(Select-String -Path $logFile.FullName -Pattern '\[SELFTEST\] done failures=(\d+)' | Select-Object -Last 1) } else { @() }
 $dap = if ($logFile) { @(Select-String -Path $logFile.FullName -Pattern 'lldb-dap: ([^)]+)\)' | Select-Object -Last 1) } else { @() }
 $r.Out = (@($done | ForEach-Object { $_.Line.Trim() }) + @($dap | ForEach-Object { $_.Line.Trim() })) -join "`n"
-Report "TREADLE_SELFTEST=smoke,debug,quit (the Release build in the package layout)" $r ($done.Count -eq 1 -and $done[0].Matches[0].Groups[1].Value -eq "0" -and $dap.Count -eq 1 -and $dap[0].Matches[0].Groups[1].Value -like "$tl\tools\llvm\*")
+Report "TREADLE_SELFTEST=smoke,debug,hood,quit (the Release build in the package layout; hood: the Disassembly through tools\llvm\bin\llvm-objdump.exe)" $r ($done.Count -eq 1 -and $done[0].Matches[0].Groups[1].Value -eq "0" -and $dap.Count -eq 1 -and $dap[0].Matches[0].Groups[1].Value -like "$tl\tools\llvm\*")
 
 # Shipped samples, built and run in place in the unpacked folder (their build folders land there): no TREADLE_SDL2,
 # so the SDL samples take SDL2 from the package's tools\SDL2 through the rewritten fallback of their sdl2.cimport,

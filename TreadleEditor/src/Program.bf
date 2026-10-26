@@ -250,15 +250,19 @@ namespace Treadle.Editor
 			app.InitUpdates();
 			bool iconsLoaded = false;
 
+			// A frame loop that stops moving is recorded in the session log (CrashHandler.StartFrameWatch).
+			CrashHandler.StartFrameWatch();
 			while (!app.QuitNow)
 			{
 				// Sleep while nothing happens (no input, no build, no animation): idle CPU ~0.
+				CrashHandler.LoopStage("waiting for input", true);
 				Desktop.PaceFrame(app.WantsContinuousFrames, app.IdleTimeoutMs);
 				if (!iconsLoaded && app.UiFont != null)
 				{
 					iconsLoaded = true;
 					Icon.Load(app.UiFont, Host.th_get_mono_font(), 16 * Look.HostScale);
 				}
+				CrashHandler.LoopStage("window events");
 				if (Host.th_begin_frame() == 0)
 				{
 					// Window close requested: let the app ask about unsaved changes.
@@ -268,8 +272,10 @@ namespace Treadle.Editor
 				// Every file dropped since the last frame, oldest first.
 				for (var dropped = Host.th_poll_drop(); dropped != null; dropped = Host.th_poll_drop())
 					app.OnFileDropped(StringView(dropped));
+				CrashHandler.LoopStage("editor frame");
 				app.Frame();
 				Desktop.NoteActivity();
+				CrashHandler.LoopStage("drawing and presenting");
 				Host.th_end_frame();
 			}
 

@@ -16,6 +16,11 @@ bin/libclang-cpp.dll
 bin/libc++.dll
 bin/libunwind.dll
 
+# The Disassembly panel: llvm-objdump (the machine code by node) and llvm-cxxfilt (readable names); both load
+# only libLLVM-23.dll and libc++.dll above.
+bin/llvm-objdump.exe
+bin/llvm-cxxfilt.exe
+
 # The debugger: lldb-dap and the lldb library it loads (liblldb links the Python runtime DLL; the
 # Python standard library is not shipped, lldb-dap starts with --no-lldbinit and no scripting).
 bin/lldb-dap.exe [debug]

@@ -1161,7 +1161,8 @@ Diagnostic { severity: Error|Warning|Note, code: "T0123", message,
 | `ld.lld.exe` | llvm-mingw | Linker (through clang) |
 | `libclang.dll` | LLVM for Windows (MSVC build; llvm-mingw has none) | C header import (section 8.2) |
 | `lldb-dap.exe` | llvm-mingw (the `C:\Program Files\LLVM` 22.1.8 build does not start on the dev machine: it needs `python311.dll`) | The debugger ([Debugging.md](Debugging.md)) |
-| `lldb.exe`, `llvm-objdump`, `llvm-nm`, `llvm-pdbutil` | llvm-mingw | The `backend` self test and developer diagnostics; not packaged |
+| `lldb.exe`, `llvm-nm`, `llvm-pdbutil` | llvm-mingw | The `backend` self test and developer diagnostics; not packaged |
+| `llvm-objdump`, `llvm-cxxfilt` | llvm-mingw (Linux: LLVM 22) | The Disassembly panel; packaged since 0.1.4-alpha |
 
 On Linux the same roles are filled by the distribution's LLVM 22 (`clang-22`, `lld-22`, `lldb-22`,
 `libclang-22-dev`; [Linux-Development.md](Linux-Development.md)). The toolchain root is found by `LlvmRoot` (`TREADLE_LLVM`,

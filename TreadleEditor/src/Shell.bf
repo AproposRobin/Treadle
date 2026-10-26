@@ -149,6 +149,89 @@ namespace Treadle.Editor
 		bool mFocusCompilerResults;
 		bool mFocusOutputLog;
 
+		// ---------------------------------------------------------------- focus record
+
+		[CLink] static extern uint32 igGetActiveID();
+		[CLink] static extern void* igGetTopMostAndVisiblePopupModal();
+		bool mWasForeground = true;
+		double mBackgroundSince;
+		int mFocusLogLeft = 200;
+
+		/// The session log records each time the window loses and regains the system focus, with what the editor's
+		/// input state is on return (an open modal, an active widget, a held button) and a frame that took over two
+		/// seconds: a report of input that stops after switching windows then shows where it stopped.
+		void TrackWindowFocus(double now)
+		{
+			if (mFrame > 2 && LastFrameMs > 2000 && mFocusLogLeft > 0)
+			{
+				mFocusLogLeft--;
+				Notify.Log(.Warning, "Editor", scope $"A frame took {(int)LastFrameMs} ms (foreground: {mWasForeground})");
+			}
+			if (Desktop.QuietWindow || mFocusLogLeft <= 0)
+				return;
+			bool fg = Desktop.IsForeground;
+			if (fg == mWasForeground)
+				return;
+			mWasForeground = fg;
+			mFocusLogLeft--;
+			if (!fg)
+			{
+				mBackgroundSince = now;
+				Notify.Log(.Verbose, "Editor", "Window lost the focus");
+				return;
+			}
+			String modal = scope .("none");
+			let m = igGetTopMostAndVisiblePopupModal();
+			if (m != null && ((char8**)m)[1] != null)
+				modal.Set(StringView(((char8**)m)[1]));
+			Notify.Log(.Verbose, "Editor", scope $"Window has the focus again after {(int)(now - mBackgroundSince)} s: popup {Gui.igIsPopupOpen_Str("", PopupFlags.AnyPopup)}, modal {modal}, active widget {igGetActiveID():X}, button held {Gui.igIsAnyMouseDown()}, minimized {Desktop.IsMinimized}, drawing context {(Desktop.GLContextCurrent ? "current" : "LOST")}");
+			ResetStaleInput("the window got the focus back");
+		}
+
+		/// The input state the editor holds that the system no longer has: a mouse button ImGui still thinks is
+		/// down while it is up (its release went to another window, so every later click would be taken as part of
+		/// that old press), and a mouse capture the window keeps with no button down (the system would send every
+		/// click to it). Called when the window gets the focus back and when the display scale changes; logs one
+		/// line "input path reset after <why>: ..." when it changed something. True then.
+		public bool ResetStaleInput(StringView why)
+		{
+			String what = scope .();
+#if BF_PLATFORM_WINDOWS
+			let io = DragNative.igGetIO_Nil();
+			int32[3] vk = .(0x01, 0x02, 0x04); // VK_LBUTTON, VK_RBUTTON, VK_MBUTTON (ImGui buttons 0, 1, 2)
+			bool anyPhysical = false;
+			for (int32 b < 3)
+			{
+				bool physical = (GetAsyncKeyState(vk[b]) & 0x8000) != 0;
+				anyPhysical |= physical;
+				if (Gui.igIsMouseDown_Nil(b) && !physical)
+				{
+					DragNative.ImGuiIO_AddMouseButtonEvent(io, b, false);
+					what.AppendF("{}mouse button {} released", what.IsEmpty ? "" : ", ", b);
+				}
+			}
+			let hwnd = Desktop.MainWindow;
+			if (hwnd != null && !anyPhysical && GetCapture() == hwnd)
+			{
+				ReleaseCapture();
+				what.AppendF("{}mouse capture released", what.IsEmpty ? "" : ", ");
+			}
+#endif
+			if (what.IsEmpty)
+				return false;
+			Notify.Log(.Info, "Editor", scope $"input path reset after {why}: {what}");
+			return true;
+		}
+
+#if BF_PLATFORM_WINDOWS
+		[Import("user32.lib"), CLink, CallingConvention(.Stdcall)]
+		static extern int16 GetAsyncKeyState(int32 key);
+		[Import("user32.lib"), CLink, CallingConvention(.Stdcall)]
+		static extern void* GetCapture();
+		[Import("user32.lib"), CLink, CallingConvention(.Stdcall)]
+		static extern int32 ReleaseCapture();
+#endif
+
 		// ---------------------------------------------------------------- frame hooks
 
 		/// First thing every frame (before any window is drawn).
@@ -157,6 +240,7 @@ namespace Treadle.Editor
 			if (UiFont == null)
 				UiFont = Gui.igGetFont();
 			let now = Desktop.Now;
+			TrackWindowFocus(now);
 			// Per-monitor DPI: follow the monitor the window is on.
 			if (now - mDpiCheckTime > 0.5)
 			{
@@ -165,7 +249,8 @@ namespace Treadle.Editor
 				if (Math.Abs(s - Look.Scale) > 0.01f)
 				{
 					Look.Apply(s);
-					Notify.Log(.Info, "Editor", scope $"Display scale {(int)(s * 100 + 0.5f)}%");
+					Notify.Log(.Info, "Editor", scope $"Display scale {(int)(s * 100 + 0.5f)}% (drawing context {(Desktop.GLContextCurrent ? "current" : "LOST")})");
+					ResetStaleInput("a display change");
 				}
 			}
 			Panels.FitTabWidth();

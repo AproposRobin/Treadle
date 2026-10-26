@@ -128,6 +128,31 @@ namespace Treadle.Editor
 			}
 		}
 
+		/// The host's OpenGL context is still current on this thread (Windows: wglGetCurrentContext; elsewhere true).
+		/// The session log records it when the window gets the focus back and when the display changes.
+		public static bool GLContextCurrent
+		{
+			get
+			{
+#if BF_PLATFORM_WINDOWS
+				if (sWglCurrent == null)
+				{
+					let gl = Win32Raw.LoadLibraryW(Utf16Text.Scoped!("opengl32.dll"));
+					if (gl != 0)
+						sWglCurrent = (function [CallingConvention(.Stdcall)] void*())Win32Raw.GetProcAddress(gl, "wglGetCurrentContext");
+					if (sWglCurrent == null)
+						return true;
+				}
+				return sWglCurrent() != null;
+#else
+				return true;
+#endif
+			}
+		}
+#if BF_PLATFORM_WINDOWS
+		static function [CallingConvention(.Stdcall)] void*() sWglCurrent;
+#endif
+
 		public static bool IsForeground
 		{
 			get

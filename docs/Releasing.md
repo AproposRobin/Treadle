@@ -131,9 +131,9 @@ and Beef 0.43.6 (`C:\Program Files\BeefLang\bin\BeefBuild.exe`, or `TREADLE_BEEF
 toolchain from `TREADLE_LLVM` or `tools\llvm-mingw` of the repository, and libclang from `TREADLE_LIBCLANG` or the main
 checkout when run in a git worktree (`-Llvm` / `-LibClang` name them explicitly).
 
-1. **Version.** One version in three places, which `package.ps1` checks agree: `VERSION.txt` (`0.1.3-alpha`),
-   `TreadleInfo.Version` + `Channel` in `TreadleCore/src/Document/CommandLine.bf` (`0.1.3`, `alpha`), and
-   `FileVersion = "0.1.3.0"` / `ProductVersion = "0.1.3"` under `[Platform.Windows]` in `TreadleEditor/BeefProj.toml`.
+1. **Version.** One version in three places, which `package.ps1` checks agree: `VERSION.txt` (`0.1.4-alpha`),
+   `TreadleInfo.Version` + `Channel` in `TreadleCore/src/Document/CommandLine.bf` (`0.1.4`, `alpha`), and
+   `FileVersion = "0.1.4.0"` / `ProductVersion = "0.1.4"` under `[Platform.Windows]` in `TreadleEditor/BeefProj.toml`.
 2. **Package and prove it:**
    ```
    powershell -File scripts\package.ps1 -Verify [-VerifyDir <empty folder>]
@@ -188,7 +188,7 @@ on copies of the inputs:
 | `--import-c <copy of TreadleCImport\fixtures\small.cimport> --out <dir>` | exit 0, `small.cdecl` written, libclang loaded from the package |
 | the packaged exe's bytes and size | no `SELFTEST` string; smaller than the `Release` build's exe |
 | `TREADLE_SELFTEST=smoke,quit` `TREADLE_WINDOW_HIDDEN=1` (packaged exe) | a normal start: still running after 15 s (then closed), no `[SELFTEST]` line in its log |
-| `TREADLE_SELFTEST=smoke,debug,quit` with the `Release` build in a copy of the unpacked folder (`TREADLE_SAMPLES` = a copy of the samples) | `[SELFTEST] done failures=0`, lldb-dap from that copy's `tools\llvm\bin` |
+| `TREADLE_SELFTEST=smoke,debug,hood,quit` with the `Release` build in a copy of the unpacked folder (`TREADLE_SAMPLES` = a copy of the samples) | `[SELFTEST] done failures=0`, lldb-dap from that copy's `tools\llvm\bin` |
 | `--build-run <unpacked>\samples\m3-core` (the shipped sample, built in place) | exit 0, the word counts |
 | `--build-run <unpacked>\samples\m2-sdl -- --frames 60` (opens its window for about a second) | exit 0, `frames 60`; `SDL2.dll` next to the program is the one of `tools\SDL2`, and the build's "C import paths outside the project folder" names `<unpacked>/tools/SDL2/` |
 | `--build-run <unpacked>\samples\m4-breakout -- --headless` | exit 0, `frames 600 score ...` |
@@ -323,7 +323,7 @@ LLVM 22 (`/usr/lib/llvm-22`, `libLLVM`, `libclang-cpp`, `libclang`, `liblldb`, `
 package works on a system that has none of them. The checks are the Windows ones: `--version`, `--build-run m1`
 fresh and again, `--build-run m3-core -- a b c`, `--import-c small.cimport`, the packaged exe without self tests
 (no `SELFTEST` string, smaller than the Release build, `TREADLE_SELFTEST` ignored: `timeout` ends the normal
-start after 15 s) and `TREADLE_SELFTEST=smoke,debug,quit` with the Release build in a copy of the unpacked
+start after 15 s) and `TREADLE_SELFTEST=smoke,debug,hood,quit` with the Release build in a copy of the unpacked
 folder (lldb-dap from that copy's `tools/llvm/bin`). Then the shipped samples, built in place in the unpacked
 folder: `samples/m3-core`, `samples/m4-breakout -- --headless` and, where a display exists (`DISPLAY` or
 `WAYLAND_DISPLAY`; else the check is skipped with a note), `samples/m2-sdl -- --frames 60`; the SDL samples run
@@ -381,7 +381,7 @@ Every installed copy looks for these names. **They must never change.**
 | `Treadle-<version>-linux-x64.tar.gz` | the Linux package, one top folder `Treadle-<version>-linux-x64/` |
 | `SHA256SUMS` | one `<64 hex>  <asset name>` line per package, as `sha256sum` writes it |
 
-The tag is `v<version>` where `<version>` is the `VERSION.txt` line (`v0.1.3-alpha`). A package carries `files.txt`
+The tag is `v<version>` where `<version>` is the `VERSION.txt` line (`v0.1.4-alpha`). A package carries `files.txt`
 at its root: every other file (and, on Linux, link) of the package, relative, `/` separators. `package.ps1` and
 `package-linux.sh` write it; the updater installs and removes files by it.
 

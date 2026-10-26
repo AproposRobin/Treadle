@@ -275,7 +275,7 @@ namespace Treadle.Editor
 			Treadle.Language.LlvmRoot.Tool(tool, exe);
 			if (!File.Exists(exe))
 			{
-				outError?.AppendF("{} is missing ({}): set TREADLE_LLVM to the llvm-mingw folder.", tool, exe);
+				outError?.AppendF("Disassembly needs {}, which this package does not include ({}). To use another copy, set the TREADLE_LLVM environment variable to an LLVM folder that has it (llvm-mingw on Windows).", tool, exe);
 				return false;
 			}
 			RunningProcess p = scope .();

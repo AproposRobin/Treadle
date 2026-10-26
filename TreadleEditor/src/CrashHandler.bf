@@ -474,6 +474,144 @@ namespace Treadle.Editor
 			return 0;
 		}
 
+		// ------------------------------------------------------------------ frame-loop watch
+
+		/// What the frame loop is doing now (a string literal: "waiting for input", "events", "drawing",
+		/// "presenting"), and when it last passed the top of the loop (GetTickCount64).
+		public static char8* sLoopStage = "starting";
+		static uint64 sLoopBeat;
+		static uint32 sMainThreadId;
+		static bool sFrameWatchOn;
+
+		/// The frame loop: called at each stage of every frame.
+		public static void LoopStage(char8* stage, bool top = false)
+		{
+			sLoopStage = stage;
+#if BF_PLATFORM_WINDOWS
+			if (top)
+				sLoopBeat = Win32Raw.GetTickCount64();
+#endif
+		}
+
+		/// The interactive editor: a raw thread that writes "frame loop stalled N s (stage: X)" and the main thread's
+		/// stack to the session log when one pass of the frame loop takes over 5 s (the idle wait is at most 1 s), and
+		/// "frame loop running again after N s" when it moves on. Nothing else: it never stops or ends anything.
+		public static void StartFrameWatch()
+		{
+#if BF_PLATFORM_WINDOWS
+			if (sFrameWatchOn)
+				return;
+			sFrameWatchOn = true;
+			sMainThreadId = Win32Raw.GetCurrentThreadId();
+			sLoopBeat = Win32Raw.GetTickCount64();
+			Win32Raw.CreateThread(null, 64 * 1024, (void*)(function [CallingConvention(.Stdcall)] uint32(void*))=> FrameWatchProc, null, 0, null);
+#endif
+		}
+
+#if BF_PLATFORM_WINDOWS
+		[Import("kernel32.lib"), CLink, CallingConvention(.Stdcall)]
+		static extern int OpenThread(uint32 access, int32 inherit, uint32 threadId);
+		[Import("kernel32.lib"), CLink, CallingConvention(.Stdcall)]
+		static extern uint32 SuspendThread(int thread);
+		[Import("kernel32.lib"), CLink, CallingConvention(.Stdcall)]
+		static extern uint32 ResumeThread(int thread);
+		[Import("kernel32.lib"), CLink, CallingConvention(.Stdcall)]
+		static extern int32 GetThreadContext(int thread, void* context);
+
+		[CallingConvention(.Stdcall)]
+		static uint32 FrameWatchProc(void* param)
+		{
+			const uint64 cLimitMs = 5000;
+			uint64 stalledAt = 0;
+			int reports = 0;
+			while (true)
+			{
+				Win32Raw.Sleep(1000);
+				let beat = sLoopBeat;
+				let now = Win32Raw.GetTickCount64();
+				if (stalledAt != 0)
+				{
+					if (beat != stalledAt)
+					{
+						RawText t = default;
+						t.Add("[watch] frame loop running again after "); t.Dec((int)((now - stalledAt) / 1000)); t.Add(" s\r\n");
+						Win32Raw.Write(SessionLog.CrashHandle(), t.GetView());
+						stalledAt = 0;
+					}
+					continue;
+				}
+				if (now - beat < cLimitMs || reports >= 20 || sInCrash != 0)
+					continue;
+				stalledAt = beat;
+				reports++;
+				ReportStall(now - beat);
+			}
+		}
+
+		/// The stall line and the main thread's stack: the thread is suspended only while its registers and return
+		/// addresses are read (no allocation, no lock), the names are looked up after it runs again.
+		static void ReportStall(uint64 ms)
+		{
+			uint64[32] pcs = default;
+			int count = 0;
+			let thread = OpenThread(0x0002 | 0x0008 | 0x0040, 0, sMainThreadId); // SUSPEND_RESUME | GET_CONTEXT | QUERY_INFORMATION
+			if (thread != 0)
+			{
+				uint8[cContextSize + 16] raw = ?;
+				uint8* ctx = (uint8*)(void*)(((int)(void*)&raw + 15) & ~15);
+				Internal.MemSet(ctx, 0, cContextSize);
+				*(uint32*)(ctx + 0x30) = 0x10000B; // ContextFlags: CONTEXT_FULL (AMD64)
+				if (SuspendThread(thread) != uint32.MaxValue)
+				{
+					if (GetThreadContext(thread, ctx) != 0)
+					{
+						while (count < pcs.Count)
+						{
+							let pc = *(uint64*)(ctx + cRip);
+							if (pc == 0)
+								break;
+							pcs[count++] = pc;
+							uint64 imageBase = 0;
+							let fe = Win32Raw.RtlLookupFunctionEntry(pc, &imageBase, null);
+							if (fe == null)
+							{
+								let rsp = *(uint64*)(ctx + cRsp);
+								if (rsp == 0 || (rsp & 7) != 0)
+									break;
+								*(uint64*)(ctx + cRip) = *(uint64*)(void*)(int)rsp;
+								*(uint64*)(ctx + cRsp) = rsp + 8;
+							}
+							else
+							{
+								void* handlerData = null;
+								uint64 establisher = 0;
+								Win32Raw.RtlVirtualUnwind(0, imageBase, pc, fe, ctx, &handlerData, &establisher, null);
+							}
+							if (*(uint64*)(ctx + cRip) == pc)
+								break;
+						}
+					}
+					ResumeThread(thread);
+				}
+				Win32Raw.CloseHandle(thread);
+			}
+			let log = SessionLog.CrashHandle();
+			RawText t = default;
+			let stage = sLoopStage;
+			t.Add("[watch] frame loop stalled "); t.Dec((int)(ms / 1000)); t.Add(" s (stage: "); t.Add(StringView(stage)); t.Add("); main thread:\r\n");
+			Win32Raw.Write(log, t.GetView());
+			EnsureSymbols();
+			for (int i < count)
+			{
+				t.Clear();
+				t.Add("    #"); t.Dec(i, 2); t.Add("  0x"); t.Hex(pcs[i]); t.Add("  "); AddSymbol(ref t, pcs[i], i > 0); t.Add("\r\n");
+				Win32Raw.Write(log, t.GetView());
+			}
+			if (log != 0)
+				Win32Raw.FlushFileBuffers(log);
+		}
+#endif
+
 		/// stderr for a headless run (0 when there is none).
 		static int StdErr()
 		{

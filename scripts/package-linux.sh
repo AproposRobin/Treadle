@@ -411,7 +411,7 @@ TL="$VERIFY_DIR/test-layout"
 cp -a "$UNP" "$TL"
 cp "$TEST_REL/treadle" "$TL/treadle"
 RUN_EXE="$TL/treadle"; RUN_DIR="$TL"
-timed 600 TREADLE_SELFTEST=smoke,debug,quit TREADLE_SAMPLES="$WORK/samples" --
+timed 600 TREADLE_SELFTEST=smoke,debug,hood,quit TREADLE_SAMPLES="$WORK/samples" --
 RUN_EXE="$PEXE"; RUN_DIR="$UNP"
 LOG="$(ls -t "$VERIFY_DIR"/home/logs/*.log 2>/dev/null | head -1 || true)"
 DONE=""; DAP=""
@@ -420,7 +420,7 @@ if [ -n "$LOG" ]; then
   DAP="$(grep -o 'lldb-dap: [^)]*' "$LOG" | tail -1 || true)"
 fi
 { echo "$DONE"; echo "$DAP"; } > "$OUTF"
-check "TREADLE_SELFTEST=smoke,debug,quit (the Release build in the package layout)" $([ $code = 0 ] && [ "$DONE" = "[SELFTEST] done failures=0" ] && [[ "$DAP" == "lldb-dap: $TL/tools/llvm/bin/"* ]] && echo 1 || echo 0) $ms $code
+check "TREADLE_SELFTEST=smoke,debug,hood,quit (the Release build in the package layout; hood: the Disassembly through tools/llvm/bin/llvm-objdump)" $([ $code = 0 ] && [ "$DONE" = "[SELFTEST] done failures=0" ] && [[ "$DAP" == "lldb-dap: $TL/tools/llvm/bin/"* ]] && echo 1 || echo 0) $ms $code
 
 # Shipped samples, built and run in place in the unpacked folder (their build folders land there). The SDL samples
 # link the package's libSDL2-2.0.so.0; with the system's SDL2 hidden they run with LD_LIBRARY_PATH set to the package

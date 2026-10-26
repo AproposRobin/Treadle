@@ -106,7 +106,7 @@ namespace Treadle.Editor
 			{
 			case "smoke": finished = SelfTestSmoke();
 			case "codec": finished = SelfTestCodec();
-			case "editor": finished = SelfTestEditor(); if (finished) mSelfTests.Insert(1, new String("entry")); // the first-program case runs after it (SelfTestEntry.bf)
+			case "editor": finished = SelfTestEditor(); if (finished) { mSelfTests.Insert(1, new String("entry")); mSelfTests.Insert(2, new String("focus")); } // the first-program case (SelfTestEntry.bf), then focus loss and return (SelfTestFocus.bf)
 			case "menu": finished = SelfTestMenu();
 			case "startsamples": SelfTestStartSamples(ref finished); // captures: StartPage.bf
 			case "reportdialog":
@@ -155,6 +155,7 @@ namespace Treadle.Editor
 			case "fatal": finished = SelfTestFatal(); // SelfTestFatal.bf
 			case "tutorial": finished = SelfTestTutorial(); // captures: SelfTestTutorial.bf
 			case "entry": finished = SelfTestEntry(); // SelfTestEntry.bf
+			case "focus": finished = SelfTestFocus(); // SelfTestFocus.bf
 			case "scale": finished = SelfTestScale(false); // SelfTestScale.bf
 			case "scalemeasure": finished = SelfTestScale(true);
 			case "scalegen": finished = SelfTestScaleGen();
